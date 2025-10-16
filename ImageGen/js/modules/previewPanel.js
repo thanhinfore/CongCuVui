@@ -1,5 +1,5 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module
+   PREVIEWPANEL.JS - Preview Panel Module (v2 with Font Effects)
    ===================================================== */
 
 import { utils } from './utils.js';
@@ -16,12 +16,8 @@ export class PreviewPanel {
     }
 
     initialize() {
-        // Setup lazy loading observer
         this.setupLazyLoading();
-
-        // Add render method to window
         window.renderImages = () => this.render();
-
         console.log('Preview panel initialized');
     }
 
@@ -32,23 +28,17 @@ export class PreviewPanel {
             return;
         }
 
-        // Clear previous content
         this.clearPreview();
 
-        // Determine total images to generate
-        const repeatBackground = this.DOM.repeatBackgroundCheckbox.checked;
+        const repeatBackground = this.DOM.repeatBackgroundCheckbox?.checked || false;
         const totalImages = repeatBackground ? textLines.length : this.state.images.length;
 
-        // Reset text configs
         this.textConfigs = [];
 
-        // Show preview actions
         this.showPreviewActions();
 
-        // Create preview container
         const container = this.createPreviewContainer(totalImages);
 
-        // Generate preview items
         for (let i = 0; i < totalImages; i++) {
             const imageIndex = i % this.state.images.length;
             const textIndex = repeatBackground ? i : 0;
@@ -57,7 +47,7 @@ export class PreviewPanel {
                 imageIndex,
                 textIndex,
                 text: textLines[textIndex] || textLines[0],
-                position: this.DOM.positionPicker.value,
+                position: this.DOM.positionPicker?.value || 'bottom',
                 fileName: this.state.images[imageIndex].file.name
             };
 
@@ -67,30 +57,27 @@ export class PreviewPanel {
             container.appendChild(previewItem);
         }
 
-        // Add download all button
         this.addDownloadAllButton();
-
-        // Start observing for lazy loading
         this.observePreviewItems();
     }
 
     getTextLines() {
-        const text = this.DOM.textInput.value.trim();
+        const text = this.DOM.textInput?.value?.trim() || '';
         return text ? text.split('\n').filter(line => line.trim()) : [];
     }
 
     clearPreview() {
         const container = this.DOM.canvasContainer;
+        if (!container) return;
+
         container.innerHTML = '';
 
-        // Clear canvas pool
         this.canvasPool.forEach(canvas => {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
         this.canvasPool = [];
 
-        // Disconnect observer
         if (this.lazyLoadObserver) {
             this.lazyLoadObserver.disconnect();
         }
@@ -98,6 +85,8 @@ export class PreviewPanel {
 
     showEmptyState() {
         const container = this.DOM.canvasContainer;
+        if (!container) return;
+
         container.innerHTML = `
             <div class="empty-state">
                 <svg viewBox="0 0 24 24" class="empty-icon">
@@ -109,7 +98,6 @@ export class PreviewPanel {
             </div>
         `;
 
-        // Hide preview actions
         const previewActions = document.getElementById('previewActions');
         if (previewActions) {
             previewActions.style.display = 'none';
@@ -121,13 +109,11 @@ export class PreviewPanel {
         if (previewActions) {
             previewActions.style.display = 'flex';
 
-            // Update global position selector
             const globalPosition = document.getElementById('globalPosition');
             if (globalPosition) {
-                globalPosition.value = this.DOM.positionPicker.value;
+                globalPosition.value = this.DOM.positionPicker?.value || 'bottom';
             }
 
-            // Setup apply all button
             const applyAllBtn = document.getElementById('applyAllPosition');
             if (applyAllBtn) {
                 applyAllBtn.onclick = () => this.applyPositionToAll();
@@ -140,7 +126,6 @@ export class PreviewPanel {
             className: 'preview-container'
         });
 
-        // Add image count info
         const info = utils.dom.createElement('div', {
             className: 'image-count-info'
         });
@@ -149,7 +134,6 @@ export class PreviewPanel {
             <div class="info-content">
                 <svg width="20" height="20" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                    <text x="12" y="16" text-anchor="middle" fill="currentColor" stroke="none" font-size="12" font-weight="bold">${totalImages}</text>
                 </svg>
                 <span><strong>${totalImages}</strong> image${totalImages > 1 ? 's' : ''} will be generated</span>
             </div>
@@ -157,7 +141,6 @@ export class PreviewPanel {
 
         this.DOM.canvasContainer.appendChild(info);
 
-        // Create grid container
         const grid = utils.dom.createElement('div', {
             className: 'preview-grid'
         });
@@ -174,7 +157,6 @@ export class PreviewPanel {
             'data-number': number
         });
 
-        // Create placeholder content
         container.innerHTML = `
             <div class="image-label">#${number}</div>
             <div class="lazy-placeholder">
@@ -218,32 +200,27 @@ export class PreviewPanel {
     loadPreviewItem(container) {
         const config = JSON.parse(container.dataset.config);
         const number = parseInt(container.dataset.number);
-        const configIndex = number - 1; // Index in textConfigs array
+        const configIndex = number - 1;
 
-        // Clear placeholder
         container.innerHTML = '';
 
-        // Add label
         const label = utils.dom.createElement('div', {
             className: 'image-label',
             textContent: `#${number}`
         });
         container.appendChild(label);
 
-        // Create preview canvas with reference to the correct config
         const canvas = this.createPreviewCanvas(this.textConfigs[configIndex]);
         container.appendChild(canvas);
 
-        // Create controls with reference to the correct config
         const controls = this.createImageControls(this.textConfigs[configIndex], canvas);
-        controls.dataset.configIndex = configIndex; // Store index for reference
+        controls.dataset.configIndex = configIndex;
         container.appendChild(controls);
     }
 
     createPreviewCanvas(config) {
         const { img } = this.state.images[config.imageIndex];
 
-        // Create small preview (max 200px width)
         const maxWidth = 200;
         const scale = Math.min(maxWidth / img.width, 0.3);
 
@@ -259,76 +236,34 @@ export class PreviewPanel {
             alpha: false
         });
 
-        // Draw image
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Draw text
         this.renderTextOnCanvas(ctx, canvas, config);
 
         return canvas;
     }
 
-    createImageControls(config, canvas) {
-        const controls = utils.dom.createElement('div', {
-            className: 'image-controls'
-        });
+    getMainFontSize() {
+        if (!this.DOM.mainFontSize) return 48;
+        const value = parseInt(this.DOM.mainFontSize.value);
+        return isNaN(value) ? 48 : value;
+    }
 
-        // Position selector
-        const positionSelect = utils.dom.createElement('select', {
-            className: 'select-input small',
-            value: config.position,
-            onchange: (e) => {
-                config.position = e.target.value;
+    getSubFontSize() {
+        if (!this.DOM.subFontSize) return 32;
+        const value = parseInt(this.DOM.subFontSize.value);
+        return isNaN(value) ? 32 : value;
+    }
 
-                // Update the main textConfigs array
-                // Use the stored index if available
-                const configIndex = parseInt(controls.dataset.configIndex);
-                if (!isNaN(configIndex) && this.textConfigs[configIndex]) {
-                    this.textConfigs[configIndex].position = e.target.value;
-                }
-
-                const ctx = canvas.getContext('2d');
-                const { img } = this.state.images[config.imageIndex];
-
-                // Redraw
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                this.renderTextOnCanvas(ctx, canvas, config);
-            }
-        });
-
-        ['top', 'upper-middle', 'middle', 'lower-middle', 'bottom'].forEach(value => {
-            const option = utils.dom.createElement('option', {
-                value: value
-            }, [value.charAt(0).toUpperCase() + value.slice(1).replace('-', ' ')]);
-            positionSelect.appendChild(option);
-        });
-
-        positionSelect.value = config.position;
-        controls.appendChild(positionSelect);
-
-        // Download button
-        const downloadBtn = utils.dom.createElement('button', {
-            className: 'download-button',
-            innerHTML: `
-                <svg viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                </svg>
-                Download
-            `,
-            onclick: async (e) => {
-                // Use the config from textConfigs array
-                const configIndex = parseInt(controls.dataset.configIndex);
-                const currentConfig = !isNaN(configIndex) && this.textConfigs[configIndex]
-                    ? this.textConfigs[configIndex]
-                    : config;
-                await this.downloadSingleImage(currentConfig, e.target);
-            }
-        });
-
-        controls.appendChild(downloadBtn);
-
-        return controls;
+    getFontEffects() {
+        return {
+            fontWeight: this.DOM.fontWeightSelect?.value || '400',
+            fontStyle: this.DOM.fontStyleSelect?.value || 'normal',
+            textUnderline: this.DOM.textUnderlineCheckbox?.checked || false,
+            textBorder: this.DOM.textBorderCheckbox?.checked || false,
+            textShadow: this.DOM.textShadowCheckbox?.checked || false,
+            borderWidth: this.DOM.textBorderCheckbox?.checked ? parseFloat(this.DOM.borderWidth?.value || '2') : 0,
+            shadowBlur: this.DOM.textShadowCheckbox?.checked ? parseInt(this.DOM.shadowBlur?.value || '4') : 0
+        };
     }
 
     renderTextOnCanvas(ctx, canvas, config) {
@@ -336,57 +271,94 @@ export class PreviewPanel {
         const mainText = lines[0].trim();
         const subtitle = lines[1]?.trim() || '';
 
-        // Calculate font size based on canvas size
-        const baseFontSize = Math.max(10, canvas.width * 0.06);
+        const mainFontSizeValue = this.getMainFontSize();
+        const subFontSizeValue = this.getSubFontSize();
 
-        // Get position
+        const scale = 200 / 1080;
+        const mainFontSize = Math.round(mainFontSizeValue * scale);
+        const subFontSize = Math.round(subFontSizeValue * scale);
+
+        const effects = this.getFontEffects();
+
         let y;
         switch (config.position) {
-            case 'top': y = baseFontSize * 2; break;
+            case 'top': y = mainFontSize * 1.5; break;
             case 'upper-middle': y = canvas.height * 0.25; break;
             case 'middle': y = canvas.height * 0.5; break;
             case 'lower-middle': y = canvas.height * 0.75; break;
-            case 'bottom': y = canvas.height - baseFontSize * 2; break;
+            case 'bottom': y = canvas.height - mainFontSize * 2.5; break;
+            default: y = canvas.height - mainFontSize * 2.5;
         }
 
-        // Setup text style
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Get font family and remove quotes for canvas context
-        const selectedFont = this.DOM.fontSelect.value || 'Inter, sans-serif';
+        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         const canvasFont = selectedFont.replace(/['"]/g, '');
 
-        // Draw main text
+        // ===== DRAW MAIN TEXT =====
         if (mainText) {
-            ctx.font = `bold ${baseFontSize * 1.5}px ${canvasFont}`;
-            ctx.fillStyle = this.DOM.colorPicker.value;
-            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-            ctx.lineWidth = baseFontSize * 0.1;
+            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${mainFontSize}px ${canvasFont}`;
+            ctx.font = fontStr;
+            ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
+
+            // Setup shadow
+            if (effects.textShadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = effects.shadowBlur;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+            } else {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+            }
+
+            // Setup border/stroke
+            if (effects.textBorder) {
+                ctx.lineWidth = effects.borderWidth;
+                ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            }
 
             const mainLines = this.wrapText(ctx, mainText, canvas.width * 0.9);
             mainLines.forEach((line, index) => {
-                const lineY = y + (index * baseFontSize * 1.8);
-                ctx.strokeText(line, canvas.width / 2, lineY);
+                const lineY = y + (index * mainFontSize * 1.8);
+
+                if (effects.textBorder) {
+                    ctx.strokeText(line, canvas.width / 2, lineY);
+                }
+
                 ctx.fillText(line, canvas.width / 2, lineY);
+
+                // Draw underline
+                if (effects.textUnderline) {
+                    const metrics = ctx.measureText(line);
+                    const startX = canvas.width / 2 - metrics.width / 2;
+                    ctx.strokeStyle = this.DOM.colorPicker?.value || '#FFFFFF';
+                    ctx.lineWidth = Math.max(1, mainFontSize * 0.08);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, lineY + mainFontSize * 0.2);
+                    ctx.lineTo(startX + metrics.width, lineY + mainFontSize * 0.2);
+                    ctx.stroke();
+                }
             });
 
-            y += mainLines.length * baseFontSize * 1.8;
+            y += mainLines.length * mainFontSize * 1.8;
         }
 
-        // Draw subtitle
+        // ===== DRAW SUBTITLE =====
         if (subtitle) {
-            ctx.font = `bold ${baseFontSize}px ${canvasFont}`;
+            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${subFontSize}px ${canvasFont}`;
+            ctx.font = fontStr;
 
             // Background if enabled
-            if (this.DOM.subtitleBgCheckbox.checked) {
+            if (this.DOM.subtitleBgCheckbox?.checked) {
                 const bgColor = utils.hexToRGBA(
-                    this.DOM.bgColorPicker.value,
-                    this.DOM.bgOpacity.value
+                    this.DOM.bgColorPicker?.value || '#000000',
+                    this.DOM.bgOpacity?.value || '28'
                 );
 
                 const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
-                const padding = baseFontSize * 0.4;
+                const padding = Math.max(2, subFontSize * 0.3);
                 let maxWidth = 0;
 
                 subLines.forEach(line => {
@@ -398,25 +370,58 @@ export class PreviewPanel {
                     (canvas.width - maxWidth) / 2 - padding,
                     y - padding,
                     maxWidth + padding * 2,
-                    subLines.length * baseFontSize * 1.5 + padding * 2,
-                    baseFontSize * 0.3,
+                    subLines.length * subFontSize * 1.5 + padding * 2,
+                    Math.max(2, subFontSize * 0.2),
                     bgColor
                 );
             }
 
-            // Draw subtitle text
-            ctx.fillStyle = this.DOM.subColorPicker.value;
+            // Setup shadow
+            if (effects.textShadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = effects.shadowBlur;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+            }
+
+            // Setup border
+            if (effects.textBorder) {
+                ctx.lineWidth = effects.borderWidth;
+                ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            }
+
+            ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
+
             const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
             subLines.forEach((line, index) => {
-                const lineY = y + baseFontSize + (index * baseFontSize * 1.5);
-                ctx.strokeText(line, canvas.width / 2, lineY);
+                const lineY = y + subFontSize + (index * subFontSize * 1.5);
+
+                if (effects.textBorder) {
+                    ctx.strokeText(line, canvas.width / 2, lineY);
+                }
+
                 ctx.fillText(line, canvas.width / 2, lineY);
+
+                // Draw underline
+                if (effects.textUnderline) {
+                    const metrics = ctx.measureText(line);
+                    const startX = canvas.width / 2 - metrics.width / 2;
+                    ctx.strokeStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
+                    ctx.lineWidth = Math.max(1, subFontSize * 0.08);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, lineY + subFontSize * 0.2);
+                    ctx.lineTo(startX + metrics.width, lineY + subFontSize * 0.2);
+                    ctx.stroke();
+                }
             });
         }
+
+        // Reset shadow for next drawing
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
     }
 
     wrapText(ctx, text, maxWidth) {
-        // Handle user line breaks
         const userLines = text.split('\\n');
         const allLines = [];
 
@@ -449,20 +454,15 @@ export class PreviewPanel {
         button.innerHTML = 'Processing...';
 
         try {
-            // Generate full resolution canvas
             const canvas = await this.generateFullCanvas(config);
-
-            // Get format preference
             const format = await this.getFormatPreference();
 
-            // Convert to blob
             const blob = await new Promise(resolve => {
                 const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
                 const quality = format === 'png' ? undefined : 0.85;
                 canvas.toBlob(resolve, mimeType, quality);
             });
 
-            // Download
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `image_${config.textIndex + 1}.${format}`;
@@ -487,7 +487,6 @@ export class PreviewPanel {
     async generateFullCanvas(config) {
         const { img } = this.state.images[config.imageIndex];
 
-        // Limit to 1080px width
         const maxWidth = 1080;
         const scale = img.width > maxWidth ? maxWidth / img.width : 1;
 
@@ -497,18 +496,9 @@ export class PreviewPanel {
         );
 
         const ctx = canvas.getContext('2d');
-
-        // Draw image
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Setup for full resolution text
-        const fullConfig = {
-            ...config,
-            baseFontSize: Math.min(canvas.width, canvas.height) * 0.05
-        };
-
-        // Render text at full resolution
-        this.renderFullText(ctx, canvas, fullConfig);
+        this.renderFullText(ctx, canvas, config);
 
         return canvas;
     }
@@ -517,49 +507,86 @@ export class PreviewPanel {
         const lines = config.text.split(':');
         const mainText = lines[0].trim();
         const subtitle = lines[1]?.trim() || '';
-        const baseFontSize = config.baseFontSize;
 
-        // Calculate position
+        const mainFontSize = this.getMainFontSize();
+        const subFontSize = this.getSubFontSize();
+
+        const effects = this.getFontEffects();
+
         let y;
         switch (config.position) {
-            case 'top': y = baseFontSize * 2; break;
+            case 'top': y = mainFontSize * 2; break;
             case 'upper-middle': y = canvas.height * 0.25; break;
-            case 'middle': y = canvas.height * 0.5 - baseFontSize; break;
+            case 'middle': y = canvas.height * 0.5 - mainFontSize; break;
             case 'lower-middle': y = canvas.height * 0.75; break;
-            case 'bottom': y = canvas.height - baseFontSize * 3; break;
+            case 'bottom': y = canvas.height - mainFontSize * 3; break;
+            default: y = canvas.height - mainFontSize * 3;
         }
 
-        const selectedFont = this.DOM.fontSelect.value || 'Inter, sans-serif';
+        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         const canvasFont = selectedFont.replace(/['"]/g, '');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Main text
+        // ===== DRAW MAIN TEXT (FULL RES) =====
         if (mainText) {
-            ctx.font = `bold ${baseFontSize * 1.5}px ${canvasFont}`;
-            ctx.fillStyle = this.DOM.colorPicker.value;
-            ctx.strokeStyle = 'rgba(0,0,0,0.96)';
-            ctx.lineWidth = baseFontSize * 0.2;
+            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${mainFontSize}px ${canvasFont}`;
+            ctx.font = fontStr;
+            ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
+
+            // Setup shadow
+            if (effects.textShadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = effects.shadowBlur * 2;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 4;
+            } else {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+            }
+
+            // Setup border
+            if (effects.textBorder) {
+                ctx.lineWidth = effects.borderWidth * 2;
+                ctx.strokeStyle = 'rgba(0,0,0,0.96)';
+            }
 
             const mainLines = this.wrapText(ctx, mainText, canvas.width * 0.9);
             mainLines.forEach((line, index) => {
-                const lineY = y + (index * baseFontSize * 2);
-                ctx.strokeText(line, canvas.width / 2, lineY);
+                const lineY = y + (index * mainFontSize * 2);
+
+                if (effects.textBorder) {
+                    ctx.strokeText(line, canvas.width / 2, lineY);
+                }
+
                 ctx.fillText(line, canvas.width / 2, lineY);
+
+                // Draw underline
+                if (effects.textUnderline) {
+                    const metrics = ctx.measureText(line);
+                    const startX = canvas.width / 2 - metrics.width / 2;
+                    ctx.strokeStyle = this.DOM.colorPicker?.value || '#FFFFFF';
+                    ctx.lineWidth = Math.max(2, mainFontSize * 0.1);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, lineY + mainFontSize * 0.25);
+                    ctx.lineTo(startX + metrics.width, lineY + mainFontSize * 0.25);
+                    ctx.stroke();
+                }
             });
 
-            y += mainLines.length * baseFontSize * 2.5;
+            y += mainLines.length * mainFontSize * 2.5;
         }
 
-        // Subtitle
+        // ===== DRAW SUBTITLE (FULL RES) =====
         if (subtitle) {
-            ctx.font = `bold ${baseFontSize}px ${canvasFont}`;
+            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${subFontSize}px ${canvasFont}`;
+            ctx.font = fontStr;
 
             const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
 
             // Background
-            if (this.DOM.subtitleBgCheckbox.checked) {
-                const padding = baseFontSize * 0.8;
+            if (this.DOM.subtitleBgCheckbox?.checked) {
+                const padding = subFontSize * 0.8;
                 let maxWidth = 0;
 
                 subLines.forEach(line => {
@@ -567,8 +594,8 @@ export class PreviewPanel {
                 });
 
                 const bgColor = utils.hexToRGBA(
-                    this.DOM.bgColorPicker.value,
-                    this.DOM.bgOpacity.value
+                    this.DOM.bgColorPicker?.value || '#000000',
+                    this.DOM.bgOpacity?.value || '28'
                 );
 
                 utils.canvas.drawRoundedRect(
@@ -576,38 +603,69 @@ export class PreviewPanel {
                     (canvas.width - maxWidth) / 2 - padding,
                     y - padding,
                     maxWidth + padding * 2,
-                    subLines.length * baseFontSize * 1.5 + padding * 2,
-                    baseFontSize * 0.3,
+                    subLines.length * subFontSize * 1.5 + padding * 2,
+                    Math.max(4, subFontSize * 0.3),
                     bgColor
                 );
             }
 
-            // Text
-            ctx.fillStyle = this.DOM.subColorPicker.value;
-            ctx.strokeStyle = 'rgba(0,0,0,0.96)';
-            ctx.lineWidth = baseFontSize * 0.1;
+            // Setup shadow
+            if (effects.textShadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = effects.shadowBlur * 2;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 4;
+            }
+
+            // Setup border
+            if (effects.textBorder) {
+                ctx.lineWidth = effects.borderWidth * 2;
+                ctx.strokeStyle = 'rgba(0,0,0,0.96)';
+            }
+
+            ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
 
             subLines.forEach((line, index) => {
-                const lineY = y + baseFontSize + (index * baseFontSize * 1.5);
-                ctx.strokeText(line, canvas.width / 2, lineY);
+                const lineY = y + subFontSize + (index * subFontSize * 1.5);
+
+                if (effects.textBorder) {
+                    ctx.strokeText(line, canvas.width / 2, lineY);
+                }
+
                 ctx.fillText(line, canvas.width / 2, lineY);
+
+                // Draw underline
+                if (effects.textUnderline) {
+                    const metrics = ctx.measureText(line);
+                    const startX = canvas.width / 2 - metrics.width / 2;
+                    ctx.strokeStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
+                    ctx.lineWidth = Math.max(2, subFontSize * 0.1);
+                    ctx.beginPath();
+                    ctx.moveTo(startX, lineY + subFontSize * 0.25);
+                    ctx.lineTo(startX + metrics.width, lineY + subFontSize * 0.25);
+                    ctx.stroke();
+                }
             });
         }
 
-        // Credit
+        // Draw credit
         this.renderCredit(ctx, canvas);
+
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
     }
 
     renderCredit(ctx, canvas) {
-        const credit = this.DOM.creditInput.value.trim();
+        const credit = this.DOM.creditInput?.value?.trim() || '';
         if (!credit) return;
 
         const creditFontSize = Math.min(canvas.width, canvas.height) * 0.04;
-        const selectedFont = this.DOM.fontSelect.value || 'Inter, sans-serif';
+        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         const canvasFont = selectedFont.replace(/['"]/g, '');
 
         ctx.font = `bold ${creditFontSize}px ${canvasFont}`;
-        ctx.fillStyle = this.DOM.subColorPicker.value;
+        ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
         ctx.textAlign = 'right';
         ctx.strokeStyle = 'rgba(0,0,0,0.96)';
         ctx.lineWidth = creditFontSize * 0.1;
@@ -618,14 +676,12 @@ export class PreviewPanel {
     }
 
     async getFormatPreference() {
-        // Check if user wants to choose format
         const lastFormat = localStorage.getItem('preferredImageFormat') || 'jpeg';
 
         if (!window.event || !window.event.shiftKey) {
             return lastFormat;
         }
 
-        // Show format dialog
         return await this.showFormatDialog();
     }
 
@@ -658,7 +714,6 @@ export class PreviewPanel {
                 </div>
             `;
 
-            // Add event listeners
             dialog.querySelectorAll('.format-btn').forEach(btn => {
                 btn.onclick = () => {
                     const format = btn.dataset.format;
@@ -674,29 +729,82 @@ export class PreviewPanel {
         });
     }
 
+    createImageControls(config, canvas) {
+        const controls = utils.dom.createElement('div', {
+            className: 'image-controls'
+        });
+
+        const positionSelect = utils.dom.createElement('select', {
+            className: 'select-input small',
+            value: config.position,
+            onchange: (e) => {
+                config.position = e.target.value;
+
+                const configIndex = parseInt(controls.dataset.configIndex);
+                if (!isNaN(configIndex) && this.textConfigs[configIndex]) {
+                    this.textConfigs[configIndex].position = e.target.value;
+                }
+
+                const ctx = canvas.getContext('2d');
+                const { img } = this.state.images[config.imageIndex];
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                this.renderTextOnCanvas(ctx, canvas, config);
+            }
+        });
+
+        ['top', 'upper-middle', 'middle', 'lower-middle', 'bottom'].forEach(value => {
+            const option = utils.dom.createElement('option', {
+                value: value
+            }, [value.charAt(0).toUpperCase() + value.slice(1).replace('-', ' ')]);
+            positionSelect.appendChild(option);
+        });
+
+        positionSelect.value = config.position;
+        controls.appendChild(positionSelect);
+
+        const downloadBtn = utils.dom.createElement('button', {
+            className: 'download-button',
+            innerHTML: `
+                <svg viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Download
+            `,
+            onclick: async (e) => {
+                const configIndex = parseInt(controls.dataset.configIndex);
+                const currentConfig = !isNaN(configIndex) && this.textConfigs[configIndex]
+                    ? this.textConfigs[configIndex]
+                    : config;
+                await this.downloadSingleImage(currentConfig, e.target);
+            }
+        });
+
+        controls.appendChild(downloadBtn);
+
+        return controls;
+    }
+
     applyPositionToAll() {
         const globalSelect = document.getElementById('globalPosition');
         if (!globalSelect) return;
 
         const position = globalSelect.value;
 
-        // Update all configs
         this.textConfigs.forEach(config => {
             config.position = position;
         });
 
-        // Update all position selects and trigger change event
         const containers = this.DOM.canvasContainer.querySelectorAll('.image-container');
         containers.forEach((container, index) => {
             const select = container.querySelector('select');
             if (select && this.textConfigs[index]) {
                 select.value = position;
-                // Trigger change event to update canvas
                 select.dispatchEvent(new Event('change'));
             }
         });
 
-        // Show feedback
         const btn = document.getElementById('applyAllPosition');
         if (btn) {
             const originalText = btn.textContent;
@@ -748,7 +856,6 @@ export class PreviewPanel {
             const format = await this.showFormatDialog();
             const zip = new JSZip();
 
-            // Process all images
             for (let i = 0; i < this.textConfigs.length; i++) {
                 const config = this.textConfigs[i];
                 const canvas = await this.generateFullCanvas(config);
@@ -761,15 +868,12 @@ export class PreviewPanel {
 
                 zip.file(`image_${i + 1}.${format}`, blob);
 
-                // Update progress
                 const progress = ((i + 1) / this.textConfigs.length) * 100;
                 button.innerHTML = `Processing... ${Math.round(progress)}%`;
             }
 
-            // Generate zip
             const content = await zip.generateAsync({ type: 'blob' });
 
-            // Download
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = 'images.zip';

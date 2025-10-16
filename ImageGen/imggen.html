@@ -9,40 +9,29 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Image Text Generator - SMCC</title>
 
-    <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <!-- Optimized font loading -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- CSS Files -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/controls.css">
     <link rel="stylesheet" href="css/preview.css">
     <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
-    <!-- App Container -->
     <div class="app-container">
-        <!-- Header -->
         <header class="app-header">
             <div class="container">
                 <div class="header-content">
-                    <img src="https://smcc.vn/images/smalllogo.png"
-                         alt="SMCC"
-                         class="logo"
-                         onclick="window.location.reload();">
+                    <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" class="logo" onclick="window.location.reload();">
                     <h1 class="app-title">Biểu diễn Tri thức</h1>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="container">
                 <div class="content-grid">
-                    <!-- Control Panel -->
                     <aside class="control-panel">
                         <!-- Text Content Section -->
                         <section class="panel-section active" id="textSection">
@@ -58,21 +47,12 @@
                                     </svg>
                                 </button>
                             </div>
-
                             <div class="section-content">
                                 <div class="form-group">
-                                    <textarea id="textInput"
-                                              class="text-input"
-                                              placeholder="Enter your text here...&#10;Example:&#10;Main Title:Subtitle&#10;Another line"
-                                              rows="6"></textarea>
-
+                                    <textarea id="textInput" class="text-input" placeholder="Enter your text here...&#10;Example:&#10;Main Title:Subtitle&#10;Another line" rows="6"></textarea>
                                     <div class="button-group">
-                                        <button id="insertFooterText" class="helper-button primary">
-                                            Add footer text
-                                        </button>
-                                        <button id="insertLineBreak" class="helper-button">
-                                            Soft break (\n)
-                                        </button>
+                                        <button id="insertFooterText" class="helper-button primary">Add footer text</button>
+                                        <button id="insertLineBreak" class="helper-button">Soft break (\n)</button>
                                     </div>
                                 </div>
                             </div>
@@ -86,14 +66,9 @@
                                 </svg>
                                 <h2 class="section-title">Upload Images</h2>
                             </div>
-
                             <div class="section-content">
                                 <div class="upload-area" id="uploadArea">
-                                    <input type="file"
-                                           id="imageLoader"
-                                           class="file-input"
-                                           multiple
-                                           accept="image/*">
+                                    <input type="file" id="imageLoader" class="file-input" multiple accept="image/*">
                                     <div class="upload-content">
                                         <svg class="upload-icon" viewBox="0 0 24 24">
                                             <path stroke="currentColor" stroke-width="2" fill="none" d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
@@ -102,7 +77,6 @@
                                         <p class="upload-hint">Support: JPG, PNG, GIF, WebP</p>
                                     </div>
                                 </div>
-
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="repeatBackgroundCheckbox" class="checkbox">
                                     <span class="checkbox-text">Repeat text for each image</span>
@@ -118,9 +92,8 @@
                                 </svg>
                                 <h2 class="section-title">Style Settings</h2>
                             </div>
-
                             <div class="section-content">
-                                <!-- Font Selection -->
+                                <!-- Font Family -->
                                 <div class="style-group">
                                     <label class="form-label">Font Family</label>
                                     <select id="fontSelect" class="select-input">
@@ -135,7 +108,73 @@
                                     </select>
                                 </div>
 
-                                <!-- Text Colors -->
+                                <!-- Font Size -->
+                                <div class="style-group">
+                                    <label class="form-label">Font Size</label>
+                                    <div class="font-size-controls">
+                                        <div class="range-group">
+                                            <label for="mainFontSize">Main Text</label>
+                                            <input type="range" id="mainFontSize" min="12" max="120" value="48" class="range-input">
+                                            <span class="range-value" id="mainFontSizeValue">48px</span>
+                                        </div>
+                                        <div class="range-group">
+                                            <label for="subFontSize">Subtitle</label>
+                                            <input type="range" id="subFontSize" min="8" max="80" value="32" class="range-input">
+                                            <span class="range-value" id="subFontSizeValue">32px</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Font Effects -->
+                                <div class="style-group">
+                                    <label class="form-label">Font Effects</label>
+                                    <div class="text-effects-grid">
+                                        <div class="effect-control">
+                                            <label for="fontWeightSelect">Weight</label>
+                                            <select id="fontWeightSelect" class="select-input small">
+                                                <option value="400">Normal</option>
+                                                <option value="600">Semi Bold</option>
+                                                <option value="bold">Bold</option>
+                                                <option value="800">Extra Bold</option>
+                                            </select>
+                                        </div>
+                                        <div class="effect-control">
+                                            <label for="fontStyleSelect">Style</label>
+                                            <select id="fontStyleSelect" class="select-input small">
+                                                <option value="normal">Normal</option>
+                                                <option value="italic">Italic</option>
+                                            </select>
+                                        </div>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="textUnderlineCheckbox" class="checkbox">
+                                            <span class="checkbox-text">Underline</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="textBorderCheckbox" class="checkbox">
+                                            <span class="checkbox-text">Border</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="textShadowCheckbox" class="checkbox">
+                                            <span class="checkbox-text">Shadow</span>
+                                        </label>
+                                    </div>
+
+                                    <!-- Border Width -->
+                                    <div class="effect-sub-control" id="borderWidthControl" style="display: none;">
+                                        <label for="borderWidth">Border Width</label>
+                                        <input type="range" id="borderWidth" min="0.5" max="5" step="0.5" value="2" class="range-input">
+                                        <span class="range-value" id="borderWidthValue">2px</span>
+                                    </div>
+
+                                    <!-- Shadow -->
+                                    <div class="effect-sub-control" id="shadowControl" style="display: none;">
+                                        <label for="shadowBlur">Shadow Blur</label>
+                                        <input type="range" id="shadowBlur" min="0" max="20" value="4" class="range-input">
+                                        <span class="range-value" id="shadowBlurValue">4px</span>
+                                    </div>
+                                </div>
+
+                                <!-- Colors -->
                                 <div class="style-group">
                                     <label class="form-label">Text Colors</label>
                                     <div class="color-grid">
@@ -162,13 +201,12 @@
                                     </select>
                                 </div>
 
-                                <!-- Background Settings -->
+                                <!-- Background -->
                                 <div class="style-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="subtitleBgCheckbox" class="checkbox">
                                         <span class="checkbox-text">Subtitle background</span>
                                     </label>
-
                                     <div class="bg-controls" id="bgControls" style="display: none;">
                                         <div class="color-input-group">
                                             <label for="bgColorPicker">Color</label>
@@ -192,12 +230,8 @@
                                 </svg>
                                 <h2 class="section-title">Author Credit</h2>
                             </div>
-
                             <div class="section-content">
-                                <input type="text"
-                                       id="creditInput"
-                                       class="text-input"
-                                       placeholder="Enter author credit (optional)">
+                                <input type="text" id="creditInput" class="text-input" placeholder="Enter author credit (optional)">
                             </div>
                         </section>
 
@@ -227,7 +261,6 @@
                                 <button id="applyAllPosition" class="secondary-button small">Apply</button>
                             </div>
                         </div>
-
                         <div id="canvasContainer" class="canvas-container">
                             <div class="empty-state">
                                 <svg viewBox="0 0 24 24" class="empty-icon">
@@ -244,7 +277,6 @@
         </main>
     </div>
 
-    <!-- Mobile Navigation Tabs -->
     <nav class="mobile-tabs" id="mobileTabs">
         <button class="tab-button active" data-panel="control">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -262,7 +294,6 @@
         </button>
     </nav>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>

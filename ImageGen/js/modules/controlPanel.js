@@ -1,32 +1,19 @@
-﻿/* =====================================================
-   CONTROLPANEL.JS - Control Panel Module
-   ===================================================== */
-
-import { utils } from './utils.js';
+﻿import { utils } from './utils.js';
 
 export class ControlPanel {
     constructor(DOM, state) {
         this.DOM = DOM;
         this.state = state;
         this.sections = DOM.sections;
-
         this.initialize();
     }
 
     initialize() {
-        // Setup event listeners
         this.setupEventListeners();
-
-        // Setup drag and drop
         this.setupDragAndDrop();
-
-        // Initialize sections
         this.initializeSections();
-
-        // Load saved settings
         this.loadSettings();
 
-        // Initialize font select style
         if (this.DOM.fontSelect) {
             this.DOM.fontSelect.style.fontFamily = this.DOM.fontSelect.value;
         }
@@ -35,18 +22,19 @@ export class ControlPanel {
     }
 
     setupEventListeners() {
-        // Text input
-        this.DOM.textInput.addEventListener('input', () => {
-            this.handleTextInput();
-        });
+        if (this.DOM.textInput) {
+            this.DOM.textInput.addEventListener('input', () => {
+                this.handleTextInput();
+            });
+        }
 
-        // Image upload
-        this.DOM.imageLoader.addEventListener('change', (e) => {
-            this.handleImageUpload(e.target.files);
-        });
+        if (this.DOM.imageLoader) {
+            this.DOM.imageLoader.addEventListener('change', (e) => {
+                this.handleImageUpload(e.target.files);
+            });
+        }
 
-        // Style controls
-        const styleControls = [
+        const basicControls = [
             this.DOM.fontSelect,
             this.DOM.colorPicker,
             this.DOM.subColorPicker,
@@ -57,20 +45,16 @@ export class ControlPanel {
             this.DOM.repeatBackgroundCheckbox
         ];
 
-        styleControls.forEach(control => {
+        basicControls.forEach(control => {
             if (control) {
                 control.addEventListener('change', () => {
-                    // Special handling for font select
                     if (control === this.DOM.fontSelect) {
-                        // Update the select element's font
                         control.style.fontFamily = control.value;
                     }
-
                     this.handleStyleChange();
                     this.saveSettings();
                 });
 
-                // For color pickers and range, also listen to input event
                 if (control.type === 'color' || control.type === 'range') {
                     control.addEventListener('input', utils.debounce(() => {
                         this.handleStyleChange();
@@ -79,30 +63,121 @@ export class ControlPanel {
             }
         });
 
-        // Credit input
-        this.DOM.creditInput.addEventListener('input', utils.debounce(() => {
-            this.handleStyleChange();
-            this.saveSettings();
-        }, 500));
+        // Font Size
+        if (this.DOM.mainFontSize) {
+            this.DOM.mainFontSize.addEventListener('input', (e) => {
+                if (this.DOM.mainFontSizeValue) {
+                    this.DOM.mainFontSizeValue.textContent = `${e.target.value}px`;
+                }
+                this.handleStyleChange();
+                this.saveSettings();
+            });
+        }
 
-        // Add text button
-        this.DOM.addTextButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.handleAddText();
+        if (this.DOM.subFontSize) {
+            this.DOM.subFontSize.addEventListener('input', (e) => {
+                if (this.DOM.subFontSizeValue) {
+                    this.DOM.subFontSizeValue.textContent = `${e.target.value}px`;
+                }
+                this.handleStyleChange();
+                this.saveSettings();
+            });
+        }
+
+        // Font Effects
+        const fontEffectControls = [
+            this.DOM.fontWeightSelect,
+            this.DOM.fontStyleSelect,
+            this.DOM.textUnderlineCheckbox,
+            this.DOM.textBorderCheckbox,
+            this.DOM.textShadowCheckbox,
+            this.DOM.borderWidth,
+            this.DOM.shadowBlur
+        ];
+
+        fontEffectControls.forEach(control => {
+            if (control) {
+                control.addEventListener('change', () => {
+                    this.handleStyleChange();
+                    this.saveSettings();
+                });
+
+                if (control.type === 'range') {
+                    control.addEventListener('input', utils.debounce(() => {
+                        this.handleStyleChange();
+                    }, 100));
+                }
+            }
         });
+
+        // Toggle border width control
+        if (this.DOM.textBorderCheckbox) {
+            this.DOM.textBorderCheckbox.addEventListener('change', () => {
+                if (this.DOM.borderWidthControl) {
+                    this.DOM.borderWidthControl.style.display =
+                        this.DOM.textBorderCheckbox.checked ? 'block' : 'none';
+                }
+                this.handleStyleChange();
+                this.saveSettings();
+            });
+        }
+
+        // Toggle shadow control
+        if (this.DOM.textShadowCheckbox) {
+            this.DOM.textShadowCheckbox.addEventListener('change', () => {
+                if (this.DOM.shadowControl) {
+                    this.DOM.shadowControl.style.display =
+                        this.DOM.textShadowCheckbox.checked ? 'block' : 'none';
+                }
+                this.handleStyleChange();
+                this.saveSettings();
+            });
+        }
+
+        // Border width display
+        if (this.DOM.borderWidth) {
+            this.DOM.borderWidth.addEventListener('input', (e) => {
+                if (this.DOM.borderWidthValue) {
+                    this.DOM.borderWidthValue.textContent = `${e.target.value}px`;
+                }
+            });
+        }
+
+        // Shadow blur display
+        if (this.DOM.shadowBlur) {
+            this.DOM.shadowBlur.addEventListener('input', (e) => {
+                if (this.DOM.shadowBlurValue) {
+                    this.DOM.shadowBlurValue.textContent = `${e.target.value}px`;
+                }
+            });
+        }
+
+        // Credit
+        if (this.DOM.creditInput) {
+            this.DOM.creditInput.addEventListener('input', utils.debounce(() => {
+                this.handleStyleChange();
+                this.saveSettings();
+            }, 500));
+        }
+
+        // Add Text Button
+        if (this.DOM.addTextButton) {
+            this.DOM.addTextButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleAddText();
+            });
+        }
     }
 
     setupDragAndDrop() {
         const uploadArea = this.DOM.uploadArea;
         if (!uploadArea) return;
 
-        // Prevent default drag behaviors
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             uploadArea.addEventListener(eventName, utils.events.preventDefault, false);
             document.body.addEventListener(eventName, utils.events.preventDefault, false);
         });
 
-        // Highlight drop area when item is dragged over it
         ['dragenter', 'dragover'].forEach(eventName => {
             uploadArea.addEventListener(eventName, () => {
                 uploadArea.classList.add('drag-over');
@@ -115,7 +190,6 @@ export class ControlPanel {
             }, false);
         });
 
-        // Handle dropped files
         uploadArea.addEventListener('drop', (e) => {
             const files = Array.from(e.dataTransfer.files).filter(file =>
                 utils.isValidImageFile(file)
@@ -130,44 +204,42 @@ export class ControlPanel {
     }
 
     initializeSections() {
-        // Text section is always active
-        this.sections.text.classList.add('active');
-
-        // Check if we should activate other sections
+        if (this.sections.text) {
+            this.sections.text.classList.add('active');
+        }
         this.updateSectionsVisibility();
     }
 
     updateSectionsVisibility() {
-        const hasText = this.DOM.textInput.value.trim() !== '';
+        const hasText = this.DOM.textInput?.value?.trim() !== '';
         const hasImages = this.state.images.length > 0;
 
-        // Upload section active when text is entered
         if (hasText) {
-            this.sections.upload.classList.add('active');
+            if (this.sections.upload) this.sections.upload.classList.add('active');
         } else {
-            this.sections.upload.classList.remove('active');
-            this.sections.style.classList.remove('active');
-            this.sections.credit.classList.remove('active');
+            if (this.sections.upload) this.sections.upload.classList.remove('active');
+            if (this.sections.style) this.sections.style.classList.remove('active');
+            if (this.sections.credit) this.sections.credit.classList.remove('active');
         }
 
-        // Style and credit sections active when both text and images exist
         if (hasText && hasImages) {
-            this.sections.style.classList.add('active');
-            this.sections.credit.classList.add('active');
+            if (this.sections.style) this.sections.style.classList.add('active');
+            if (this.sections.credit) this.sections.credit.classList.add('active');
         } else {
-            this.sections.style.classList.remove('active');
-            this.sections.credit.classList.remove('active');
+            if (this.sections.style) this.sections.style.classList.remove('active');
+            if (this.sections.credit) this.sections.credit.classList.remove('active');
         }
 
-        // Update button state
         this.updateButtonState();
     }
 
     updateButtonState() {
-        const hasText = this.DOM.textInput.value.trim() !== '';
+        const hasText = this.DOM.textInput?.value?.trim() !== '';
         const hasImages = this.state.images.length > 0;
 
-        this.DOM.addTextButton.disabled = !(hasText && hasImages);
+        if (this.DOM.addTextButton) {
+            this.DOM.addTextButton.disabled = !(hasText && hasImages);
+        }
     }
 
     handleTextInput() {
@@ -178,32 +250,26 @@ export class ControlPanel {
         if (!files || files.length === 0) return;
 
         try {
-            // Show loading state
             this.showLoadingState(true);
 
-            // Reset state
             this.state.images = [];
             this.state.minWidth = Infinity;
 
-            // Load all images
             const imagePromises = Array.from(files).map(file =>
                 utils.image.loadFromFile(file)
             );
 
             const loadedImages = await Promise.all(imagePromises);
 
-            // Update state
             loadedImages.forEach(({ img, file }) => {
                 this.state.images.push({ img, file });
                 this.state.minWidth = Math.min(this.state.minWidth, img.width);
             });
 
-            // Update UI
             this.updateSectionsVisibility();
             this.showImageCount(this.state.images.length);
 
-            // Trigger render if text exists
-            if (this.DOM.textInput.value.trim()) {
+            if (this.DOM.textInput?.value?.trim()) {
                 this.handleStyleChange();
             }
 
@@ -218,7 +284,6 @@ export class ControlPanel {
     }
 
     handleStyleChange() {
-        // Trigger preview render
         if (window.renderImages && this.state.images.length > 0) {
             window.renderImages();
         }
@@ -227,28 +292,24 @@ export class ControlPanel {
     handleAddText() {
         if (!this.validateInputs()) return;
 
-        // Save current state
         this.saveSettings();
-
-        // Trigger render
         this.handleStyleChange();
-
-        // Show success notification
         this.showNotification('Text added to images!', 'success');
 
-        // Vibrate on mobile
         if (window.innerWidth <= 768 && 'vibrate' in navigator) {
             navigator.vibrate(10);
         }
     }
 
     validateInputs() {
-        const hasText = this.DOM.textInput.value.trim() !== '';
+        const hasText = this.DOM.textInput?.value?.trim() !== '';
         const hasImages = this.state.images.length > 0;
 
         if (!hasText) {
             this.showNotification('Please enter some text', 'error');
-            this.DOM.textInput.focus();
+            if (this.DOM.textInput) {
+                this.DOM.textInput.focus();
+            }
             return false;
         }
 
@@ -266,30 +327,11 @@ export class ControlPanel {
 
         if (show) {
             uploadArea.classList.add('loading');
-            uploadArea.innerHTML = `
-                <div class="upload-content">
-                    <svg class="upload-icon spinning" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-width="2" fill="none" 
-                              d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-                    </svg>
-                    <p>Loading images...</p>
-                </div>
-            `;
+            uploadArea.innerHTML = `<div class="upload-content"><svg class="upload-icon spinning" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg><p>Loading images...</p></div>`;
         } else {
             uploadArea.classList.remove('loading');
-            uploadArea.innerHTML = `
-                <input type="file" id="imageLoader" class="file-input" multiple accept="image/*">
-                <div class="upload-content">
-                    <svg class="upload-icon" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-width="2" fill="none" 
-                              d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
-                    </svg>
-                    <p class="upload-text">Drop images here or click to browse</p>
-                    <p class="upload-hint">Support: JPG, PNG, GIF, WebP</p>
-                </div>
-            `;
+            uploadArea.innerHTML = `<input type="file" id="imageLoader" class="file-input" multiple accept="image/*"><div class="upload-content"><svg class="upload-icon" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" fill="none" d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/></svg><p class="upload-text">Drop images here or click to browse</p><p class="upload-hint">Support: JPG, PNG, GIF, WebP</p></div>`;
 
-            // Re-attach file input listener
             const newInput = uploadArea.querySelector('#imageLoader');
             if (newInput) {
                 newInput.addEventListener('change', (e) => {
@@ -302,23 +344,31 @@ export class ControlPanel {
     showImageCount(count) {
         const uploadContent = this.DOM.uploadArea.querySelector('.upload-content p');
         if (uploadContent) {
-            uploadContent.innerHTML = `${count} image${count > 1 ? 's' : ''} loaded<br>
-                                     <small>Click or drop to replace</small>`;
+            uploadContent.innerHTML = `${count} image${count > 1 ? 's' : ''} loaded<br><small>Click or drop to replace</small>`;
         }
     }
 
     saveSettings() {
         const settings = {
-            text: this.DOM.textInput.value,
-            font: this.DOM.fontSelect.value,
-            mainColor: this.DOM.colorPicker.value,
-            subColor: this.DOM.subColorPicker.value,
-            position: this.DOM.positionPicker.value,
-            subtitleBg: this.DOM.subtitleBgCheckbox.checked,
-            bgColor: this.DOM.bgColorPicker.value,
-            bgOpacity: this.DOM.bgOpacity.value,
-            repeatBackground: this.DOM.repeatBackgroundCheckbox.checked,
-            credit: this.DOM.creditInput.value,
+            text: this.DOM.textInput?.value || '',
+            font: this.DOM.fontSelect?.value || 'Inter, sans-serif',
+            mainColor: this.DOM.colorPicker?.value || '#FFFFFF',
+            subColor: this.DOM.subColorPicker?.value || '#FFFFFF',
+            position: this.DOM.positionPicker?.value || 'bottom',
+            mainFontSize: this.DOM.mainFontSize?.value || '48',
+            subFontSize: this.DOM.subFontSize?.value || '32',
+            fontWeight: this.DOM.fontWeightSelect?.value || '400',
+            fontStyle: this.DOM.fontStyleSelect?.value || 'normal',
+            textUnderline: this.DOM.textUnderlineCheckbox?.checked || false,
+            textBorder: this.DOM.textBorderCheckbox?.checked || false,
+            textShadow: this.DOM.textShadowCheckbox?.checked || false,
+            borderWidth: this.DOM.borderWidth?.value || '2',
+            shadowBlur: this.DOM.shadowBlur?.value || '4',
+            subtitleBg: this.DOM.subtitleBgCheckbox?.checked || false,
+            bgColor: this.DOM.bgColorPicker?.value || '#000000',
+            bgOpacity: this.DOM.bgOpacity?.value || '28',
+            repeatBackground: this.DOM.repeatBackgroundCheckbox?.checked || false,
+            credit: this.DOM.creditInput?.value || '',
             lastSaved: new Date().toISOString()
         };
 
@@ -329,30 +379,73 @@ export class ControlPanel {
         const settings = utils.storage.load('imageTextSettings');
         if (!settings) return;
 
-        // Apply saved settings
-        if (settings.text) this.DOM.textInput.value = settings.text;
-        if (settings.font) {
-            this.DOM.fontSelect.value = settings.font;
-            this.DOM.fontSelect.style.fontFamily = settings.font;
+        if (this.DOM.textInput) this.DOM.textInput.value = settings.text || '';
+        if (this.DOM.fontSelect) {
+            this.DOM.fontSelect.value = settings.font || 'Inter, sans-serif';
+            this.DOM.fontSelect.style.fontFamily = this.DOM.fontSelect.value;
         }
-        if (settings.mainColor) this.DOM.colorPicker.value = settings.mainColor;
-        if (settings.subColor) this.DOM.subColorPicker.value = settings.subColor;
-        if (settings.position) this.DOM.positionPicker.value = settings.position;
-        if (settings.credit) this.DOM.creditInput.value = settings.credit;
+        if (this.DOM.colorPicker) this.DOM.colorPicker.value = settings.mainColor || '#FFFFFF';
+        if (this.DOM.subColorPicker) this.DOM.subColorPicker.value = settings.subColor || '#FFFFFF';
+        if (this.DOM.positionPicker) this.DOM.positionPicker.value = settings.position || 'bottom';
+        if (this.DOM.creditInput) this.DOM.creditInput.value = settings.credit || '';
 
-        this.DOM.subtitleBgCheckbox.checked = settings.subtitleBg || false;
-        this.DOM.bgColorPicker.value = settings.bgColor || '#000000';
-        this.DOM.bgOpacity.value = settings.bgOpacity || '28';
-        this.DOM.repeatBackgroundCheckbox.checked = settings.repeatBackground || false;
+        if (this.DOM.mainFontSize) {
+            this.DOM.mainFontSize.value = settings.mainFontSize || '48';
+            if (this.DOM.mainFontSizeValue) {
+                this.DOM.mainFontSizeValue.textContent = `${this.DOM.mainFontSize.value}px`;
+            }
+        }
 
-        // Update sections visibility
+        if (this.DOM.subFontSize) {
+            this.DOM.subFontSize.value = settings.subFontSize || '32';
+            if (this.DOM.subFontSizeValue) {
+                this.DOM.subFontSizeValue.textContent = `${this.DOM.subFontSize.value}px`;
+            }
+        }
+
+        if (this.DOM.fontWeightSelect) this.DOM.fontWeightSelect.value = settings.fontWeight || '400';
+        if (this.DOM.fontStyleSelect) this.DOM.fontStyleSelect.value = settings.fontStyle || 'normal';
+        if (this.DOM.textUnderlineCheckbox) this.DOM.textUnderlineCheckbox.checked = settings.textUnderline || false;
+        if (this.DOM.textBorderCheckbox) this.DOM.textBorderCheckbox.checked = settings.textBorder || false;
+        if (this.DOM.textShadowCheckbox) this.DOM.textShadowCheckbox.checked = settings.textShadow || false;
+
+        if (this.DOM.borderWidth) {
+            this.DOM.borderWidth.value = settings.borderWidth || '2';
+            if (this.DOM.borderWidthValue) {
+                this.DOM.borderWidthValue.textContent = `${this.DOM.borderWidth.value}px`;
+            }
+        }
+
+        if (this.DOM.shadowBlur) {
+            this.DOM.shadowBlur.value = settings.shadowBlur || '4';
+            if (this.DOM.shadowBlurValue) {
+                this.DOM.shadowBlurValue.textContent = `${this.DOM.shadowBlur.value}px`;
+            }
+        }
+
+        if (this.DOM.borderWidthControl) {
+            this.DOM.borderWidthControl.style.display = settings.textBorder ? 'block' : 'none';
+        }
+
+        if (this.DOM.shadowControl) {
+            this.DOM.shadowControl.style.display = settings.textShadow ? 'block' : 'none';
+        }
+
+        if (this.DOM.subtitleBgCheckbox) this.DOM.subtitleBgCheckbox.checked = settings.subtitleBg || false;
+        if (this.DOM.bgColorPicker) this.DOM.bgColorPicker.value = settings.bgColor || '#000000';
+        if (this.DOM.bgOpacity) this.DOM.bgOpacity.value = settings.bgOpacity || '28';
+        if (this.DOM.repeatBackgroundCheckbox) this.DOM.repeatBackgroundCheckbox.checked = settings.repeatBackground || false;
+
+        if (this.DOM.bgControls) {
+            this.DOM.bgControls.style.display = settings.subtitleBg ? 'grid' : 'none';
+        }
+
         this.updateSectionsVisibility();
 
         console.log('Settings loaded from:', settings.lastSaved);
     }
 
     showNotification(message, type = 'info') {
-        // Create or use existing notification system
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
@@ -361,7 +454,7 @@ export class ControlPanel {
             top: 20px;
             right: 20px;
             padding: 12px 24px;
-            background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+            background: ${type === 'error' ? '#ef4444' : '#10b981'};
             color: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -371,7 +464,6 @@ export class ControlPanel {
 
         document.body.appendChild(notification);
 
-        // Auto remove
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notification.remove(), 300);

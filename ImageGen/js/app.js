@@ -1,5 +1,5 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point
+   APP.JS - Main Application Entry Point (v2)
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -22,26 +22,18 @@ class ImageTextApp {
 
     async init() {
         try {
-            // Initialize DOM references
             this.initializeDOMReferences();
-
-            // Initialize components
             this.components.controls = new ControlPanel(this.DOM, this.state);
             this.components.preview = new PreviewPanel(this.DOM, this.state);
             this.components.mobile = new MobileHandler();
 
-            // Setup global methods
             this.setupGlobalMethods();
 
-            // Initialize mobile if needed
             if (window.innerWidth <= 768) {
                 this.components.mobile.init();
             }
 
-            // Setup event listeners
             this.setupEventListeners();
-
-            // Load saved settings
             this.loadSavedState();
 
             this.initialized = true;
@@ -54,26 +46,42 @@ class ImageTextApp {
     }
 
     initializeDOMReferences() {
-        // Cache all DOM references
         this.DOM = {
-            // Inputs
+            // Text inputs
             textInput: document.getElementById('textInput'),
             imageLoader: document.getElementById('imageLoader'),
             creditInput: document.getElementById('creditInput'),
 
-            // Style controls
+            // Font family & size
             fontSelect: document.getElementById('fontSelect'),
+            mainFontSize: document.getElementById('mainFontSize'),
+            mainFontSizeValue: document.getElementById('mainFontSizeValue'),
+            subFontSize: document.getElementById('subFontSize'),
+            subFontSizeValue: document.getElementById('subFontSizeValue'),
+
+            // Font effects
+            fontWeightSelect: document.getElementById('fontWeightSelect'),
+            fontStyleSelect: document.getElementById('fontStyleSelect'),
+            textUnderlineCheckbox: document.getElementById('textUnderlineCheckbox'),
+            textBorderCheckbox: document.getElementById('textBorderCheckbox'),
+            textShadowCheckbox: document.getElementById('textShadowCheckbox'),
+            borderWidth: document.getElementById('borderWidth'),
+            borderWidthValue: document.getElementById('borderWidthValue'),
+            shadowBlur: document.getElementById('shadowBlur'),
+            shadowBlurValue: document.getElementById('shadowBlurValue'),
+            borderWidthControl: document.getElementById('borderWidthControl'),
+            shadowControl: document.getElementById('shadowControl'),
+
+            // Colors
             colorPicker: document.getElementById('colorPicker'),
             subColorPicker: document.getElementById('subColorPicker'),
-            positionPicker: document.getElementById('positionPicker'),
 
-            // Background controls
+            // Position & background
+            positionPicker: document.getElementById('positionPicker'),
             subtitleBgCheckbox: document.getElementById('subtitleBgCheckbox'),
             bgColorPicker: document.getElementById('bgColorPicker'),
             bgOpacity: document.getElementById('bgOpacity'),
             bgControls: document.getElementById('bgControls'),
-
-            // Options
             repeatBackgroundCheckbox: document.getElementById('repeatBackgroundCheckbox'),
 
             // Containers
@@ -94,7 +102,6 @@ class ImageTextApp {
             }
         };
 
-        // Validate DOM references
         const missing = Object.entries(this.DOM)
             .filter(([key, element]) => !element && key !== 'sections')
             .map(([key]) => key);
@@ -105,28 +112,22 @@ class ImageTextApp {
     }
 
     setupGlobalMethods() {
-        // Make render method globally available for other components
         window.renderImages = () => {
             if (this.components.preview) {
                 this.components.preview.render();
             }
         };
 
-        // Global error handler
         window.addEventListener('error', (event) => {
             console.error('Global error:', event.error);
-            this.showError('An unexpected error occurred');
         });
 
-        // Unhandled promise rejection handler
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
-            this.showError('An unexpected error occurred');
         });
     }
 
     setupEventListeners() {
-        // Window resize handler
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
@@ -135,31 +136,25 @@ class ImageTextApp {
             }, 250);
         });
 
-        // Visibility change handler
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && this.initialized) {
-                // Save state when tab becomes visible
                 this.saveState();
             }
         });
 
-        // Before unload handler
         window.addEventListener('beforeunload', () => {
             if (this.state.images.length > 0 && !this.state.saved) {
                 return 'You have unsaved work. Are you sure you want to leave?';
             }
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + S to save settings
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 this.saveState();
                 this.showNotification('Settings saved');
             }
 
-            // Ctrl/Cmd + Enter to add text
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 if (!this.DOM.addTextButton.disabled) {
                     this.DOM.addTextButton.click();
@@ -167,30 +162,61 @@ class ImageTextApp {
             }
         });
 
-        // Background controls toggle
-        this.DOM.subtitleBgCheckbox.addEventListener('change', () => {
-            this.DOM.bgControls.style.display =
-                this.DOM.subtitleBgCheckbox.checked ? 'grid' : 'none';
-        });
+        if (this.DOM.subtitleBgCheckbox) {
+            this.DOM.subtitleBgCheckbox.addEventListener('change', () => {
+                this.DOM.bgControls.style.display = this.DOM.subtitleBgCheckbox.checked ? 'grid' : 'none';
+            });
+        }
 
-        // Opacity slider value update
-        this.DOM.bgOpacity.addEventListener('input', (e) => {
-            const value = e.target.value;
-            const valueDisplay = e.target.nextElementSibling;
-            if (valueDisplay) {
-                valueDisplay.textContent = `${value}%`;
-            }
-        });
+        if (this.DOM.bgOpacity) {
+            this.DOM.bgOpacity.addEventListener('input', (e) => {
+                const valueDisplay = e.target.nextElementSibling;
+                if (valueDisplay) {
+                    valueDisplay.textContent = `${e.target.value}%`;
+                }
+            });
+        }
 
-        // Helper buttons
-        this.DOM.insertFooterText.addEventListener('click', () => {
-            const footerText = '🍀\\nMỗi ảnh là một prompt: Nếu bạn muốn tìm hiểu sâu hơn về kiến thức trong bất kỳ tấm ảnh nào bên trên, hãy sao chép ảnh và thả vào ChatGPT để hỏi đáp trực tiếp. Đây chính là phương pháp học AI miễn phí hàng ngày mà chương trình Luyện AI xin dành tặng bạn!';
-            this.insertTextAtCursor(footerText);
-        });
+        if (this.DOM.textBorderCheckbox) {
+            this.DOM.textBorderCheckbox.addEventListener('change', () => {
+                this.DOM.borderWidthControl.style.display = this.DOM.textBorderCheckbox.checked ? 'block' : 'none';
+            });
+        }
 
-        this.DOM.insertLineBreak.addEventListener('click', () => {
-            this.insertTextAtCursor('\\n');
-        });
+        if (this.DOM.textShadowCheckbox) {
+            this.DOM.textShadowCheckbox.addEventListener('change', () => {
+                this.DOM.shadowControl.style.display = this.DOM.textShadowCheckbox.checked ? 'block' : 'none';
+            });
+        }
+
+        if (this.DOM.borderWidth) {
+            this.DOM.borderWidth.addEventListener('input', (e) => {
+                if (this.DOM.borderWidthValue) {
+                    this.DOM.borderWidthValue.textContent = `${e.target.value}px`;
+                }
+            });
+        }
+
+        if (this.DOM.shadowBlur) {
+            this.DOM.shadowBlur.addEventListener('input', (e) => {
+                if (this.DOM.shadowBlurValue) {
+                    this.DOM.shadowBlurValue.textContent = `${e.target.value}px`;
+                }
+            });
+        }
+
+        if (this.DOM.insertFooterText) {
+            this.DOM.insertFooterText.addEventListener('click', () => {
+                const footerText = '🍀\\nMỗi ảnh là một prompt: Nếu bạn muốn tìm hiểu sâu hơn về kiến thức trong bất kỳ tấm ảnh nào bên trên, hãy sao chép ảnh và thả vào ChatGPT để hỏi đáp trực tiếp!';
+                this.insertTextAtCursor(footerText);
+            });
+        }
+
+        if (this.DOM.insertLineBreak) {
+            this.DOM.insertLineBreak.addEventListener('click', () => {
+                this.insertTextAtCursor('\\n');
+            });
+        }
     }
 
     insertTextAtCursor(text) {
@@ -203,7 +229,6 @@ class ImageTextApp {
         textarea.selectionStart = textarea.selectionEnd = start + text.length;
         textarea.focus();
 
-        // Trigger input event
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
@@ -219,16 +244,25 @@ class ImageTextApp {
 
     saveState() {
         const state = {
-            text: this.DOM.textInput.value,
-            font: this.DOM.fontSelect.value,
-            mainColor: this.DOM.colorPicker.value,
-            subColor: this.DOM.subColorPicker.value,
-            position: this.DOM.positionPicker.value,
-            subtitleBg: this.DOM.subtitleBgCheckbox.checked,
-            bgColor: this.DOM.bgColorPicker.value,
-            bgOpacity: this.DOM.bgOpacity.value,
-            repeatBackground: this.DOM.repeatBackgroundCheckbox.checked,
-            credit: this.DOM.creditInput.value,
+            text: this.DOM.textInput?.value || '',
+            font: this.DOM.fontSelect?.value || 'Inter, sans-serif',
+            mainColor: this.DOM.colorPicker?.value || '#FFFFFF',
+            subColor: this.DOM.subColorPicker?.value || '#FFFFFF',
+            position: this.DOM.positionPicker?.value || 'bottom',
+            mainFontSize: this.DOM.mainFontSize?.value || '48',
+            subFontSize: this.DOM.subFontSize?.value || '32',
+            fontWeight: this.DOM.fontWeightSelect?.value || '400',
+            fontStyle: this.DOM.fontStyleSelect?.value || 'normal',
+            textUnderline: this.DOM.textUnderlineCheckbox?.checked || false,
+            textBorder: this.DOM.textBorderCheckbox?.checked || false,
+            textShadow: this.DOM.textShadowCheckbox?.checked || false,
+            borderWidth: this.DOM.borderWidth?.value || '2',
+            shadowBlur: this.DOM.shadowBlur?.value || '4',
+            subtitleBg: this.DOM.subtitleBgCheckbox?.checked || false,
+            bgColor: this.DOM.bgColorPicker?.value || '#000000',
+            bgOpacity: this.DOM.bgOpacity?.value || '28',
+            repeatBackground: this.DOM.repeatBackgroundCheckbox?.checked || false,
+            credit: this.DOM.creditInput?.value || '',
             lastSaved: new Date().toISOString()
         };
 
@@ -247,24 +281,65 @@ class ImageTextApp {
 
             const state = JSON.parse(saved);
 
-            // Restore values
-            if (state.text) this.DOM.textInput.value = state.text;
-            if (state.font) this.DOM.fontSelect.value = state.font;
-            if (state.mainColor) this.DOM.colorPicker.value = state.mainColor;
-            if (state.subColor) this.DOM.subColorPicker.value = state.subColor;
-            if (state.position) this.DOM.positionPicker.value = state.position;
-            if (state.credit) this.DOM.creditInput.value = state.credit;
+            if (this.DOM.textInput) this.DOM.textInput.value = state.text || '';
+            if (this.DOM.fontSelect) {
+                this.DOM.fontSelect.value = state.font || 'Inter, sans-serif';
+                this.DOM.fontSelect.style.fontFamily = this.DOM.fontSelect.value;
+            }
+            if (this.DOM.colorPicker) this.DOM.colorPicker.value = state.mainColor || '#FFFFFF';
+            if (this.DOM.subColorPicker) this.DOM.subColorPicker.value = state.subColor || '#FFFFFF';
+            if (this.DOM.positionPicker) this.DOM.positionPicker.value = state.position || 'bottom';
+            if (this.DOM.creditInput) this.DOM.creditInput.value = state.credit || '';
 
-            this.DOM.subtitleBgCheckbox.checked = state.subtitleBg || false;
-            this.DOM.bgColorPicker.value = state.bgColor || '#000000';
-            this.DOM.bgOpacity.value = state.bgOpacity || '28';
-            this.DOM.repeatBackgroundCheckbox.checked = state.repeatBackground || false;
+            if (this.DOM.mainFontSize) {
+                this.DOM.mainFontSize.value = state.mainFontSize || '48';
+                if (this.DOM.mainFontSizeValue) {
+                    this.DOM.mainFontSizeValue.textContent = `${this.DOM.mainFontSize.value}px`;
+                }
+            }
 
-            // Update UI
-            this.DOM.bgControls.style.display = state.subtitleBg ? 'grid' : 'none';
-            const opacityDisplay = this.DOM.bgOpacity.nextElementSibling;
-            if (opacityDisplay) {
-                opacityDisplay.textContent = `${state.bgOpacity || 28}%`;
+            if (this.DOM.subFontSize) {
+                this.DOM.subFontSize.value = state.subFontSize || '32';
+                if (this.DOM.subFontSizeValue) {
+                    this.DOM.subFontSizeValue.textContent = `${this.DOM.subFontSize.value}px`;
+                }
+            }
+
+            if (this.DOM.fontWeightSelect) this.DOM.fontWeightSelect.value = state.fontWeight || '400';
+            if (this.DOM.fontStyleSelect) this.DOM.fontStyleSelect.value = state.fontStyle || 'normal';
+            if (this.DOM.textUnderlineCheckbox) this.DOM.textUnderlineCheckbox.checked = state.textUnderline || false;
+            if (this.DOM.textBorderCheckbox) this.DOM.textBorderCheckbox.checked = state.textBorder || false;
+            if (this.DOM.textShadowCheckbox) this.DOM.textShadowCheckbox.checked = state.textShadow || false;
+
+            if (this.DOM.borderWidth) {
+                this.DOM.borderWidth.value = state.borderWidth || '2';
+                if (this.DOM.borderWidthValue) {
+                    this.DOM.borderWidthValue.textContent = `${this.DOM.borderWidth.value}px`;
+                }
+            }
+
+            if (this.DOM.shadowBlur) {
+                this.DOM.shadowBlur.value = state.shadowBlur || '4';
+                if (this.DOM.shadowBlurValue) {
+                    this.DOM.shadowBlurValue.textContent = `${this.DOM.shadowBlur.value}px`;
+                }
+            }
+
+            if (this.DOM.borderWidthControl) {
+                this.DOM.borderWidthControl.style.display = state.textBorder ? 'block' : 'none';
+            }
+
+            if (this.DOM.shadowControl) {
+                this.DOM.shadowControl.style.display = state.textShadow ? 'block' : 'none';
+            }
+
+            if (this.DOM.subtitleBgCheckbox) this.DOM.subtitleBgCheckbox.checked = state.subtitleBg || false;
+            if (this.DOM.bgColorPicker) this.DOM.bgColorPicker.value = state.bgColor || '#000000';
+            if (this.DOM.bgOpacity) this.DOM.bgOpacity.value = state.bgOpacity || '28';
+            if (this.DOM.repeatBackgroundCheckbox) this.DOM.repeatBackgroundCheckbox.checked = state.repeatBackground || false;
+
+            if (this.DOM.bgControls) {
+                this.DOM.bgControls.style.display = state.subtitleBg ? 'grid' : 'none';
             }
 
             console.log('State restored from:', state.lastSaved);
@@ -275,26 +350,24 @@ class ImageTextApp {
     }
 
     showNotification(message, type = 'info') {
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
+        notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 12px 24px;
-            background: ${type === 'error' ? 'var(--color-error)' : 'var(--color-success)'};
+            background: ${type === 'error' ? '#ef4444' : 'var(--color-success)'};
             color: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
             animation: slideIn 0.3s ease;
         `;
-        notification.textContent = message;
 
         document.body.appendChild(notification);
 
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notification.remove(), 300);
@@ -306,16 +379,12 @@ class ImageTextApp {
     }
 }
 
-// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     const app = new ImageTextApp();
     app.init();
-
-    // Make app instance available globally for debugging
     window.imageTextApp = app;
 });
 
-// Add notification animations
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -328,7 +397,6 @@ style.textContent = `
             opacity: 1;
         }
     }
-    
     @keyframes slideOut {
         from {
             transform: translateX(0);
