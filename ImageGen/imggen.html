@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Image Text Generator - Add beautiful text to your images with custom fonts and styles">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Image Text Generator - SMCC</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Optimized font loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/controls.css">
+    <link rel="stylesheet" href="css/preview.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="container">
+                <div class="header-content">
+                    <img src="https://smcc.vn/images/smalllogo.png"
+                         alt="SMCC"
+                         class="logo"
+                         onclick="window.location.reload();">
+                    <h1 class="app-title">Biểu diễn Tri thức</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="content-grid">
+                    <!-- Control Panel -->
+                    <aside class="control-panel">
+                        <!-- Text Content Section -->
+                        <section class="panel-section active" id="textSection">
+                            <div class="section-header">
+                                <svg class="section-icon" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M17 6.1H3M21 12.1H3M15.5 18.1H3" />
+                                </svg>
+                                <h2 class="section-title">Text Content</h2>
+                                <button class="info-button" data-tooltip="Use \n for new line, : to separate title and subtitle">
+                                    <svg viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+                                        <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="section-content">
+                                <div class="form-group">
+                                    <textarea id="textInput"
+                                              class="text-input"
+                                              placeholder="Enter your text here...&#10;Example:&#10;Main Title:Subtitle&#10;Another line"
+                                              rows="6"></textarea>
+
+                                    <div class="button-group">
+                                        <button id="insertFooterText" class="helper-button primary">
+                                            Add footer text
+                                        </button>
+                                        <button id="insertLineBreak" class="helper-button">
+                                            Soft break (\n)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Upload Section -->
+                        <section class="panel-section" id="uploadSection">
+                            <div class="section-header">
+                                <svg class="section-icon" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8L12 3 7 8M12 3v12" />
+                                </svg>
+                                <h2 class="section-title">Upload Images</h2>
+                            </div>
+
+                            <div class="section-content">
+                                <div class="upload-area" id="uploadArea">
+                                    <input type="file"
+                                           id="imageLoader"
+                                           class="file-input"
+                                           multiple
+                                           accept="image/*">
+                                    <div class="upload-content">
+                                        <svg class="upload-icon" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
+                                        </svg>
+                                        <p class="upload-text">Drop images here or click to browse</p>
+                                        <p class="upload-hint">Support: JPG, PNG, GIF, WebP</p>
+                                    </div>
+                                </div>
+
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="repeatBackgroundCheckbox" class="checkbox">
+                                    <span class="checkbox-text">Repeat text for each image</span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Style Section -->
+                        <section class="panel-section" id="styleSection">
+                            <div class="section-header">
+                                <svg class="section-icon" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                                <h2 class="section-title">Style Settings</h2>
+                            </div>
+
+                            <div class="section-content">
+                                <!-- Font Selection -->
+                                <div class="style-group">
+                                    <label class="form-label">Font Family</label>
+                                    <select id="fontSelect" class="select-input">
+                                        <option value="Inter, sans-serif" selected>Inter</option>
+                                        <option value="Roboto, sans-serif">Roboto</option>
+                                        <option value="Open Sans, sans-serif">Open Sans</option>
+                                        <option value="Montserrat, sans-serif">Montserrat</option>
+                                        <option value="Poppins, sans-serif">Poppins</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                        <option value="Georgia, serif">Georgia</option>
+                                        <option value="Times New Roman, serif">Times New Roman</option>
+                                    </select>
+                                </div>
+
+                                <!-- Text Colors -->
+                                <div class="style-group">
+                                    <label class="form-label">Text Colors</label>
+                                    <div class="color-grid">
+                                        <div class="color-input-group">
+                                            <label for="colorPicker">Main</label>
+                                            <input type="color" id="colorPicker" value="#FFFFFF" class="color-picker">
+                                        </div>
+                                        <div class="color-input-group">
+                                            <label for="subColorPicker">Subtitle</label>
+                                            <input type="color" id="subColorPicker" value="#FFFFFF" class="color-picker">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Position -->
+                                <div class="style-group">
+                                    <label class="form-label">Text Position</label>
+                                    <select id="positionPicker" class="select-input">
+                                        <option value="top">Top</option>
+                                        <option value="upper-middle">Upper Middle</option>
+                                        <option value="middle">Middle</option>
+                                        <option value="lower-middle">Lower Middle</option>
+                                        <option value="bottom" selected>Bottom</option>
+                                    </select>
+                                </div>
+
+                                <!-- Background Settings -->
+                                <div class="style-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="subtitleBgCheckbox" class="checkbox">
+                                        <span class="checkbox-text">Subtitle background</span>
+                                    </label>
+
+                                    <div class="bg-controls" id="bgControls" style="display: none;">
+                                        <div class="color-input-group">
+                                            <label for="bgColorPicker">Color</label>
+                                            <input type="color" id="bgColorPicker" value="#000000" class="color-picker">
+                                        </div>
+                                        <div class="range-group">
+                                            <label for="bgOpacity">Opacity</label>
+                                            <input type="range" id="bgOpacity" min="0" max="100" value="28" class="range-input">
+                                            <span class="range-value">28%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Credit Section -->
+                        <section class="panel-section" id="creditSection">
+                            <div class="section-header">
+                                <svg class="section-icon" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                                </svg>
+                                <h2 class="section-title">Author Credit</h2>
+                            </div>
+
+                            <div class="section-content">
+                                <input type="text"
+                                       id="creditInput"
+                                       class="text-input"
+                                       placeholder="Enter author credit (optional)">
+                            </div>
+                        </section>
+
+                        <!-- Action Button -->
+                        <div class="action-section">
+                            <button id="addTextButton" class="primary-button" disabled>
+                                <svg viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                                Add Text to Images
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Preview Panel -->
+                    <section class="preview-panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Preview</h2>
+                            <div id="previewActions" class="preview-actions" style="display: none;">
+                                <select id="globalPosition" class="select-input small">
+                                    <option value="top">All: Top</option>
+                                    <option value="upper-middle">All: Upper Middle</option>
+                                    <option value="middle">All: Middle</option>
+                                    <option value="lower-middle">All: Lower Middle</option>
+                                    <option value="bottom">All: Bottom</option>
+                                </select>
+                                <button id="applyAllPosition" class="secondary-button small">Apply</button>
+                            </div>
+                        </div>
+
+                        <div id="canvasContainer" class="canvas-container">
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" class="empty-icon">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15l-5-5L5 21" />
+                                </svg>
+                                <p>Your edited images will appear here</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Navigation Tabs -->
+    <nav class="mobile-tabs" id="mobileTabs">
+        <button class="tab-button active" data-panel="control">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+        </button>
+        <button class="tab-button" data-panel="preview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Preview
+        </button>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
