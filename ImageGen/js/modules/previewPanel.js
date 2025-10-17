@@ -1,5 +1,5 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v2 with Font Effects)
+   PREVIEWPANEL.JS - Preview Panel Module (v3 - Optimized ZIP)
    ===================================================== */
 
 import { utils } from './utils.js';
@@ -11,6 +11,7 @@ export class PreviewPanel {
         this.textConfigs = [];
         this.lazyLoadObserver = null;
         this.canvasPool = [];
+        this.canvasCache = new Map(); // Cache cho canvas đã render
 
         this.initialize();
     }
@@ -81,6 +82,9 @@ export class PreviewPanel {
         if (this.lazyLoadObserver) {
             this.lazyLoadObserver.disconnect();
         }
+
+        // Clear canvas cache khi render lại
+        this.canvasCache.clear();
     }
 
     showEmptyState() {
@@ -302,7 +306,6 @@ export class PreviewPanel {
             ctx.font = fontStr;
             ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
 
-            // Setup shadow
             if (effects.textShadow) {
                 ctx.shadowColor = 'rgba(0,0,0,0.5)';
                 ctx.shadowBlur = effects.shadowBlur;
@@ -313,7 +316,6 @@ export class PreviewPanel {
                 ctx.shadowBlur = 0;
             }
 
-            // Setup border/stroke
             if (effects.textBorder) {
                 ctx.lineWidth = effects.borderWidth;
                 ctx.strokeStyle = 'rgba(0,0,0,0.8)';
@@ -329,7 +331,6 @@ export class PreviewPanel {
 
                 ctx.fillText(line, canvas.width / 2, lineY);
 
-                // Draw underline
                 if (effects.textUnderline) {
                     const metrics = ctx.measureText(line);
                     const startX = canvas.width / 2 - metrics.width / 2;
@@ -350,7 +351,6 @@ export class PreviewPanel {
             const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${subFontSize}px ${canvasFont}`;
             ctx.font = fontStr;
 
-            // Background if enabled
             if (this.DOM.subtitleBgCheckbox?.checked) {
                 const bgColor = utils.hexToRGBA(
                     this.DOM.bgColorPicker?.value || '#000000',
@@ -376,7 +376,6 @@ export class PreviewPanel {
                 );
             }
 
-            // Setup shadow
             if (effects.textShadow) {
                 ctx.shadowColor = 'rgba(0,0,0,0.5)';
                 ctx.shadowBlur = effects.shadowBlur;
@@ -384,7 +383,6 @@ export class PreviewPanel {
                 ctx.shadowOffsetY = 2;
             }
 
-            // Setup border
             if (effects.textBorder) {
                 ctx.lineWidth = effects.borderWidth;
                 ctx.strokeStyle = 'rgba(0,0,0,0.8)';
@@ -402,7 +400,6 @@ export class PreviewPanel {
 
                 ctx.fillText(line, canvas.width / 2, lineY);
 
-                // Draw underline
                 if (effects.textUnderline) {
                     const metrics = ctx.measureText(line);
                     const startX = canvas.width / 2 - metrics.width / 2;
@@ -416,7 +413,6 @@ export class PreviewPanel {
             });
         }
 
-        // Reset shadow for next drawing
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
     }
@@ -459,7 +455,7 @@ export class PreviewPanel {
 
             const blob = await new Promise(resolve => {
                 const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                const quality = format === 'png' ? undefined : 0.85;
+                const quality = format === 'png' ? undefined : 0.8; // Giảm từ 0.85
                 canvas.toBlob(resolve, mimeType, quality);
             });
 
@@ -468,11 +464,11 @@ export class PreviewPanel {
             link.download = `image_${config.textIndex + 1}.${format}`;
             link.click();
 
-            URL.revokeObjectURL(link.href);
+            setTimeout(() => URL.revokeObjectURL(link.href), 100);
 
         } catch (error) {
             console.error('Download error:', error);
-            alert('Failed to download image');
+            this.showErrorNotification('Failed to download image');
         } finally {
             button.disabled = false;
             button.innerHTML = `
@@ -484,7 +480,35 @@ export class PreviewPanel {
         }
     }
 
+    getConfigHash(config) {
+        // Tạo hash key cho cache
+        return JSON.stringify({
+            imageIndex: config.imageIndex,
+            text: config.text,
+            position: config.position,
+            mainFont: this.getMainFontSize(),
+            subFont: this.getSubFontSize(),
+            effects: this.getFontEffects(),
+            colors: {
+                main: this.DOM.colorPicker?.value,
+                sub: this.DOM.subColorPicker?.value,
+                bg: this.DOM.bgColorPicker?.value
+            }
+        });
+    }
+
     async generateFullCanvas(config) {
+        // Check cache trước
+        const cacheKey = this.getConfigHash(config);
+        if (this.canvasCache.has(cacheKey)) {
+            const cachedCanvas = this.canvasCache.get(cacheKey);
+            // Clone canvas để tránh bị modify
+            const clonedCanvas = utils.canvas.createOffscreenCanvas(cachedCanvas.width, cachedCanvas.height);
+            const ctx = clonedCanvas.getContext('2d');
+            ctx.drawImage(cachedCanvas, 0, 0);
+            return clonedCanvas;
+        }
+
         const { img } = this.state.images[config.imageIndex];
 
         const maxWidth = 1080;
@@ -499,6 +523,9 @@ export class PreviewPanel {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         this.renderFullText(ctx, canvas, config);
+
+        // Lưu vào cache
+        this.canvasCache.set(cacheKey, canvas);
 
         return canvas;
     }
@@ -534,7 +561,6 @@ export class PreviewPanel {
             ctx.font = fontStr;
             ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
 
-            // Setup shadow
             if (effects.textShadow) {
                 ctx.shadowColor = 'rgba(0,0,0,0.5)';
                 ctx.shadowBlur = effects.shadowBlur * 2;
@@ -545,7 +571,6 @@ export class PreviewPanel {
                 ctx.shadowBlur = 0;
             }
 
-            // Setup border
             if (effects.textBorder) {
                 ctx.lineWidth = effects.borderWidth * 2;
                 ctx.strokeStyle = 'rgba(0,0,0,0.96)';
@@ -561,7 +586,6 @@ export class PreviewPanel {
 
                 ctx.fillText(line, canvas.width / 2, lineY);
 
-                // Draw underline
                 if (effects.textUnderline) {
                     const metrics = ctx.measureText(line);
                     const startX = canvas.width / 2 - metrics.width / 2;
@@ -584,7 +608,6 @@ export class PreviewPanel {
 
             const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
 
-            // Background
             if (this.DOM.subtitleBgCheckbox?.checked) {
                 const padding = subFontSize * 0.8;
                 let maxWidth = 0;
@@ -609,7 +632,6 @@ export class PreviewPanel {
                 );
             }
 
-            // Setup shadow
             if (effects.textShadow) {
                 ctx.shadowColor = 'rgba(0,0,0,0.5)';
                 ctx.shadowBlur = effects.shadowBlur * 2;
@@ -617,7 +639,6 @@ export class PreviewPanel {
                 ctx.shadowOffsetY = 4;
             }
 
-            // Setup border
             if (effects.textBorder) {
                 ctx.lineWidth = effects.borderWidth * 2;
                 ctx.strokeStyle = 'rgba(0,0,0,0.96)';
@@ -634,7 +655,6 @@ export class PreviewPanel {
 
                 ctx.fillText(line, canvas.width / 2, lineY);
 
-                // Draw underline
                 if (effects.textUnderline) {
                     const metrics = ctx.measureText(line);
                     const startX = canvas.width / 2 - metrics.width / 2;
@@ -648,10 +668,8 @@ export class PreviewPanel {
             });
         }
 
-        // Draw credit
         this.renderCredit(ctx, canvas);
 
-        // Reset shadow
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
     }
@@ -842,6 +860,7 @@ export class PreviewPanel {
         this.DOM.canvasContainer.appendChild(container);
     }
 
+    // ===== OPTIMIZED DOWNLOAD ALL AS ZIP =====
     async downloadAllAsZip(button) {
         button.disabled = true;
         button.classList.add('loading');
@@ -849,41 +868,129 @@ export class PreviewPanel {
             <svg class="spinning" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
             </svg>
-            Processing...
+            Preparing...
         `;
 
         try {
             const format = await this.showFormatDialog();
             const zip = new JSZip();
 
-            for (let i = 0; i < this.textConfigs.length; i++) {
-                const config = this.textConfigs[i];
-                const canvas = await this.generateFullCanvas(config);
+            // === BƯỚC 1: Tạo tất cả canvas và blob SONG SONG ===
+            const quality = format === 'png' ? undefined : 0.8;
+            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
 
-                const blob = await new Promise(resolve => {
-                    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                    const quality = format === 'png' ? undefined : 0.85;
-                    canvas.toBlob(resolve, mimeType, quality);
-                });
+            let completed = 0;
+            const total = this.textConfigs.length;
 
-                zip.file(`image_${i + 1}.${format}`, blob);
+            const updateCanvasProgress = () => {
+                completed++;
+                const progress = Math.round((completed / total) * 70);
+                button.innerHTML = `
+                    <svg class="spinning" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                    </svg>
+                    Processing images... ${progress}%
+                `;
+            };
 
-                const progress = ((i + 1) / this.textConfigs.length) * 100;
-                button.innerHTML = `Processing... ${Math.round(progress)}%`;
+            // Tạo promises cho tất cả canvas và blob
+            const blobPromises = this.textConfigs.map(async (config, i) => {
+                try {
+                    const canvas = await this.generateFullCanvas(config);
+
+                    const blob = await new Promise((resolve, reject) => {
+                        try {
+                            canvas.toBlob((result) => {
+                                if (result) {
+                                    resolve(result);
+                                } else {
+                                    reject(new Error('Failed to create blob'));
+                                }
+                            }, mimeType, quality);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    });
+
+                    updateCanvasProgress();
+                    return { blob, index: i, success: true };
+                } catch (error) {
+                    console.error(`Failed to process image ${i + 1}:`, error);
+                    updateCanvasProgress();
+                    return { blob: null, index: i, success: false, error };
+                }
+            });
+
+            // Chờ tất cả hoàn thành (không fail-fast)
+            const results = await Promise.allSettled(blobPromises);
+
+            // Lọc kết quả thành công
+            const successfulResults = results
+                .filter(r => r.status === 'fulfilled' && r.value.success)
+                .map(r => r.value);
+
+            if (successfulResults.length === 0) {
+                throw new Error('Failed to process any images');
             }
 
-            const content = await zip.generateAsync({ type: 'blob' });
+            // Thông báo nếu có ảnh bị lỗi
+            if (successfulResults.length < total) {
+                const failedCount = total - successfulResults.length;
+                this.showWarningNotification(`${failedCount} image(s) failed to process`);
+            }
 
+            // Thêm tất cả blob vào ZIP
+            successfulResults.forEach(({ blob, index }) => {
+                zip.file(`image_${index + 1}.${format}`, blob);
+            });
+
+            // === BƯỚC 2: Nén ZIP với compression thấp và progress ===
+            button.innerHTML = `
+                <svg class="spinning" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                </svg>
+                Compressing ZIP... 70%
+            `;
+
+            const content = await zip.generateAsync(
+                {
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: {
+                        level: 1  // Nén thấp để nhanh hơn
+                    },
+                    streamFiles: true  // Tối ưu memory
+                },
+                (metadata) => {
+                    // Progress callback cho nén ZIP (70% -> 100%)
+                    const zipProgress = Math.round(70 + (metadata.percent * 0.3));
+                    button.innerHTML = `
+                        <svg class="spinning" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                        </svg>
+                        Compressing ZIP... ${zipProgress}%
+                    `;
+                }
+            );
+
+            // === BƯỚC 3: Download file ===
+            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = 'images.zip';
+            link.download = `images_${timestamp}.zip`;
             link.click();
 
-            URL.revokeObjectURL(link.href);
+            // Cleanup sau 100ms
+            setTimeout(() => URL.revokeObjectURL(link.href), 100);
+
+            // Thông báo thành công
+            this.showSuccessNotification(
+                `Downloaded ${successfulResults.length} image${successfulResults.length > 1 ? 's' : ''} successfully!`
+            );
 
         } catch (error) {
             console.error('Error creating zip:', error);
-            alert('Failed to create zip file');
+            this.showErrorNotification('Failed to create ZIP file. Please try again.');
         } finally {
             button.disabled = false;
             button.classList.remove('loading');
@@ -894,5 +1001,45 @@ export class PreviewPanel {
                 Download All as ZIP
             `;
         }
+    }
+
+    // ===== NOTIFICATION HELPERS =====
+    showSuccessNotification(message) {
+        this.showNotification(message, '#10b981', 3000);
+    }
+
+    showErrorNotification(message) {
+        this.showNotification(message, '#ef4444', 4000);
+    }
+
+    showWarningNotification(message) {
+        this.showNotification(message, '#f59e0b', 3500);
+    }
+
+    showNotification(message, backgroundColor, duration) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: ${backgroundColor};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-weight: 500;
+            font-size: 14px;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
     }
 }
