@@ -1,5 +1,5 @@
 ﻿// ============================================================================
-// Live Voting Application - Debug Enhanced Version
+// Live Voting Application - Production Version with Floating QR
 // ============================================================================
 
 const app = {
@@ -11,7 +11,7 @@ const app = {
         maxRetries: 3,
         retryDelay: 2000,
         maxHistoryItems: 20,
-        debugMode: true // Enable detailed logging
+        debugMode: false
     },
 
     // Application State
@@ -31,47 +31,47 @@ const app = {
         debugLogs: []
     },
 
+    // Debounce timer
+    debounceTimer: null,
+
     // ========================================================================
-    // Debug Helpers
+    // Lightweight Logging
     // ========================================================================
 
     log(message, type = 'info', data = null) {
+        if (!this.config.debugMode && type !== 'error') return;
+
         const timestamp = new Date().toLocaleTimeString('vi-VN');
-        const logEntry = {
-            timestamp,
-            type,
-            message,
-            data
-        };
 
-        this.state.debugLogs.push(logEntry);
-
-        // Keep last 100 logs
-        if (this.state.debugLogs.length > 100) {
-            this.state.debugLogs.shift();
+        if (type === 'error') {
+            console.error(`[${timestamp}] ${message}`, data || '');
+        } else if (this.config.debugMode) {
+            const colors = {
+                info: '#3b82f6',
+                success: '#10b981',
+                warning: '#f59e0b'
+            };
+            console.log(
+                `%c[${timestamp}] ${message}`,
+                `color: ${colors[type] || '#3b82f6'}; font-weight: bold;`,
+                data || ''
+            );
         }
 
-        // Console output with colors
-        const colors = {
-            info: '#3b82f6',
-            success: '#10b981',
-            error: '#ef4444',
-            warning: '#f59e0b'
-        };
-
-        console.log(
-            `%c[${timestamp}] ${message}`,
-            `color: ${colors[type]}; font-weight: bold;`,
-            data || ''
-        );
-
-        // Update debug panel if exists
-        this.updateDebugPanel();
+        if (this.config.debugMode) {
+            this.state.debugLogs.push({ timestamp, type, message, data });
+            if (this.state.debugLogs.length > 100) {
+                this.state.debugLogs.shift();
+            }
+            this.updateDebugPanel();
+        }
     },
 
     updateDebugPanel() {
+        if (!this.config.debugMode) return;
+
         const panel = document.getElementById('debugPanel');
-        if (!panel || !this.config.debugMode) return;
+        if (!panel) return;
 
         const logs = this.state.debugLogs.slice(-20).reverse();
         const html = logs.map(log => {
@@ -101,27 +101,22 @@ const app = {
     // ========================================================================
 
     init() {
-        this.log('🚀 Application starting...', 'info');
-
         this.parseURLParams();
         this.setupEventListeners();
-        this.createDebugPanel();
+
+        if (this.config.debugMode) {
+            this.createDebugPanel();
+            this.log('Debug mode enabled', 'info');
+        }
 
         if (this.config.csvUrl && this.config.formUrl) {
-            this.log('✅ URL params found, starting voting mode', 'success', {
-                csvUrl: this.config.csvUrl.substring(0, 50) + '...',
-                formUrl: this.config.formUrl.substring(0, 50) + '...'
-            });
             this.startVotingMode();
         } else {
-            this.log('ℹ️ No URL params, showing setup screen', 'info');
             this.showSetupScreen();
         }
     },
 
     createDebugPanel() {
-        if (!this.config.debugMode) return;
-
         const panel = document.createElement('div');
         panel.id = 'debugPanel';
         panel.className = 'debug-panel';
@@ -144,11 +139,9 @@ const app = {
     clearDebugLogs() {
         this.state.debugLogs = [];
         this.updateDebugPanel();
-        this.log('🗑️ Debug logs cleared', 'info');
     },
 
     setupEventListeners() {
-        // Setup form
         const setupForm = document.getElementById('setupForm');
         if (setupForm) {
             setupForm.addEventListener('submit', (e) => {
@@ -157,7 +150,6 @@ const app = {
             });
         }
 
-        // Input validation
         const formUrlInput = document.getElementById('formUrl');
         const csvUrlInput = document.getElementById('csvUrl');
 
@@ -171,13 +163,11 @@ const app = {
             csvUrlInput.addEventListener('blur', () => this.validateCsvUrl());
         }
 
-        // Test connection
         const testBtn = document.getElementById('testConnection');
         if (testBtn) {
             testBtn.addEventListener('click', () => this.testConnection());
         }
 
-        // View tabs
         document.querySelectorAll('.view-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 const view = e.target.dataset.view;
@@ -185,7 +175,6 @@ const app = {
             });
         });
 
-        // Guide toggle
         const guideToggle = document.getElementById('guideToggle');
         const guideContent = document.getElementById('guideContent');
         if (guideToggle && guideContent) {
@@ -194,13 +183,11 @@ const app = {
             });
         }
 
-        // Clear history
         const clearHistoryBtn = document.getElementById('clearHistory');
         if (clearHistoryBtn) {
             clearHistoryBtn.addEventListener('click', () => this.clearHistory());
         }
 
-        // Menu toggle
         const menuBtn = document.getElementById('menuBtn');
         const dropdownMenu = document.getElementById('dropdownMenu');
         if (menuBtn && dropdownMenu) {
@@ -214,7 +201,6 @@ const app = {
             });
         }
 
-        // Menu actions
         const viewStatsBtn = document.getElementById('viewStats');
         const copyLinkBtn = document.getElementById('copyLink');
         const newSessionBtn = document.getElementById('newSession');
@@ -223,12 +209,18 @@ const app = {
         if (copyLinkBtn) copyLinkBtn.addEventListener('click', () => this.copyCurrentLink());
         if (newSessionBtn) newSessionBtn.addEventListener('click', () => this.newSession());
 
-        // Back buttons
         const backToSetup = document.getElementById('backToSetup');
         const backToSetupFromError = document.getElementById('backToSetupFromError');
 
         if (backToSetup) backToSetup.addEventListener('click', () => this.newSession());
         if (backToSetupFromError) backToSetupFromError.addEventListener('click', () => this.newSession());
+
+        // Keyboard shortcut for QR toggle
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'q' && e.ctrlKey) {
+                this.toggleQRWidget();
+            }
+        });
     },
 
     parseURLParams() {
@@ -242,7 +234,6 @@ const app = {
             this.config.formUrl = decodeURIComponent(params.get('form'));
         }
 
-        // Debug mode toggle
         if (params.has('debug')) {
             this.config.debugMode = params.get('debug') === 'true';
         }
@@ -328,7 +319,6 @@ const app = {
 
         if (!formUrlValid || !csvUrlValid) {
             this.showToast('❌ Vui lòng nhập link hợp lệ', 'error');
-            this.log('❌ Validation failed', 'error');
             return;
         }
 
@@ -338,55 +328,32 @@ const app = {
         testBtn.disabled = true;
 
         this.showLoadingOverlay(true, 'Đang kiểm tra kết nối...');
-        this.log('🔍 Testing connection...', 'info');
 
         try {
             const csvUrl = document.getElementById('csvUrl').value.trim();
-            this.log('📡 Fetching CSV from: ' + csvUrl.substring(0, 80) + '...', 'info');
-
             const response = await fetch(`${csvUrl}&t=${Date.now()}`, {
                 cache: 'no-store'
             });
-
-            this.log(`📥 Response status: ${response.status} ${response.statusText}`,
-                response.ok ? 'success' : 'error');
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const text = await response.text();
-            this.log(`📄 Received ${text.length} characters`, 'info');
-            this.log('📋 First 200 chars:', 'info', text.substring(0, 200));
-
             const { headers, rows } = this.parseCSV(text);
-
-            this.log('✅ CSV parsed successfully', 'success', {
-                headers: headers,
-                rowCount: rows.length,
-                columnCount: headers.length
-            });
 
             if (headers.length === 0) {
                 throw new Error('CSV không có header (dòng đầu trống)');
             }
 
             if (rows.length === 0) {
-                this.log('⚠️ CSV chưa có response nào', 'warning');
                 this.showToast(`✅ Kết nối OK! Chưa có response. Headers: ${headers.length} columns`, 'success');
             } else {
                 this.showToast(`✅ Kết nối thành công! ${rows.length} responses, ${headers.length} questions`, 'success');
             }
 
-            // Show preview
-            this.showDataPreview(headers, rows);
-
         } catch (error) {
-            console.error('[LiveVote] Test failed:', error);
-            this.log('❌ Test connection failed', 'error', {
-                error: error.message,
-                stack: error.stack
-            });
+            this.log('Test connection failed', 'error', error);
             this.showToast(`❌ Lỗi: ${error.message}`, 'error');
         } finally {
             testBtn.textContent = originalText;
@@ -395,29 +362,19 @@ const app = {
         }
     },
 
-    showDataPreview(headers, rows) {
-        this.log('📊 Data Structure:', 'info', {
-            'Headers': headers,
-            'Sample Row': rows[0] || 'No data yet',
-            'Total Rows': rows.length
-        });
-    },
-
     async handleSetupSubmit() {
         const formUrl = document.getElementById('formUrl').value.trim();
         const csvUrl = document.getElementById('csvUrl').value.trim();
 
         if (!this.validateFormUrl() || !this.validateCsvUrl()) {
             this.showToast('❌ Vui lòng nhập link hợp lệ', 'error');
-            this.log('❌ Form validation failed', 'error');
             return;
         }
 
-        this.log('💾 Saving session to history', 'info');
         this.saveToHistory(formUrl, csvUrl);
 
-        const newUrl = `${window.location.pathname}?form=${encodeURIComponent(formUrl)}&csv=${encodeURIComponent(csvUrl)}&debug=true`;
-        this.log('🔄 Redirecting to: ' + newUrl, 'info');
+        const debugParam = this.config.debugMode ? '&debug=true' : '';
+        const newUrl = `${window.location.pathname}?form=${encodeURIComponent(formUrl)}&csv=${encodeURIComponent(csvUrl)}${debugParam}`;
         window.location.href = newUrl;
     },
 
@@ -446,7 +403,6 @@ const app = {
             const data = localStorage.getItem('votingHistory');
             return data ? JSON.parse(data) : [];
         } catch (error) {
-            this.log('❌ Error reading history', 'error', error);
             return [];
         }
     },
@@ -456,7 +412,6 @@ const app = {
             localStorage.removeItem('votingHistory');
             this.loadRecentSessions();
             this.showToast('🗑️ Đã xóa lịch sử', 'success');
-            this.log('🗑️ History cleared', 'info');
         }
     },
 
@@ -506,7 +461,6 @@ const app = {
             this.validateFormUrl();
             this.validateCsvUrl();
             this.showToast('✅ Đã tải phiên khảo sát', 'success');
-            this.log('✅ Session loaded', 'success', { sessionId });
         }
     },
 
@@ -519,15 +473,23 @@ const app = {
         this.state.sessionStartTime = Date.now();
         this.state.sessionId = Date.now().toString();
 
-        this.log('🎯 Starting voting mode', 'info', {
-            sessionId: this.state.sessionId
-        });
-
         document.getElementById('setupScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         document.getElementById('statsDashboard').classList.remove('active');
 
+        // CRITICAL: Clear any previous errors
+        this.hideError();
+        this.state.errorCount = 0;
+
         this.generateQR();
+
+        // Restore QR widget state
+        const wasMinimized = localStorage.getItem('qrWidgetMinimized') === 'true';
+        if (wasMinimized) {
+            const widget = document.getElementById('qrWidget');
+            if (widget) widget.classList.add('minimized');
+        }
+
         this.showLoadingOverlay(true, 'Đang tải dữ liệu...');
         this.loadData();
         this.startAutoUpdate();
@@ -568,10 +530,14 @@ const app = {
 
     generateQR() {
         const container = document.getElementById('qrcode');
+        if (!container) return;
+
+        // Only generate once
+        if (container.children.length > 0) return;
+
         container.innerHTML = '';
 
         try {
-            this.log('📱 Generating QR code', 'info');
             new QRCode(container, {
                 text: this.config.formUrl,
                 width: 200,
@@ -580,134 +546,118 @@ const app = {
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H
             });
-            this.log('✅ QR code generated', 'success');
         } catch (error) {
-            this.log('❌ QR generation failed', 'error', error);
+            this.log('QR generation failed', 'error', error);
             container.innerHTML = '<p style="color: #ef4444;">Không thể tạo mã QR</p>';
         }
     },
 
+    toggleQRWidget() {
+        const widget = document.getElementById('qrWidget');
+        if (widget) {
+            widget.classList.toggle('minimized');
+
+            const isMinimized = widget.classList.contains('minimized');
+            localStorage.setItem('qrWidgetMinimized', isMinimized);
+        }
+    },
+
     // ========================================================================
-    // Data Loading & Parsing
+    // Data Loading & Parsing (with debounce)
     // ========================================================================
 
     async loadData() {
         if (this.state.isUpdating) {
-            this.log('⏸️ Update already in progress, skipping', 'warning');
+            this.log('Update in progress, skipping', 'warning');
             return;
         }
 
+        // Debounce rapid calls
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+
+        return new Promise((resolve) => {
+            this.debounceTimer = setTimeout(async () => {
+                await this._performUpdate();
+                resolve();
+            }, 300);
+        });
+    },
+
+    async _performUpdate() {
         this.state.isUpdating = true;
         this.showUpdateIndicator(true);
 
-        this.log('📡 Starting data load...', 'info');
+        const wasAutoUpdating = !!this.state.updateTimer;
+        if (wasAutoUpdating) {
+            clearInterval(this.state.updateTimer);
+        }
 
         try {
             const timestamp = Date.now();
             const url = `${this.config.csvUrl}${this.config.csvUrl.includes('?') ? '&' : '?'}t=${timestamp}`;
 
-            this.log('🌐 Fetching: ' + url.substring(0, 100) + '...', 'info');
-
             const response = await fetch(url, {
                 cache: 'no-store'
             });
-
-            this.log(`📥 Response: ${response.status} ${response.statusText}`,
-                response.ok ? 'success' : 'error');
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const text = await response.text();
-            this.log(`📄 Received ${text.length} characters`, 'info');
-
             const { headers, rows } = this.parseCSV(text);
 
-            this.log('📊 Parsed data', 'success', {
-                headers: headers.length,
-                rows: rows.length,
-                sampleHeaders: headers.slice(0, 3)
-            });
-
-            // CRITICAL FIX: Always update UI if we have no questions yet
             const needsInitialRender = this.state.questions.length === 0;
             const newDataHash = this.hashData(rows);
             const hasChanged = this.state.previousData !== newDataHash;
 
-            this.log(`🔍 Render decision:`, 'info', {
-                needsInitialRender,
-                hasChanged,
-                currentQuestionsCount: this.state.questions.length,
-                parsedHeadersCount: headers.length,
-                previousHash: this.state.previousData,
-                newHash: newDataHash
-            });
-
-            // Render if: (1) No questions yet OR (2) Data changed
             if (needsInitialRender || hasChanged) {
-                this.log('✨ Processing data and updating UI...', 'info');
-
-                // Process data
                 this.processData(headers, rows);
 
-                // Log processed state
-                this.log('📋 Processed state:', 'success', {
-                    questionsCount: this.state.questions.length,
-                    responsesCount: this.state.responses.length,
-                    questions: this.state.questions.map(q => q.text)
-                });
+                await new Promise(resolve => requestAnimationFrame(resolve));
 
-                // FORCE update UI
                 this.updateUI();
 
-                // Update hash AFTER successful render
+                await new Promise(resolve => setTimeout(resolve, 100));
                 this.state.previousData = newDataHash;
 
-                // Update session stats
                 this.updateSessionStats();
 
                 if (this.state.lastUpdateTime) {
-                    this.showToast('✅ Dữ liệu đã cập nhật', 'success', 2000);
+                    this.showToast('✅ Dữ liệu đã cập nhật', 'success', 1500);
                 }
-
-                this.log('✅ UI updated successfully', 'success');
-            } else {
-                this.log('ℹ️ No changes detected AND already rendered, skipping', 'info');
             }
 
-            // Success
+            // CRITICAL: Always hide error on success
             this.hideError();
             this.state.errorCount = 0;
             this.state.lastUpdateTime = Date.now();
 
+            // CRITICAL: Force update stats even if no data change
+            this.updateStats();
+
         } catch (error) {
-            this.log('❌ Load data failed', 'error', {
-                message: error.message,
-                stack: error.stack
-            });
+            this.log('Load data failed', 'error', error);
             this.handleLoadError(error);
         } finally {
             this.state.isUpdating = false;
             this.showUpdateIndicator(false);
             this.showLoadingOverlay(false);
+
+            if (wasAutoUpdating) {
+                this.startAutoUpdate();
+            }
         }
     },
 
     parseCSV(text) {
-        this.log('🔧 Starting CSV parse...', 'info');
-
         try {
-            // Clean BOM and normalize
             text = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             const lines = text.split('\n').filter(line => line.trim());
 
-            this.log(`📋 Found ${lines.length} lines`, 'info');
-
-            if (lines.length === 0) {
-                this.log('❌ CSV is empty', 'error');
-                return { headers: [], rows: [] };
-            }
+            if (lines.length === 0) return { headers: [], rows: [] };
 
             const parseRow = (row) => {
                 const result = [];
@@ -736,35 +686,19 @@ const app = {
             };
 
             const headers = parseRow(lines[0]);
-            this.log('📌 Headers parsed', 'success', {
-                count: headers.length,
-                headers: headers
-            });
-
             const rows = lines.slice(1)
                 .map(line => parseRow(line))
                 .filter(row => row.length === headers.length && row.some(cell => cell));
 
-            this.log('✅ CSV parsed successfully', 'success', {
-                headers: headers.length,
-                rows: rows.length
-            });
-
             return { headers, rows };
 
         } catch (error) {
-            this.log('❌ CSV parse error', 'error', {
-                message: error.message,
-                stack: error.stack
-            });
+            this.log('CSV parse error', 'error', error);
             return { headers: [], rows: [] };
         }
     },
 
     processData(headers, rows) {
-        this.log('⚙️ Processing data...', 'info');
-
-        // Skip first column (Timestamp) and process questions
         this.state.questions = headers.slice(1).map((header, idx) => ({
             id: idx + 1,
             text: header || `Câu hỏi ${idx + 1}`,
@@ -772,11 +706,6 @@ const app = {
         }));
 
         this.state.responses = rows;
-
-        this.log('✅ Data processed', 'success', {
-            questions: this.state.questions.map(q => q.text),
-            responseCount: rows.length
-        });
     },
 
     hashData(data) {
@@ -786,23 +715,19 @@ const app = {
     handleLoadError(error) {
         this.state.errorCount++;
 
-        this.log(`❌ Error #${this.state.errorCount}/${this.config.maxRetries}`, 'error');
-
         if (this.state.errorCount > this.config.maxRetries) {
             const errorMsg = `Không thể tải dữ liệu sau ${this.config.maxRetries} lần thử. 
 
 Chi tiết lỗi: ${error.message}
 
 Kiểm tra:
-1. Google Sheets đã Publish to web chưa? (File → Share → Publish to web → CSV)
+1. Google Sheets đã Publish to web chưa?
 2. Link CSV có chứa '/pub?' hoặc '/export?' không?
-3. Sheet có dữ liệu chưa? (ít nhất phải có header row)
-4. Kiểm tra Debug Console bên dưới để xem chi tiết`;
+3. Sheet có dữ liệu chưa?`;
 
             this.showError(errorMsg);
             this.showToast('❌ Lỗi kết nối dữ liệu', 'error');
         } else {
-            this.log(`🔄 Retrying in ${this.config.retryDelay * this.state.errorCount}ms...`, 'warning');
             setTimeout(() => this.loadData(), this.config.retryDelay * this.state.errorCount);
         }
     },
@@ -812,11 +737,21 @@ Kiểm tra:
     // ========================================================================
 
     updateUI() {
-        this.log('🎨 Updating UI...', 'info');
-        this.updateNavigation();
-        this.updateQuestions();
-        this.updateStats();
-        this.log('✅ UI update complete', 'success');
+        this.log('Updating UI...', 'info');
+
+        try {
+            this.updateNavigation();
+            this.updateQuestions();
+            this.updateStats();
+
+            // CRITICAL: Hide error if we successfully updated UI with data
+            if (this.state.questions.length > 0) {
+                this.hideError();
+            }
+        } catch (error) {
+            this.log('UI update error', 'error', error);
+            this.showError('Lỗi hiển thị dữ liệu: ' + error.message);
+        }
     },
 
     updateNavigation() {
@@ -840,136 +775,52 @@ Kiểm tra:
     },
 
     updateQuestions() {
-        this.log('🎨 updateQuestions() called', 'info', {
-            currentView: this.state.currentView,
-            selectedQuestion: this.state.selectedQuestion,
-            totalQuestions: this.state.questions.length
-        });
-
         const grid = document.getElementById('questionsGrid');
-        if (!grid) {
-            this.log('❌ questionsGrid element not found!', 'error');
-            return;
-        }
+        if (!grid) return;
 
         let questionsToShow = [];
 
-        // Determine which questions to show
         if (this.state.currentView === 'single') {
             if (this.state.questions[this.state.selectedQuestion]) {
                 questionsToShow = [this.state.questions[this.state.selectedQuestion]];
-                this.log('📍 Single view mode', 'info', {
-                    selectedIndex: this.state.selectedQuestion,
-                    question: this.state.questions[this.state.selectedQuestion].text
-                });
-            } else {
-                this.log('⚠️ Selected question index out of bounds', 'warning', {
-                    selectedQuestion: this.state.selectedQuestion,
-                    availableQuestions: this.state.questions.length
-                });
             }
         } else {
             questionsToShow = this.state.questions;
-            this.log('📋 All view mode', 'info', {
-                questionCount: questionsToShow.length
-            });
         }
 
-        // CRITICAL: Check if we have questions to show
         if (questionsToShow.length === 0) {
-            this.log('⚠️ No questions to show!', 'warning', {
-                totalQuestions: this.state.questions.length,
-                currentView: this.state.currentView,
-                stateQuestions: this.state.questions
-            });
-
             grid.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div>Chưa có dữ liệu câu hỏi.</div>
-                <div style="margin-top: 10px; font-size: 0.9em; color: #64748b;">
-                    Đã parse ${this.state.questions.length} câu hỏi từ CSV.
-                    Kiểm tra Debug Console bên dưới để xem chi tiết.
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <div>Chưa có dữ liệu câu hỏi</div>
                 </div>
-            </div>
-        `;
+            `;
             return;
         }
 
-        // Render questions
-        this.log('🔨 Rendering questions...', 'info', {
-            count: questionsToShow.length
-        });
-
         try {
-            const renderedCards = [];
+            const newHtml = questionsToShow.map(question =>
+                this.renderQuestionCard(question)
+            ).join('');
 
-            for (const question of questionsToShow) {
-                this.log(`📝 Rendering question ${question.id}`, 'info', {
-                    text: question.text,
-                    columnIndex: question.columnIndex
-                });
-
-                const card = this.renderQuestionCard(question);
-                renderedCards.push(card);
-
-                this.log(`✅ Question ${question.id} rendered, HTML length: ${card.length}`, 'success');
-            }
-
-            const newHtml = renderedCards.join('');
-
-            this.log('📏 Total HTML length:', 'info', { length: newHtml.length });
-
-            // CRITICAL FIX: Use requestAnimationFrame to ensure DOM is ready
             requestAnimationFrame(() => {
                 grid.innerHTML = newHtml;
-
-                this.log('✅ Grid innerHTML updated', 'success', {
-                    actualLength: grid.innerHTML.length,
-                    childrenCount: grid.children.length
-                });
-
-                // Verify render
-                setTimeout(() => {
-                    const hasCards = grid.querySelector('.question-card');
-                    if (!hasCards) {
-                        this.log('❌ WARNING: No .question-card found after render!', 'error', {
-                            innerHTML: grid.innerHTML.substring(0, 200)
-                        });
-                    } else {
-                        this.log('✅ Verification passed: question-card elements exist', 'success');
-                    }
-                }, 100);
             });
 
         } catch (error) {
-            this.log('❌ Render error', 'error', {
-                message: error.message,
-                stack: error.stack
-            });
-
-            // Fallback rendering
+            this.log('Render error', 'error', error);
             grid.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">⚠️</div>
-                <div>Lỗi khi render câu hỏi</div>
-                <div style="margin-top: 10px; font-size: 0.9em; color: #ef4444;">
-                    ${error.message}
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <div>Lỗi khi render câu hỏi</div>
                 </div>
-            </div>
-        `;
+            `;
         }
     },
 
     renderQuestionCard(question) {
         const responses = this.getQuestionResponses(question.columnIndex);
         const totalCount = responses.reduce((sum, r) => sum + r.count, 0);
-
-        this.log(`📊 Rendering Q${question.id}`, 'info', {
-            question: question.text,
-            responses: totalCount,
-            options: responses.length
-        });
 
         const votesHtml = responses.length > 0
             ? responses.map((response, idx) => this.renderVoteItem(response, idx)).join('')
@@ -1022,24 +873,6 @@ Kiểm tra:
         `;
     },
 
-    updateVoteBarsSmooth(currentGrid, newGrid) {
-        const currentBars = currentGrid.querySelectorAll('.vote-bar');
-        const newBars = newGrid.querySelectorAll('.vote-bar');
-
-        currentBars.forEach((bar, index) => {
-            if (newBars[index]) {
-                const newPercentage = newBars[index].dataset.percentage;
-                const currentPercentage = bar.dataset.percentage;
-
-                if (newPercentage !== currentPercentage) {
-                    bar.style.width = newPercentage + '%';
-                    bar.textContent = newPercentage + '%';
-                    bar.dataset.percentage = newPercentage;
-                }
-            }
-        });
-    },
-
     getQuestionResponses(columnIndex) {
         const votes = {};
         let total = 0;
@@ -1052,15 +885,13 @@ Kiểm tra:
             }
         });
 
-        const responses = Object.entries(votes)
+        return Object.entries(votes)
             .map(([option, count]) => ({
                 option,
                 count,
                 percentage: total > 0 ? ((count / total) * 100).toFixed(1) : '0'
             }))
             .sort((a, b) => b.count - a.count);
-
-        return responses;
     },
 
     updateStats() {
@@ -1068,8 +899,16 @@ Kiểm tra:
         const totalQuestionsElem = document.getElementById('totalQuestions');
         const updateTimeElem = document.getElementById('updateTime');
 
-        if (totalVotesElem) this.animateNumber(totalVotesElem, this.state.responses.length);
-        if (totalQuestionsElem) this.animateNumber(totalQuestionsElem, this.state.questions.length);
+        // CRITICAL: Always update, even if value is 0
+        if (totalVotesElem) {
+            const newValue = this.state.responses.length;
+            this.animateNumber(totalVotesElem, newValue);
+        }
+
+        if (totalQuestionsElem) {
+            const newValue = this.state.questions.length;
+            this.animateNumber(totalQuestionsElem, newValue);
+        }
 
         if (updateTimeElem) {
             updateTimeElem.textContent = new Date().toLocaleTimeString('vi-VN', {
@@ -1080,12 +919,14 @@ Kiểm tra:
     },
 
     animateNumber(element, newValue) {
+        if (!element) return;
+
         const oldValue = parseInt(element.textContent) || 0;
-        if (oldValue !== newValue) {
-            element.classList.add('updating');
-            element.textContent = newValue;
-            setTimeout(() => element.classList.remove('updating'), 400);
-        }
+
+        // Always update, even if same value (to ensure consistency)
+        element.classList.add('updating');
+        element.textContent = newValue;
+        setTimeout(() => element.classList.remove('updating'), 400);
     },
 
     // ========================================================================
@@ -1167,7 +1008,8 @@ Kiểm tra:
         const session = sessions.find(s => s.id === sessionId);
 
         if (session) {
-            const url = `${window.location.pathname}?form=${encodeURIComponent(session.formUrl)}&csv=${encodeURIComponent(session.csvUrl)}&debug=true`;
+            const debugParam = this.config.debugMode ? '&debug=true' : '';
+            const url = `${window.location.pathname}?form=${encodeURIComponent(session.formUrl)}&csv=${encodeURIComponent(session.csvUrl)}${debugParam}`;
             window.location.href = url;
         }
     },
@@ -1193,13 +1035,11 @@ Kiểm tra:
         if (this.state.selectedQuestion === index) return;
 
         this.state.selectedQuestion = index;
-        this.log(`📍 Selected question ${index + 1}`, 'info');
         this.updateUI();
     },
 
     setView(view, event) {
         this.state.currentView = view;
-        this.log(`👁️ View changed to: ${view}`, 'info');
 
         document.querySelectorAll('.view-tab').forEach(tab => {
             tab.classList.remove('active');
@@ -1213,7 +1053,6 @@ Kiểm tra:
         const btn = document.getElementById('refreshBtn');
         btn.classList.add('loading');
 
-        this.log('🔄 Force refresh triggered', 'info');
         this.loadData().finally(() => {
             setTimeout(() => btn.classList.remove('loading'), 500);
         });
@@ -1223,18 +1062,16 @@ Kiểm tra:
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
             this.showToast('✅ Đã copy link chia sẻ', 'success');
-            this.log('📋 Link copied', 'success');
         });
     },
 
     newSession() {
-        this.log('➕ Starting new session', 'info');
-
         if (this.state.updateTimer) {
             clearInterval(this.state.updateTimer);
         }
 
-        window.location.href = window.location.pathname + '?debug=true';
+        const debugParam = this.config.debugMode ? '?debug=true' : '';
+        window.location.href = window.location.pathname + debugParam;
     },
 
     // ========================================================================
@@ -1248,12 +1085,9 @@ Kiểm tra:
 
         this.state.updateTimer = setInterval(() => {
             if (!this.state.isUpdating && this.state.mode === 'voting') {
-                this.log('⏰ Auto-update triggered', 'info');
                 this.loadData();
             }
         }, this.config.updateInterval);
-
-        this.log(`⏰ Auto-update started (every ${this.config.updateInterval / 1000}s)`, 'success');
     },
 
     // ========================================================================
@@ -1325,49 +1159,3 @@ if (document.readyState === 'loading') {
 } else {
     app.init();
 }
-
-// ========================================================================
-// Debug Helpers (thêm vào cuối file)
-// ========================================================================
-
-// Force render for debugging
-window.forceRender = function () {
-    console.log('🔧 Force render triggered');
-    app.updateUI();
-};
-
-// Inspect current state
-window.inspectState = function () {
-    console.log('🔍 Current State:', {
-        mode: app.state.mode,
-        questions: app.state.questions,
-        responses: app.state.responses,
-        currentView: app.state.currentView,
-        selectedQuestion: app.state.selectedQuestion
-    });
-
-    // Try to render manually
-    if (app.state.questions.length > 0) {
-        console.log('Attempting manual render...');
-        app.updateQuestions();
-    }
-};
-
-// Test with sample data
-window.injectTestData = function () {
-    console.log('💉 Injecting test data...');
-
-    const headers = ['Timestamp', 'Bạn nghĩ sao về việc A?', 'Bạn thích gì?'];
-    const rows = [
-        ['2025-01-20 10:00', 'Rất tốt', 'Pizza'],
-        ['2025-01-20 10:01', 'Tốt', 'Burger']
-    ];
-
-    app.processData(headers, rows);
-    app.log('✅ Test data injected', 'success', {
-        questions: app.state.questions,
-        responses: app.state.responses
-    });
-
-    app.updateUI();
-};

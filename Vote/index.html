@@ -138,7 +138,7 @@
                     <div class="stat-badge">
                         <span>📋</span>
                         <span class="stat-value" id="totalQuestions">0</span>
-                        <span>câu hỏi</span>
+                        <span>câu</span>
                     </div>
                     <div class="stat-badge">
                         <span>👥</span>
@@ -151,7 +151,6 @@
                     </div>
                     <button class="refresh-btn" id="refreshBtn" onclick="app.forceRefresh()">
                         <span class="refresh-icon">🔄</span>
-                        <span>Làm mới</span>
                     </button>
                     <button class="menu-btn" id="menuBtn">⚙️</button>
                 </div>
@@ -164,33 +163,21 @@
                 <button class="menu-item" id="newSession">➕ Phiên mới</button>
             </div>
 
+            <!-- Floating QR Widget -->
+            <div class="qr-widget" id="qrWidget">
+                <div class="qr-widget-header" onclick="app.toggleQRWidget()">
+                    <span class="qr-widget-title">📱 Quét để tham gia</span>
+                    <button class="qr-widget-toggle">−</button>
+                </div>
+                <div class="qr-widget-body">
+                    <div id="qrcode"></div>
+                    <div class="qr-widget-hint">Hoặc truy cập link trên điện thoại</div>
+                </div>
+            </div>
+
             <!-- Main Layout -->
             <div class="main-layout">
-                <!-- Sidebar -->
-                <div class="sidebar">
-                    <!-- QR Card -->
-                    <div class="qr-card">
-                        <h3 class="qr-title">📱 Quét để tham gia</h3>
-                        <div id="qrcode"></div>
-                        <div class="qr-footer">
-                            <small>Hoặc truy cập link trên điện thoại</small>
-                        </div>
-                    </div>
-
-                    <!-- Question Navigation -->
-                    <div class="nav-card">
-                        <div class="nav-title">DANH SÁCH CÂU HỎI</div>
-                        <div class="question-nav" id="questionNav">
-                            <div class="skeleton-loader">
-                                <div class="skeleton-item"></div>
-                                <div class="skeleton-item"></div>
-                                <div class="skeleton-item"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Content Area -->
+                <!-- Content Area Full Width -->
                 <div class="content-area">
                     <!-- View Controls -->
                     <div class="view-controls">
@@ -204,7 +191,7 @@
                         </div>
                     </div>
 
-                    <!-- Questions Grid -->
+                    <!-- Questions Grid (2 columns) -->
                     <div class="questions-grid" id="questionsGrid">
                         <div class="empty-state">
                             <div class="empty-icon">📥</div>
