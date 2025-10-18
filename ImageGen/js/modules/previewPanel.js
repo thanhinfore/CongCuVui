@@ -1,5 +1,5 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v3 - Optimized ZIP)
+   PREVIEWPANEL.JS - Preview Panel Module (v4 - Markdown Bold + Fixed ZIP)
    ===================================================== */
 
 import { utils } from './utils.js';
@@ -11,7 +11,6 @@ export class PreviewPanel {
         this.textConfigs = [];
         this.lazyLoadObserver = null;
         this.canvasPool = [];
-        this.canvasCache = new Map(); // Cache cho canvas đã render
 
         this.initialize();
     }
@@ -82,9 +81,6 @@ export class PreviewPanel {
         if (this.lazyLoadObserver) {
             this.lazyLoadObserver.disconnect();
         }
-
-        // Clear canvas cache khi render lại
-        this.canvasCache.clear();
     }
 
     showEmptyState() {
@@ -241,7 +237,9 @@ export class PreviewPanel {
         });
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        this.renderTextOnCanvas(ctx, canvas, config);
+
+        const previewScale = canvas.width / img.width;
+        this.renderTextCommon(ctx, canvas, config, previewScale);
 
         return canvas;
     }
@@ -270,179 +268,311 @@ export class PreviewPanel {
         };
     }
 
-    renderTextOnCanvas(ctx, canvas, config) {
+    /**
+     * Parse markdown-style bold text: **text** becomes bold
+     */
+    parseMarkdown(text) {
+        const segments = [];
+        let currentText = '';
+        let inBold = false;
+        let i = 0;
+
+        while (i < text.length) {
+            if (text[i] === '*' && text[i + 1] === '*') {
+                if (currentText) {
+                    segments.push({ text: currentText, bold: inBold });
+                    currentText = '';
+                }
+                inBold = !inBold;
+                i += 2;
+            } else {
+                currentText += text[i];
+                i++;
+            }
+        }
+
+        if (currentText) {
+            segments.push({ text: currentText, bold: inBold });
+        }
+
+        return segments.length > 0 ? segments : [{ text: text, bold: false }];
+    }
+
+    /**
+     * Wrap text with markdown bold support
+     */
+    wrapStyledText(ctx, text, maxWidth, fontSize, fontFamily, baseWeight, fontStyle) {
+        const userLines = text.split('\\n');
+        const wrappedLines = [];
+
+        userLines.forEach(userLine => {
+            if (!userLine.trim()) {
+                wrappedLines.push({ segments: [{ text: '', bold: false }] });
+                return;
+            }
+
+            const segments = this.parseMarkdown(userLine);
+            let currentLine = [];
+            let currentWidth = 0;
+
+            segments.forEach(segment => {
+                const words = segment.text.split(' ');
+
+                words.forEach((word, wordIndex) => {
+                    const isLastWord = wordIndex === words.length - 1;
+                    const wordText = isLastWord ? word : word + ' ';
+
+                    const weight = segment.bold ? 'bold' : baseWeight;
+                    ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+                    const wordWidth = ctx.measureText(wordText).width;
+
+                    if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
+                        wrappedLines.push({ segments: this.mergeAdjacentSegments(currentLine) });
+                        currentLine = [{ text: wordText, bold: segment.bold }];
+                        currentWidth = wordWidth;
+                    } else {
+                        if (currentLine.length > 0 &&
+                            currentLine[currentLine.length - 1].bold === segment.bold) {
+                            currentLine[currentLine.length - 1].text += wordText;
+                        } else {
+                            currentLine.push({ text: wordText, bold: segment.bold });
+                        }
+                        currentWidth += wordWidth;
+                    }
+                });
+            });
+
+            if (currentLine.length > 0) {
+                wrappedLines.push({ segments: this.mergeAdjacentSegments(currentLine) });
+            }
+        });
+
+        return wrappedLines;
+    }
+
+    mergeAdjacentSegments(segments) {
+        if (segments.length <= 1) return segments;
+
+        const merged = [];
+        let current = { ...segments[0] };
+
+        for (let i = 1; i < segments.length; i++) {
+            if (segments[i].bold === current.bold) {
+                current.text += segments[i].text;
+            } else {
+                merged.push(current);
+                current = { ...segments[i] };
+            }
+        }
+        merged.push(current);
+
+        return merged;
+    }
+
+    renderStyledLine(ctx, line, x, y, fontSize, color, effects, fontFamily, baseWeight, fontStyle) {
+        let totalWidth = 0;
+        line.segments.forEach(segment => {
+            const weight = segment.bold ? 'bold' : baseWeight;
+            ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+            totalWidth += ctx.measureText(segment.text).width;
+        });
+
+        let currentX = x - totalWidth / 2;
+
+        if (effects.textShadow) {
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = effects.shadowBlur;
+            ctx.shadowOffsetX = effects.shadowOffsetX;
+            ctx.shadowOffsetY = effects.shadowOffsetY;
+        }
+
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+
+        line.segments.forEach(segment => {
+            const weight = segment.bold ? 'bold' : baseWeight;
+            ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+
+            if (effects.textBorder) {
+                ctx.strokeText(segment.text, currentX, y);
+            }
+
+            ctx.fillText(segment.text, currentX, y);
+
+            currentX += ctx.measureText(segment.text).width;
+        });
+
+        if (effects.textUnderline) {
+            const startX = x - totalWidth / 2;
+            const underlineY = y + fontSize * 0.25;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = Math.max(1, fontSize * 0.1);
+            ctx.beginPath();
+            ctx.moveTo(startX, underlineY);
+            ctx.lineTo(startX + totalWidth, underlineY);
+            ctx.stroke();
+        }
+    }
+
+    renderTextCommon(ctx, canvas, config, scaleFactor) {
         const lines = config.text.split(':');
         const mainText = lines[0].trim();
         const subtitle = lines[1]?.trim() || '';
 
-        const mainFontSizeValue = this.getMainFontSize();
-        const subFontSizeValue = this.getSubFontSize();
+        const baseMainFontSize = this.getMainFontSize();
+        const baseSubFontSize = this.getSubFontSize();
 
-        const scale = 200 / 1080;
-        const mainFontSize = Math.round(mainFontSizeValue * scale);
-        const subFontSize = Math.round(subFontSizeValue * scale);
+        const mainFontSize = Math.round(baseMainFontSize * scaleFactor);
+        const subFontSize = Math.round(baseSubFontSize * scaleFactor);
 
         const effects = this.getFontEffects();
 
+        const LINE_SPACING = 2.0;
+        const MAIN_PADDING = 1.5;
+
         let y;
         switch (config.position) {
-            case 'top': y = mainFontSize * 1.5; break;
-            case 'upper-middle': y = canvas.height * 0.25; break;
-            case 'middle': y = canvas.height * 0.5; break;
-            case 'lower-middle': y = canvas.height * 0.75; break;
-            case 'bottom': y = canvas.height - mainFontSize * 2.5; break;
-            default: y = canvas.height - mainFontSize * 2.5;
+            case 'top':
+                y = mainFontSize * MAIN_PADDING;
+                break;
+            case 'upper-middle':
+                y = canvas.height * 0.25 - mainFontSize;
+                break;
+            case 'middle':
+                y = canvas.height * 0.5 - mainFontSize;
+                break;
+            case 'lower-middle':
+                y = canvas.height * 0.75 - mainFontSize;
+                break;
+            case 'bottom':
+            default:
+                y = canvas.height - mainFontSize * (LINE_SPACING + 2);
+                break;
         }
 
-        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         const canvasFont = selectedFont.replace(/['"]/g, '');
 
-        // ===== DRAW MAIN TEXT =====
-        if (mainText) {
-            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${mainFontSize}px ${canvasFont}`;
-            ctx.font = fontStr;
-            ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
+        const renderEffects = {
+            textShadow: effects.textShadow,
+            shadowBlur: Math.max(1, effects.shadowBlur * scaleFactor * 2),
+            shadowOffsetX: Math.max(1, 3 * scaleFactor),
+            shadowOffsetY: Math.max(1, 3 * scaleFactor),
+            textBorder: effects.textBorder,
+            borderWidth: Math.max(1, effects.borderWidth * scaleFactor * 2),
+            textUnderline: effects.textUnderline
+        };
 
-            if (effects.textShadow) {
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = effects.shadowBlur;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-            } else {
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-            }
-
-            if (effects.textBorder) {
-                ctx.lineWidth = effects.borderWidth;
-                ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-            }
-
-            const mainLines = this.wrapText(ctx, mainText, canvas.width * 0.9);
-            mainLines.forEach((line, index) => {
-                const lineY = y + (index * mainFontSize * 1.8);
-
-                if (effects.textBorder) {
-                    ctx.strokeText(line, canvas.width / 2, lineY);
-                }
-
-                ctx.fillText(line, canvas.width / 2, lineY);
-
-                if (effects.textUnderline) {
-                    const metrics = ctx.measureText(line);
-                    const startX = canvas.width / 2 - metrics.width / 2;
-                    ctx.strokeStyle = this.DOM.colorPicker?.value || '#FFFFFF';
-                    ctx.lineWidth = Math.max(1, mainFontSize * 0.08);
-                    ctx.beginPath();
-                    ctx.moveTo(startX, lineY + mainFontSize * 0.2);
-                    ctx.lineTo(startX + metrics.width, lineY + mainFontSize * 0.2);
-                    ctx.stroke();
-                }
-            });
-
-            y += mainLines.length * mainFontSize * 1.8;
+        if (renderEffects.textBorder) {
+            ctx.lineWidth = renderEffects.borderWidth;
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
         }
 
-        // ===== DRAW SUBTITLE =====
+        if (mainText) {
+            const mainColor = this.DOM.colorPicker?.value || '#FFFFFF';
+            const mainLines = this.wrapStyledText(
+                ctx,
+                mainText,
+                canvas.width * 0.9,
+                mainFontSize,
+                canvasFont,
+                effects.fontWeight,
+                effects.fontStyle
+            );
+
+            mainLines.forEach((line, index) => {
+                const lineY = y + (index * mainFontSize * LINE_SPACING);
+                this.renderStyledLine(
+                    ctx,
+                    line,
+                    canvas.width / 2,
+                    lineY,
+                    mainFontSize,
+                    mainColor,
+                    renderEffects,
+                    canvasFont,
+                    effects.fontWeight,
+                    effects.fontStyle
+                );
+            });
+
+            y += mainLines.length * mainFontSize * LINE_SPACING + mainFontSize * 0.5;
+        }
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
         if (subtitle) {
-            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${subFontSize}px ${canvasFont}`;
-            ctx.font = fontStr;
+            const subColor = this.DOM.subColorPicker?.value || '#FFFFFF';
+            const subLines = this.wrapStyledText(
+                ctx,
+                subtitle,
+                canvas.width * 0.85,
+                subFontSize,
+                canvasFont,
+                effects.fontWeight,
+                effects.fontStyle
+            );
 
             if (this.DOM.subtitleBgCheckbox?.checked) {
+                const padding = Math.max(4, subFontSize * 0.5);
+
+                let maxWidth = 0;
+                subLines.forEach(line => {
+                    let lineWidth = 0;
+                    line.segments.forEach(segment => {
+                        const weight = segment.bold ? 'bold' : effects.fontWeight;
+                        ctx.font = `${effects.fontStyle} ${weight} ${subFontSize}px ${canvasFont}`;
+                        lineWidth += ctx.measureText(segment.text).width;
+                    });
+                    maxWidth = Math.max(maxWidth, lineWidth);
+                });
+
                 const bgColor = utils.hexToRGBA(
                     this.DOM.bgColorPicker?.value || '#000000',
                     this.DOM.bgOpacity?.value || '28'
                 );
 
-                const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
-                const padding = Math.max(2, subFontSize * 0.3);
-                let maxWidth = 0;
-
-                subLines.forEach(line => {
-                    maxWidth = Math.max(maxWidth, ctx.measureText(line).width);
-                });
+                const bgHeight = subLines.length * subFontSize * 1.5 + padding * 2;
+                const borderRadius = Math.max(2, subFontSize * 0.25);
 
                 utils.canvas.drawRoundedRect(
                     ctx,
                     (canvas.width - maxWidth) / 2 - padding,
-                    y - padding,
+                    y - subFontSize * 0.5 - padding,
                     maxWidth + padding * 2,
-                    subLines.length * subFontSize * 1.5 + padding * 2,
-                    Math.max(2, subFontSize * 0.2),
+                    bgHeight,
+                    borderRadius,
                     bgColor
                 );
             }
 
-            if (effects.textShadow) {
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = effects.shadowBlur;
-                ctx.shadowOffsetX = 2;
-                ctx.shadowOffsetY = 2;
-            }
-
-            if (effects.textBorder) {
-                ctx.lineWidth = effects.borderWidth;
-                ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-            }
-
-            ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-
-            const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
             subLines.forEach((line, index) => {
-                const lineY = y + subFontSize + (index * subFontSize * 1.5);
-
-                if (effects.textBorder) {
-                    ctx.strokeText(line, canvas.width / 2, lineY);
-                }
-
-                ctx.fillText(line, canvas.width / 2, lineY);
-
-                if (effects.textUnderline) {
-                    const metrics = ctx.measureText(line);
-                    const startX = canvas.width / 2 - metrics.width / 2;
-                    ctx.strokeStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-                    ctx.lineWidth = Math.max(1, subFontSize * 0.08);
-                    ctx.beginPath();
-                    ctx.moveTo(startX, lineY + subFontSize * 0.2);
-                    ctx.lineTo(startX + metrics.width, lineY + subFontSize * 0.2);
-                    ctx.stroke();
-                }
+                const lineY = y + (index * subFontSize * 1.5);
+                this.renderStyledLine(
+                    ctx,
+                    line,
+                    canvas.width / 2,
+                    lineY,
+                    subFontSize,
+                    subColor,
+                    renderEffects,
+                    canvasFont,
+                    effects.fontWeight,
+                    effects.fontStyle
+                );
             });
         }
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
-    }
-
-    wrapText(ctx, text, maxWidth) {
-        const userLines = text.split('\\n');
-        const allLines = [];
-
-        userLines.forEach(userLine => {
-            const words = userLine.trim().split(' ');
-            let currentLine = '';
-
-            words.forEach(word => {
-                const testLine = currentLine + word + ' ';
-                const metrics = ctx.measureText(testLine);
-
-                if (metrics.width > maxWidth && currentLine !== '') {
-                    allLines.push(currentLine.trim());
-                    currentLine = word + ' ';
-                } else {
-                    currentLine = testLine;
-                }
-            });
-
-            if (currentLine.trim()) {
-                allLines.push(currentLine.trim());
-            }
-        });
-
-        return allLines;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
 
     async downloadSingleImage(config, button) {
@@ -455,20 +585,29 @@ export class PreviewPanel {
 
             const blob = await new Promise(resolve => {
                 const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                const quality = format === 'png' ? undefined : 0.8; // Giảm từ 0.85
+                const quality = format === 'png' ? undefined : 0.85;
                 canvas.toBlob(resolve, mimeType, quality);
             });
 
+            // Create download link with proper DOM manipulation
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = `image_${config.textIndex + 1}.${format}`;
+            link.style.display = 'none';
+
+            // Append to body, click, then remove
+            document.body.appendChild(link);
             link.click();
 
-            setTimeout(() => URL.revokeObjectURL(link.href), 100);
+            // Delay cleanup
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }, 100);
 
         } catch (error) {
             console.error('Download error:', error);
-            this.showErrorNotification('Failed to download image');
+            alert('Failed to download image');
         } finally {
             button.disabled = false;
             button.innerHTML = `
@@ -480,217 +619,62 @@ export class PreviewPanel {
         }
     }
 
-    getConfigHash(config) {
-        // Tạo hash key cho cache
-        return JSON.stringify({
-            imageIndex: config.imageIndex,
-            text: config.text,
-            position: config.position,
-            mainFont: this.getMainFontSize(),
-            subFont: this.getSubFontSize(),
-            effects: this.getFontEffects(),
-            colors: {
-                main: this.DOM.colorPicker?.value,
-                sub: this.DOM.subColorPicker?.value,
-                bg: this.DOM.bgColorPicker?.value
-            }
-        });
-    }
-
     async generateFullCanvas(config) {
-        // Check cache trước
-        const cacheKey = this.getConfigHash(config);
-        if (this.canvasCache.has(cacheKey)) {
-            const cachedCanvas = this.canvasCache.get(cacheKey);
-            // Clone canvas để tránh bị modify
-            const clonedCanvas = utils.canvas.createOffscreenCanvas(cachedCanvas.width, cachedCanvas.height);
-            const ctx = clonedCanvas.getContext('2d');
-            ctx.drawImage(cachedCanvas, 0, 0);
-            return clonedCanvas;
-        }
-
         const { img } = this.state.images[config.imageIndex];
 
         const maxWidth = 1080;
-        const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+        const scaleFactor = img.width > maxWidth ? maxWidth / img.width : 1;
 
         const canvas = utils.canvas.createOffscreenCanvas(
             Math.min(img.width, maxWidth),
-            Math.round(img.height * scale)
+            Math.round(img.height * scaleFactor)
         );
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', {
+            willReadFrequently: false,
+            alpha: false
+        });
+
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        this.renderFullText(ctx, canvas, config);
+        const textScaleFactor = canvas.width / img.width;
 
-        // Lưu vào cache
-        this.canvasCache.set(cacheKey, canvas);
+        this.renderTextCommon(ctx, canvas, config, textScaleFactor);
+        this.renderCredit(ctx, canvas, textScaleFactor);
 
         return canvas;
     }
 
-    renderFullText(ctx, canvas, config) {
-        const lines = config.text.split(':');
-        const mainText = lines[0].trim();
-        const subtitle = lines[1]?.trim() || '';
-
-        const mainFontSize = this.getMainFontSize();
-        const subFontSize = this.getSubFontSize();
-
-        const effects = this.getFontEffects();
-
-        let y;
-        switch (config.position) {
-            case 'top': y = mainFontSize * 2; break;
-            case 'upper-middle': y = canvas.height * 0.25; break;
-            case 'middle': y = canvas.height * 0.5 - mainFontSize; break;
-            case 'lower-middle': y = canvas.height * 0.75; break;
-            case 'bottom': y = canvas.height - mainFontSize * 3; break;
-            default: y = canvas.height - mainFontSize * 3;
-        }
-
-        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        const canvasFont = selectedFont.replace(/['"]/g, '');
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // ===== DRAW MAIN TEXT (FULL RES) =====
-        if (mainText) {
-            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${mainFontSize}px ${canvasFont}`;
-            ctx.font = fontStr;
-            ctx.fillStyle = this.DOM.colorPicker?.value || '#FFFFFF';
-
-            if (effects.textShadow) {
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = effects.shadowBlur * 2;
-                ctx.shadowOffsetX = 4;
-                ctx.shadowOffsetY = 4;
-            } else {
-                ctx.shadowColor = 'transparent';
-                ctx.shadowBlur = 0;
-            }
-
-            if (effects.textBorder) {
-                ctx.lineWidth = effects.borderWidth * 2;
-                ctx.strokeStyle = 'rgba(0,0,0,0.96)';
-            }
-
-            const mainLines = this.wrapText(ctx, mainText, canvas.width * 0.9);
-            mainLines.forEach((line, index) => {
-                const lineY = y + (index * mainFontSize * 2);
-
-                if (effects.textBorder) {
-                    ctx.strokeText(line, canvas.width / 2, lineY);
-                }
-
-                ctx.fillText(line, canvas.width / 2, lineY);
-
-                if (effects.textUnderline) {
-                    const metrics = ctx.measureText(line);
-                    const startX = canvas.width / 2 - metrics.width / 2;
-                    ctx.strokeStyle = this.DOM.colorPicker?.value || '#FFFFFF';
-                    ctx.lineWidth = Math.max(2, mainFontSize * 0.1);
-                    ctx.beginPath();
-                    ctx.moveTo(startX, lineY + mainFontSize * 0.25);
-                    ctx.lineTo(startX + metrics.width, lineY + mainFontSize * 0.25);
-                    ctx.stroke();
-                }
-            });
-
-            y += mainLines.length * mainFontSize * 2.5;
-        }
-
-        // ===== DRAW SUBTITLE (FULL RES) =====
-        if (subtitle) {
-            const fontStr = `${effects.fontStyle} ${effects.fontWeight} ${subFontSize}px ${canvasFont}`;
-            ctx.font = fontStr;
-
-            const subLines = this.wrapText(ctx, subtitle, canvas.width * 0.85);
-
-            if (this.DOM.subtitleBgCheckbox?.checked) {
-                const padding = subFontSize * 0.8;
-                let maxWidth = 0;
-
-                subLines.forEach(line => {
-                    maxWidth = Math.max(maxWidth, ctx.measureText(line).width);
-                });
-
-                const bgColor = utils.hexToRGBA(
-                    this.DOM.bgColorPicker?.value || '#000000',
-                    this.DOM.bgOpacity?.value || '28'
-                );
-
-                utils.canvas.drawRoundedRect(
-                    ctx,
-                    (canvas.width - maxWidth) / 2 - padding,
-                    y - padding,
-                    maxWidth + padding * 2,
-                    subLines.length * subFontSize * 1.5 + padding * 2,
-                    Math.max(4, subFontSize * 0.3),
-                    bgColor
-                );
-            }
-
-            if (effects.textShadow) {
-                ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                ctx.shadowBlur = effects.shadowBlur * 2;
-                ctx.shadowOffsetX = 4;
-                ctx.shadowOffsetY = 4;
-            }
-
-            if (effects.textBorder) {
-                ctx.lineWidth = effects.borderWidth * 2;
-                ctx.strokeStyle = 'rgba(0,0,0,0.96)';
-            }
-
-            ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-
-            subLines.forEach((line, index) => {
-                const lineY = y + subFontSize + (index * subFontSize * 1.5);
-
-                if (effects.textBorder) {
-                    ctx.strokeText(line, canvas.width / 2, lineY);
-                }
-
-                ctx.fillText(line, canvas.width / 2, lineY);
-
-                if (effects.textUnderline) {
-                    const metrics = ctx.measureText(line);
-                    const startX = canvas.width / 2 - metrics.width / 2;
-                    ctx.strokeStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-                    ctx.lineWidth = Math.max(2, subFontSize * 0.1);
-                    ctx.beginPath();
-                    ctx.moveTo(startX, lineY + subFontSize * 0.25);
-                    ctx.lineTo(startX + metrics.width, lineY + subFontSize * 0.25);
-                    ctx.stroke();
-                }
-            });
-        }
-
-        this.renderCredit(ctx, canvas);
-
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-    }
-
-    renderCredit(ctx, canvas) {
+    renderCredit(ctx, canvas, scaleFactor) {
         const credit = this.DOM.creditInput?.value?.trim() || '';
         if (!credit) return;
 
-        const creditFontSize = Math.min(canvas.width, canvas.height) * 0.04;
+        const baseCreditSize = 28;
+        const creditFontSize = Math.round(baseCreditSize * scaleFactor);
+
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         const canvasFont = selectedFont.replace(/['"]/g, '');
 
         ctx.font = `bold ${creditFontSize}px ${canvasFont}`;
         ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
         ctx.textAlign = 'right';
-        ctx.strokeStyle = 'rgba(0,0,0,0.96)';
-        ctx.lineWidth = creditFontSize * 0.1;
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = Math.max(1, creditFontSize * 0.12);
 
-        const padding = creditFontSize;
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = Math.max(2, creditFontSize * 0.3);
+        ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
+        ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
+
+        const padding = Math.max(10, creditFontSize * 0.8);
+
         ctx.strokeText(credit, canvas.width - padding, canvas.height - padding);
         ctx.fillText(credit, canvas.width - padding, canvas.height - padding);
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
 
     async getFormatPreference() {
@@ -765,10 +749,11 @@ export class PreviewPanel {
 
                 const ctx = canvas.getContext('2d');
                 const { img } = this.state.images[config.imageIndex];
+                const previewScale = canvas.width / img.width;
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                this.renderTextOnCanvas(ctx, canvas, config);
+                this.renderTextCommon(ctx, canvas, config, previewScale);
             }
         });
 
@@ -795,6 +780,7 @@ export class PreviewPanel {
                 const currentConfig = !isNaN(configIndex) && this.textConfigs[configIndex]
                     ? this.textConfigs[configIndex]
                     : config;
+
                 await this.downloadSingleImage(currentConfig, e.target);
             }
         });
@@ -819,7 +805,18 @@ export class PreviewPanel {
             const select = container.querySelector('select');
             if (select && this.textConfigs[index]) {
                 select.value = position;
-                select.dispatchEvent(new Event('change'));
+
+                this.textConfigs[index].position = position;
+                const canvas = container.querySelector('.preview-canvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    const { img } = this.state.images[this.textConfigs[index].imageIndex];
+                    const previewScale = canvas.width / img.width;
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    this.renderTextCommon(ctx, canvas, this.textConfigs[index], previewScale);
+                }
             }
         });
 
@@ -860,186 +857,136 @@ export class PreviewPanel {
         this.DOM.canvasContainer.appendChild(container);
     }
 
-    // ===== OPTIMIZED DOWNLOAD ALL AS ZIP =====
     async downloadAllAsZip(button) {
+        const originalHTML = button.innerHTML;
         button.disabled = true;
         button.classList.add('loading');
         button.innerHTML = `
             <svg class="spinning" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
             </svg>
-            Preparing...
+            Initializing...
         `;
 
         try {
-            const format = await this.showFormatDialog();
-            const zip = new JSZip();
-
-            // === BƯỚC 1: Tạo tất cả canvas và blob SONG SONG ===
-            const quality = format === 'png' ? undefined : 0.8;
-            const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-
-            let completed = 0;
-            const total = this.textConfigs.length;
-
-            const updateCanvasProgress = () => {
-                completed++;
-                const progress = Math.round((completed / total) * 70);
-                button.innerHTML = `
-                    <svg class="spinning" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-                    </svg>
-                    Processing images... ${progress}%
-                `;
-            };
-
-            // Tạo promises cho tất cả canvas và blob
-            const blobPromises = this.textConfigs.map(async (config, i) => {
-                try {
-                    const canvas = await this.generateFullCanvas(config);
-
-                    const blob = await new Promise((resolve, reject) => {
-                        try {
-                            canvas.toBlob((result) => {
-                                if (result) {
-                                    resolve(result);
-                                } else {
-                                    reject(new Error('Failed to create blob'));
-                                }
-                            }, mimeType, quality);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    });
-
-                    updateCanvasProgress();
-                    return { blob, index: i, success: true };
-                } catch (error) {
-                    console.error(`Failed to process image ${i + 1}:`, error);
-                    updateCanvasProgress();
-                    return { blob: null, index: i, success: false, error };
-                }
-            });
-
-            // Chờ tất cả hoàn thành (không fail-fast)
-            const results = await Promise.allSettled(blobPromises);
-
-            // Lọc kết quả thành công
-            const successfulResults = results
-                .filter(r => r.status === 'fulfilled' && r.value.success)
-                .map(r => r.value);
-
-            if (successfulResults.length === 0) {
-                throw new Error('Failed to process any images');
-            }
-
-            // Thông báo nếu có ảnh bị lỗi
-            if (successfulResults.length < total) {
-                const failedCount = total - successfulResults.length;
-                this.showWarningNotification(`${failedCount} image(s) failed to process`);
-            }
-
-            // Thêm tất cả blob vào ZIP
-            successfulResults.forEach(({ blob, index }) => {
-                zip.file(`image_${index + 1}.${format}`, blob);
-            });
-
-            // === BƯỚC 2: Nén ZIP với compression thấp và progress ===
+            // Show format dialog first
             button.innerHTML = `
                 <svg class="spinning" viewBox="0 0 24 24">
                     <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
                 </svg>
-                Compressing ZIP... 70%
+                Choose format...
             `;
 
-            const content = await zip.generateAsync(
-                {
-                    type: 'blob',
-                    compression: 'DEFLATE',
-                    compressionOptions: {
-                        level: 1  // Nén thấp để nhanh hơn
-                    },
-                    streamFiles: true  // Tối ưu memory
-                },
-                (metadata) => {
-                    // Progress callback cho nén ZIP (70% -> 100%)
-                    const zipProgress = Math.round(70 + (metadata.percent * 0.3));
-                    button.innerHTML = `
-                        <svg class="spinning" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
-                        </svg>
-                        Compressing ZIP... ${zipProgress}%
-                    `;
-                }
-            );
+            const format = await this.showFormatDialog();
 
-            // === BƯỚC 3: Download file ===
-            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            console.log(`Creating ZIP with ${this.textConfigs.length} images in ${format} format`);
+
+            button.innerHTML = `
+                <svg class="spinning" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                </svg>
+                Processing 0%
+            `;
+
+            const zip = new JSZip();
+
+            // Process each image
+            for (let i = 0; i < this.textConfigs.length; i++) {
+                const config = this.textConfigs[i];
+
+                console.log(`Processing image ${i + 1}/${this.textConfigs.length}`);
+
+                // Generate canvas
+                const canvas = await this.generateFullCanvas(config);
+
+                // Convert to blob
+                const blob = await new Promise(resolve => {
+                    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                    const quality = format === 'png' ? undefined : 0.85;
+                    canvas.toBlob(resolve, mimeType, quality);
+                });
+
+                // Add to ZIP
+                const filename = `image_${String(i + 1).padStart(3, '0')}.${format}`;
+                zip.file(filename, blob);
+
+                // Update progress
+                const progress = Math.round(((i + 1) / this.textConfigs.length) * 100);
+                button.innerHTML = `
+                    <svg class="spinning" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                    </svg>
+                    Processing ${progress}%
+                `;
+            }
+
+            // Generate ZIP file
+            console.log('Generating ZIP file...');
+            button.innerHTML = `
+                <svg class="spinning" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                </svg>
+                Creating ZIP file...
+            `;
+
+            const zipBlob = await zip.generateAsync({
+                type: 'blob',
+                compression: 'DEFLATE',
+                compressionOptions: { level: 6 }
+            });
+
+            console.log('ZIP file generated, size:', zipBlob.size, 'bytes');
+
+            // Create download link with proper DOM handling
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
+            link.href = URL.createObjectURL(zipBlob);
             link.download = `images_${timestamp}.zip`;
-            link.click();
+            link.style.display = 'none';
 
-            // Cleanup sau 100ms
-            setTimeout(() => URL.revokeObjectURL(link.href), 100);
+            // CRITICAL: Append to body before clicking
+            document.body.appendChild(link);
 
-            // Thông báo thành công
-            this.showSuccessNotification(
-                `Downloaded ${successfulResults.length} image${successfulResults.length > 1 ? 's' : ''} successfully!`
-            );
-
-        } catch (error) {
-            console.error('Error creating zip:', error);
-            this.showErrorNotification('Failed to create ZIP file. Please try again.');
-        } finally {
-            button.disabled = false;
-            button.classList.remove('loading');
+            console.log('Triggering download...');
             button.innerHTML = `
                 <svg viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M5 13l4 4L19 7"/>
                 </svg>
-                Download All as ZIP
+                Downloading...
             `;
+
+            // Click to download
+            link.click();
+
+            console.log('Download triggered successfully');
+
+            // Cleanup after delay
+            setTimeout(() => {
+                console.log('Cleaning up...');
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }, 1000);
+
+            // Show success message
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M5 13l4 4L19 7"/>
+                </svg>
+                Download Complete!
+            `;
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+                button.classList.remove('loading');
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error creating ZIP:', error);
+            alert(`Failed to create ZIP file: ${error.message}`);
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+            button.classList.remove('loading');
         }
-    }
-
-    // ===== NOTIFICATION HELPERS =====
-    showSuccessNotification(message) {
-        this.showNotification(message, '#10b981', 3000);
-    }
-
-    showErrorNotification(message) {
-        this.showNotification(message, '#ef4444', 4000);
-    }
-
-    showWarningNotification(message) {
-        this.showNotification(message, '#f59e0b', 3500);
-    }
-
-    showNotification(message, backgroundColor, duration) {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            background: ${backgroundColor};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            font-weight: 500;
-            font-size: 14px;
-            max-width: 400px;
-            animation: slideInRight 0.3s ease;
-        `;
-        notification.textContent = message;
-
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, duration);
     }
 }
