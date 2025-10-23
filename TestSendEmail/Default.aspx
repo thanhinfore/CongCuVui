@@ -129,6 +129,29 @@
             document.getElementById('<%= chkEnableSSL.ClientID %>').checked = ssl;
             return false;
         }
+
+        // Tự động sync From Email với Username
+        window.addEventListener('DOMContentLoaded', function() {
+            var txtUsername = document.getElementById('<%= txtUsername.ClientID %>');
+            var txtFromEmail = document.getElementById('<%= txtFromEmail.ClientID %>');
+
+            // Sync khi người dùng nhập Username
+            txtUsername.addEventListener('input', function() {
+                if (txtFromEmail.value === '' || txtFromEmail.value === txtUsername.getAttribute('data-last-value')) {
+                    txtFromEmail.value = txtUsername.value;
+                }
+                txtUsername.setAttribute('data-last-value', txtUsername.value);
+            });
+
+            // Cảnh báo nếu From Email khác Username
+            txtFromEmail.addEventListener('blur', function() {
+                if (txtUsername.value !== '' && txtFromEmail.value !== txtUsername.value) {
+                    if (confirm('⚠️ CẢNH BÁO:\n\nFrom Email khác với Username SMTP!\n\nMột số SMTP server (như mail.luyenai.vn) YÊU CẦU From Email phải GIỐNG Username để tránh spam.\n\nBạn có muốn tự động đặt From Email = Username không?')) {
+                        txtFromEmail.value = txtUsername.value;
+                    }
+                }
+            });
+        });
     </script>
 </head>
 <body>
@@ -183,6 +206,7 @@
                 <div class="form-group">
                     <label for="txtUsername">Username (Email) *</label>
                     <asp:TextBox ID="txtUsername" runat="server" placeholder="your-email@luyenai.vn"></asp:TextBox>
+                    <p class="info-text">⚠️ From Email bên dưới sẽ tự động đặt bằng Username này</p>
                 </div>
 
                 <div class="form-group">
@@ -216,6 +240,7 @@
                     <asp:RegularExpressionValidator ID="revFrom" runat="server" ControlToValidate="txtFromEmail"
                         ValidationExpression="^[\w\.-]+@[\w\.-]+\.\w+$"
                         ErrorMessage="Invalid email format" ForeColor="Red" Display="Dynamic" />
+                    <p class="info-text" style="color: #d32f2f; font-weight: 600;">⚠️ PHẢI GIỐNG Username SMTP ở trên để tránh spam!</p>
                 </div>
             </div>
 
