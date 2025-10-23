@@ -96,6 +96,15 @@ namespace TestSendEmail
         protected global::System.Web.UI.WebControls.CheckBox chkEnableSSL;
 
         /// <summary>
+        /// txtFromName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtFromName;
+
+        /// <summary>
         /// txtFromEmail control.
         /// </summary>
         /// <remarks>
@@ -141,13 +150,22 @@ namespace TestSendEmail
         protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvTo;
 
         /// <summary>
-        /// revTo control.
+        /// txtCcEmail control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.RegularExpressionValidator revTo;
+        protected global::System.Web.UI.WebControls.TextBox txtCcEmail;
+
+        /// <summary>
+        /// txtBccEmail control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtBccEmail;
 
         /// <summary>
         /// txtSubject control.
@@ -184,6 +202,15 @@ namespace TestSendEmail
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvBody;
+
+        /// <summary>
+        /// chkIsHtml control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkIsHtml;
 
         /// <summary>
         /// btnSend control.
