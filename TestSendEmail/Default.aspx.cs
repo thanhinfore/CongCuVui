@@ -27,19 +27,46 @@ namespace TestSendEmail
                 string password = txtPassword.Text.Trim();
                 bool enableSsl = chkEnableSSL.Checked;
 
+                string fromName = txtFromName.Text.Trim();
                 string fromEmail = txtFromEmail.Text.Trim();
                 string toEmail = txtToEmail.Text.Trim();
+                string ccEmail = txtCcEmail.Text.Trim();
+                string bccEmail = txtBccEmail.Text.Trim();
                 string subject = txtSubject.Text.Trim();
                 string body = txtBody.Text.Trim();
+                bool isHtml = chkIsHtml.Checked;
 
                 // Tạo MailMessage
                 using (MailMessage mail = new MailMessage())
                 {
-                    mail.From = new MailAddress(fromEmail);
-                    mail.To.Add(toEmail);
+                    // Set From address với tên người gửi nếu có
+                    if (!string.IsNullOrEmpty(fromName))
+                    {
+                        mail.From = new MailAddress(fromEmail, fromName);
+                    }
+                    else
+                    {
+                        mail.From = new MailAddress(fromEmail);
+                    }
+
+                    // Add To addresses (có thể có nhiều email, ngăn cách bởi ;)
+                    AddEmailAddresses(mail.To, toEmail);
+
+                    // Add CC addresses nếu có
+                    if (!string.IsNullOrEmpty(ccEmail))
+                    {
+                        AddEmailAddresses(mail.CC, ccEmail);
+                    }
+
+                    // Add BCC addresses nếu có
+                    if (!string.IsNullOrEmpty(bccEmail))
+                    {
+                        AddEmailAddresses(mail.Bcc, bccEmail);
+                    }
+
                     mail.Subject = subject;
                     mail.Body = body;
-                    mail.IsBodyHtml = false;
+                    mail.IsBodyHtml = isHtml;
 
                     // Cấu hình SmtpClient
                     using (SmtpClient smtp = new SmtpClient(smtpHost, smtpPort))
@@ -53,12 +80,39 @@ namespace TestSendEmail
                     }
                 }
 
-                // Hiển thị thông báo thành công
-                ShowMessage($"✓ Email đã được gửi thành công!\n\nFrom: {fromEmail}\nTo: {toEmail}\nSMTP: {smtpHost}:{smtpPort}\nSSL: {enableSsl}", true);
+                // Hiển thị thông báo thành công với thông tin chi tiết
+                string successMessage = $"✓ Email đã được gửi thành công!\n\n" +
+                                      $"SMTP Server: {smtpHost}:{smtpPort}\n" +
+                                      $"SSL/TLS: {(enableSsl ? "Enabled" : "Disabled")}\n" +
+                                      $"From: {(string.IsNullOrEmpty(fromName) ? fromEmail : $"{fromName} <{fromEmail}>")}\n" +
+                                      $"To: {toEmail}\n";
+
+                if (!string.IsNullOrEmpty(ccEmail))
+                    successMessage += $"CC: {ccEmail}\n";
+
+                if (!string.IsNullOrEmpty(bccEmail))
+                    successMessage += $"BCC: {bccEmail}\n";
+
+                successMessage += $"Subject: {subject}\n" +
+                                $"Format: {(isHtml ? "HTML" : "Plain Text")}";
+
+                ShowMessage(successMessage, true);
             }
             catch (SmtpException smtpEx)
             {
-                ShowMessage($"✗ SMTP Error:\n{smtpEx.Message}\n\nStatus Code: {smtpEx.StatusCode}\n\nKiểm tra:\n- Host/Port đúng chưa\n- Username/Password chính xác\n- SSL/TLS phù hợp (587→TLS, 465→SSL, 25→no SSL)\n- Firewall có chặn không", false);
+                string errorMessage = $"✗ SMTP Error:\n{smtpEx.Message}\n\n";
+
+                if (smtpEx.StatusCode != 0)
+                    errorMessage += $"Status Code: {smtpEx.StatusCode}\n\n";
+
+                errorMessage += "Kiểm tra:\n" +
+                              "- Host/Port đúng chưa? (mail.luyenai.vn:587 hoặc :465)\n" +
+                              "- Username/Password chính xác?\n" +
+                              "- SSL/TLS phù hợp? (587→TLS Enabled, 465→SSL Enabled, 25→No SSL)\n" +
+                              "- Firewall có chặn kết nối không?\n" +
+                              "- Email domain có được phép gửi không?";
+
+                ShowMessage(errorMessage, false);
             }
             catch (FormatException formatEx)
             {
@@ -67,6 +121,27 @@ namespace TestSendEmail
             catch (Exception ex)
             {
                 ShowMessage($"✗ Unexpected Error:\n{ex.GetType().Name}: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}", false);
+            }
+        }
+
+        /// <summary>
+        /// Thêm nhiều địa chỉ email vào collection (ngăn cách bởi ; hoặc ,)
+        /// </summary>
+        private void AddEmailAddresses(System.Net.Mail.MailAddressCollection collection, string addresses)
+        {
+            if (string.IsNullOrWhiteSpace(addresses))
+                return;
+
+            // Split bởi ; hoặc ,
+            string[] emails = addresses.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string email in emails)
+            {
+                string trimmedEmail = email.Trim();
+                if (!string.IsNullOrEmpty(trimmedEmail))
+                {
+                    collection.Add(new MailAddress(trimmedEmail));
+                }
             }
         }
 
