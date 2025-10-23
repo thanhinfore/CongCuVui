@@ -2,56 +2,76 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Live Voting - Enhanced UX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Ứng dụng khảo sát trực tiếp với Google Forms - Real-time voting visualization">
+    <meta name="theme-color" content="#6366f1">
+
+    <title>📊 Live Voting - Real-time Survey Dashboard</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <!-- Setup Screen (shown when no URL params) -->
+        <!-- ================================================================
+             SETUP SCREEN
+             ================================================================ -->
         <div class="setup-screen" id="setupScreen">
             <div class="setup-card">
                 <div class="setup-header">
-                    <div class="setup-logo">📊</div>
+                    <div class="setup-logo" role="img" aria-label="Survey icon">📊</div>
                     <h1>Khảo sát trực tiếp</h1>
                     <p>Thiết lập nguồn dữ liệu để bắt đầu</p>
                 </div>
 
-                <form class="setup-form" id="setupForm">
+                <form class="setup-form" id="setupForm" novalidate>
                     <div class="form-group">
                         <label for="formUrl">
-                            <span class="label-icon">📝</span>
+                            <span class="label-icon" aria-hidden="true">📝</span>
                             <span>Google Form URL</span>
                             <span class="label-hint">(Link chia sẻ form)</span>
                         </label>
                         <input type="url"
                                id="formUrl"
+                               name="formUrl"
                                placeholder="https://docs.google.com/forms/d/e/..."
-                               required>
-                        <div class="input-hint">
+                               autocomplete="url"
+                               spellcheck="false"
+                               required
+                               aria-describedby="formUrlHint formUrlValidation">
+                        <div class="input-hint" id="formUrlHint">
                             Lấy từ: <strong>Send form</strong> → <strong>Copy link</strong>
                         </div>
-                        <div class="validation-msg" id="formUrlValidation"></div>
+                        <div class="validation-msg" id="formUrlValidation" role="alert"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="csvUrl">
-                            <span class="label-icon">📊</span>
+                            <span class="label-icon" aria-hidden="true">📊</span>
                             <span>Google Sheets CSV URL</span>
                             <span class="label-hint">(Link dữ liệu responses)</span>
                         </label>
                         <input type="url"
                                id="csvUrl"
+                               name="csvUrl"
                                placeholder="https://docs.google.com/spreadsheets/d/e/..."
-                               required>
-                        <div class="input-hint">
+                               autocomplete="url"
+                               spellcheck="false"
+                               required
+                               aria-describedby="csvUrlHint csvUrlValidation">
+                        <div class="input-hint" id="csvUrlHint">
                             Lấy từ: <strong>Responses</strong> → <strong>View in Sheets</strong> → <strong>File</strong> → <strong>Share</strong> → <strong>Publish to web</strong> → Chọn <strong>CSV</strong>
                         </div>
-                        <div class="validation-msg" id="csvUrlValidation"></div>
+                        <div class="validation-msg" id="csvUrlValidation" role="alert"></div>
                     </div>
 
-                    <button type="button" class="test-btn" id="testConnection">
+                    <button type="button" class="test-btn" id="testConnection" aria-label="Kiểm tra kết nối đến Google Sheets">
                         🔍 Kiểm tra kết nối
                     </button>
 
@@ -64,18 +84,27 @@
                 <div class="recent-sessions" id="recentSessions">
                     <div class="sessions-header">
                         <h3>📚 Phiên gần đây</h3>
-                        <button class="clear-history-btn" id="clearHistory">🗑️ Xóa</button>
+                        <button class="clear-history-btn"
+                                id="clearHistory"
+                                aria-label="Xóa lịch sử phiên">
+                            🗑️ Xóa
+                        </button>
                     </div>
-                    <div class="sessions-list" id="sessionsList"></div>
+                    <div class="sessions-list" id="sessionsList" role="list"></div>
                 </div>
 
                 <!-- Quick Guide -->
                 <div class="quick-guide">
-                    <button class="guide-toggle" id="guideToggle">❓ Hướng dẫn nhanh</button>
-                    <div class="guide-content" id="guideContent">
+                    <button class="guide-toggle"
+                            id="guideToggle"
+                            aria-expanded="false"
+                            aria-controls="guideContent">
+                        ❓ Hướng dẫn nhanh
+                    </button>
+                    <div class="guide-content" id="guideContent" aria-hidden="true">
                         <h4>Bước 1: Tạo Google Form</h4>
                         <ol>
-                            <li>Tạo form tại <a href="https://forms.google.com" target="_blank">forms.google.com</a></li>
+                            <li>Tạo form tại <a href="https://forms.google.com" target="_blank" rel="noopener noreferrer">forms.google.com</a></li>
                             <li>Thêm câu hỏi (Multiple choice/Checkboxes)</li>
                             <li>Copy link form từ nút <strong>Send</strong></li>
                         </ol>
@@ -95,26 +124,38 @@
             </div>
         </div>
 
-        <!-- Statistics Dashboard -->
+        <!-- ================================================================
+             STATISTICS DASHBOARD
+             ================================================================ -->
         <div class="stats-dashboard" id="statsDashboard">
             <div class="stats-header">
                 <h2>📈 Thống kê phiên khảo sát</h2>
-                <button class="back-btn" id="backToSetup">← Quay lại</button>
+                <button class="back-btn"
+                        id="backToSetup"
+                        aria-label="Quay lại trang thiết lập">
+                    ← Quay lại
+                </button>
             </div>
-            <div class="stats-grid" id="statsGrid"></div>
+            <div class="stats-grid" id="statsGrid" role="list"></div>
         </div>
 
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
+        <!-- ================================================================
+             LOADING OVERLAY
+             ================================================================ -->
+        <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-busy="true">
+            <div class="loading-spinner" role="status" aria-label="Đang tải"></div>
             <div class="loading-text">Đang kiểm tra kết nối...</div>
         </div>
 
-        <!-- Toast Notifications -->
-        <div class="toast-container" id="toastContainer"></div>
+        <!-- ================================================================
+             TOAST NOTIFICATIONS
+             ================================================================ -->
+        <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-atomic="true"></div>
 
-        <!-- Error Box -->
-        <div class="error-box" id="errorBox">
+        <!-- ================================================================
+             ERROR BOX
+             ================================================================ -->
+        <div class="error-box" id="errorBox" role="alert" aria-live="assertive">
             <div class="error-title">⚠️ Lỗi kết nối dữ liệu</div>
             <div id="errorMessage"></div>
             <div class="error-hint">
@@ -125,84 +166,113 @@
             </button>
         </div>
 
-        <!-- Main App (shown when URL params exist) -->
+        <!-- ================================================================
+             MAIN APP
+             ================================================================ -->
         <div class="main-app" id="mainApp">
             <!-- Header -->
-            <div class="header">
+            <header class="header" role="banner">
                 <div class="logo">📊 Khảo sát trực tiếp</div>
-                <div class="live-indicator">
-                    <div class="live-dot"></div>
-                    LIVE
+                <div class="live-indicator" aria-label="Đang cập nhật trực tiếp">
+                    <div class="live-dot" aria-hidden="true"></div>
+                    <span>LIVE</span>
                 </div>
                 <div class="header-controls">
-                    <div class="stat-badge">
-                        <span>📋</span>
+                    <div class="stat-badge" aria-label="Tổng số câu hỏi">
+                        <span aria-hidden="true">📋</span>
                         <span class="stat-value" id="totalQuestions">0</span>
                         <span>câu</span>
                     </div>
-                    <div class="stat-badge">
-                        <span>👥</span>
+                    <div class="stat-badge" aria-label="Tổng số phản hồi">
+                        <span aria-hidden="true">👥</span>
                         <span class="stat-value" id="totalVotes">0</span>
                         <span>phản hồi</span>
                     </div>
-                    <div class="stat-badge">
-                        <span>⏱️</span>
+                    <div class="stat-badge" aria-label="Thời gian cập nhật gần nhất">
+                        <span aria-hidden="true">⏱️</span>
                         <span class="stat-value" id="updateTime">--:--</span>
                     </div>
-                    <button class="refresh-btn" id="refreshBtn" onclick="app.forceRefresh()">
-                        <span class="refresh-icon">🔄</span>
+                    <button class="refresh-btn"
+                            id="refreshBtn"
+                            aria-label="Làm mới dữ liệu ngay">
+                        <span class="refresh-icon" aria-hidden="true">🔄</span>
                     </button>
-                    <button class="menu-btn" id="menuBtn">⚙️</button>
+                    <button class="menu-btn"
+                            id="menuBtn"
+                            aria-label="Mở menu"
+                            aria-expanded="false"
+                            aria-controls="dropdownMenu">
+                        ⚙️
+                    </button>
                 </div>
-            </div>
+            </header>
 
             <!-- Dropdown Menu -->
-            <div class="dropdown-menu" id="dropdownMenu">
+            <nav class="dropdown-menu" id="dropdownMenu" aria-label="Menu chính">
                 <button class="menu-item" id="viewStats">📈 Xem thống kê</button>
                 <button class="menu-item" id="copyLink">🔗 Copy link</button>
                 <button class="menu-item" id="newSession">➕ Phiên mới</button>
-            </div>
+            </nav>
 
             <!-- Floating QR Widget -->
-            <div class="qr-widget" id="qrWidget">
-                <div class="qr-widget-header" onclick="app.toggleQRWidget()">
+            <aside class="qr-widget" id="qrWidget" aria-label="Mã QR để tham gia khảo sát">
+                <div class="qr-widget-header" tabindex="0" role="button" aria-label="Thu gọn/mở rộng mã QR">
                     <span class="qr-widget-title">📱 Quét để tham gia</span>
-                    <button class="qr-widget-toggle">−</button>
+                    <button class="qr-widget-toggle"
+                            aria-label="Thu gọn">
+                        −
+                    </button>
                 </div>
                 <div class="qr-widget-body">
-                    <div id="qrcode"></div>
+                    <div id="qrcode" aria-label="Mã QR liên kết đến form khảo sát"></div>
                     <div class="qr-widget-hint">Hoặc truy cập link trên điện thoại</div>
                 </div>
-            </div>
+            </aside>
 
             <!-- Main Layout -->
-            <div class="main-layout">
-                <!-- Content Area Full Width -->
+            <main class="main-layout" role="main">
                 <div class="content-area">
                     <!-- View Controls -->
                     <div class="view-controls">
-                        <div class="view-tabs">
-                            <button class="view-tab active" data-view="single">Một câu</button>
-                            <button class="view-tab" data-view="all">Tất cả</button>
+                        <div class="view-tabs" role="tablist" aria-label="Chế độ xem">
+                            <button class="view-tab active"
+                                    data-view="single"
+                                    role="tab"
+                                    aria-selected="true"
+                                    aria-controls="questionsGrid">
+                                Một câu
+                            </button>
+                            <button class="view-tab"
+                                    data-view="all"
+                                    role="tab"
+                                    aria-selected="false"
+                                    aria-controls="questionsGrid">
+                                Tất cả
+                            </button>
                         </div>
-                        <div class="update-indicator" id="updateIndicator">
-                            <span class="indicator-dot"></span>
+                        <div class="update-indicator" id="updateIndicator" aria-live="polite">
+                            <span class="indicator-dot" aria-hidden="true"></span>
                             <span>Đang cập nhật...</span>
                         </div>
                     </div>
 
-                    <!-- Questions Grid (2 columns) -->
-                    <div class="questions-grid" id="questionsGrid">
+                    <!-- Questions Grid -->
+                    <div class="questions-grid"
+                         id="questionsGrid"
+                         role="region"
+                         aria-live="polite"
+                         aria-atomic="false">
                         <div class="empty-state">
-                            <div class="empty-icon">📥</div>
+                            <div class="empty-icon" aria-hidden="true">📥</div>
                             <div>Đang tải dữ liệu...</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
+    <!-- Application Script -->
     <script src="app.js"></script>
 </body>
 </html>
