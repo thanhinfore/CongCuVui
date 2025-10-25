@@ -233,7 +233,7 @@ export class PreviewPanel {
 
         const ctx = canvas.getContext('2d', {
             willReadFrequently: false,
-            alpha: false
+            alpha: true
         });
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -632,7 +632,7 @@ export class PreviewPanel {
 
         const ctx = canvas.getContext('2d', {
             willReadFrequently: false,
-            alpha: false
+            alpha: true
         });
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
