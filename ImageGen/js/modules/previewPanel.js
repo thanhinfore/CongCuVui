@@ -264,8 +264,67 @@ export class PreviewPanel {
             textBorder: this.DOM.textBorderCheckbox?.checked || false,
             textShadow: this.DOM.textShadowCheckbox?.checked || false,
             borderWidth: this.DOM.textBorderCheckbox?.checked ? parseFloat(this.DOM.borderWidth?.value || '2') : 0,
-            shadowBlur: this.DOM.textShadowCheckbox?.checked ? parseInt(this.DOM.shadowBlur?.value || '4') : 0
+            shadowBlur: this.DOM.textShadowCheckbox?.checked ? parseInt(this.DOM.shadowBlur?.value || '4') : 0,
+            textGlow: this.DOM.textGlowCheckbox?.checked || false,
+            glowColor: this.DOM.glowColor?.value || '#FFD700',
+            glowIntensity: this.DOM.textGlowCheckbox?.checked ? parseInt(this.DOM.glowIntensity?.value || '20') : 0
         };
+    }
+
+    getAdvancedTextSettings() {
+        const textAlign = document.querySelector('.align-btn.active')?.dataset.align || 'center';
+        const textRotation = parseFloat(document.getElementById('textRotation')?.value || '0');
+        const textOpacity = parseInt(document.getElementById('textOpacity')?.value || '100') / 100;
+        const letterSpacing = parseFloat(document.getElementById('letterSpacing')?.value || '0');
+        const lineHeight = parseFloat(document.getElementById('lineHeight')?.value || '2');
+        const textTransform = document.getElementById('textTransform')?.value || 'none';
+
+        return {
+            textAlign,
+            textRotation,
+            textOpacity,
+            letterSpacing,
+            lineHeight,
+            textTransform
+        };
+    }
+
+    getColorSettings() {
+        const colorMode = document.querySelector('input[name="colorMode"]:checked')?.value || 'solid';
+
+        if (colorMode === 'gradient') {
+            const color1 = document.getElementById('gradientColor1')?.value || '#FF6B6B';
+            const color2 = document.getElementById('gradientColor2')?.value || '#4ECDC4';
+            const angle = parseInt(document.getElementById('gradientAngle')?.value || '45');
+
+            return {
+                mode: 'gradient',
+                color1,
+                color2,
+                angle
+            };
+        }
+
+        return {
+            mode: 'solid',
+            mainColor: this.DOM.colorPicker?.value || '#FFFFFF',
+            subColor: this.DOM.subColorPicker?.value || '#FFFFFF'
+        };
+    }
+
+    applyTextTransform(text, transform) {
+        switch (transform) {
+            case 'uppercase':
+                return text.toUpperCase();
+            case 'lowercase':
+                return text.toLowerCase();
+            case 'capitalize':
+                return text.split(' ').map(word =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                ).join(' ');
+            default:
+                return text;
+        }
     }
 
     /**
@@ -369,56 +428,141 @@ export class PreviewPanel {
         return merged;
     }
 
-    renderStyledLine(ctx, line, x, y, fontSize, color, effects, fontFamily, baseWeight, fontStyle) {
+    renderStyledLine(ctx, line, x, y, fontSize, color, effects, fontFamily, baseWeight, fontStyle, advanced = {}, canvas = null) {
+        const letterSpacing = (advanced.letterSpacing || 0) * (fontSize / 48);
+
+        // Calculate total width including letter spacing
         let totalWidth = 0;
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
             ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
-            totalWidth += ctx.measureText(segment.text).width;
+
+            // Add letter spacing to width calculation
+            const chars = segment.text.split('');
+            chars.forEach((char, i) => {
+                totalWidth += ctx.measureText(char).width;
+                if (i < chars.length - 1) {
+                    totalWidth += letterSpacing;
+                }
+            });
         });
 
-        let currentX = x - totalWidth / 2;
+        // Calculate starting X based on alignment
+        let currentX;
+        const textAlign = advanced.textAlign || 'center';
+        if (textAlign === 'left') {
+            currentX = x - (canvas?.width || 0) * 0.45;
+        } else if (textAlign === 'right') {
+            currentX = x + (canvas?.width || 0) * 0.45 - totalWidth;
+        } else {
+            currentX = x - totalWidth / 2;
+        }
 
-        if (effects.textShadow) {
+        const startX = currentX;
+
+        // Apply opacity
+        const opacity = advanced.textOpacity !== undefined ? advanced.textOpacity : 1;
+        ctx.globalAlpha = opacity;
+
+        // Apply glow effect
+        if (effects.textGlow) {
+            ctx.shadowColor = effects.glowColor;
+            ctx.shadowBlur = effects.glowIntensity;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        } else if (effects.textShadow) {
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
             ctx.shadowBlur = effects.shadowBlur;
             ctx.shadowOffsetX = effects.shadowOffsetX;
             ctx.shadowOffsetY = effects.shadowOffsetY;
         }
 
-        ctx.fillStyle = color;
         ctx.textAlign = 'left';
 
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
             ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
 
-            if (effects.textBorder) {
-                ctx.strokeText(segment.text, currentX, y);
-            }
+            // Render each character with letter spacing
+            const chars = segment.text.split('');
+            chars.forEach((char, i) => {
+                // Set color (gradient or solid)
+                if (color.mode === 'gradient' && canvas) {
+                    const gradient = this.createGradient(ctx, canvas, color);
+                    ctx.fillStyle = gradient;
+                    if (effects.textBorder) {
+                        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                    }
+                } else {
+                    ctx.fillStyle = color.mainColor || color;
+                    if (effects.textBorder) {
+                        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                    }
+                }
 
-            ctx.fillText(segment.text, currentX, y);
+                if (effects.textBorder) {
+                    ctx.strokeText(char, currentX, y);
+                }
 
-            currentX += ctx.measureText(segment.text).width;
+                ctx.fillText(char, currentX, y);
+
+                currentX += ctx.measureText(char).width;
+                if (i < chars.length - 1) {
+                    currentX += letterSpacing;
+                }
+            });
         });
 
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Draw underline
         if (effects.textUnderline) {
-            const startX = x - totalWidth / 2;
             const underlineY = y + fontSize * 0.25;
 
-            ctx.strokeStyle = color;
+            // Use gradient for underline if gradient mode is active
+            if (color.mode === 'gradient' && canvas) {
+                ctx.strokeStyle = this.createGradient(ctx, canvas, color);
+            } else {
+                ctx.strokeStyle = color.mainColor || color;
+            }
+
             ctx.lineWidth = Math.max(1, fontSize * 0.1);
             ctx.beginPath();
             ctx.moveTo(startX, underlineY);
             ctx.lineTo(startX + totalWidth, underlineY);
             ctx.stroke();
         }
+
+        // Reset alpha
+        ctx.globalAlpha = 1;
+    }
+
+    createGradient(ctx, canvas, colorSettings) {
+        const angle = (colorSettings.angle || 45) * Math.PI / 180;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const length = Math.max(canvas.width, canvas.height);
+
+        const x0 = centerX - Math.cos(angle) * length / 2;
+        const y0 = centerY - Math.sin(angle) * length / 2;
+        const x1 = centerX + Math.cos(angle) * length / 2;
+        const y1 = centerY + Math.sin(angle) * length / 2;
+
+        const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+        gradient.addColorStop(0, colorSettings.color1);
+        gradient.addColorStop(1, colorSettings.color2);
+
+        return gradient;
     }
 
     renderTextCommon(ctx, canvas, config, scaleFactor) {
         const lines = config.text.split(':');
-        const mainText = lines[0].trim();
-        const subtitle = lines[1]?.trim() || '';
+        let mainText = lines[0].trim();
+        let subtitle = lines[1]?.trim() || '';
 
         const baseMainFontSize = this.getMainFontSize();
         const baseSubFontSize = this.getSubFontSize();
@@ -427,8 +571,16 @@ export class PreviewPanel {
         const subFontSize = Math.round(baseSubFontSize * scaleFactor);
 
         const effects = this.getFontEffects();
+        const advanced = this.getAdvancedTextSettings();
+        const colorSettings = this.getColorSettings();
 
-        const LINE_SPACING = 2.0;
+        // Apply text transform
+        if (advanced.textTransform && advanced.textTransform !== 'none') {
+            mainText = this.applyTextTransform(mainText, advanced.textTransform);
+            subtitle = this.applyTextTransform(subtitle, advanced.textTransform);
+        }
+
+        const LINE_SPACING = advanced.lineHeight || 2.0;
         const MAIN_PADDING = 1.5;
 
         let y;
@@ -471,8 +623,19 @@ export class PreviewPanel {
             ctx.strokeStyle = 'rgba(0,0,0,0.85)';
         }
 
+        // Save context state
+        ctx.save();
+
+        // Apply rotation if specified
+        if (advanced.textRotation && advanced.textRotation !== 0) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            ctx.translate(centerX, centerY);
+            ctx.rotate((advanced.textRotation * Math.PI) / 180);
+            ctx.translate(-centerX, -centerY);
+        }
+
         if (mainText) {
-            const mainColor = this.DOM.colorPicker?.value || '#FFFFFF';
             const mainLines = this.wrapStyledText(
                 ctx,
                 mainText,
@@ -491,11 +654,13 @@ export class PreviewPanel {
                     canvas.width / 2,
                     lineY,
                     mainFontSize,
-                    mainColor,
+                    colorSettings,
                     renderEffects,
                     canvasFont,
                     effects.fontWeight,
-                    effects.fontStyle
+                    effects.fontStyle,
+                    advanced,
+                    canvas
                 );
             });
 
@@ -508,7 +673,6 @@ export class PreviewPanel {
         ctx.shadowOffsetY = 0;
 
         if (subtitle) {
-            const subColor = this.DOM.subColorPicker?.value || '#FFFFFF';
             const subLines = this.wrapStyledText(
                 ctx,
                 subtitle,
@@ -518,6 +682,11 @@ export class PreviewPanel {
                 effects.fontWeight,
                 effects.fontStyle
             );
+
+            // Use subtitle color from solid mode or gradient
+            const subtitleColor = colorSettings.mode === 'solid'
+                ? { mode: 'solid', mainColor: this.DOM.subColorPicker?.value || '#FFFFFF' }
+                : colorSettings;
 
             if (this.DOM.subtitleBgCheckbox?.checked) {
                 const padding = Math.max(4, subFontSize * 0.5);
@@ -560,14 +729,19 @@ export class PreviewPanel {
                     canvas.width / 2,
                     lineY,
                     subFontSize,
-                    subColor,
+                    subtitleColor,
                     renderEffects,
                     canvasFont,
                     effects.fontWeight,
-                    effects.fontStyle
+                    effects.fontStyle,
+                    advanced,
+                    canvas
                 );
             });
         }
+
+        // Restore context state (rotation)
+        ctx.restore();
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
