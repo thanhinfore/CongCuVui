@@ -3,6 +3,7 @@
 """
 TimeSeriesRacing - Tạo video biểu đồ động (bar chart race) từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
+Version 2.0 - Enhanced with professional styling and animations
 """
 
 import pandas as pd
@@ -12,12 +13,93 @@ import sys
 import os
 from pathlib import Path
 import warnings
+import matplotlib.pyplot as plt
+from matplotlib import colors as mcolors
 
 warnings.filterwarnings('ignore')
 
 
+class ColorPalettes:
+    """Bộ sưu tập color palettes chuyên nghiệp"""
+
+    VIBRANT = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+               '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788']
+
+    PROFESSIONAL = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E',
+                    '#BC4B51', '#5E548E', '#9A8C98', '#C9ADA7', '#4A5859']
+
+    PASTEL = ['#FFB5BA', '#B8E0D2', '#D6EADF', '#EAC4D5', '#F7D59C',
+              '#C9B1BD', '#A7D2CB', '#F2D388', '#C98474', '#874C62']
+
+    NEON = ['#FF006E', '#FB5607', '#FFBE0B', '#8338EC', '#3A86FF',
+            '#06FFA5', '#FF206E', '#FAED26', '#7209B7', '#4CC9F0']
+
+    OCEAN = ['#023047', '#126782', '#219EBC', '#8ECAE6', '#FFB703',
+             '#FB8500', '#006466', '#4D908E', '#43AA8B', '#90BE6D']
+
+    SUNSET = ['#F72585', '#B5179E', '#7209B7', '#560BAD', '#480CA8',
+              '#3A0CA3', '#3F37C9', '#4361EE', '#4895EF', '#4CC9F0']
+
+    EARTH = ['#9A8C98', '#C9ADA7', '#F2E9E4', '#4A4E69', '#22223B',
+             '#9A8C98', '#C9ADA7', '#F2E9E4', '#4A4E69', '#22223B']
+
+    FOOTBALL = ['#DC143C', '#0000CD', '#FFD700', '#FF4500', '#00CED1',
+                '#FF1493', '#32CD32', '#FF6347', '#4169E1', '#FF8C00']
+
+    @staticmethod
+    def get_palette(name):
+        """Lấy color palette theo tên"""
+        palettes = {
+            'vibrant': ColorPalettes.VIBRANT,
+            'professional': ColorPalettes.PROFESSIONAL,
+            'pastel': ColorPalettes.PASTEL,
+            'neon': ColorPalettes.NEON,
+            'ocean': ColorPalettes.OCEAN,
+            'sunset': ColorPalettes.SUNSET,
+            'earth': ColorPalettes.EARTH,
+            'football': ColorPalettes.FOOTBALL
+        }
+        return palettes.get(name.lower(), ColorPalettes.PROFESSIONAL)
+
+
+class StylePresets:
+    """Preset styles cho các use cases khác nhau"""
+
+    TIKTOK = {
+        'period_length': 300,
+        'steps_per_period': 15,
+        'ratio': '9:16',
+        'palette': 'neon',
+        'bar_style': 'gradient'
+    }
+
+    YOUTUBE = {
+        'period_length': 500,
+        'steps_per_period': 12,
+        'ratio': '16:9',
+        'palette': 'professional',
+        'bar_style': 'solid'
+    }
+
+    INSTAGRAM = {
+        'period_length': 400,
+        'steps_per_period': 15,
+        'ratio': '9:16',
+        'palette': 'pastel',
+        'bar_style': 'gradient'
+    }
+
+    PRESENTATION = {
+        'period_length': 600,
+        'steps_per_period': 10,
+        'ratio': '16:9',
+        'palette': 'professional',
+        'bar_style': 'solid'
+    }
+
+
 class TimeSeriesRacing:
-    """Lớp chính để xử lý và tạo video bar chart race"""
+    """Lớp chính để xử lý và tạo video bar chart race - Enhanced version"""
 
     def __init__(self, input_file, **kwargs):
         """
@@ -41,8 +123,38 @@ class TimeSeriesRacing:
         self.period_length = kwargs.get('period_length', 500)
         self.steps_per_period = kwargs.get('steps_per_period', 10)
 
+        # Enhanced parameters
+        self.palette = kwargs.get('palette', 'professional')
+        self.bar_style = kwargs.get('bar_style', 'gradient')
+        self.preset = kwargs.get('preset', None)
+        self.show_grid = kwargs.get('show_grid', True)
+        self.bar_label_font_size = kwargs.get('bar_label_font_size', 12)
+        self.title_font_size = kwargs.get('title_font_size', 20)
+
+        # Apply preset if specified
+        if self.preset:
+            self._apply_preset()
+
         self.df = None
         self.df_wide = None
+
+    def _apply_preset(self):
+        """Áp dụng preset style"""
+        presets = {
+            'tiktok': StylePresets.TIKTOK,
+            'youtube': StylePresets.YOUTUBE,
+            'instagram': StylePresets.INSTAGRAM,
+            'presentation': StylePresets.PRESENTATION
+        }
+
+        if self.preset.lower() in presets:
+            preset = presets[self.preset.lower()]
+            self.period_length = preset['period_length']
+            self.steps_per_period = preset['steps_per_period']
+            self.ratio = preset['ratio']
+            self.palette = preset['palette']
+            self.bar_style = preset['bar_style']
+            print(f"✨ Đã áp dụng preset: {self.preset.upper()}")
 
     def read_data(self):
         """Đọc dữ liệu từ file CSV, Excel, hoặc JSON"""
@@ -186,27 +298,65 @@ class TimeSeriesRacing:
             return False
 
     def create_animation(self):
-        """Tạo animation bar chart race và xuất video MP4"""
+        """Tạo animation bar chart race và xuất video MP4 - Enhanced version"""
         print(f"\n🎬 Đang tạo video animation...")
         print(f"  → Tiêu đề: {self.title}")
         print(f"  → Top {self.top_n} thực thể")
         print(f"  → FPS: {self.fps}")
         print(f"  → Tỷ lệ: {self.ratio}")
+        print(f"  → Palette: {self.palette}")
+        print(f"  → Bar style: {self.bar_style}")
 
         try:
             # Cấu hình kích thước theo tỷ lệ
             if self.ratio == '9:16':
-                figsize = (5, 8.89)  # Portrait cho TikTok/Reels
+                figsize = (6, 10.67)  # Portrait cho TikTok/Reels
             else:
-                figsize = (10, 5.625)  # Landscape 16:9
+                figsize = (12, 6.75)  # Landscape 16:9
 
-            # Chọn colormap theo theme
-            if self.theme == 'dark':
-                cmap = 'plasma'
-                colors = None
+            # Lấy color palette
+            colors = ColorPalettes.get_palette(self.palette)
+
+            # Tạo custom colormap
+            if self.bar_style == 'gradient':
+                # Gradient colors cho bars
+                n_colors = len(self.df_wide.columns)
+                if n_colors <= len(colors):
+                    bar_colors = colors[:n_colors]
+                else:
+                    # Repeat colors if needed
+                    bar_colors = (colors * ((n_colors // len(colors)) + 1))[:n_colors]
+                cmap = None
             else:
-                cmap = 'tab20'
-                colors = None
+                # Solid colors
+                cmap = mcolors.ListedColormap(colors)
+                bar_colors = None
+
+            # Font configuration
+            title_font_size = self.title_font_size if self.ratio == '16:9' else self.title_font_size - 2
+            bar_label_size = self.bar_label_font_size
+            tick_label_size = self.bar_label_font_size - 1
+
+            # Period label configuration
+            period_label_size = title_font_size + 8
+            if self.ratio == '9:16':
+                period_label_pos = {'x': 0.95, 'y': 0.15, 'ha': 'right', 'va': 'center'}
+            else:
+                period_label_pos = {'x': 0.98, 'y': 0.12, 'ha': 'right', 'va': 'center'}
+
+            # Bar styling
+            if self.bar_style == 'gradient':
+                bar_kwargs = {
+                    'alpha': 0.9,
+                    'ec': 'white',
+                    'lw': 2,
+                }
+            else:
+                bar_kwargs = {
+                    'alpha': 0.85,
+                    'ec': 'white',
+                    'lw': 1.5,
+                }
 
             # Tạo animation
             print(f"  ⏳ Đang render video... (có thể mất vài phút)")
@@ -219,25 +369,36 @@ class TimeSeriesRacing:
                 figsize=figsize,
                 period_length=self.period_length,
                 steps_per_period=self.steps_per_period,
-                cmap=cmap,
+                cmap=cmap if not bar_colors else None,
+                colors=bar_colors if bar_colors else None,
                 bar_size=0.95,
                 period_label={
-                    'x': 0.98,
-                    'y': 0.1,
-                    'ha': 'right',
-                    'va': 'center',
-                    'size': 24,
-                    'weight': 'bold'
+                    **period_label_pos,
+                    'size': period_label_size,
+                    'weight': 'bold',
+                    'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
                 },
                 period_fmt='{x:.0f}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
-                bar_label_size=10,
-                tick_label_size=10,
-                shared_fontdict={'family': 'sans-serif', 'weight': 'bold'},
+                bar_label_size=bar_label_size,
+                tick_label_size=tick_label_size,
+                shared_fontdict={
+                    'family': 'sans-serif',
+                    'weight': 'bold',
+                    'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
+                },
+                title_size=title_font_size,
                 scale='linear',
                 writer='ffmpeg',
                 fig=None,
-                bar_kwargs={'alpha': 0.8, 'ec': 'white', 'lw': 1.5},
-                filter_column_colors=False
+                bar_kwargs=bar_kwargs,
+                filter_column_colors=False,
+                period_summary_func=lambda v, r: {
+                    'x': 0.98,
+                    'y': 0.05,
+                    's': f'Total: {v.sum():,.0f}' if not self.use_percent else f'Total: {v.sum():.1f}%',
+                    'ha': 'right',
+                    'size': bar_label_size - 2
+                } if self.show_grid else None,
             )
 
             print(f"\n✅ Video đã được tạo thành công: {self.output}")
@@ -245,6 +406,12 @@ class TimeSeriesRacing:
             # Hiển thị thông tin file
             file_size = os.path.getsize(self.output) / (1024 * 1024)  # MB
             print(f"  → Kích thước: {file_size:.2f} MB")
+
+            # Show specs
+            print(f"\n📊 Thông số video:")
+            print(f"  → Resolution: {'1080×1920' if self.ratio == '9:16' else '1920×1080'}")
+            print(f"  → Duration: ~{(len(self.df_wide) * self.period_length) / 1000:.1f}s")
+            print(f"  → Animation quality: {'Smooth' if self.steps_per_period >= 12 else 'Standard'}")
 
             return True
 
@@ -256,9 +423,9 @@ class TimeSeriesRacing:
 
     def run(self):
         """Chạy toàn bộ quy trình"""
-        print("="*60)
-        print("🎥 TIMESERIES RACING - TẠO VIDEO BIỂU ĐỒ ĐỘNG")
-        print("="*60)
+        print("="*70)
+        print("🎥 TIMESERIES RACING v2.0 - ENHANCED VIDEO GENERATOR")
+        print("="*70)
 
         # Bước 1: Đọc dữ liệu
         if not self.read_data():
@@ -275,9 +442,13 @@ class TimeSeriesRacing:
         if not self.create_animation():
             return False
 
-        print("\n" + "="*60)
+        print("\n" + "="*70)
         print("🎉 HOÀN THÀNH!")
-        print("="*60)
+        print("="*70)
+        print("\n💡 Tips:")
+        print("  - Chia sẻ video lên TikTok/Instagram Reels để viral!")
+        print("  - Thử các palette khác: vibrant, neon, ocean, sunset")
+        print("  - Dùng preset: --preset tiktok hoặc youtube")
 
         return True
 
@@ -286,49 +457,42 @@ def main():
     """Hàm main với CLI parser"""
 
     parser = argparse.ArgumentParser(
-        description='TimeSeriesRacing - Tạo video biểu đồ động từ dữ liệu time series',
+        description='TimeSeriesRacing v2.0 - Tạo video biểu đồ động chuyên nghiệp',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ví dụ sử dụng:
   # Cách đơn giản nhất
   python TimeSeriesRacing.py data.csv
 
-  # Với các tùy chọn
-  python TimeSeriesRacing.py data.csv --title "Evolution of Coding" --top 10 --fps 30
+  # Với preset TikTok (tự động tối ưu)
+  python TimeSeriesRacing.py data.csv --preset tiktok
 
-  # Chỉ định cột cụ thể (long format)
-  python TimeSeriesRacing.py data.csv --time year --entity language --value popularity
+  # Với palette màu đẹp
+  python TimeSeriesRacing.py data.csv --palette neon --title "Trending Data"
 
-  # Xuất video dạng portrait cho TikTok/Reels
-  python TimeSeriesRacing.py data.csv --ratio 9:16 --output tiktok.mp4
+  # Video chuyên nghiệp với gradient bars
+  python TimeSeriesRacing.py data.csv --palette ocean --bar-style gradient
 
-  # Hiển thị dữ liệu dạng phần trăm
-  python TimeSeriesRacing.py data.csv --percent --title "Market Share Evolution"
+  # Preset cho YouTube
+  python TimeSeriesRacing.py data.csv --preset youtube --title "My Analysis"
 
-Định dạng dữ liệu được hỗ trợ:
-  - CSV (.csv)
-  - Excel (.xlsx, .xls)
-  - JSON (.json)
+Palettes có sẵn:
+  vibrant, professional, pastel, neon, ocean, sunset, earth, football
 
-Cấu trúc dữ liệu:
-  1. Long format (3 cột):
-     year, language, popularity
-     1992, C, 71.41
-     1992, C++, 20.36
+Presets có sẵn:
+  tiktok, youtube, instagram, presentation
 
-  2. Wide format (nhiều cột):
-     year, C, C++, Java, JS
-     1992, 71.4, 20.3, 0, 0
-     1996, 59.1, 17.2, 12, 11
+Bar styles:
+  solid, gradient
         """
     )
 
     # Tham số bắt buộc
     parser.add_argument('input', help='File dữ liệu đầu vào (CSV, Excel, JSON)')
 
-    # Tham số tùy chọn
+    # Tham số tùy chọn cơ bản
     parser.add_argument('--title', type=str, default='Evolution of Data',
-                        help='Tiêu đề video (mặc định: "Evolution of Data")')
+                        help='Tiêu đề video')
     parser.add_argument('--top', type=int, default=10,
                         help='Số thanh hiển thị tối đa (mặc định: 10)')
     parser.add_argument('--fps', type=int, default=30,
@@ -344,7 +508,26 @@ Cấu trúc dữ liệu:
     parser.add_argument('--period-length', type=int, default=500,
                         help='Độ dài mỗi period (ms) (mặc định: 500)')
     parser.add_argument('--steps-per-period', type=int, default=10,
-                        help='Số bước mỗi period (mặc định: 10)')
+                        help='Số bước mỗi period - càng cao càng mượt (mặc định: 10)')
+
+    # Enhanced parameters
+    parser.add_argument('--palette', type=str,
+                        choices=['vibrant', 'professional', 'pastel', 'neon', 'ocean',
+                                'sunset', 'earth', 'football'],
+                        default='professional',
+                        help='Color palette (mặc định: professional)')
+    parser.add_argument('--bar-style', type=str, choices=['solid', 'gradient'],
+                        default='gradient',
+                        help='Kiểu thanh bar (mặc định: gradient)')
+    parser.add_argument('--preset', type=str,
+                        choices=['tiktok', 'youtube', 'instagram', 'presentation'],
+                        help='Preset tối ưu cho platform cụ thể')
+    parser.add_argument('--no-grid', action='store_true',
+                        help='Tắt grid lines')
+    parser.add_argument('--bar-label-font-size', type=int, default=12,
+                        help='Kích thước font cho bar labels (mặc định: 12)')
+    parser.add_argument('--title-font-size', type=int, default=20,
+                        help='Kích thước font cho title (mặc định: 20)')
 
     # Tham số cho long format
     parser.add_argument('--time', type=str, default=None,
@@ -376,7 +559,13 @@ Cấu trúc dữ liệu:
         entity=args.entity,
         value=args.value,
         period_length=args.period_length,
-        steps_per_period=args.steps_per_period
+        steps_per_period=args.steps_per_period,
+        palette=args.palette,
+        bar_style=args.bar_style,
+        preset=args.preset,
+        show_grid=not args.no_grid,
+        bar_label_font_size=args.bar_label_font_size,
+        title_font_size=args.title_font_size
     )
 
     success = racing.run()

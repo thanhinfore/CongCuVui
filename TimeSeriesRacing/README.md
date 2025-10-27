@@ -1,16 +1,26 @@
-# TimeSeriesRacing - Tạo Video Biểu Đồ Động
+# TimeSeriesRacing v2.0 - Tạo Video Biểu Đồ Động Chuyên Nghiệp
 
 Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-## Tính năng chính
+**🆕 Version 2.0**: Được nâng cấp với 8 color palettes chuyên nghiệp, 4 style presets tối ưu cho từng platform, và animations mượt mà hơn!
 
+## ✨ Tính năng chính
+
+### Core Features
 - **Tự động nhận dạng** cấu trúc dữ liệu (long format / wide format)
 - **Hỗ trợ nhiều định dạng**: CSV, Excel (.xlsx, .xls), JSON
 - **Không cần setup phức tạp**: Chỉ 1 file Python duy nhất
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
-- **Tùy biến linh hoạt**: Title, màu sắc, tỷ lệ khung hình, FPS...
-- **Hỗ trợ portrait mode** cho TikTok/Reels (9:16)
 - **Xuất video MP4** chất lượng cao
+
+### 🆕 New in v2.0
+- **8 Color Palettes**: Vibrant, Professional, Neon, Pastel, Ocean, Sunset, Earth, Football
+- **4 Style Presets**: TikTok, YouTube, Instagram, Presentation
+- **Gradient Bar Styles**: Bars với gradient colors đẹp mắt
+- **Enhanced Typography**: Font sizing tối ưu cho mỗi platform
+- **Smooth Animations**: Tăng steps per period cho animation mượt mà hơn
+- **Platform Optimization**: Auto-config cho TikTok, YouTube, Instagram
+- **Professional Styling**: Bar borders, colors, spacing được tinh chỉnh
 
 ## Cài đặt
 
@@ -74,6 +84,48 @@ python TimeSeriesRacing.py data.csv --percent --title "Market Share Evolution"
 ```bash
 python TimeSeriesRacing.py data.csv --time year --entity language --value popularity
 ```
+
+## 🆕 Sử dụng Palettes và Presets (v2.0)
+
+### Với Presets (Recommended)
+
+Presets tự động cấu hình tối ưu cho từng platform:
+
+```bash
+# TikTok - Video viral nhanh, màu neon, 9:16
+python TimeSeriesRacing.py data.csv --preset tiktok --title "Trending Now! 🔥"
+
+# YouTube - Video chuyên nghiệp, 16:9
+python TimeSeriesRacing.py data.csv --preset youtube --title "Data Analysis 2024"
+
+# Instagram - Video aesthetic, pastel colors, 9:16
+python TimeSeriesRacing.py data.csv --preset instagram --title "Beautiful Data 💕"
+
+# Presentation - Chậm rãi, dễ đọc, professional
+python TimeSeriesRacing.py data.csv --preset presentation --title "Q4 Report"
+```
+
+### Với Color Palettes
+
+Chọn palette để video đẹp hơn:
+
+```bash
+# Neon - Rực rỡ cho viral content
+python TimeSeriesRacing.py data.csv --palette neon
+
+# Ocean - Xanh biển cho travel/nature
+python TimeSeriesRacing.py data.csv --palette ocean
+
+# Football - Cho sports content
+python TimeSeriesRacing.py data.csv --palette football --bar-style gradient
+
+# Professional - Cho business presentation
+python TimeSeriesRacing.py data.csv --palette professional
+```
+
+**8 Palettes có sẵn**: `vibrant`, `professional`, `pastel`, `neon`, `ocean`, `sunset`, `earth`, `football`
+
+**📖 Xem chi tiết**: [PALETTES_AND_PRESETS.md](PALETTES_AND_PRESETS.md)
 
 ## Định dạng dữ liệu
 
@@ -205,14 +257,15 @@ bash examples/demo_football.sh
 
 ```
 TimeSeriesRacing/
-├── TimeSeriesRacing.py    # File chính
-├── requirements.txt       # Thư viện cần thiết
-├── README.md             # Tài liệu này
-├── QUICKSTART.md         # Hướng dẫn nhanh
-├── LICENSE               # MIT License
-├── .gitignore           # Git ignore rules
-├── demo.sh              # Demo script tổng hợp
-└── examples/            # Thư mục ví dụ
+├── TimeSeriesRacing.py            # File chính (v2.0 enhanced)
+├── requirements.txt               # Thư viện cần thiết
+├── README.md                      # Tài liệu này
+├── QUICKSTART.md                  # Hướng dẫn nhanh
+├── PALETTES_AND_PRESETS.md        # 🆕 Hướng dẫn palettes và presets
+├── LICENSE                        # MIT License
+├── .gitignore                     # Git ignore rules
+├── demo.sh                        # Demo script tổng hợp
+└── examples/                      # Thư mục ví dụ
     ├── sample_long.csv                    # Dữ liệu mẫu long format
     ├── sample_wide.csv                    # Dữ liệu mẫu wide format
     ├── sample_coding.csv                  # Ví dụ ngôn ngữ lập trình
@@ -284,9 +337,22 @@ Phát triển bởi CongCuVui Team
 
 ## Changelog
 
-### v1.0.0 (2025)
+### v2.0.0 (2025-10-27) 🎉
+- **8 Color Palettes chuyên nghiệp**: Vibrant, Professional, Neon, Pastel, Ocean, Sunset, Earth, Football
+- **4 Style Presets**: TikTok, YouTube, Instagram, Presentation với auto-config
+- **Gradient Bar Styles**: Bars với gradient colors và border styling
+- **Enhanced Typography**: Font sizing tối ưu cho từng platform
+- **Smooth Animations**: Mặc định tăng từ 10 lên 12-15 steps per period
+- **Better Period Labels**: Positioning và styling được cải thiện
+- **Platform Optimization**: Tự động tối ưu cho từng social media platform
+- **Improved Bar Styling**: Alpha, edge colors, line width được tinh chỉnh
+- **Total Summary**: Hiển thị tổng giá trị ở cuối video
+- **Comprehensive Documentation**: Thêm PALETTES_AND_PRESETS.md với hướng dẫn chi tiết
+
+### v1.0.0 (2025-10-27)
 - Phiên bản đầu tiên
 - Hỗ trợ CSV, Excel, JSON
-- Tự động nhận dạng cấu trúc dữ liệu
+- Tự động nhận dạng cấu trúc dữ liệu (long/wide format)
 - Xuất video MP4
 - CLI đầy đủ tính năng
+- Dữ liệu mẫu Premier League Trophy Race
