@@ -23,6 +23,48 @@
   <ItemGroup>
     <Compile Include="TimeSeriesRacing.py" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="examples\" />
+    <Folder Include="examples\sports_data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="demo.sh" />
+    <Content Include="examples\demo_football.sh" />
+    <Content Include="examples\PREMIER_LEAGUE_DATA.md" />
+    <Content Include="examples\premier_league_trophies_long.csv" />
+    <Content Include="examples\premier_league_trophies_wide.csv" />
+    <Content Include="examples\sample_coding.csv" />
+    <Content Include="examples\sample_long.csv" />
+    <Content Include="examples\sample_wide.csv" />
+    <Content Include="examples\sports_data\01_champions_league_trophies.csv" />
+    <Content Include="examples\sports_data\02_olympic_medals.csv" />
+    <Content Include="examples\sports_data\03_grand_slam_tennis.csv" />
+    <Content Include="examples\sports_data\04_world_cup_titles.csv" />
+    <Content Include="examples\sports_data\05_formula1_championships.csv" />
+    <Content Include="examples\sports_data\06_nba_championships.csv" />
+    <Content Include="examples\sports_data\07_super_bowl_wins.csv" />
+    <Content Include="examples\sports_data\08_world_series_wins.csv" />
+    <Content Include="examples\sports_data\09_uefa_euro_titles.csv" />
+    <Content Include="examples\sports_data\10_copa_america_titles.csv" />
+    <Content Include="examples\sports_data\11_wimbledon_titles.csv" />
+    <Content Include="examples\sports_data\12_tour_de_france.csv" />
+    <Content Include="examples\sports_data\13_golf_majors.csv" />
+    <Content Include="examples\sports_data\14_cricket_world_cup.csv" />
+    <Content Include="examples\sports_data\15_rugby_world_cup.csv" />
+    <Content Include="examples\sports_data\16_stanley_cup.csv" />
+    <Content Include="examples\sports_data\17_boxing_champions.csv" />
+    <Content Include="examples\sports_data\18_premier_league_goals.csv" />
+    <Content Include="examples\sports_data\19_ballon_dor.csv" />
+    <Content Include="examples\sports_data\20_swimming_records.csv" />
+    <Content Include="examples\sports_data\README.md" />
+    <Content Include="IDEAS.md" />
+    <Content Include="LICENSE" />
+    <Content Include="PALETTES_AND_PRESETS.md" />
+    <Content Include="QUICKSTART.md" />
+    <Content Include="README.md" />
+    <Content Include="requirements.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
        Visual Studio and specify your pre- and post-build commands in
