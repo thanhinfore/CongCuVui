@@ -1,0 +1,301 @@
+year,club,total_trophies
+1990,Manchester United,20
+1990,Liverpool,38
+1990,Chelsea,10
+1990,Arsenal,18
+1990,Manchester City,8
+1990,Tottenham,15
+1990,Leicester,7
+1990,Blackburn,6
+1990,Newcastle,11
+1990,Everton,15
+1990,Aston Villa,14
+1990,Leeds United,12
+1992,Manchester United,21
+1992,Liverpool,38
+1992,Chelsea,10
+1992,Arsenal,19
+1992,Manchester City,8
+1992,Tottenham,15
+1992,Leicester,7
+1992,Blackburn,6
+1992,Newcastle,11
+1992,Everton,16
+1992,Aston Villa,14
+1992,Leeds United,12
+1994,Manchester United,24
+1994,Liverpool,38
+1994,Chelsea,10
+1994,Arsenal,19
+1994,Manchester City,8
+1994,Tottenham,16
+1994,Leicester,7
+1994,Blackburn,6
+1994,Newcastle,11
+1994,Everton,16
+1994,Aston Villa,14
+1994,Leeds United,13
+1995,Manchester United,25
+1995,Liverpool,38
+1995,Chelsea,10
+1995,Arsenal,20
+1995,Manchester City,8
+1995,Tottenham,16
+1995,Leicester,7
+1995,Blackburn,7
+1995,Newcastle,11
+1995,Everton,16
+1995,Aston Villa,15
+1995,Leeds United,13
+1997,Manchester United,29
+1997,Liverpool,38
+1997,Chelsea,10
+1997,Arsenal,22
+1997,Manchester City,8
+1997,Tottenham,16
+1997,Leicester,7
+1997,Blackburn,7
+1997,Newcastle,11
+1997,Everton,16
+1997,Aston Villa,15
+1997,Leeds United,13
+1999,Manchester United,33
+1999,Liverpool,39
+1999,Chelsea,10
+1999,Arsenal,23
+1999,Manchester City,8
+1999,Tottenham,17
+1999,Leicester,7
+1999,Blackburn,7
+1999,Newcastle,11
+1999,Everton,16
+1999,Aston Villa,15
+1999,Leeds United,13
+2001,Manchester United,36
+2001,Liverpool,40
+2001,Chelsea,11
+2001,Arsenal,25
+2001,Manchester City,8
+2001,Tottenham,18
+2001,Leicester,7
+2001,Blackburn,7
+2001,Newcastle,11
+2001,Everton,16
+2001,Aston Villa,15
+2001,Leeds United,13
+2003,Manchester United,39
+2003,Liverpool,41
+2003,Chelsea,11
+2003,Arsenal,28
+2003,Manchester City,8
+2003,Tottenham,18
+2003,Leicester,7
+2003,Blackburn,7
+2003,Newcastle,11
+2003,Everton,16
+2003,Aston Villa,15
+2003,Leeds United,13
+2004,Manchester United,40
+2004,Liverpool,42
+2004,Chelsea,12
+2004,Arsenal,29
+2004,Manchester City,8
+2004,Tottenham,18
+2004,Leicester,7
+2004,Blackburn,7
+2004,Newcastle,11
+2004,Everton,16
+2004,Aston Villa,15
+2004,Leeds United,13
+2005,Manchester United,41
+2005,Liverpool,44
+2005,Chelsea,13
+2005,Arsenal,30
+2005,Manchester City,8
+2005,Tottenham,18
+2005,Leicester,7
+2005,Blackburn,7
+2005,Newcastle,11
+2005,Everton,16
+2005,Aston Villa,15
+2005,Leeds United,13
+2007,Manchester United,44
+2007,Liverpool,44
+2007,Chelsea,15
+2007,Arsenal,31
+2007,Manchester City,8
+2007,Tottenham,20
+2007,Leicester,7
+2007,Blackburn,7
+2007,Newcastle,11
+2007,Everton,16
+2007,Aston Villa,15
+2007,Leeds United,13
+2009,Manchester United,47
+2009,Liverpool,44
+2009,Chelsea,16
+2009,Arsenal,31
+2009,Manchester City,9
+2009,Tottenham,21
+2009,Leicester,7
+2009,Blackburn,7
+2009,Newcastle,11
+2009,Everton,16
+2009,Aston Villa,15
+2009,Leeds United,13
+2011,Manchester United,49
+2011,Liverpool,44
+2011,Chelsea,18
+2011,Arsenal,33
+2011,Manchester City,10
+2011,Tottenham,21
+2011,Leicester,7
+2011,Blackburn,7
+2011,Newcastle,11
+2011,Everton,16
+2011,Aston Villa,15
+2011,Leeds United,13
+2012,Manchester United,50
+2012,Liverpool,44
+2012,Chelsea,19
+2012,Arsenal,33
+2012,Manchester City,11
+2012,Tottenham,21
+2012,Leicester,7
+2012,Blackburn,7
+2012,Newcastle,11
+2012,Everton,16
+2012,Aston Villa,15
+2012,Leeds United,13
+2013,Manchester United,51
+2013,Liverpool,44
+2013,Chelsea,19
+2013,Arsenal,34
+2013,Manchester City,11
+2013,Tottenham,21
+2013,Leicester,7
+2013,Blackburn,7
+2013,Newcastle,11
+2013,Everton,16
+2013,Aston Villa,15
+2013,Leeds United,14
+2015,Manchester United,52
+2015,Liverpool,45
+2015,Chelsea,21
+2015,Arsenal,37
+2015,Manchester City,14
+2015,Tottenham,21
+2015,Leicester,7
+2015,Blackburn,7
+2015,Newcastle,11
+2015,Everton,16
+2015,Aston Villa,15
+2015,Leeds United,13
+2016,Manchester United,52
+2016,Liverpool,45
+2016,Chelsea,21
+2016,Arsenal,38
+2016,Manchester City,14
+2016,Tottenham,21
+2016,Leicester,8
+2016,Blackburn,7
+2016,Newcastle,11
+2016,Everton,16
+2016,Aston Villa,15
+2016,Leeds United,13
+2017,Manchester United,54
+2017,Liverpool,45
+2017,Chelsea,22
+2017,Arsenal,40
+2017,Manchester City,15
+2017,Tottenham,21
+2017,Leicester,8
+2017,Blackburn,7
+2017,Newcastle,11
+2017,Everton,16
+2017,Aston Villa,15
+2017,Leeds United,13
+2018,Manchester United,55
+2018,Liverpool,45
+2018,Chelsea,23
+2018,Arsenal,40
+2018,Manchester City,17
+2018,Tottenham,21
+2018,Leicester,8
+2018,Blackburn,7
+2018,Newcastle,11
+2018,Everton,16
+2018,Aston Villa,15
+2018,Leeds United,13
+2019,Manchester United,55
+2019,Liverpool,47
+2019,Chelsea,24
+2019,Arsenal,41
+2019,Manchester City,19
+2019,Tottenham,21
+2019,Leicester,8
+2019,Blackburn,7
+2019,Newcastle,11
+2019,Everton,16
+2019,Aston Villa,15
+2019,Leeds United,13
+2020,Manchester United,55
+2020,Liverpool,49
+2020,Chelsea,24
+2020,Arsenal,42
+2020,Manchester City,21
+2020,Tottenham,21
+2020,Leicester,8
+2020,Blackburn,7
+2020,Newcastle,11
+2020,Everton,16
+2020,Aston Villa,15
+2020,Leeds United,13
+2021,Manchester United,55
+2021,Liverpool,49
+2021,Chelsea,24
+2021,Arsenal,43
+2021,Manchester City,22
+2021,Tottenham,21
+2021,Leicester,9
+2021,Blackburn,7
+2021,Newcastle,11
+2021,Everton,16
+2021,Aston Villa,15
+2021,Leeds United,13
+2022,Manchester United,55
+2022,Liverpool,50
+2022,Chelsea,24
+2022,Arsenal,43
+2022,Manchester City,24
+2022,Tottenham,21
+2022,Leicester,10
+2022,Blackburn,7
+2022,Newcastle,11
+2022,Everton,16
+2022,Aston Villa,15
+2022,Leeds United,13
+2023,Manchester United,56
+2023,Liverpool,51
+2023,Chelsea,25
+2023,Arsenal,43
+2023,Manchester City,26
+2023,Tottenham,21
+2023,Leicester,10
+2023,Blackburn,7
+2023,Newcastle,11
+2023,Everton,16
+2023,Aston Villa,15
+2023,Leeds United,13
+2024,Manchester United,56
+2024,Liverpool,51
+2024,Chelsea,25
+2024,Arsenal,43
+2024,Manchester City,28
+2024,Tottenham,21
+2024,Leicester,10
+2024,Blackburn,7
+2024,Newcastle,11
+2024,Everton,16
+2024,Aston Villa,15
+2024,Leeds United,13
