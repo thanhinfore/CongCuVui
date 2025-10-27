@@ -317,20 +317,16 @@ class TimeSeriesRacing:
             # Lấy color palette
             colors = ColorPalettes.get_palette(self.palette)
 
-            # Tạo custom colormap
-            if self.bar_style == 'gradient':
-                # Gradient colors cho bars
-                n_colors = len(self.df_wide.columns)
-                if n_colors <= len(colors):
-                    bar_colors = colors[:n_colors]
-                else:
-                    # Repeat colors if needed
-                    bar_colors = (colors * ((n_colors // len(colors)) + 1))[:n_colors]
-                cmap = None
+            # Tạo custom colormap - bar_chart_race chỉ nhận cmap, không nhận colors
+            n_colors = len(self.df_wide.columns)
+            if n_colors <= len(colors):
+                palette_colors = colors[:n_colors]
             else:
-                # Solid colors
-                cmap = mcolors.ListedColormap(colors)
-                bar_colors = None
+                # Repeat colors if needed
+                palette_colors = (colors * ((n_colors // len(colors)) + 1))[:n_colors]
+
+            # Tạo colormap từ palette colors
+            cmap = mcolors.ListedColormap(palette_colors)
 
             # Font configuration
             title_font_size = self.title_font_size if self.ratio == '16:9' else self.title_font_size - 2
@@ -369,8 +365,7 @@ class TimeSeriesRacing:
                 figsize=figsize,
                 period_length=self.period_length,
                 steps_per_period=self.steps_per_period,
-                cmap=cmap if not bar_colors else None,
-                colors=bar_colors if bar_colors else None,
+                cmap=cmap,
                 bar_size=0.95,
                 period_label={
                     **period_label_pos,
