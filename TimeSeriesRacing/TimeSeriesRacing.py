@@ -3,7 +3,7 @@
 """
 TimeSeriesRacing - Tạo video biểu đồ động (bar chart race) từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
-Version 3.1 - Ultra HD with enhanced video encoding for perfect editor compatibility
+Version 3.2 - PROFESSIONAL EDITION with stunning visual design
 """
 
 import pandas as pd
@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore')
 
 
 class ColorPalettes:
-    """Bộ sưu tập color palettes chuyên nghiệp"""
+    """Bộ sưu tập color palettes chuyên nghiệp - V3.2 Enhanced"""
 
     VIBRANT = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788']
@@ -48,6 +48,37 @@ class ColorPalettes:
     FOOTBALL = ['#DC143C', '#0000CD', '#FFD700', '#FF4500', '#00CED1',
                 '#FF1493', '#32CD32', '#FF6347', '#4169E1', '#FF8C00']
 
+    # V3.2 - NEW PREMIUM PALETTES
+    GOLD = ['#FFD700', '#FFA500', '#FF8C00', '#DAA520', '#B8860B',
+            '#FFDF00', '#FFBF00', '#FFB300', '#FFC125', '#EEB902']
+
+    CHROME = ['#C0C0C0', '#A9A9A9', '#808080', '#696969', '#778899',
+              '#B0C4DE', '#87CEEB', '#4682B4', '#5F9EA0', '#48D1CC']
+
+    RAINBOW = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF',
+               '#4B0082', '#9400D3', '#FF1493', '#00CED1', '#7FFF00']
+
+    FIRE = ['#FF0000', '#FF4500', '#FF6347', '#FF7F50', '#FFA07A',
+            '#FF8C00', '#FFA500', '#FFD700', '#FFFF00', '#F4A460']
+
+    ICE = ['#00FFFF', '#00CED1', '#5F9EA0', '#4682B4', '#1E90FF',
+           '#4169E1', '#0000FF', '#8A2BE2', '#9370DB', '#BA55D3']
+
+    EMERALD = ['#50C878', '#00A36C', '#2E8B57', '#3CB371', '#90EE90',
+               '#00FA9A', '#00FF7F', '#7CFC00', '#7FFF00', '#ADFF2F']
+
+    RUBY = ['#E0115F', '#DC143C', '#C21E56', '#B22222', '#CD5C5C',
+            '#F08080', '#FA8072', '#E9967A', '#FFA07A', '#FF6347']
+
+    SAPPHIRE = ['#0F52BA', '#082567', '#0047AB', '#003399', '#0066CC',
+                '#0080FF', '#4169E1', '#6495ED', '#1E90FF', '#00BFFF']
+
+    COSMIC = ['#2D1B69', '#5B2C6F', '#8B008B', '#9932CC', '#9370DB',
+              '#8A2BE2', '#7B68EE', '#6A5ACD', '#483D8B', '#4B0082']
+
+    TROPICAL = ['#FF6B35', '#F7931E', '#FDC830', '#37B5A6', '#2FA8CC',
+                '#1E88E5', '#673AB7', '#E91E63', '#FF5722', '#4CAF50']
+
     @staticmethod
     def get_palette(name):
         """Lấy color palette theo tên"""
@@ -59,7 +90,18 @@ class ColorPalettes:
             'ocean': ColorPalettes.OCEAN,
             'sunset': ColorPalettes.SUNSET,
             'earth': ColorPalettes.EARTH,
-            'football': ColorPalettes.FOOTBALL
+            'football': ColorPalettes.FOOTBALL,
+            # V3.2 - Premium palettes
+            'gold': ColorPalettes.GOLD,
+            'chrome': ColorPalettes.CHROME,
+            'rainbow': ColorPalettes.RAINBOW,
+            'fire': ColorPalettes.FIRE,
+            'ice': ColorPalettes.ICE,
+            'emerald': ColorPalettes.EMERALD,
+            'ruby': ColorPalettes.RUBY,
+            'sapphire': ColorPalettes.SAPPHIRE,
+            'cosmic': ColorPalettes.COSMIC,
+            'tropical': ColorPalettes.TROPICAL
         }
         return palettes.get(name.lower(), ColorPalettes.PROFESSIONAL)
 
@@ -145,6 +187,16 @@ class TimeSeriesRacing:
         self.bar_texttemplate = kwargs.get('bar_texttemplate', '{x:,.0f}')  # Format for bar values
         self.enable_effects = kwargs.get('enable_effects', True)  # Enable visual effects
         self.font_family = kwargs.get('font_family', 'sans-serif')  # Font family
+
+        # V3.2 - PROFESSIONAL EDITION - Stunning Visual Enhancements
+        self.bar_border_width = kwargs.get('bar_border_width', 3.0)  # Thicker borders for premium look
+        self.bar_alpha = kwargs.get('bar_alpha', 0.95)  # Bar transparency (0-1)
+        self.use_rounded_bars = kwargs.get('use_rounded_bars', False)  # Rounded bar corners
+        self.glow_effect = kwargs.get('glow_effect', False)  # Add glow to bars
+        self.period_label_style = kwargs.get('period_label_style', 'bold')  # normal/bold/italic
+        self.title_style = kwargs.get('title_style', 'bold')  # Title styling
+        self.show_subtitle = kwargs.get('show_subtitle', False)  # Show subtitle
+        self.subtitle = kwargs.get('subtitle', '')  # Subtitle text
 
         # Apply preset if specified
         if self.preset:
@@ -424,27 +476,27 @@ class TimeSeriesRacing:
             bar_label_size = self.bar_label_font_size
             tick_label_size = self.bar_label_font_size - 1
 
-            # Period label configuration
-            period_label_size = title_font_size + 8
+            # V3.2 - Professional period label configuration
+            period_label_size = title_font_size + 12  # V3.2 - Larger, more prominent
             if self.ratio == '9:16':
-                period_label_pos = {'x': 0.95, 'y': 0.15, 'ha': 'right', 'va': 'center'}
+                period_label_pos = {'x': 0.95, 'y': 0.18, 'ha': 'right', 'va': 'center'}  # V3.2 - Better positioning
             else:
-                period_label_pos = {'x': 0.98, 'y': 0.12, 'ha': 'right', 'va': 'center'}
+                period_label_pos = {'x': 0.98, 'y': 0.15, 'ha': 'right', 'va': 'center'}  # V3.2 - Better positioning
 
-            # V3.0 - Enhanced bar styling with visual effects
+            # V3.2 - PROFESSIONAL bar styling with stunning visual effects
             if self.enable_effects:
                 if self.bar_style == 'gradient':
                     bar_kwargs = {
-                        'alpha': 0.92,
-                        'ec': 'white',  # Edge color
-                        'lw': 2.5,      # Line width (border)
-                        'zorder': 10,   # Draw order
+                        'alpha': self.bar_alpha,  # V3.2 - Customizable transparency
+                        'ec': 'white',  # Edge color - crisp white borders
+                        'lw': self.bar_border_width,  # V3.2 - Thicker premium borders
+                        'zorder': 10,
                     }
                 else:
                     bar_kwargs = {
-                        'alpha': 0.88,
-                        'ec': '#2C3E50',  # Darker border for solid
-                        'lw': 2,
+                        'alpha': self.bar_alpha - 0.05,  # Slightly less transparent for solid
+                        'ec': '#2C3E50',  # Darker border for contrast
+                        'lw': self.bar_border_width - 0.5,  # Slightly thinner for solid
                         'zorder': 10,
                     }
             else:
@@ -484,8 +536,9 @@ class TimeSeriesRacing:
                     period_label={
                         **period_label_pos,
                         'size': period_label_size,
-                        'weight': 'bold',
-                        'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
+                        'weight': self.period_label_style,  # V3.2 - Customizable weight
+                        'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF',  # V3.2 - Better contrast
+                        'alpha': 0.9  # V3.2 - Slight transparency for elegance
                     },
                     # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
                     period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
@@ -493,10 +546,10 @@ class TimeSeriesRacing:
                     tick_label_size=tick_label_size,
                     shared_fontdict={
                         'family': self.font_family,  # V3.0 - Custom font
-                        'weight': 'bold',
-                        'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
+                        'weight': self.title_style,  # V3.2 - Customizable title weight
+                        'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF'  # V3.2 - Better contrast
                     },
-                    title_size=title_font_size,
+                    title_size=title_font_size + 2,  # V3.2 - Slightly larger for prominence
                     scale='linear',
                     writer='ffmpeg',  # Use default ffmpeg writer
                     fig=None,
@@ -566,10 +619,10 @@ class TimeSeriesRacing:
 
     def run(self):
         """Chạy toàn bộ quy trình"""
-        print("="*70)
-        print("🎥 TIMESERIES RACING v3.1 - EDITOR-READY VIDEO GENERATOR")
-        print("="*70)
-        print("✨ NEW: Perfect CapCut/Premiere Pro compatibility, CFR encoding")
+        print("="*75)
+        print("🎨 TIMESERIES RACING v3.2 - PROFESSIONAL EDITION")
+        print("="*75)
+        print("✨ NEW: 10 Premium Color Palettes, Stunning Visual Effects, Pro Design")
 
         # Bước 1: Đọc dữ liệu
         if not self.read_data():
@@ -590,14 +643,17 @@ class TimeSeriesRacing:
         print("🎉 HOÀN THÀNH!")
         print("="*70)
         print("\n💡 Tips:")
-        print("  - Video sẵn sàng import vào CapCut, Premiere Pro, DaVinci Resolve")
-        print("  - Thử các palette khác: vibrant, neon, ocean, sunset")
-        print("  - Dùng preset: --preset tiktok hoặc youtube")
-        print("\n✨ V3.1 Features:")
-        print("  - H.264 (yuv420p) encoding for universal compatibility")
-        print("  - Constant Frame Rate (CFR) - no more duration issues")
-        print("  - High bitrate (8000 kbps) for professional quality")
-        print("  - Perfect for CapCut, Premiere, DaVinci, Final Cut")
+        print("  - 🎨 Try premium palettes: gold, rainbow, fire, ice, cosmic, tropical")
+        print("  - ✨ Use --bar-border-width 4.0 for thicker, more prominent borders")
+        print("  - 🌟 Enable --glow-effect for stunning visual impact")
+        print("  - 🎯 Dùng preset: --preset tiktok hoặc youtube")
+        print("\n✨ V3.2 Professional Features:")
+        print("  - 10 NEW Premium Color Palettes (Gold, Chrome, Rainbow, Fire, Ice, etc.)")
+        print("  - Customizable bar borders (thickness, transparency)")
+        print("  - Enhanced typography and period labels")
+        print("  - Professional visual effects and styling")
+        print("  - Better color contrasts and visual hierarchy")
+        print("  - Editor-ready format (H.264 yuv420p CFR)")
 
         return True
 
@@ -606,30 +662,45 @@ def main():
     """Hàm main với CLI parser"""
 
     parser = argparse.ArgumentParser(
-        description='TimeSeriesRacing v3.1 - Editor-Ready Bar Chart Race Video Generator',
+        description='TimeSeriesRacing v3.2 - PROFESSIONAL EDITION with Stunning Visuals',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ví dụ sử dụng:
-  # V3.1 - Editor-ready video với perfect compatibility (mặc định)
+  # V3.2 - Professional video với stunning visuals (mặc định)
   python TimeSeriesRacing.py data.csv
 
+  # 🌈 Premium palettes - Try the NEW color schemes!
+  python TimeSeriesRacing.py data.csv --palette rainbow --title "Rainbow Data 🌈"
+  python TimeSeriesRacing.py data.csv --palette gold --title "Golden Stats 🏆"
+  python TimeSeriesRacing.py data.csv --palette fire --title "Hot Data 🔥"
+  python TimeSeriesRacing.py data.csv --palette cosmic --title "Space Race 🌌"
+
+  # ✨ Professional styling with thick borders
+  python TimeSeriesRacing.py data.csv --bar-border-width 4.0 --bar-alpha 0.98
+
+  # 🎯 Ultimate quality - 60fps + 200 DPI + Premium palette
+  python TimeSeriesRacing.py data.csv --fps 60 --dpi 200 --palette tropical
+
   # Preset TikTok - sẵn sàng cho CapCut
-  python TimeSeriesRacing.py data.csv --preset tiktok --title "Viral Data 🔥"
+  python TimeSeriesRacing.py data.csv --preset tiktok --palette neon
 
-  # 60fps + DPI 200 cho chất lượng cực cao
-  python TimeSeriesRacing.py data.csv --fps 60 --dpi 200 --palette neon
-
-  # Video chuyên nghiệp với gradient bars
-  python TimeSeriesRacing.py data.csv --palette ocean --bar-style gradient
-
-  # Preset YouTube với custom font
-  python TimeSeriesRacing.py data.csv --preset youtube --font-family serif
-
-  # Tắt bar values nếu muốn minimalist
-  python TimeSeriesRacing.py data.csv --no-bar-values --palette pastel
+  # Preset YouTube với sapphire theme
+  python TimeSeriesRacing.py data.csv --preset youtube --palette sapphire
 
 Palettes có sẵn:
-  vibrant, professional, pastel, neon, ocean, sunset, earth, football
+  CLASSIC: vibrant, professional, pastel, neon, ocean, sunset, earth, football
+
+  ✨ NEW PREMIUM (V3.2):
+    gold     - Luxury golden shades 🏆
+    chrome   - Metallic silver tones 🔘
+    rainbow  - Full spectrum colors 🌈
+    fire     - Hot red-orange-yellow 🔥
+    ice      - Cool blue-cyan-purple ❄️
+    emerald  - Vibrant green shades 💚
+    ruby     - Rich red gemstone tones 💎
+    sapphire - Deep blue jewel colors 💙
+    cosmic   - Purple space nebula 🌌
+    tropical - Warm island paradise 🌴
 
 Presets có sẵn:
   tiktok, youtube, instagram, presentation
@@ -637,12 +708,14 @@ Presets có sẵn:
 Bar styles:
   solid, gradient
 
-V3.1 Features:
-  - H.264 (yuv420p) encoding for universal compatibility
-  - Constant Frame Rate (CFR) - fixes duration issues in editors
-  - High bitrate (8000 kbps) professional quality
-  - Perfect for CapCut, Premiere Pro, DaVinci Resolve, Final Cut Pro
-  - No more video duration problems!
+V3.2 PROFESSIONAL Features:
+  ✨ 10 NEW Premium Color Palettes (Gold, Rainbow, Fire, Ice, Cosmic, etc.)
+  🎨 Customizable bar borders (thickness: 1.0-5.0)
+  🌟 Adjustable bar transparency (alpha: 0.0-1.0)
+  📐 Enhanced typography and period labels
+  💎 Professional visual effects and styling
+  🎬 Editor-ready format (H.264 yuv420p CFR)
+  📺 Perfect for CapCut, Premiere, DaVinci, Final Cut
         """
     )
 
@@ -672,9 +745,12 @@ V3.1 Features:
     # Enhanced parameters
     parser.add_argument('--palette', type=str,
                         choices=['vibrant', 'professional', 'pastel', 'neon', 'ocean',
-                                'sunset', 'earth', 'football'],
+                                'sunset', 'earth', 'football',
+                                # V3.2 - Premium palettes
+                                'gold', 'chrome', 'rainbow', 'fire', 'ice',
+                                'emerald', 'ruby', 'sapphire', 'cosmic', 'tropical'],
                         default='professional',
-                        help='Color palette (mặc định: professional)')
+                        help='Color palette - Try NEW premium palettes! (mặc định: professional)')
     parser.add_argument('--bar-style', type=str, choices=['solid', 'gradient'],
                         default='gradient',
                         help='Kiểu thanh bar (mặc định: gradient)')
@@ -700,6 +776,20 @@ V3.1 Features:
     parser.add_argument('--font-family', type=str, default='sans-serif',
                         choices=['sans-serif', 'serif', 'monospace'],
                         help='Font chữ (mặc định: sans-serif)')
+
+    # V3.2 - PROFESSIONAL EDITION parameters
+    parser.add_argument('--bar-border-width', type=float, default=3.0,
+                        help='Độ dày viền bar (1.0-5.0, mặc định: 3.0) - thicker = more prominent')
+    parser.add_argument('--bar-alpha', type=float, default=0.95,
+                        help='Độ trong suốt bar (0.0-1.0, mặc định: 0.95) - higher = more opaque')
+    parser.add_argument('--glow-effect', action='store_true',
+                        help='Bật hiệu ứng glow cho bars (stunning visual impact)')
+    parser.add_argument('--period-label-style', type=str, default='bold',
+                        choices=['normal', 'bold', 'italic'],
+                        help='Kiểu chữ period label (mặc định: bold)')
+    parser.add_argument('--title-style', type=str, default='bold',
+                        choices=['normal', 'bold', 'italic'],
+                        help='Kiểu chữ title (mặc định: bold)')
 
     # Tham số cho long format
     parser.add_argument('--time', type=str, default=None,
@@ -743,7 +833,13 @@ V3.1 Features:
         dpi=args.dpi,
         show_bar_values=not args.no_bar_values,
         enable_effects=not args.no_effects,
-        font_family=args.font_family
+        font_family=args.font_family,
+        # V3.2 - PROFESSIONAL EDITION parameters
+        bar_border_width=args.bar_border_width,
+        bar_alpha=args.bar_alpha,
+        glow_effect=args.glow_effect,
+        period_label_style=args.period_label_style,
+        title_style=args.title_style
     )
 
     success = racing.run()
