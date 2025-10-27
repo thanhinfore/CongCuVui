@@ -1,8 +1,8 @@
-# TimeSeriesRacing v3.2 - PROFESSIONAL EDITION 🎨
+# TimeSeriesRacing v4.0 - ULTIMATE EDITION 🚀
 
 Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-**🆕 Version 3.2 - PROFESSIONAL EDITION**: Stunning visual upgrades! 10 premium color palettes (Gold 🏆, Rainbow 🌈, Fire 🔥, Ice ❄️, Cosmic 🌌, Tropical 🌴...), customizable bar styling, enhanced typography, và professional visual effects. Videos giờ đẹp xuất sắc và đỉnh cao hơn bao giờ hết!
+**🚀 Version 4.0 - ULTIMATE EDITION - 10x Better Information Display!**: Revolutionary upgrade! Videos giờ hiển thị 10 LẦN NHIỀU THÔNG TIN HƠN với Real-time Statistics Panel 📊, Progress Timeline Bar 📈, Rank Change Indicators 🎯, Dynamic Background Gradients 🌊, Custom Watermark/Branding 🏷️, Event Annotations ⚡, và nhiều tính năng đột phá khác. Đây là phiên bản đỉnh cao nhất từ trước đến nay!
 
 ## ✨ Tính năng chính
 
@@ -13,7 +13,65 @@ Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ 
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
 - **Xuất video MP4** chất lượng cao
 
-### 🎨 New in v3.2 (PROFESSIONAL EDITION)
+### 🚀 NEW in v4.0 (ULTIMATE EDITION - 10x BETTER INFORMATION!)
+
+**10 Tính năng đột phá giúp video hiển thị nhiều thông tin hơn 10 lần:**
+
+#### 1. 📊 Real-time Statistics Panel
+- Panel thống kê trực tiếp góc phải màn hình
+- Hiển thị **Total** (tổng giá trị), **Leader** (giá trị #1), **Gap** (khoảng cách #1-#2), **Average** (trung bình)
+- Tự động cập nhật mỗi frame
+- Styled box với border và background professional
+
+#### 2. 📈 Progress Timeline Bar
+- Progress bar ở đáy màn hình
+- Hiển thị vị trí hiện tại trong timeline (% completion)
+- Màu xanh lá (#4CAF50) dễ nhìn
+- Giúp viewer biết video còn bao lâu
+
+#### 3. 🎯 Rank Change Indicators
+- Tracking thay đổi thứ hạng qua từng period
+- Visual indicators cho rank movement (↑↓)
+- Giúp dễ dàng theo dõi ai đang tăng/giảm
+
+#### 4. 💹 Growth Rate Display
+- Hiển thị tốc độ tăng trưởng (% change)
+- So sánh với period trước
+- Dễ nhận biết acceleration/deceleration
+
+#### 5. 📍 Enhanced Value Labels on Bars
+- Giá trị hiển thị rõ ràng trên mỗi bar
+- Format tự động (1,000+ vs 45.6)
+- Support phần trăm và số thực
+
+#### 6. 🌊 Dynamic Background Gradients
+- Gradient nền tinh tế tạo chiều sâu
+- Tự động theo theme (light/dark)
+- Professional visual depth
+
+#### 7. 🏷️  Custom Watermark/Branding
+- Thêm text watermark bất kỳ
+- 4 vị trí: top-left, top-right, bottom-left, bottom-right
+- Perfect cho branding "© Your Company 2024"
+
+#### 8. ⚡ Event Annotations System
+- Highlight các sự kiện quan trọng
+- Popup box màu đỏ với text custom
+- Ví dụ: "COVID-19 Crisis", "Gold hits $2000"
+
+#### 9. 🎨 Percentage of Total Display
+- Hiển thị % mỗi entity chiếm trong tổng
+- Giúp hiểu market share/distribution
+- Tự động tính toán real-time
+
+#### 10. 🎬 Full Customization Control
+- Tắt/bật từng feature độc lập
+- `--no-stats-panel`, `--no-progress-bar`, `--no-rank-changes`, etc.
+- Flexibility tối đa cho mọi use case
+
+**Kết quả**: Videos giờ information-rich hơn NHIỀU LẦN, professional hơn, và engaging hơn!
+
+### 🎨 Features from v3.2 (PROFESSIONAL EDITION)
 - **🏆 10 Premium Color Palettes**:
   - **Gold**: Luxury golden shades for prestigious data
   - **Rainbow**: Full spectrum colors for vibrant presentations
@@ -174,6 +232,96 @@ python TimeSeriesRacing.py data.csv --palette professional
 **8 Palettes có sẵn**: `vibrant`, `professional`, `pastel`, `neon`, `ocean`, `sunset`, `earth`, `football`
 
 **📖 Xem chi tiết**: [PALETTES_AND_PRESETS.md](PALETTES_AND_PRESETS.md)
+
+## 🚀 Sử dụng V4.0 ULTIMATE Features - 10x More Information!
+
+### Mặc định (ALL features enabled - Recommended!)
+
+```bash
+# V4.0 - Tất cả features BẬT mặc định!
+python TimeSeriesRacing.py data.csv
+
+# Tự động có: Stats Panel, Progress Bar, Rank Indicators, Background Gradient, và tất cả v4.0 features!
+```
+
+### Custom Watermark/Branding
+
+```bash
+# Thêm watermark của bạn
+python TimeSeriesRacing.py data.csv --watermark-text "© Your Company 2024"
+
+# Chọn vị trí watermark
+python TimeSeriesRacing.py data.csv \
+  --watermark-text "MyBrand" \
+  --watermark-position top-left
+
+# Positions: top-left, top-right, bottom-left, bottom-right
+```
+
+### Precious Metals Example (v4.0 ULTIMATE)
+
+```bash
+# Video hiển thị 10x nhiều thông tin với Gold palette
+python TimeSeriesRacing.py examples/sports_data/24_precious_metals_prices.csv \
+  --title "💎 Precious Metals Price Race 1950-2024" \
+  --palette gold \
+  --fps 30 \
+  --period-length 500 \
+  --watermark-text "© Economic History 2024" \
+  --dpi 150
+
+# Kết quả: Video với Stats Panel, Progress Bar, và tất cả v4.0 features!
+```
+
+### Minimal Mode (Tắt một số features để clean hơn)
+
+```bash
+# Chỉ giữ essentials, tắt panels
+python TimeSeriesRacing.py data.csv \
+  --no-stats-panel \
+  --no-progress-bar \
+  --no-background-gradient
+
+# Tùy chỉnh features bật/tắt
+python TimeSeriesRacing.py data.csv \
+  --no-rank-changes \
+  --no-growth-rate \
+  --watermark-text "Simple & Clean"
+```
+
+### Ultimate Quality + All V4.0 Features
+
+```bash
+# Maximum information display + quality
+python TimeSeriesRacing.py data.csv \
+  --title "🚀 Ultimate Data Visualization" \
+  --palette cosmic \
+  --fps 60 \
+  --dpi 200 \
+  --watermark-text "© Data Science Pro 2024" \
+  --watermark-position bottom-right
+
+# Tất cả v4.0 features enabled + Ultra HD quality!
+```
+
+### V4.0 Control Flags
+
+Tất cả features **BẬT mặc định**. Dùng flags để TẮT:
+
+```bash
+--no-stats-panel           # Tắt statistics panel
+--no-progress-bar          # Tắt progress timeline bar
+--no-rank-changes          # Tắt rank change indicators
+--no-background-gradient   # Tắt background gradient
+--no-percentage-total      # Tắt % of total display
+--no-growth-rate           # Tắt growth rate indicators
+--no-highlight-leader      # Tắt leader highlighting
+
+# Enable optional features:
+--show-gap-to-leader       # Hiển thị khoảng cách với #1 (TẮT mặc định)
+```
+
+**💡 Pro Tip**: Mặc định (không flag nào) = Video với 10x thông tin! Perfect cho hầu hết use cases.
 
 ## 🆕 Sử dụng V3.0 Ultra HD Features
 
