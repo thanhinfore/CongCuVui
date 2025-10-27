@@ -66,35 +66,39 @@ class StylePresets:
     """Preset styles cho các use cases khác nhau"""
 
     TIKTOK = {
-        'period_length': 300,
-        'steps_per_period': 15,
+        'period_length': 600,  # 0.6 giây - nhanh cho viral
+        'steps_per_period': 20,  # Mượt mà
         'ratio': '9:16',
         'palette': 'neon',
-        'bar_style': 'gradient'
+        'bar_style': 'gradient',
+        'interpolate_period': True
     }
 
     YOUTUBE = {
-        'period_length': 500,
-        'steps_per_period': 12,
+        'period_length': 1000,  # 1 giây - vừa phải
+        'steps_per_period': 20,  # Mượt mà
         'ratio': '16:9',
         'palette': 'professional',
-        'bar_style': 'solid'
+        'bar_style': 'solid',
+        'interpolate_period': True
     }
 
     INSTAGRAM = {
-        'period_length': 400,
-        'steps_per_period': 15,
+        'period_length': 800,  # 0.8 giây - medium
+        'steps_per_period': 20,  # Mượt mà
         'ratio': '9:16',
         'palette': 'pastel',
-        'bar_style': 'gradient'
+        'bar_style': 'gradient',
+        'interpolate_period': True
     }
 
     PRESENTATION = {
-        'period_length': 600,
-        'steps_per_period': 10,
+        'period_length': 1500,  # 1.5 giây - chậm hơn, dễ đọc
+        'steps_per_period': 20,  # Vẫn mượt
         'ratio': '16:9',
         'palette': 'professional',
-        'bar_style': 'solid'
+        'bar_style': 'solid',
+        'interpolate_period': True
     }
 
 
@@ -120,8 +124,8 @@ class TimeSeriesRacing:
         self.time_col = kwargs.get('time', None)
         self.entity_col = kwargs.get('entity', None)
         self.value_col = kwargs.get('value', None)
-        self.period_length = kwargs.get('period_length', 500)
-        self.steps_per_period = kwargs.get('steps_per_period', 10)
+        self.period_length = kwargs.get('period_length', 1000)  # Mặc định 1 giây
+        self.steps_per_period = kwargs.get('steps_per_period', 20)  # Mặc định 20 steps cho mượt mà
 
         # Enhanced parameters
         self.palette = kwargs.get('palette', 'professional')
@@ -130,6 +134,7 @@ class TimeSeriesRacing:
         self.show_grid = kwargs.get('show_grid', True)
         self.bar_label_font_size = kwargs.get('bar_label_font_size', 12)
         self.title_font_size = kwargs.get('title_font_size', 20)
+        self.interpolate_period = kwargs.get('interpolate_period', True)  # Smooth interpolation
 
         # Apply preset if specified
         if self.preset:
@@ -154,7 +159,9 @@ class TimeSeriesRacing:
             self.ratio = preset['ratio']
             self.palette = preset['palette']
             self.bar_style = preset['bar_style']
+            self.interpolate_period = preset.get('interpolate_period', True)
             print(f"✨ Đã áp dụng preset: {self.preset.upper()}")
+            print(f"  → Period: {self.period_length}ms, Steps: {self.steps_per_period}")
 
     def read_data(self):
         """Đọc dữ liệu từ file CSV, Excel, hoặc JSON"""
@@ -365,6 +372,7 @@ class TimeSeriesRacing:
                 figsize=figsize,
                 period_length=self.period_length,
                 steps_per_period=self.steps_per_period,
+                interpolate_period=self.interpolate_period,  # Smooth transitions
                 cmap=cmap,
                 bar_size=0.95,
                 period_label={
@@ -373,7 +381,8 @@ class TimeSeriesRacing:
                     'weight': 'bold',
                     'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
                 },
-                period_fmt='{x:.0f}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
+                # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
+                period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
                 bar_label_size=bar_label_size,
                 tick_label_size=tick_label_size,
                 shared_fontdict={
@@ -406,7 +415,8 @@ class TimeSeriesRacing:
             print(f"\n📊 Thông số video:")
             print(f"  → Resolution: {'1080×1920' if self.ratio == '9:16' else '1920×1080'}")
             print(f"  → Duration: ~{(len(self.df_wide) * self.period_length) / 1000:.1f}s")
-            print(f"  → Animation quality: {'Smooth' if self.steps_per_period >= 12 else 'Standard'}")
+            print(f"  → Period length: {self.period_length}ms ({self.period_length/1000:.1f}s/frame)")
+            print(f"  → Animation quality: {'Ultra Smooth' if self.steps_per_period >= 20 else 'Smooth' if self.steps_per_period >= 15 else 'Standard'}")
 
             return True
 
@@ -500,10 +510,10 @@ Bar styles:
                         help='Theme màu sắc (mặc định: light)')
     parser.add_argument('--output', type=str, default='output.mp4',
                         help='Tên file video đầu ra (mặc định: output.mp4)')
-    parser.add_argument('--period-length', type=int, default=500,
-                        help='Độ dài mỗi period (ms) (mặc định: 500)')
-    parser.add_argument('--steps-per-period', type=int, default=10,
-                        help='Số bước mỗi period - càng cao càng mượt (mặc định: 10)')
+    parser.add_argument('--period-length', type=int, default=1000,
+                        help='Thời lượng mỗi nhịp/period (ms) - mặc định: 1000ms = 1 giây')
+    parser.add_argument('--steps-per-period', type=int, default=20,
+                        help='Số bước mỗi period - càng cao càng mượt (mặc định: 20 = ultra smooth)')
 
     # Enhanced parameters
     parser.add_argument('--palette', type=str,
@@ -523,6 +533,8 @@ Bar styles:
                         help='Kích thước font cho bar labels (mặc định: 12)')
     parser.add_argument('--title-font-size', type=int, default=20,
                         help='Kích thước font cho title (mặc định: 20)')
+    parser.add_argument('--no-interpolate', action='store_true',
+                        help='Tắt interpolation (mặc định: bật để mượt mà hơn)')
 
     # Tham số cho long format
     parser.add_argument('--time', type=str, default=None,
@@ -560,7 +572,8 @@ Bar styles:
         preset=args.preset,
         show_grid=not args.no_grid,
         bar_label_font_size=args.bar_label_font_size,
-        title_font_size=args.title_font_size
+        title_font_size=args.title_font_size,
+        interpolate_period=not args.no_interpolate
     )
 
     success = racing.run()
