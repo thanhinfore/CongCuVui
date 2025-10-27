@@ -5,6 +5,7 @@
 import { ControlPanel } from './modules/controlPanel.js';
 import { PreviewPanel } from './modules/previewPanel.js';
 import { MobileHandler } from './modules/mobileHandler.js';
+import { PresetsManager } from './modules/presets.js';
 import { utils } from './modules/utils.js';
 
 class ImageTextApp {
@@ -26,6 +27,7 @@ class ImageTextApp {
             this.components.controls = new ControlPanel(this.DOM, this.state);
             this.components.preview = new PreviewPanel(this.DOM, this.state);
             this.components.mobile = new MobileHandler();
+            this.components.presets = new PresetsManager(this.DOM, this.components.controls);
 
             this.setupGlobalMethods();
 
@@ -93,10 +95,22 @@ class ImageTextApp {
             insertFooterText: document.getElementById('insertFooterText'),
             insertLineBreak: document.getElementById('insertLineBreak'),
 
+            // Advanced text controls
+            textRotation: document.getElementById('textRotation'),
+            textOpacity: document.getElementById('textOpacity'),
+            letterSpacing: document.getElementById('letterSpacing'),
+            lineHeight: document.getElementById('lineHeight'),
+            textTransform: document.getElementById('textTransform'),
+            textGlowCheckbox: document.getElementById('textGlowCheckbox'),
+            glowColor: document.getElementById('glowColor'),
+            glowIntensity: document.getElementById('glowIntensity'),
+            glowControl: document.getElementById('glowControl'),
+
             // Sections
             sections: {
                 text: document.getElementById('textSection'),
                 upload: document.getElementById('uploadSection'),
+                presets: document.getElementById('presetsSection'),
                 style: document.getElementById('styleSection'),
                 credit: document.getElementById('creditSection')
             }
@@ -215,6 +229,124 @@ class ImageTextApp {
         if (this.DOM.insertLineBreak) {
             this.DOM.insertLineBreak.addEventListener('click', () => {
                 this.insertTextAtCursor('\\n');
+            });
+        }
+
+        // Color mode selector
+        const colorModeRadios = document.querySelectorAll('input[name="colorMode"]');
+        colorModeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const solidColors = document.getElementById('solidColors');
+                const gradientColors = document.getElementById('gradientColors');
+
+                if (solidColors && gradientColors) {
+                    if (e.target.value === 'solid') {
+                        solidColors.style.display = 'grid';
+                        gradientColors.style.display = 'none';
+                    } else {
+                        solidColors.style.display = 'none';
+                        gradientColors.style.display = 'block';
+                    }
+                }
+
+                this.components.controls?.saveSettings();
+                this.components.controls?.handleStyleChange();
+            });
+        });
+
+        // Gradient controls
+        const gradientAngle = document.getElementById('gradientAngle');
+        const gradientColor1 = document.getElementById('gradientColor1');
+        const gradientColor2 = document.getElementById('gradientColor2');
+
+        if (gradientAngle) {
+            gradientAngle.addEventListener('input', (e) => {
+                const valueDisplay = document.getElementById('gradientAngleValue');
+                if (valueDisplay) {
+                    valueDisplay.textContent = `${e.target.value}°`;
+                }
+                this.components.controls?.handleStyleChange();
+            });
+        }
+
+        [gradientColor1, gradientColor2].forEach(input => {
+            if (input) {
+                input.addEventListener('change', () => {
+                    this.components.controls?.saveSettings();
+                    this.components.controls?.handleStyleChange();
+                });
+                input.addEventListener('input', utils.debounce(() => {
+                    this.components.controls?.handleStyleChange();
+                }, 100));
+            }
+        });
+
+        // Alignment buttons
+        const alignButtons = document.querySelectorAll('.align-btn');
+        alignButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                alignButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.components.controls?.saveSettings();
+                this.components.controls?.handleStyleChange();
+            });
+        });
+
+        // Advanced text controls
+        const advancedControls = [
+            { id: 'textRotation', suffix: '°' },
+            { id: 'textOpacity', suffix: '%' },
+            { id: 'letterSpacing', suffix: 'px' },
+            { id: 'lineHeight', suffix: '' },
+            { id: 'glowIntensity', suffix: 'px' }
+        ];
+
+        advancedControls.forEach(({ id, suffix }) => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', (e) => {
+                    const valueDisplay = document.getElementById(`${id}Value`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = `${e.target.value}${suffix}`;
+                    }
+                    this.components.controls?.handleStyleChange();
+                });
+            }
+        });
+
+        // Text transform
+        if (this.DOM.textTransform) {
+            this.DOM.textTransform.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+                this.components.controls?.handleStyleChange();
+            });
+        }
+
+        // Glow effect
+        if (this.DOM.textGlowCheckbox) {
+            this.DOM.textGlowCheckbox.addEventListener('change', () => {
+                if (this.DOM.glowControl) {
+                    this.DOM.glowControl.style.display = this.DOM.textGlowCheckbox.checked ? 'block' : 'none';
+                }
+                this.components.controls?.saveSettings();
+                this.components.controls?.handleStyleChange();
+            });
+        }
+
+        if (this.DOM.glowColor) {
+            this.DOM.glowColor.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+                this.components.controls?.handleStyleChange();
+            });
+        }
+
+        // Reset button
+        const resetBtn = document.getElementById('resetSettings');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Reset all settings to defaults?')) {
+                    this.resetToDefaults();
+                }
             });
         }
     }
@@ -347,6 +479,103 @@ class ImageTextApp {
         } catch (error) {
             console.error('Failed to load saved state:', error);
         }
+    }
+
+    resetToDefaults() {
+        // Reset all controls to default values
+        if (this.DOM.fontSelect) {
+            this.DOM.fontSelect.value = 'Inter, sans-serif';
+            this.DOM.fontSelect.style.fontFamily = 'Inter, sans-serif';
+        }
+
+        // Reset color mode to solid
+        const solidRadio = document.querySelector('input[name="colorMode"][value="solid"]');
+        if (solidRadio) solidRadio.checked = true;
+        const solidColors = document.getElementById('solidColors');
+        const gradientColors = document.getElementById('gradientColors');
+        if (solidColors) solidColors.style.display = 'grid';
+        if (gradientColors) gradientColors.style.display = 'none';
+
+        // Reset colors
+        if (this.DOM.colorPicker) this.DOM.colorPicker.value = '#FFFFFF';
+        if (this.DOM.subColorPicker) this.DOM.subColorPicker.value = '#FFFFFF';
+
+        // Reset font sizes
+        if (this.DOM.mainFontSize) {
+            this.DOM.mainFontSize.value = 48;
+            if (this.DOM.mainFontSizeValue) this.DOM.mainFontSizeValue.textContent = '48px';
+        }
+        if (this.DOM.subFontSize) {
+            this.DOM.subFontSize.value = 32;
+            if (this.DOM.subFontSizeValue) this.DOM.subFontSizeValue.textContent = '32px';
+        }
+
+        // Reset font effects
+        if (this.DOM.fontWeightSelect) this.DOM.fontWeightSelect.value = '400';
+        if (this.DOM.fontStyleSelect) this.DOM.fontStyleSelect.value = 'normal';
+        if (this.DOM.textUnderlineCheckbox) this.DOM.textUnderlineCheckbox.checked = false;
+        if (this.DOM.textBorderCheckbox) this.DOM.textBorderCheckbox.checked = false;
+        if (this.DOM.textShadowCheckbox) this.DOM.textShadowCheckbox.checked = false;
+        if (this.DOM.borderWidthControl) this.DOM.borderWidthControl.style.display = 'none';
+        if (this.DOM.shadowControl) this.DOM.shadowControl.style.display = 'none';
+
+        // Reset alignment to center
+        const alignButtons = document.querySelectorAll('.align-btn');
+        alignButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.align === 'center');
+        });
+
+        // Reset position
+        if (this.DOM.positionPicker) this.DOM.positionPicker.value = 'bottom';
+
+        // Reset advanced controls
+        const textRotation = document.getElementById('textRotation');
+        if (textRotation) {
+            textRotation.value = 0;
+            const valueDisplay = document.getElementById('textRotationValue');
+            if (valueDisplay) valueDisplay.textContent = '0°';
+        }
+
+        const textOpacity = document.getElementById('textOpacity');
+        if (textOpacity) {
+            textOpacity.value = 100;
+            const valueDisplay = document.getElementById('textOpacityValue');
+            if (valueDisplay) valueDisplay.textContent = '100%';
+        }
+
+        const letterSpacing = document.getElementById('letterSpacing');
+        if (letterSpacing) {
+            letterSpacing.value = 0;
+            const valueDisplay = document.getElementById('letterSpacingValue');
+            if (valueDisplay) valueDisplay.textContent = '0px';
+        }
+
+        const lineHeight = document.getElementById('lineHeight');
+        if (lineHeight) {
+            lineHeight.value = 2;
+            const valueDisplay = document.getElementById('lineHeightValue');
+            if (valueDisplay) valueDisplay.textContent = '2.0';
+        }
+
+        const textTransform = document.getElementById('textTransform');
+        if (textTransform) textTransform.value = 'none';
+
+        // Reset glow
+        if (this.DOM.textGlowCheckbox) this.DOM.textGlowCheckbox.checked = false;
+        if (this.DOM.glowControl) this.DOM.glowControl.style.display = 'none';
+
+        // Reset background
+        if (this.DOM.subtitleBgCheckbox) this.DOM.subtitleBgCheckbox.checked = false;
+        if (this.DOM.bgControls) this.DOM.bgControls.style.display = 'none';
+
+        // Clear active preset
+        document.querySelectorAll('.preset-card').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        this.components.controls?.saveSettings();
+        this.components.controls?.handleStyleChange();
+        this.showNotification('Settings reset to defaults');
     }
 
     showNotification(message, type = 'info') {

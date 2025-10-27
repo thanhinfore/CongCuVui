@@ -349,11 +349,18 @@ export class ControlPanel {
     }
 
     saveSettings() {
+        const colorMode = document.querySelector('input[name="colorMode"]:checked')?.value || 'solid';
+        const textAlign = document.querySelector('.align-btn.active')?.dataset.align || 'center';
+
         const settings = {
             text: this.DOM.textInput?.value || '',
             font: this.DOM.fontSelect?.value || 'Inter, sans-serif',
+            colorMode,
             mainColor: this.DOM.colorPicker?.value || '#FFFFFF',
             subColor: this.DOM.subColorPicker?.value || '#FFFFFF',
+            gradientColor1: document.getElementById('gradientColor1')?.value || '#FF6B6B',
+            gradientColor2: document.getElementById('gradientColor2')?.value || '#4ECDC4',
+            gradientAngle: document.getElementById('gradientAngle')?.value || '45',
             position: this.DOM.positionPicker?.value || 'bottom',
             mainFontSize: this.DOM.mainFontSize?.value || '48',
             subFontSize: this.DOM.subFontSize?.value || '32',
@@ -364,6 +371,15 @@ export class ControlPanel {
             textShadow: this.DOM.textShadowCheckbox?.checked || false,
             borderWidth: this.DOM.borderWidth?.value || '2',
             shadowBlur: this.DOM.shadowBlur?.value || '4',
+            textAlign,
+            textRotation: document.getElementById('textRotation')?.value || '0',
+            textOpacity: document.getElementById('textOpacity')?.value || '100',
+            letterSpacing: document.getElementById('letterSpacing')?.value || '0',
+            lineHeight: document.getElementById('lineHeight')?.value || '2',
+            textTransform: document.getElementById('textTransform')?.value || 'none',
+            textGlow: this.DOM.textGlowCheckbox?.checked || false,
+            glowColor: this.DOM.glowColor?.value || '#FFD700',
+            glowIntensity: this.DOM.glowIntensity?.value || '20',
             subtitleBg: this.DOM.subtitleBgCheckbox?.checked || false,
             bgColor: this.DOM.bgColorPicker?.value || '#000000',
             bgOpacity: this.DOM.bgOpacity?.value || '28',
@@ -384,8 +400,36 @@ export class ControlPanel {
             this.DOM.fontSelect.value = settings.font || 'Inter, sans-serif';
             this.DOM.fontSelect.style.fontFamily = this.DOM.fontSelect.value;
         }
+
+        // Color mode
+        const colorMode = settings.colorMode || 'solid';
+        const colorModeRadios = document.querySelectorAll('input[name="colorMode"]');
+        colorModeRadios.forEach(radio => {
+            radio.checked = radio.value === colorMode;
+        });
+
+        const solidColors = document.getElementById('solidColors');
+        const gradientColors = document.getElementById('gradientColors');
+        if (solidColors && gradientColors) {
+            solidColors.style.display = colorMode === 'solid' ? 'grid' : 'none';
+            gradientColors.style.display = colorMode === 'gradient' ? 'block' : 'none';
+        }
+
         if (this.DOM.colorPicker) this.DOM.colorPicker.value = settings.mainColor || '#FFFFFF';
         if (this.DOM.subColorPicker) this.DOM.subColorPicker.value = settings.subColor || '#FFFFFF';
+
+        // Gradient colors
+        const gradientColor1 = document.getElementById('gradientColor1');
+        const gradientColor2 = document.getElementById('gradientColor2');
+        const gradientAngle = document.getElementById('gradientAngle');
+        if (gradientColor1) gradientColor1.value = settings.gradientColor1 || '#FF6B6B';
+        if (gradientColor2) gradientColor2.value = settings.gradientColor2 || '#4ECDC4';
+        if (gradientAngle) {
+            gradientAngle.value = settings.gradientAngle || '45';
+            const angleValue = document.getElementById('gradientAngleValue');
+            if (angleValue) angleValue.textContent = `${gradientAngle.value}°`;
+        }
+
         if (this.DOM.positionPicker) this.DOM.positionPicker.value = settings.position || 'bottom';
         if (this.DOM.creditInput) this.DOM.creditInput.value = settings.credit || '';
 
@@ -438,6 +482,57 @@ export class ControlPanel {
 
         if (this.DOM.bgControls) {
             this.DOM.bgControls.style.display = settings.subtitleBg ? 'grid' : 'none';
+        }
+
+        // Text alignment
+        const textAlign = settings.textAlign || 'center';
+        const alignButtons = document.querySelectorAll('.align-btn');
+        alignButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.align === textAlign);
+        });
+
+        // Advanced text controls
+        const textRotation = document.getElementById('textRotation');
+        if (textRotation) {
+            textRotation.value = settings.textRotation || '0';
+            const valueDisplay = document.getElementById('textRotationValue');
+            if (valueDisplay) valueDisplay.textContent = `${textRotation.value}°`;
+        }
+
+        const textOpacity = document.getElementById('textOpacity');
+        if (textOpacity) {
+            textOpacity.value = settings.textOpacity || '100';
+            const valueDisplay = document.getElementById('textOpacityValue');
+            if (valueDisplay) valueDisplay.textContent = `${textOpacity.value}%`;
+        }
+
+        const letterSpacing = document.getElementById('letterSpacing');
+        if (letterSpacing) {
+            letterSpacing.value = settings.letterSpacing || '0';
+            const valueDisplay = document.getElementById('letterSpacingValue');
+            if (valueDisplay) valueDisplay.textContent = `${letterSpacing.value}px`;
+        }
+
+        const lineHeight = document.getElementById('lineHeight');
+        if (lineHeight) {
+            lineHeight.value = settings.lineHeight || '2';
+            const valueDisplay = document.getElementById('lineHeightValue');
+            if (valueDisplay) valueDisplay.textContent = settings.lineHeight || '2.0';
+        }
+
+        const textTransform = document.getElementById('textTransform');
+        if (textTransform) textTransform.value = settings.textTransform || 'none';
+
+        // Glow effect
+        if (this.DOM.textGlowCheckbox) this.DOM.textGlowCheckbox.checked = settings.textGlow || false;
+        if (this.DOM.glowColor) this.DOM.glowColor.value = settings.glowColor || '#FFD700';
+        if (this.DOM.glowIntensity) {
+            this.DOM.glowIntensity.value = settings.glowIntensity || '20';
+            const valueDisplay = document.getElementById('glowIntensityValue');
+            if (valueDisplay) valueDisplay.textContent = `${this.DOM.glowIntensity.value}px`;
+        }
+        if (this.DOM.glowControl) {
+            this.DOM.glowControl.style.display = settings.textGlow ? 'block' : 'none';
         }
 
         this.updateSectionsVisibility();
