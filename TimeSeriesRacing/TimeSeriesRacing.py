@@ -71,7 +71,7 @@ class StylePresets:
         'ratio': '9:16',
         'palette': 'neon',
         'bar_style': 'gradient',
-        'interpolate_period': True
+        'interpolate_period': False  # Tắt để period label không nháy
     }
 
     YOUTUBE = {
@@ -80,7 +80,7 @@ class StylePresets:
         'ratio': '16:9',
         'palette': 'professional',
         'bar_style': 'solid',
-        'interpolate_period': True
+        'interpolate_period': False  # Tắt để period label không nháy
     }
 
     INSTAGRAM = {
@@ -89,7 +89,7 @@ class StylePresets:
         'ratio': '9:16',
         'palette': 'pastel',
         'bar_style': 'gradient',
-        'interpolate_period': True
+        'interpolate_period': False  # Tắt để period label không nháy
     }
 
     PRESENTATION = {
@@ -98,7 +98,7 @@ class StylePresets:
         'ratio': '16:9',
         'palette': 'professional',
         'bar_style': 'solid',
-        'interpolate_period': True
+        'interpolate_period': False  # Tắt để period label không nháy
     }
 
 
@@ -134,7 +134,7 @@ class TimeSeriesRacing:
         self.show_grid = kwargs.get('show_grid', True)
         self.bar_label_font_size = kwargs.get('bar_label_font_size', 12)
         self.title_font_size = kwargs.get('title_font_size', 20)
-        self.interpolate_period = kwargs.get('interpolate_period', True)  # Smooth interpolation
+        self.interpolate_period = kwargs.get('interpolate_period', False)  # Mặc định tắt để period label không nháy
 
         # Apply preset if specified
         if self.preset:
@@ -159,9 +159,10 @@ class TimeSeriesRacing:
             self.ratio = preset['ratio']
             self.palette = preset['palette']
             self.bar_style = preset['bar_style']
-            self.interpolate_period = preset.get('interpolate_period', True)
+            self.interpolate_period = preset.get('interpolate_period', False)
             print(f"✨ Đã áp dụng preset: {self.preset.upper()}")
             print(f"  → Period: {self.period_length}ms, Steps: {self.steps_per_period}")
+            print(f"  → Interpolate: {'Yes' if self.interpolate_period else 'No (period label sẽ nhảy từng năm)'}")
 
     def read_data(self):
         """Đọc dữ liệu từ file CSV, Excel, hoặc JSON"""
@@ -533,8 +534,8 @@ Bar styles:
                         help='Kích thước font cho bar labels (mặc định: 12)')
     parser.add_argument('--title-font-size', type=int, default=20,
                         help='Kích thước font cho title (mặc định: 20)')
-    parser.add_argument('--no-interpolate', action='store_true',
-                        help='Tắt interpolation (mặc định: bật để mượt mà hơn)')
+    parser.add_argument('--interpolate', action='store_true',
+                        help='Bật interpolation cho period (có thể làm period label nháy)')
 
     # Tham số cho long format
     parser.add_argument('--time', type=str, default=None,
@@ -573,7 +574,7 @@ Bar styles:
         show_grid=not args.no_grid,
         bar_label_font_size=args.bar_label_font_size,
         title_font_size=args.title_font_size,
-        interpolate_period=not args.no_interpolate
+        interpolate_period=args.interpolate
     )
 
     success = racing.run()
