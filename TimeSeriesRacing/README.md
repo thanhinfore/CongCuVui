@@ -179,6 +179,28 @@ python TimeSeriesRacing.py data.xlsx \
   --output gdp_evolution.mp4
 ```
 
+### 4. Video Premier League Trophy Race (Dữ liệu có sẵn):
+
+```bash
+# Video cơ bản 16:9
+python TimeSeriesRacing.py examples/premier_league_trophies_wide.csv \
+  --title "Premier League Trophy Race (1990-2024)" \
+  --top 10 \
+  --output pl_trophies.mp4
+
+# Video TikTok 9:16
+python TimeSeriesRacing.py examples/premier_league_trophies_long.csv \
+  --title "English Football Trophy Race ⚽" \
+  --ratio 9:16 \
+  --top 8 \
+  --output pl_tiktok.mp4
+
+# Chạy tất cả demo bóng đá
+bash examples/demo_football.sh
+```
+
+**Xem chi tiết**: `examples/PREMIER_LEAGUE_DATA.md`
+
 ## Cấu trúc file dự án
 
 ```
@@ -186,10 +208,18 @@ TimeSeriesRacing/
 ├── TimeSeriesRacing.py    # File chính
 ├── requirements.txt       # Thư viện cần thiết
 ├── README.md             # Tài liệu này
-└── examples/             # Thư mục ví dụ
-    ├── sample_long.csv   # Dữ liệu mẫu long format
-    ├── sample_wide.csv   # Dữ liệu mẫu wide format
-    └── sample_coding.csv # Ví dụ ngôn ngữ lập trình
+├── QUICKSTART.md         # Hướng dẫn nhanh
+├── LICENSE               # MIT License
+├── .gitignore           # Git ignore rules
+├── demo.sh              # Demo script tổng hợp
+└── examples/            # Thư mục ví dụ
+    ├── sample_long.csv                    # Dữ liệu mẫu long format
+    ├── sample_wide.csv                    # Dữ liệu mẫu wide format
+    ├── sample_coding.csv                  # Ví dụ ngôn ngữ lập trình
+    ├── premier_league_trophies_wide.csv   # Danh hiệu bóng đá Anh (wide)
+    ├── premier_league_trophies_long.csv   # Danh hiệu bóng đá Anh (long)
+    ├── PREMIER_LEAGUE_DATA.md             # Tài liệu dữ liệu bóng đá
+    └── demo_football.sh                   # Demo script cho bóng đá
 ```
 
 ## Tips & Tricks
