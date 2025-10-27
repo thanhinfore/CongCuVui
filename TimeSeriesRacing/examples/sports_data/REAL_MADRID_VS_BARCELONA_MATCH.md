@@ -4,6 +4,13 @@
 
 Phân tích chi tiết hoạt động của cầu thủ trong trận **El Clásico** giữa Real Madrid vs Barcelona tại sân Santiago Bernabéu.
 
+### ✨ Dataset Features
+
+- **📅 Đầy đủ 92 phút liên tục**: Dữ liệu cho TỪNG phút từ 1' đến 92' (không có gap)
+- **👥 15 cầu thủ chính**: Tracking các cầu thủ có impact cao nhất
+- **📈 Cumulative scoring**: Điểm số tích lũy theo thời gian thực
+- **🎯 Ultra-smooth animation**: Mượt mà hoàn toàn, không có hiện tượng "nhảy"
+
 ### 🎯 Điểm Nổi Bật
 
 - **Tỷ số cuối cùng**: Real Madrid 2-1 Barcelona
@@ -237,8 +244,10 @@ Dataset này có thể được mở rộng với:
 
 ### 📝 Notes
 
+- **✅ Dataset hoàn chỉnh**: 92 phút liên tục từ 1' đến 92' (không có gap, ultra-smooth animation)
 - Dataset tracking 15 cầu thủ chính có impact cao nhất
 - Điểm số được cập nhật theo từng phút (real-time simulation)
+- Các phút không có sự kiện: điểm số giữ nguyên (carry forward)
 - Không bao gồm cầu thủ vào sân thay thế muộn (< 5 phút)
 - Dữ liệu dựa trên match commentary chi tiết
 
