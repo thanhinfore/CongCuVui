@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vote", "Vote\Vote.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSendEmail", "TestSendEmail\TestSendEmail.csproj", "{DC81C0B8-619B-40BE-8737-418A9617F187}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TimeSeriesRacing", "TimeSeriesRacing\TimeSeriesRacing.pyproj", "{0BB40C5A-9C2F-41E9-AEF7-0EB45EBBC02C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,8 @@ Global
 		{DC81C0B8-619B-40BE-8737-418A9617F187}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC81C0B8-619B-40BE-8737-418A9617F187}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC81C0B8-619B-40BE-8737-418A9617F187}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BB40C5A-9C2F-41E9-AEF7-0EB45EBBC02C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB40C5A-9C2F-41E9-AEF7-0EB45EBBC02C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
