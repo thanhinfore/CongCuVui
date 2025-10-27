@@ -1,0 +1,262 @@
+# TimeSeriesRacing - Tạo Video Biểu Đồ Động
+
+Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
+
+## Tính năng chính
+
+- **Tự động nhận dạng** cấu trúc dữ liệu (long format / wide format)
+- **Hỗ trợ nhiều định dạng**: CSV, Excel (.xlsx, .xls), JSON
+- **Không cần setup phức tạp**: Chỉ 1 file Python duy nhất
+- **CLI đơn giản**: Chạy ngay với 1 lệnh
+- **Tùy biến linh hoạt**: Title, màu sắc, tỷ lệ khung hình, FPS...
+- **Hỗ trợ portrait mode** cho TikTok/Reels (9:16)
+- **Xuất video MP4** chất lượng cao
+
+## Cài đặt
+
+### 1. Cài đặt thư viện Python
+
+```bash
+pip install -r requirements.txt
+```
+
+Hoặc cài thủ công:
+
+```bash
+pip install pandas matplotlib bar_chart_race openpyxl
+```
+
+### 2. Cài đặt FFmpeg
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install ffmpeg
+```
+
+**macOS:**
+```bash
+brew install ffmpeg
+```
+
+**Windows:**
+Tải từ [ffmpeg.org](https://ffmpeg.org/download.html) và thêm vào PATH
+
+## Cách sử dụng nhanh
+
+### Ví dụ đơn giản nhất:
+
+```bash
+python TimeSeriesRacing.py data.csv
+```
+
+Video sẽ được xuất ra file `output.mp4`
+
+### Với các tùy chọn:
+
+```bash
+python TimeSeriesRacing.py data.csv --title "Evolution of Programming Languages" --top 10 --fps 30
+```
+
+### Xuất video cho TikTok/Reels (portrait):
+
+```bash
+python TimeSeriesRacing.py data.csv --ratio 9:16 --output tiktok.mp4
+```
+
+### Hiển thị dạng phần trăm:
+
+```bash
+python TimeSeriesRacing.py data.csv --percent --title "Market Share Evolution"
+```
+
+### Chỉ định cột cụ thể (long format):
+
+```bash
+python TimeSeriesRacing.py data.csv --time year --entity language --value popularity
+```
+
+## Định dạng dữ liệu
+
+Phần mềm tự động nhận dạng 2 dạng dữ liệu phổ biến:
+
+### 1. Long Format (3 cột)
+
+Mỗi dòng là một bản ghi (thời gian, thực thể, giá trị):
+
+```csv
+year,language,popularity
+1992,C,71.41
+1992,C++,20.36
+1992,Java,0
+1996,C,59.11
+1996,C++,17.21
+1996,Java,12.03
+2000,C,45.23
+2000,C++,15.12
+2000,Java,25.34
+```
+
+### 2. Wide Format (nhiều cột)
+
+Mỗi cột là một thực thể, dòng đầu tiên là thời gian:
+
+```csv
+year,C,C++,Java,Python,JavaScript
+1992,71.41,20.36,0,0,0
+1996,59.11,17.21,12.03,0,0
+2000,45.23,15.12,25.34,5.12,0
+2004,32.45,12.34,30.21,10.23,8.45
+2008,25.34,10.12,35.12,15.34,12.89
+```
+
+## Tham số CLI đầy đủ
+
+```
+python TimeSeriesRacing.py <input_file> [options]
+```
+
+### Tham số bắt buộc:
+
+| Tham số | Mô tả |
+|---------|-------|
+| `input` | File dữ liệu đầu vào (CSV, Excel, JSON) |
+
+### Tham số tùy chọn:
+
+| Tham số | Mặc định | Mô tả |
+|---------|----------|-------|
+| `--title` | "Evolution of Data" | Tiêu đề video |
+| `--top` | 10 | Số thanh hiển thị tối đa |
+| `--fps` | 30 | Frame per second |
+| `--percent` | False | Hiển thị giá trị dạng % |
+| `--ratio` | 16:9 | Tỷ lệ khung hình (16:9 hoặc 9:16) |
+| `--theme` | light | Theme màu sắc (light hoặc dark) |
+| `--output` | output.mp4 | Tên file video đầu ra |
+| `--period-length` | 500 | Độ dài mỗi period (ms) |
+| `--steps-per-period` | 10 | Số bước mỗi period |
+
+### Tham số cho Long Format:
+
+| Tham số | Mô tả |
+|---------|-------|
+| `--time` | Tên cột thời gian (tự động phát hiện nếu không chỉ định) |
+| `--entity` | Tên cột thực thể |
+| `--value` | Tên cột giá trị |
+
+## Ví dụ chi tiết
+
+### 1. Video marketing với theme tối:
+
+```bash
+python TimeSeriesRacing.py market_share.csv \
+  --title "Smartphone Market Share 2010-2024" \
+  --theme dark \
+  --top 8 \
+  --percent \
+  --output smartphone.mp4
+```
+
+### 2. Video cho TikTok với animation nhanh:
+
+```bash
+python TimeSeriesRacing.py trending.csv \
+  --ratio 9:16 \
+  --period-length 300 \
+  --steps-per-period 15 \
+  --title "Top Trending Topics" \
+  --output tiktok.mp4
+```
+
+### 3. Video với dữ liệu Excel và cột cụ thể:
+
+```bash
+python TimeSeriesRacing.py data.xlsx \
+  --time Year \
+  --entity Country \
+  --value GDP \
+  --title "GDP Evolution by Country" \
+  --top 15 \
+  --output gdp_evolution.mp4
+```
+
+## Cấu trúc file dự án
+
+```
+TimeSeriesRacing/
+├── TimeSeriesRacing.py    # File chính
+├── requirements.txt       # Thư viện cần thiết
+├── README.md             # Tài liệu này
+└── examples/             # Thư mục ví dụ
+    ├── sample_long.csv   # Dữ liệu mẫu long format
+    ├── sample_wide.csv   # Dữ liệu mẫu wide format
+    └── sample_coding.csv # Ví dụ ngôn ngữ lập trình
+```
+
+## Tips & Tricks
+
+### 1. Tăng tốc độ animation:
+```bash
+--period-length 300 --steps-per-period 15
+```
+
+### 2. Làm chậm để xem rõ hơn:
+```bash
+--period-length 800 --steps-per-period 8
+```
+
+### 3. Video chất lượng cao cho YouTube:
+```bash
+--fps 60 --ratio 16:9
+```
+
+### 4. Video nhanh cho social media:
+```bash
+--fps 30 --period-length 400 --ratio 9:16
+```
+
+## Xử lý lỗi thường gặp
+
+### Lỗi: "No module named 'bar_chart_race'"
+```bash
+pip install bar_chart_race
+```
+
+### Lỗi: "ffmpeg not found"
+Cài đặt FFmpeg theo hướng dẫn ở mục Cài đặt
+
+### Lỗi: "ValueError: Could not convert to numeric"
+Kiểm tra dữ liệu có chứa ký tự đặc biệt hoặc text trong cột giá trị
+
+### Dữ liệu không hiển thị đúng:
+Thử chỉ định cột cụ thể:
+```bash
+--time <tên_cột_thời_gian> --entity <tên_cột_thực_thể> --value <tên_cột_giá_trị>
+```
+
+## Yêu cầu hệ thống
+
+- Python 3.7+
+- RAM: tối thiểu 2GB (khuyến nghị 4GB cho dữ liệu lớn)
+- FFmpeg
+- Thời gian render: < 30 giây cho 2000 dòng dữ liệu (phụ thuộc vào cấu hình máy)
+
+## Đóng góp
+
+Mọi đóng góp đều được chào đón! Hãy tạo Pull Request hoặc báo lỗi qua Issues.
+
+## License
+
+MIT License - Tự do sử dụng cho mục đích cá nhân và thương mại.
+
+## Tác giả
+
+Phát triển bởi CongCuVui Team
+
+## Changelog
+
+### v1.0.0 (2025)
+- Phiên bản đầu tiên
+- Hỗ trợ CSV, Excel, JSON
+- Tự động nhận dạng cấu trúc dữ liệu
+- Xuất video MP4
+- CLI đầy đủ tính năng
