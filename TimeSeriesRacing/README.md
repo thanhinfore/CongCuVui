@@ -1,8 +1,8 @@
-# TimeSeriesRacing v2.0 - Tạo Video Biểu Đồ Động Chuyên Nghiệp
+# TimeSeriesRacing v3.0 - Ultra HD Bar Chart Race Videos
 
 Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-**🆕 Version 2.0**: Được nâng cấp với 8 color palettes chuyên nghiệp, 4 style presets tối ưu cho từng platform, và animations mượt mà hơn!
+**🆕 Version 3.0 - Ultra HD**: Nâng cấp lớn với DPI cao hơn, hiển thị giá trị trên bars, visual effects đẹp mắt, và chất lượng video vượt trội!
 
 ## ✨ Tính năng chính
 
@@ -13,7 +13,16 @@ Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ 
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
 - **Xuất video MP4** chất lượng cao
 
-### 🆕 New in v2.0
+### 🆕 New in v3.0 (ULTRA HD)
+- **Higher DPI (150 default, up to 300)**: Video chất lượng cao hơn gấp đôi v2.0
+- **Bar Value Labels**: Hiển thị số trên mỗi bar (có thể tắt)
+- **Enhanced Visual Effects**: Borders dày hơn, shadows, better styling
+- **Better Typography**: Custom font families (sans-serif, serif, monospace)
+- **Improved Bar Styling**: Better colors, alpha, edge colors
+- **60fps Support**: Ultra smooth animations
+- **Quality Control**: Full control over DPI, effects, bar values
+
+### Features from v2.0
 - **8 Color Palettes**: Vibrant, Professional, Neon, Pastel, Ocean, Sunset, Earth, Football
 - **4 Style Presets**: TikTok, YouTube, Instagram, Presentation
 - **Gradient Bar Styles**: Bars với gradient colors đẹp mắt
@@ -126,6 +135,78 @@ python TimeSeriesRacing.py data.csv --palette professional
 **8 Palettes có sẵn**: `vibrant`, `professional`, `pastel`, `neon`, `ocean`, `sunset`, `earth`, `football`
 
 **📖 Xem chi tiết**: [PALETTES_AND_PRESETS.md](PALETTES_AND_PRESETS.md)
+
+## 🆕 Sử dụng V3.0 Ultra HD Features
+
+### Chất lượng cực cao (Recommended)
+
+```bash
+# Default v3.0 - Automatically uses DPI 150, bar values, enhanced effects
+python TimeSeriesRacing.py data.csv
+
+# Ultra HD với DPI 200 + 60fps
+python TimeSeriesRacing.py data.csv --dpi 200 --fps 60 --title "Ultra HD Demo"
+
+# Maximum quality (DPI 300, 60fps, effects)
+python TimeSeriesRacing.py data.csv --dpi 300 --fps 60 --palette neon
+```
+
+### Bar Values Control
+
+```bash
+# Default - Bar values shown
+python TimeSeriesRacing.py data.csv
+
+# Hide bar values for minimalist look
+python TimeSeriesRacing.py data.csv --no-bar-values --palette pastel
+
+# Combine with preset
+python TimeSeriesRacing.py data.csv --preset tiktok --no-bar-values
+```
+
+### Custom Typography
+
+```bash
+# Serif font for professional look
+python TimeSeriesRacing.py data.csv --font-family serif
+
+# Monospace for tech/coding data
+python TimeSeriesRacing.py data.csv --font-family monospace
+
+# Custom font sizes
+python TimeSeriesRacing.py data.csv --title-font-size 24 --bar-label-font-size 14
+```
+
+### Visual Effects Control
+
+```bash
+# Maximum effects (default in v3.0)
+python TimeSeriesRacing.py data.csv --palette neon
+
+# Disable effects for clean look
+python TimeSeriesRacing.py data.csv --no-effects --palette professional
+
+# Combine all v3.0 features
+python TimeSeriesRacing.py data.csv \
+  --dpi 200 \
+  --fps 60 \
+  --palette neon \
+  --font-family sans-serif \
+  --title "My Amazing Data 🚀"
+```
+
+### V3.0 + Presets
+
+```bash
+# TikTok Ultra HD
+python TimeSeriesRacing.py data.csv --preset tiktok --dpi 200
+
+# YouTube 60fps Ultra HD
+python TimeSeriesRacing.py data.csv --preset youtube --fps 60 --dpi 180
+
+# Instagram with custom font
+python TimeSeriesRacing.py data.csv --preset instagram --font-family serif
+```
 
 ## Định dạng dữ liệu
 
@@ -336,6 +417,36 @@ MIT License - Tự do sử dụng cho mục đích cá nhân và thương mại.
 Phát triển bởi CongCuVui Team
 
 ## Changelog
+
+### v3.0.0 (2025-10-27) 🚀 ULTRA HD
+**Major Quality Upgrade**
+- **Higher DPI (150 default)**: Video quality increased by 50% compared to v2.0
+  - Supports DPI up to 300 for maximum quality
+  - Default changed from 100 to 150 DPI
+- **Bar Value Labels**: Values now displayed on bars by default
+  - Toggle with `--no-bar-values` flag
+  - Auto-formatted with thousands separator
+- **Enhanced Visual Effects**:
+  - Thicker borders (2.5px vs 2px)
+  - Better alpha blending (0.92 vs 0.90)
+  - Improved edge colors
+  - zorder layering for better depth
+- **Better Typography**:
+  - Custom font family support (sans-serif, serif, monospace)
+  - Improved font weight and styling
+  - Better period label boldness
+- **60fps Support**: Full support for 60fps ultra-smooth animations
+- **Quality Control**: New CLI flags for fine control:
+  - `--dpi`: Control video quality
+  - `--no-bar-values`: Hide bar values
+  - `--no-effects`: Disable visual effects
+  - `--font-family`: Choose font style
+- **Improved Bar Styling**:
+  - Gradient bars now use 0.92 alpha
+  - Solid bars use darker borders (#2C3E50)
+  - Better zorder (10) for proper layering
+- **Enhanced Output Info**: Shows DPI, FPS, bar values, effects status in output
+- **Backward Compatible**: All v2.0 features still work, v3.0 is opt-in enhancement
 
 ### v2.0.0 (2025-10-27) 🎉
 - **8 Color Palettes chuyên nghiệp**: Vibrant, Professional, Neon, Pastel, Ocean, Sunset, Earth, Football
