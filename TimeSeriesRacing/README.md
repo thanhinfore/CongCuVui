@@ -1,8 +1,8 @@
-# TimeSeriesRacing v3.1 - Editor-Ready Bar Chart Race Videos
+# TimeSeriesRacing v3.2 - PROFESSIONAL EDITION 🎨
 
 Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-**🆕 Version 3.1 - Editor-Ready**: Fix critical video encoding issues! Videos giờ có format chuẩn, import hoàn hảo vào CapCut, Premiere Pro, DaVinci Resolve. Không còn vấn đề duration bị cắt ngắn!
+**🆕 Version 3.2 - PROFESSIONAL EDITION**: Stunning visual upgrades! 10 premium color palettes (Gold 🏆, Rainbow 🌈, Fire 🔥, Ice ❄️, Cosmic 🌌, Tropical 🌴...), customizable bar styling, enhanced typography, và professional visual effects. Videos giờ đẹp xuất sắc và đỉnh cao hơn bao giờ hết!
 
 ## ✨ Tính năng chính
 
@@ -13,7 +13,37 @@ Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ 
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
 - **Xuất video MP4** chất lượng cao
 
-### 🆕 New in v3.1 (EDITOR-READY)
+### 🎨 New in v3.2 (PROFESSIONAL EDITION)
+- **🏆 10 Premium Color Palettes**:
+  - **Gold**: Luxury golden shades for prestigious data
+  - **Rainbow**: Full spectrum colors for vibrant presentations
+  - **Fire**: Hot red-orange-yellow gradient for intense data
+  - **Ice**: Cool blue-cyan-purple for calming visuals
+  - **Emerald**: Vibrant green shades for growth/nature themes
+  - **Ruby**: Rich red gemstone tones for passion/energy
+  - **Sapphire**: Deep blue jewel colors for trust/stability
+  - **Cosmic**: Purple space nebula for futuristic themes
+  - **Tropical**: Warm island paradise colors
+  - **Chrome**: Metallic silver tones for tech/modern look
+
+- **✨ Advanced Bar Styling**:
+  - **Customizable Border Width** (1.0-5.0): Thicker borders for more prominent look
+  - **Adjustable Transparency** (alpha 0.0-1.0): Perfect opacity control
+  - **Enhanced Visual Effects**: Better contrast và professional styling
+
+- **📐 Professional Typography**:
+  - Larger, more prominent period labels
+  - Customizable font weights (normal/bold/italic)
+  - Better color contrasts (#1a1a1a vs #FFFFFF)
+  - Improved text positioning and spacing
+
+- **💎 Visual Enhancements**:
+  - Crisp white borders for gradient bars
+  - Better alpha blending for depth
+  - Professional color hierarchy
+  - Elegant transparency effects
+
+### Features from v3.1 (EDITOR-READY)
 - **H.264 (libx264) Encoding**: Universal video codec compatibility
 - **yuv420p Pixel Format**: Required by all major video editors
 - **Constant Frame Rate (CFR)**: Fixes duration issues in CapCut, Premiere, etc.
