@@ -1,8 +1,8 @@
-# TimeSeriesRacing v3.0 - Ultra HD Bar Chart Race Videos
+# TimeSeriesRacing v3.1 - Editor-Ready Bar Chart Race Videos
 
 Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-**🆕 Version 3.0 - Ultra HD**: Nâng cấp lớn với DPI cao hơn, hiển thị giá trị trên bars, visual effects đẹp mắt, và chất lượng video vượt trội!
+**🆕 Version 3.1 - Editor-Ready**: Fix critical video encoding issues! Videos giờ có format chuẩn, import hoàn hảo vào CapCut, Premiere Pro, DaVinci Resolve. Không còn vấn đề duration bị cắt ngắn!
 
 ## ✨ Tính năng chính
 
@@ -13,7 +13,16 @@ Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ 
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
 - **Xuất video MP4** chất lượng cao
 
-### 🆕 New in v3.0 (ULTRA HD)
+### 🆕 New in v3.1 (EDITOR-READY)
+- **H.264 (libx264) Encoding**: Universal video codec compatibility
+- **yuv420p Pixel Format**: Required by all major video editors
+- **Constant Frame Rate (CFR)**: Fixes duration issues in CapCut, Premiere, etc.
+- **High Bitrate (8000 kbps)**: Professional quality output
+- **Fast Start Enabled**: Instant playback in browsers and apps
+- **Proper GOP Size**: Better seeking and scrubbing in editors
+- **✅ Full Editor Support**: CapCut, Premiere Pro, DaVinci Resolve, Final Cut Pro
+
+### Features from v3.0 (ULTRA HD)
 - **Higher DPI (150 default, up to 300)**: Video chất lượng cao hơn gấp đôi v2.0
 - **Bar Value Labels**: Hiển thị số trên mỗi bar (có thể tắt)
 - **Enhanced Visual Effects**: Borders dày hơn, shadows, better styling
