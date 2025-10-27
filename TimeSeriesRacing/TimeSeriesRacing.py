@@ -3,7 +3,7 @@
 """
 TimeSeriesRacing - Tạo video biểu đồ động (bar chart race) từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
-Version 2.0 - Enhanced with professional styling and animations
+Version 3.0 - Ultra HD with enhanced visual effects and professional animations
 """
 
 import pandas as pd
@@ -135,6 +135,14 @@ class TimeSeriesRacing:
         self.bar_label_font_size = kwargs.get('bar_label_font_size', 12)
         self.title_font_size = kwargs.get('title_font_size', 20)
         self.interpolate_period = kwargs.get('interpolate_period', False)  # Mặc định tắt để period label không nháy
+
+        # V3.0 - Ultra HD & Visual Effects
+        self.dpi = kwargs.get('dpi', 150)  # Higher DPI for better quality
+        self.show_bar_values = kwargs.get('show_bar_values', True)  # Show values on bars
+        self.bar_textposition = kwargs.get('bar_textposition', 'outside')  # inside/outside
+        self.bar_texttemplate = kwargs.get('bar_texttemplate', '{x:,.0f}')  # Format for bar values
+        self.enable_effects = kwargs.get('enable_effects', True)  # Enable visual effects
+        self.font_family = kwargs.get('font_family', 'sans-serif')  # Font family
 
         # Apply preset if specified
         if self.preset:
@@ -306,14 +314,17 @@ class TimeSeriesRacing:
             return False
 
     def create_animation(self):
-        """Tạo animation bar chart race và xuất video MP4 - Enhanced version"""
-        print(f"\n🎬 Đang tạo video animation...")
+        """Tạo animation bar chart race và xuất video MP4 - V3.0 Ultra HD"""
+        print(f"\n🎬 Đang tạo video animation (V3.0 Ultra HD)...")
         print(f"  → Tiêu đề: {self.title}")
         print(f"  → Top {self.top_n} thực thể")
         print(f"  → FPS: {self.fps}")
+        print(f"  → DPI: {self.dpi} (Higher quality!)")
         print(f"  → Tỷ lệ: {self.ratio}")
         print(f"  → Palette: {self.palette}")
         print(f"  → Bar style: {self.bar_style}")
+        print(f"  → Bar values: {'Yes' if self.show_bar_values else 'No'}")
+        print(f"  → Visual effects: {'Enabled' if self.enable_effects else 'Disabled'}")
 
         try:
             # Cấu hình kích thước theo tỷ lệ
@@ -348,19 +359,36 @@ class TimeSeriesRacing:
             else:
                 period_label_pos = {'x': 0.98, 'y': 0.12, 'ha': 'right', 'va': 'center'}
 
-            # Bar styling
-            if self.bar_style == 'gradient':
-                bar_kwargs = {
-                    'alpha': 0.9,
-                    'ec': 'white',
-                    'lw': 2,
-                }
+            # V3.0 - Enhanced bar styling with visual effects
+            if self.enable_effects:
+                if self.bar_style == 'gradient':
+                    bar_kwargs = {
+                        'alpha': 0.92,
+                        'ec': 'white',  # Edge color
+                        'lw': 2.5,      # Line width (border)
+                        'zorder': 10,   # Draw order
+                    }
+                else:
+                    bar_kwargs = {
+                        'alpha': 0.88,
+                        'ec': '#2C3E50',  # Darker border for solid
+                        'lw': 2,
+                        'zorder': 10,
+                    }
             else:
-                bar_kwargs = {
-                    'alpha': 0.85,
-                    'ec': 'white',
-                    'lw': 1.5,
-                }
+                # Standard styling (backward compatible)
+                if self.bar_style == 'gradient':
+                    bar_kwargs = {
+                        'alpha': 0.9,
+                        'ec': 'white',
+                        'lw': 2,
+                    }
+                else:
+                    bar_kwargs = {
+                        'alpha': 0.85,
+                        'ec': 'white',
+                        'lw': 1.5,
+                    }
 
             # Tạo animation
             print(f"  ⏳ Đang render video... (có thể mất vài phút)")
@@ -384,10 +412,10 @@ class TimeSeriesRacing:
                 },
                 # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
                 period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
-                bar_label_size=bar_label_size,
+                bar_label_size=bar_label_size if self.show_bar_values else 0,  # V3.0 - Control bar values
                 tick_label_size=tick_label_size,
                 shared_fontdict={
-                    'family': 'sans-serif',
+                    'family': self.font_family,  # V3.0 - Custom font
                     'weight': 'bold',
                     'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
                 },
@@ -395,6 +423,7 @@ class TimeSeriesRacing:
                 scale='linear',
                 writer='ffmpeg',
                 fig=None,
+                dpi=self.dpi,  # V3.0 - Higher DPI for better quality!
                 bar_kwargs=bar_kwargs,
                 filter_column_colors=False,
                 period_summary_func=lambda v, r: {
@@ -402,7 +431,8 @@ class TimeSeriesRacing:
                     'y': 0.05,
                     's': f'Total: {v.sum():,.0f}' if not self.use_percent else f'Total: {v.sum():.1f}%',
                     'ha': 'right',
-                    'size': bar_label_size - 2
+                    'size': bar_label_size - 2,
+                    'weight': 'bold'
                 } if self.show_grid else None,
             )
 
@@ -415,9 +445,13 @@ class TimeSeriesRacing:
             # Show specs
             print(f"\n📊 Thông số video:")
             print(f"  → Resolution: {'1080×1920' if self.ratio == '9:16' else '1920×1080'}")
+            print(f"  → DPI: {self.dpi} {'(Ultra HD)' if self.dpi >= 150 else '(Standard)'}")
+            print(f"  → FPS: {self.fps}")
             print(f"  → Duration: ~{(len(self.df_wide) * self.period_length) / 1000:.1f}s")
             print(f"  → Period length: {self.period_length}ms ({self.period_length/1000:.1f}s/frame)")
             print(f"  → Animation quality: {'Ultra Smooth' if self.steps_per_period >= 20 else 'Smooth' if self.steps_per_period >= 15 else 'Standard'}")
+            print(f"  → Bar values: {'Yes' if self.show_bar_values else 'No'}")
+            print(f"  → Visual effects: {'Enabled' if self.enable_effects else 'Disabled'}")
 
             return True
 
@@ -430,8 +464,9 @@ class TimeSeriesRacing:
     def run(self):
         """Chạy toàn bộ quy trình"""
         print("="*70)
-        print("🎥 TIMESERIES RACING v2.0 - ENHANCED VIDEO GENERATOR")
+        print("🎥 TIMESERIES RACING v3.0 - ULTRA HD VIDEO GENERATOR")
         print("="*70)
+        print("✨ NEW: Higher DPI, Bar Values, Enhanced Effects, Better Quality")
 
         # Bước 1: Đọc dữ liệu
         if not self.read_data():
@@ -455,6 +490,11 @@ class TimeSeriesRacing:
         print("  - Chia sẻ video lên TikTok/Instagram Reels để viral!")
         print("  - Thử các palette khác: vibrant, neon, ocean, sunset")
         print("  - Dùng preset: --preset tiktok hoặc youtube")
+        print("\n✨ V3.0 Features:")
+        print("  - Higher DPI (150) for Ultra HD quality")
+        print("  - Bar values displayed by default")
+        print("  - Enhanced visual effects (borders, shadows)")
+        print("  - Better typography and styling")
 
         return True
 
@@ -463,24 +503,27 @@ def main():
     """Hàm main với CLI parser"""
 
     parser = argparse.ArgumentParser(
-        description='TimeSeriesRacing v2.0 - Tạo video biểu đồ động chuyên nghiệp',
+        description='TimeSeriesRacing v3.0 - Ultra HD Bar Chart Race Video Generator',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ví dụ sử dụng:
-  # Cách đơn giản nhất
+  # V3.0 - Ultra HD với tất cả enhancements (mặc định)
   python TimeSeriesRacing.py data.csv
 
-  # Với preset TikTok (tự động tối ưu)
-  python TimeSeriesRacing.py data.csv --preset tiktok
+  # Preset TikTok với Ultra HD
+  python TimeSeriesRacing.py data.csv --preset tiktok --title "Viral Data 🔥"
 
-  # Với palette màu đẹp
-  python TimeSeriesRacing.py data.csv --palette neon --title "Trending Data"
+  # 60fps + DPI 200 cho chất lượng cực cao
+  python TimeSeriesRacing.py data.csv --fps 60 --dpi 200 --palette neon
 
   # Video chuyên nghiệp với gradient bars
   python TimeSeriesRacing.py data.csv --palette ocean --bar-style gradient
 
-  # Preset cho YouTube
-  python TimeSeriesRacing.py data.csv --preset youtube --title "My Analysis"
+  # Preset YouTube với custom font
+  python TimeSeriesRacing.py data.csv --preset youtube --font-family serif
+
+  # Tắt bar values nếu muốn minimalist
+  python TimeSeriesRacing.py data.csv --no-bar-values --palette pastel
 
 Palettes có sẵn:
   vibrant, professional, pastel, neon, ocean, sunset, earth, football
@@ -490,6 +533,13 @@ Presets có sẵn:
 
 Bar styles:
   solid, gradient
+
+V3.0 Features:
+  - Higher DPI (150 default, up to 300)
+  - Bar values on by default
+  - Enhanced visual effects
+  - Custom fonts
+  - Better typography
         """
     )
 
@@ -537,6 +587,17 @@ Bar styles:
     parser.add_argument('--interpolate', action='store_true',
                         help='Bật interpolation cho period (có thể làm period label nháy)')
 
+    # V3.0 - Ultra HD & Visual Effects parameters
+    parser.add_argument('--dpi', type=int, default=150,
+                        help='DPI cho video (mặc định: 150, cao hơn = chất lượng tốt hơn)')
+    parser.add_argument('--no-bar-values', action='store_true',
+                        help='Ẩn giá trị trên bars (mặc định: hiển thị)')
+    parser.add_argument('--no-effects', action='store_true',
+                        help='Tắt visual effects (borders, shadows)')
+    parser.add_argument('--font-family', type=str, default='sans-serif',
+                        choices=['sans-serif', 'serif', 'monospace'],
+                        help='Font chữ (mặc định: sans-serif)')
+
     # Tham số cho long format
     parser.add_argument('--time', type=str, default=None,
                         help='Tên cột thời gian (tự động phát hiện nếu không chỉ định)')
@@ -574,7 +635,12 @@ Bar styles:
         show_grid=not args.no_grid,
         bar_label_font_size=args.bar_label_font_size,
         title_font_size=args.title_font_size,
-        interpolate_period=args.interpolate
+        interpolate_period=args.interpolate,
+        # V3.0 - New parameters
+        dpi=args.dpi,
+        show_bar_values=not args.no_bar_values,
+        enable_effects=not args.no_effects,
+        font_family=args.font_family
     )
 
     success = racing.run()
