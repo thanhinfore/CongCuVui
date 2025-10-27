@@ -15,7 +15,8 @@ from pathlib import Path
 import warnings
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
-from matplotlib import animation
+import subprocess
+import tempfile
 
 warnings.filterwarnings('ignore')
 
@@ -314,42 +315,74 @@ class TimeSeriesRacing:
             traceback.print_exc()
             return False
 
-    def _setup_ffmpeg_writer(self):
-        """Setup custom FFmpeg writer for maximum compatibility with video editors"""
-        # Custom FFmpeg settings for CapCut, Premiere Pro, DaVinci Resolve, etc.
-        # Key points:
-        # - h264 codec (libx264) - universal compatibility
-        # - yuv420p pixel format - required by most editors
-        # - Constant Frame Rate (CFR) - prevents duration issues
-        # - Proper bitrate for quality
-        # - GOP size = fps for better seeking in editors
+    def _reencode_video(self, temp_file, final_file):
+        """Re-encode video with editor-friendly settings using FFmpeg CLI"""
+        print(f"  ⚙️  Re-encoding with editor-friendly format...")
 
-        extra_args = [
-            '-vcodec', 'libx264',           # H.264 codec (most compatible)
-            '-pix_fmt', 'yuv420p',          # Pixel format (required for compatibility)
-            '-preset', 'medium',             # Encoding speed vs compression
-            '-crf', '18',                    # Quality (18 = near lossless, lower = better)
-            '-movflags', '+faststart',       # Enable fast start for web/streaming
-            '-r', str(self.fps),            # Force constant frame rate (CFR)
-            '-g', str(self.fps),            # GOP size = fps (keyframe every 1 second)
-            '-bf', '2',                      # B-frames for better compression
-            '-profile:v', 'high',            # H.264 profile
-            '-level', '4.2',                 # H.264 level (4.2 = 1080p60)
+        # FFmpeg command for editor compatibility
+        # Key settings:
+        # - libx264: H.264 codec (universal)
+        # - yuv420p: Pixel format (required by editors)
+        # - CFR: Constant frame rate
+        # - High bitrate: Professional quality
+
+        ffmpeg_cmd = [
+            'ffmpeg',
+            '-i', temp_file,                    # Input file
+            '-y',                                # Overwrite output
+            '-c:v', 'libx264',                  # H.264 video codec
+            '-preset', 'medium',                 # Encoding preset
+            '-crf', '18',                        # Quality (18 = near lossless)
+            '-pix_fmt', 'yuv420p',              # Pixel format (required!)
+            '-r', str(self.fps),                # Force constant frame rate
+            '-g', str(self.fps),                # GOP size (keyframe interval)
+            '-bf', '2',                          # B-frames
+            '-profile:v', 'high',                # H.264 high profile
+            '-level', '4.2',                     # H.264 level (1080p60)
+            '-movflags', '+faststart',           # Fast start for web
+            '-b:v', '8000k',                     # Video bitrate
+            '-c:a', 'copy',                      # Copy audio (if exists)
+            '-metadata', f'title={self.title}',
+            '-metadata', 'artist=TimeSeriesRacing v3.1',
+            '-metadata', 'comment=Editor-Ready Format: H.264 yuv420p CFR',
+            final_file
         ]
 
-        # Create custom FFmpeg writer
-        writer = animation.FFMpegWriter(
-            fps=self.fps,
-            metadata={
-                'title': self.title,
-                'artist': 'TimeSeriesRacing v3.1',
-                'comment': 'Created with TimeSeriesRacing v3.1 - Editor-Ready Format'
-            },
-            bitrate=8000,  # 8000 kbps = high quality
-            extra_args=extra_args
-        )
+        try:
+            # Run ffmpeg with output suppressed (unless error)
+            result = subprocess.run(
+                ffmpeg_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=300  # 5 minutes timeout
+            )
 
-        return writer
+            if result.returncode != 0:
+                print(f"  ⚠️  FFmpeg warning/error output:")
+                print(result.stderr)
+                # Don't raise - file might still be created
+
+            # Check if output file was created
+            if os.path.exists(final_file) and os.path.getsize(final_file) > 0:
+                print(f"  ✅ Re-encoding complete!")
+                return True
+            else:
+                print(f"  ❌ Re-encoding failed - output file not created")
+                return False
+
+        except subprocess.TimeoutExpired:
+            print(f"  ❌ FFmpeg re-encoding timeout (>5 minutes)")
+            return False
+        except FileNotFoundError:
+            print(f"  ❌ FFmpeg not found. Please install FFmpeg:")
+            print(f"     Windows: choco install ffmpeg")
+            print(f"     Mac: brew install ffmpeg")
+            print(f"     Linux: sudo apt-get install ffmpeg")
+            return False
+        except Exception as e:
+            print(f"  ❌ Re-encoding error: {str(e)}")
+            return False
 
     def create_animation(self):
         """Tạo animation bar chart race và xuất video MP4 - V3.1 Editor-Ready"""
@@ -429,54 +462,75 @@ class TimeSeriesRacing:
                         'lw': 1.5,
                     }
 
-            # Setup custom FFmpeg writer for editor compatibility
-            ffmpeg_writer = self._setup_ffmpeg_writer()
+            # Create temporary file for initial render
+            temp_fd, temp_file = tempfile.mkstemp(suffix='.mp4', prefix='tsr_temp_')
+            os.close(temp_fd)  # Close file descriptor
 
-            # Tạo animation
-            print(f"  ⏳ Đang render video... (có thể mất vài phút)")
+            try:
+                # Tạo animation to temp file first
+                print(f"  ⏳ Step 1/2: Rendering animation... (có thể mất vài phút)")
 
-            bcr.bar_chart_race(
-                df=self.df_wide,
-                filename=self.output,
-                n_bars=self.top_n,
-                title=self.title,
-                figsize=figsize,
-                period_length=self.period_length,
-                steps_per_period=self.steps_per_period,
-                interpolate_period=self.interpolate_period,  # Smooth transitions
-                cmap=cmap,
-                bar_size=0.95,
-                period_label={
-                    **period_label_pos,
-                    'size': period_label_size,
-                    'weight': 'bold',
-                    'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
-                },
-                # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
-                period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
-                bar_label_size=bar_label_size if self.show_bar_values else 0,  # V3.0 - Control bar values
-                tick_label_size=tick_label_size,
-                shared_fontdict={
-                    'family': self.font_family,  # V3.0 - Custom font
-                    'weight': 'bold',
-                    'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
-                },
-                title_size=title_font_size,
-                scale='linear',
-                writer=ffmpeg_writer,  # V3.0 Enhanced - Custom FFmpeg writer for editor compatibility
-                fig=None,
-                dpi=self.dpi,  # V3.0 - Higher DPI for better quality!
-                bar_kwargs=bar_kwargs,
-                filter_column_colors=False,
-                period_summary_func=lambda v, r: {
-                    'x': 0.98,
-                    'y': 0.05,
-                    's': f'Total: {v.sum():,.0f}' if not self.use_percent else f'Total: {v.sum():.1f}%',
-                    'ha': 'right',
-                    'size': bar_label_size - 2,
-                    'weight': 'bold'
-                } if self.show_grid else None,
-            )
+                bcr.bar_chart_race(
+                    df=self.df_wide,
+                    filename=temp_file,  # Save to temp file first
+                    n_bars=self.top_n,
+                    title=self.title,
+                    figsize=figsize,
+                    period_length=self.period_length,
+                    steps_per_period=self.steps_per_period,
+                    interpolate_period=self.interpolate_period,  # Smooth transitions
+                    cmap=cmap,
+                    bar_size=0.95,
+                    period_label={
+                        **period_label_pos,
+                        'size': period_label_size,
+                        'weight': 'bold',
+                        'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
+                    },
+                    # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
+                    period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
+                    bar_label_size=bar_label_size if self.show_bar_values else 0,  # V3.0 - Control bar values
+                    tick_label_size=tick_label_size,
+                    shared_fontdict={
+                        'family': self.font_family,  # V3.0 - Custom font
+                        'weight': 'bold',
+                        'color': '#2C3E50' if self.theme == 'light' else '#ECF0F1'
+                    },
+                    title_size=title_font_size,
+                    scale='linear',
+                    writer='ffmpeg',  # Use default ffmpeg writer
+                    fig=None,
+                    dpi=self.dpi,  # V3.0 - Higher DPI for better quality!
+                    bar_kwargs=bar_kwargs,
+                    filter_column_colors=False,
+                    period_summary_func=lambda v, r: {
+                        'x': 0.98,
+                        'y': 0.05,
+                        's': f'Total: {v.sum():,.0f}' if not self.use_percent else f'Total: {v.sum():.1f}%',
+                        'ha': 'right',
+                        'size': bar_label_size - 2,
+                        'weight': 'bold'
+                    } if self.show_grid else None,
+                )
+
+                print(f"  ✅ Animation rendered to temp file")
+
+                # Step 2: Re-encode with editor-friendly settings
+                print(f"  ⏳ Step 2/2: Re-encoding for editor compatibility...")
+                if not self._reencode_video(temp_file, self.output):
+                    print(f"  ⚠️  Re-encoding failed, using original file")
+                    # Copy temp to output as fallback
+                    import shutil
+                    shutil.copy2(temp_file, self.output)
+
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_file):
+                    try:
+                        os.remove(temp_file)
+                        print(f"  🗑️  Cleaned up temp file")
+                    except:
+                        pass  # Ignore cleanup errors
 
             print(f"\n✅ Video đã được tạo thành công: {self.output}")
 
