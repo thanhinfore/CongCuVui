@@ -759,8 +759,9 @@ class TimeSeriesRacing:
 
         # Create animation
         frames = len(self.df_wide)
+        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
         anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=self.period_length/self.steps_per_period,
+                           interval=interval_ms,
                            repeat=False)
 
         return fig, anim
@@ -827,8 +828,9 @@ class TimeSeriesRacing:
 
         # Create animation
         frames = len(self.df_wide)
+        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
         anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=self.period_length/self.steps_per_period,
+                           interval=interval_ms,
                            repeat=False)
 
         return fig, anim
@@ -901,8 +903,9 @@ class TimeSeriesRacing:
 
         # Create animation
         frames = len(self.df_wide)
+        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
         anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=self.period_length/self.steps_per_period,
+                           interval=interval_ms,
                            repeat=False)
 
         return fig, anim
@@ -1006,8 +1009,9 @@ class TimeSeriesRacing:
 
         # Create animation
         frames = len(self.df_wide)
+        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
         anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=self.period_length/self.steps_per_period,
+                           interval=interval_ms,
                            repeat=False)
 
         return fig, anim
