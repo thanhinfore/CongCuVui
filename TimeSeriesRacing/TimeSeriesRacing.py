@@ -1113,28 +1113,41 @@ class TimeSeriesRacing:
                     fig, anim = self._create_line_chart_race()
                     # Save animation using matplotlib's built-in writer
                     print(f"  ⏳ Saving LINE chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # Calculate FPS based on period_length: fps = 1000ms / period_length
+                    # E.g., period_length=1000ms → 1 fps → 1 second per frame
+                    video_fps = 1000.0 / self.period_length
+                    writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'pie':
                     # Pie chart race
                     fig, anim = self._create_pie_chart_race()
                     print(f"  ⏳ Saving PIE chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # Calculate FPS based on period_length: fps = 1000ms / period_length
+                    video_fps = 1000.0 / self.period_length
+                    writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'column':
                     # Column chart race
                     fig, anim = self._create_column_chart_race()
                     print(f"  ⏳ Saving COLUMN chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # Calculate FPS based on period_length: fps = 1000ms / period_length
+                    video_fps = 1000.0 / self.period_length
+                    writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'combo':
                     # Combo chart with multiple types
                     fig, anim = self._create_combo_chart_race()
                     print(f"  ⏳ Saving COMBO chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # Calculate FPS based on period_length: fps = 1000ms / period_length
+                    video_fps = 1000.0 / self.period_length
+                    writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'bar':
