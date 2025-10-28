@@ -6,6 +6,7 @@ import { ControlPanel } from './modules/controlPanel.js';
 import { PreviewPanel } from './modules/previewPanel.js';
 import { MobileHandler } from './modules/mobileHandler.js';
 import { PresetsManager } from './modules/presets.js';
+import { AdvancedFeatures } from './modules/advancedFeatures.js';
 import { utils } from './modules/utils.js';
 
 class ImageTextApp {
@@ -28,6 +29,7 @@ class ImageTextApp {
             this.components.preview = new PreviewPanel(this.DOM, this.state);
             this.components.mobile = new MobileHandler();
             this.components.presets = new PresetsManager(this.DOM, this.components.controls);
+            this.components.advanced = new AdvancedFeatures(this);
 
             this.setupGlobalMethods();
 
@@ -39,7 +41,14 @@ class ImageTextApp {
             this.loadSavedState();
 
             this.initialized = true;
-            console.log('Image Text App initialized successfully');
+            console.log('Image Text App Pro initialized successfully');
+
+            // Welcome toast
+            setTimeout(() => {
+                if (this.components.advanced) {
+                    this.components.advanced.showToast('Welcome to Image Text Generator Pro! Press ? for shortcuts.', 'info', 5000);
+                }
+            }, 500);
 
         } catch (error) {
             console.error('Failed to initialize app:', error);
