@@ -1,8 +1,15 @@
-# TimeSeriesRacing v4.0 - ULTIMATE EDITION 🚀
+# TimeSeriesRacing v5.0 - MULTI-CHART EDITION 🎨
 
-Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ động) từ dữ liệu time series - giống như các video "Evolution of Data" trên TikTok/YouTube.
+Công cụ Python mạnh mẽ để tạo video biểu đồ động từ dữ liệu time series - **Bar📊, Line📈, Pie🥧, Column📉, Combo🎨** - giống như các video "Evolution of Data" trên TikTok/YouTube.
 
-**🚀 Version 4.0 - ULTIMATE EDITION - 10x Better Information Display!**: Revolutionary upgrade! Videos giờ hiển thị 10 LẦN NHIỀU THÔNG TIN HƠN với Real-time Statistics Panel 📊, Progress Timeline Bar 📈, Rank Change Indicators 🎯, Dynamic Background Gradients 🌊, Custom Watermark/Branding 🏷️, Event Annotations ⚡, và nhiều tính năng đột phá khác. Đây là phiên bản đỉnh cao nhất từ trước đến nay!
+**🎨 Version 5.0 - MULTI-CHART EDITION**: Game-changing upgrade! Giờ hỗ trợ **5 LOẠI BIỂU ĐỒ** khác nhau:
+- 📊 **BAR Chart Race** - Horizontal bars classic (original)
+- 📈 **LINE Chart Race** - Animated growing lines over time
+- 🥧 **PIE Chart Race** - Dynamic pie chart evolution
+- 📉 **COLUMN Chart Race** - Vertical bars for compact view
+- 🎨 **COMBO Mode** - Multiple charts side-by-side or grid!
+
+**Plus TẤT CẢ v4.0 features** (10x information display) hoạt động với **MỌI chart type**!
 
 ## ✨ Tính năng chính
 
@@ -13,7 +20,63 @@ Công cụ Python đơn giản để tạo video "bar chart race" (biểu đồ 
 - **CLI đơn giản**: Chạy ngay với 1 lệnh
 - **Xuất video MP4** chất lượng cao
 
-### 🚀 NEW in v4.0 (ULTIMATE EDITION - 10x BETTER INFORMATION!)
+### 🎨 NEW in v5.0 (MULTI-CHART EDITION)
+
+**5 Chart Types - Choose the best visualization for your data!**
+
+#### 1. 📊 BAR Chart Race (Horizontal Bars)
+- Classic horizontal bar chart race
+- Perfect for rankings and competitions
+- Smooth transitions between periods
+- Best for: Sports rankings, country comparisons, product sales
+
+#### 2. 📈 LINE Chart Race (Animated Lines)
+- Growing animated lines over time
+- Shows trends and evolution clearly
+- Multiple lines for comparison
+- Best for: Stock prices, temperature data, growth metrics
+
+#### 3. 🥧 PIE Chart Race (Dynamic Pies)
+- Animated pie chart showing market share
+- Percentages auto-calculated
+- Clear visual proportions
+- Best for: Market share, budget allocation, category distribution
+
+#### 4. 📉 COLUMN Chart Race (Vertical Bars)
+- Vertical bars for compact viewing
+- Great for presentations
+- Value labels on top of bars
+- Best for: Monthly data, quarterly results, compact dashboards
+
+#### 5. 🎨 COMBO Mode (Multiple Charts Together!)
+- Show multiple chart types simultaneously
+- Horizontal, vertical, or grid layouts
+- Compare different visualizations
+- Best for: Comprehensive analysis, data exploration, presentations
+
+**Usage:**
+```bash
+# BAR Chart (default)
+python TimeSeriesRacing.py data.csv --chart-type bar
+
+# LINE Chart
+python TimeSeriesRacing.py data.csv --chart-type line
+
+# PIE Chart
+python TimeSeriesRacing.py data.csv --chart-type pie
+
+# COLUMN Chart
+python TimeSeriesRacing.py data.csv --chart-type column
+
+# COMBO Mode (bar + line)
+python TimeSeriesRacing.py data.csv --chart-type combo --combo-charts bar,line
+
+# COMBO with all 4 types in grid
+python TimeSeriesRacing.py data.csv --chart-type combo \
+  --combo-charts bar,line,pie,column --combo-layout grid
+```
+
+### 🚀 Features from v4.0 (ULTIMATE EDITION - 10x BETTER INFORMATION!)
 
 **10 Tính năng đột phá giúp video hiển thị nhiều thông tin hơn 10 lần:**
 

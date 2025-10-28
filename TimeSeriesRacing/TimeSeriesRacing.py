@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TimeSeriesRacing - Tạo video biểu đồ động (bar chart race) từ dữ liệu time series
+TimeSeriesRacing - Tạo video biểu đồ động từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
-Version 4.0 - ULTIMATE EDITION - 10x Better Information Display!
+Version 5.0 - MULTI-CHART EDITION - Bar, Line, Pie, Column Charts & Combo Mode!
 """
 
 import pandas as pd
@@ -15,11 +15,14 @@ from pathlib import Path
 import warnings
 import matplotlib.pyplot as plt
 from matplotlib import colors as mcolors
-from matplotlib.patches import FancyBboxPatch, Rectangle
+from matplotlib.patches import FancyBboxPatch, Rectangle, Wedge
 import matplotlib.patches as mpatches
+from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
+import matplotlib.gridspec as gridspec
 import subprocess
 import tempfile
 import numpy as np
+from collections import defaultdict
 
 warnings.filterwarnings('ignore')
 
@@ -150,7 +153,7 @@ class StylePresets:
 
 
 class TimeSeriesRacing:
-    """Lớp chính để xử lý và tạo video bar chart race - V4.0 ULTIMATE EDITION - 10x Better Info Display"""
+    """Lớp chính để xử lý và tạo video chart race - V5.0 MULTI-CHART EDITION"""
 
     def __init__(self, input_file, **kwargs):
         """
@@ -173,6 +176,11 @@ class TimeSeriesRacing:
         self.value_col = kwargs.get('value', None)
         self.period_length = kwargs.get('period_length', 1000)  # Mặc định 1 giây
         self.steps_per_period = kwargs.get('steps_per_period', 20)  # Mặc định 20 steps cho mượt mà
+
+        # V5.0 - MULTI-CHART EDITION - Chart Type Selection
+        self.chart_type = kwargs.get('chart_type', 'bar')  # bar, line, pie, column, combo
+        self.combo_charts = kwargs.get('combo_charts', ['bar', 'line'])  # For combo mode
+        self.combo_layout = kwargs.get('combo_layout', 'horizontal')  # horizontal, vertical, grid
 
         # Enhanced parameters
         self.palette = kwargs.get('palette', 'professional')
@@ -689,9 +697,325 @@ class TimeSeriesRacing:
             print(f"  ❌ Re-encoding error: {str(e)}")
             return False
 
+    def _create_line_chart_race(self):
+        """V5.0 - Create animated line chart race"""
+        print(f"\n📈 Creating LINE CHART RACE animation...")
+
+        # Setup figure
+        if self.ratio == '9:16':
+            figsize = (6, 10.67)
+        else:
+            figsize = (12, 6.75)
+
+        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
+
+        # Get colors
+        colors_list = ColorPalettes.get_palette(self.palette)
+
+        # Prepare data - cumulative for line charts works better
+        df_cumsum = self.df_wide.cumsum()
+
+        # Animation function
+        def animate(frame):
+            ax.clear()
+
+            # Get data up to current frame
+            current_idx = int(frame)
+            data_slice = df_cumsum.iloc[:current_idx+1]
+
+            if len(data_slice) == 0:
+                return
+
+            # Plot lines for top N entities (based on final values)
+            final_values = self.df_wide.iloc[-1].sort_values(ascending=False)
+            top_entities = final_values.head(self.top_n).index
+
+            for i, entity in enumerate(top_entities):
+                color = colors_list[i % len(colors_list)]
+                ax.plot(data_slice.index, data_slice[entity],
+                       label=entity, color=color, linewidth=3, alpha=0.9)
+
+            # Styling
+            ax.set_title(self.title, fontsize=self.title_font_size + 2,
+                        weight='bold', pad=20)
+            ax.legend(loc='upper left', fontsize=self.bar_label_font_size - 2)
+            ax.grid(True, alpha=0.3)
+            ax.set_xlabel('Period', fontsize=self.bar_label_font_size)
+            ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+
+            # Add v4.0 overlays if enabled
+            if current_idx < len(self.df_wide):
+                period_val = self.df_wide.index[current_idx]
+                current_values = self.df_wide.iloc[current_idx][top_entities].values
+                current_ranks = {entity: i for i, entity in enumerate(top_entities)}
+
+                # Add v4.0 overlays
+                text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
+                if self.show_progress_bar:
+                    self.period_index = current_idx
+                    self._add_progress_bar(ax, text_color)
+                if self.watermark_text:
+                    self._add_watermark(ax, text_color)
+
+        # Create animation
+        frames = len(self.df_wide)
+        anim = FuncAnimation(fig, animate, frames=frames,
+                           interval=self.period_length/self.steps_per_period,
+                           repeat=False)
+
+        return fig, anim
+
+    def _create_pie_chart_race(self):
+        """V5.0 - Create animated pie chart race"""
+        print(f"\n🥧 Creating PIE CHART RACE animation...")
+
+        # Setup figure
+        if self.ratio == '9:16':
+            figsize = (6, 10.67)
+        else:
+            figsize = (12, 6.75)
+
+        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
+
+        # Get colors
+        colors_list = ColorPalettes.get_palette(self.palette)
+
+        # Animation function
+        def animate(frame):
+            ax.clear()
+
+            # Get current period data
+            current_idx = int(frame)
+            if current_idx >= len(self.df_wide):
+                return
+
+            current_data = self.df_wide.iloc[current_idx]
+            period_val = self.df_wide.index[current_idx]
+
+            # Get top N
+            sorted_data = current_data.sort_values(ascending=False)
+            top_data = sorted_data.head(self.top_n)
+
+            # Create pie chart
+            if top_data.sum() > 0:
+                wedges, texts, autotexts = ax.pie(
+                    top_data.values,
+                    labels=top_data.index,
+                    colors=colors_list[:len(top_data)],
+                    autopct='%1.1f%%',
+                    startangle=90,
+                    textprops={'fontsize': self.bar_label_font_size}
+                )
+
+                # Make percentage text bold
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontweight('bold')
+
+            # Title with period
+            ax.set_title(f"{self.title}\nPeriod: {period_val}",
+                        fontsize=self.title_font_size + 2,
+                        weight='bold', pad=20)
+
+            # Add v4.0 overlays
+            text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
+            if self.show_progress_bar:
+                self.period_index = current_idx
+                self._add_progress_bar(ax, text_color)
+            if self.watermark_text:
+                self._add_watermark(ax, text_color)
+
+        # Create animation
+        frames = len(self.df_wide)
+        anim = FuncAnimation(fig, animate, frames=frames,
+                           interval=self.period_length/self.steps_per_period,
+                           repeat=False)
+
+        return fig, anim
+
+    def _create_column_chart_race(self):
+        """V5.0 - Create animated column (vertical bar) chart race"""
+        print(f"\n📊 Creating COLUMN CHART RACE animation (vertical bars)...")
+
+        # Setup figure
+        if self.ratio == '9:16':
+            figsize = (6, 10.67)
+        else:
+            figsize = (12, 6.75)
+
+        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
+
+        # Get colors
+        colors_list = ColorPalettes.get_palette(self.palette)
+
+        # Animation function
+        def animate(frame):
+            ax.clear()
+
+            # Get current period data
+            current_idx = int(frame)
+            if current_idx >= len(self.df_wide):
+                return
+
+            current_data = self.df_wide.iloc[current_idx]
+            period_val = self.df_wide.index[current_idx]
+
+            # Get top N and sort
+            sorted_data = current_data.sort_values(ascending=False)
+            top_data = sorted_data.head(self.top_n)
+
+            # Create column chart (vertical bars)
+            bars = ax.bar(range(len(top_data)), top_data.values,
+                         color=colors_list[:len(top_data)],
+                         alpha=self.bar_alpha,
+                         edgecolor='white',
+                         linewidth=self.bar_border_width)
+
+            # Add value labels on top of bars
+            if self.show_bar_values:
+                for i, (value, bar) in enumerate(zip(top_data.values, bars)):
+                    height = bar.get_height()
+                    ax.text(bar.get_x() + bar.get_width()/2., height,
+                           f'{value:,.0f}',
+                           ha='center', va='bottom',
+                           fontsize=self.bar_label_font_size - 2,
+                           fontweight='bold')
+
+            # Styling
+            ax.set_xticks(range(len(top_data)))
+            ax.set_xticklabels(top_data.index, rotation=45, ha='right',
+                              fontsize=self.bar_label_font_size - 2)
+            ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+            ax.set_title(f"{self.title} - Period: {period_val}",
+                        fontsize=self.title_font_size + 2,
+                        weight='bold', pad=20)
+            ax.grid(True, alpha=0.3, axis='y')
+
+            # Add v4.0 overlays
+            text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
+            if self.show_progress_bar:
+                self.period_index = current_idx
+                self._add_progress_bar(ax, text_color)
+            if self.watermark_text:
+                self._add_watermark(ax, text_color)
+
+        # Create animation
+        frames = len(self.df_wide)
+        anim = FuncAnimation(fig, animate, frames=frames,
+                           interval=self.period_length/self.steps_per_period,
+                           repeat=False)
+
+        return fig, anim
+
+    def _create_combo_chart_race(self):
+        """V5.0 - Create combo chart with multiple chart types"""
+        print(f"\n🎨 Creating COMBO CHART RACE with {', '.join(self.combo_charts)}...")
+
+        # Setup figure with subplots
+        if self.ratio == '9:16':
+            base_figsize = (6, 10.67)
+        else:
+            base_figsize = (12, 6.75)
+
+        n_charts = len(self.combo_charts)
+
+        if self.combo_layout == 'horizontal':
+            fig = plt.figure(figsize=(base_figsize[0] * n_charts, base_figsize[1]), dpi=self.dpi)
+            gs = gridspec.GridSpec(1, n_charts, figure=fig)
+        elif self.combo_layout == 'vertical':
+            fig = plt.figure(figsize=(base_figsize[0], base_figsize[1] * n_charts), dpi=self.dpi)
+            gs = gridspec.GridSpec(n_charts, 1, figure=fig)
+        else:  # grid
+            rows = int(np.ceil(np.sqrt(n_charts)))
+            cols = int(np.ceil(n_charts / rows))
+            fig = plt.figure(figsize=(base_figsize[0] * cols, base_figsize[1] * rows), dpi=self.dpi)
+            gs = gridspec.GridSpec(rows, cols, figure=fig)
+
+        axes = []
+        for i in range(n_charts):
+            if self.combo_layout == 'grid':
+                row = i // int(np.ceil(np.sqrt(n_charts)))
+                col = i % int(np.ceil(np.sqrt(n_charts)))
+                ax = fig.add_subplot(gs[row, col])
+            else:
+                ax = fig.add_subplot(gs[i])
+            axes.append(ax)
+
+        # Get colors
+        colors_list = ColorPalettes.get_palette(self.palette)
+
+        # Animation function
+        def animate(frame):
+            current_idx = int(frame)
+            if current_idx >= len(self.df_wide):
+                return
+
+            current_data = self.df_wide.iloc[current_idx]
+            period_val = self.df_wide.index[current_idx]
+
+            # Get top N
+            sorted_data = current_data.sort_values(ascending=False)
+            top_data = sorted_data.head(self.top_n)
+
+            for ax, chart_type in zip(axes, self.combo_charts):
+                ax.clear()
+
+                if chart_type == 'bar':
+                    # Horizontal bar chart
+                    ax.barh(range(len(top_data)), top_data.values,
+                           color=colors_list[:len(top_data)],
+                           alpha=self.bar_alpha)
+                    ax.set_yticks(range(len(top_data)))
+                    ax.set_yticklabels(top_data.index)
+                    ax.invert_yaxis()
+                    ax.set_title('Bar Chart', fontsize=self.bar_label_font_size)
+
+                elif chart_type == 'column':
+                    # Vertical bar chart
+                    ax.bar(range(len(top_data)), top_data.values,
+                          color=colors_list[:len(top_data)],
+                          alpha=self.bar_alpha)
+                    ax.set_xticks(range(len(top_data)))
+                    ax.set_xticklabels(top_data.index, rotation=45, ha='right')
+                    ax.set_title('Column Chart', fontsize=self.bar_label_font_size)
+
+                elif chart_type == 'line':
+                    # Line chart (cumulative)
+                    data_slice = self.df_wide.iloc[:current_idx+1]
+                    for i, entity in enumerate(top_data.index):
+                        ax.plot(data_slice.index, data_slice[entity],
+                               color=colors_list[i % len(colors_list)],
+                               linewidth=2)
+                    ax.set_title('Line Chart', fontsize=self.bar_label_font_size)
+                    ax.legend(top_data.index, fontsize=8, loc='upper left')
+
+                elif chart_type == 'pie':
+                    # Pie chart
+                    if top_data.sum() > 0:
+                        ax.pie(top_data.values, labels=top_data.index,
+                              colors=colors_list[:len(top_data)],
+                              autopct='%1.1f%%')
+                    ax.set_title('Pie Chart', fontsize=self.bar_label_font_size)
+
+                ax.grid(True, alpha=0.3)
+
+            # Main title
+            fig.suptitle(f"{self.title} - Period: {period_val}",
+                        fontsize=self.title_font_size + 4,
+                        weight='bold', y=0.98)
+
+        # Create animation
+        frames = len(self.df_wide)
+        anim = FuncAnimation(fig, animate, frames=frames,
+                           interval=self.period_length/self.steps_per_period,
+                           repeat=False)
+
+        return fig, anim
+
     def create_animation(self):
-        """Tạo animation bar chart race và xuất video MP4 - V4.0 ULTIMATE EDITION"""
-        print(f"\n🎬 Đang tạo video animation (V4.0 ULTIMATE EDITION - 10x Better Info Display!)...")
+        """Tạo animation chart race và xuất video MP4 - V5.0 MULTI-CHART EDITION"""
+        print(f"\n🎬 Đang tạo video animation (V5.0 MULTI-CHART EDITION)...")
+        print(f"  → Chart Type: {self.chart_type.upper()}")
         print(f"  → Tiêu đề: {self.title}")
         print(f"  → Top {self.top_n} thực thể")
         print(f"  → FPS: {self.fps}")
@@ -779,11 +1103,42 @@ class TimeSeriesRacing:
             os.close(temp_fd)  # Close file descriptor
 
             try:
-                # Tạo animation to temp file first
-                print(f"  ⏳ Step 1/2: Rendering animation... (có thể mất vài phút)")
+                # V5.0 - MULTI-CHART: Route to appropriate chart type
+                if self.chart_type == 'line':
+                    # Line chart race
+                    fig, anim = self._create_line_chart_race()
+                    # Save animation using matplotlib's built-in writer
+                    print(f"  ⏳ Saving LINE chart animation...")
+                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    anim.save(temp_file, writer=writer)
 
-                # V4.0 - Custom bar label function with rank indicators and values
-                def v4_bar_label_func(val, rank):
+                elif self.chart_type == 'pie':
+                    # Pie chart race
+                    fig, anim = self._create_pie_chart_race()
+                    print(f"  ⏳ Saving PIE chart animation...")
+                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    anim.save(temp_file, writer=writer)
+
+                elif self.chart_type == 'column':
+                    # Column chart race
+                    fig, anim = self._create_column_chart_race()
+                    print(f"  ⏳ Saving COLUMN chart animation...")
+                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    anim.save(temp_file, writer=writer)
+
+                elif self.chart_type == 'combo':
+                    # Combo chart with multiple types
+                    fig, anim = self._create_combo_chart_race()
+                    print(f"  ⏳ Saving COMBO chart animation...")
+                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    anim.save(temp_file, writer=writer)
+
+                elif self.chart_type == 'bar':
+                    # Original horizontal bar chart race (using bar_chart_race library)
+                    print(f"  ⏳ Step 1/2: Rendering BAR chart animation... (có thể mất vài phút)")
+
+                    # V4.0 - Custom bar label function with rank indicators and values
+                    def v4_bar_label_func(val, rank):
                     """Enhanced bar labels with values and rank indicators"""
                     # Format the value
                     if self.use_percent:
@@ -882,11 +1237,15 @@ class TimeSeriesRacing:
                     filter_column_colors=False,
                     # V4.0 - ULTIMATE EDITION period summary with full overlay system
                     period_summary_func=v4_period_summary,
-                )
+                    )
 
-                print(f"  ✅ Animation rendered to temp file")
+                    print(f"  ✅ BAR chart animation rendered to temp file")
 
-                # Step 2: Re-encode with editor-friendly settings
+                else:
+                    # Unknown chart type
+                    raise ValueError(f"Unknown chart type: {self.chart_type}. Use: bar, line, pie, column, combo")
+
+                # V5.0 - Step 2: Re-encode with editor-friendly settings (for ALL chart types)
                 print(f"  ⏳ Step 2/2: Re-encoding for editor compatibility...")
                 if not self._reencode_video(temp_file, self.output):
                     print(f"  ⚠️  Re-encoding failed, using original file")
@@ -937,10 +1296,13 @@ class TimeSeriesRacing:
 
     def run(self):
         """Chạy toàn bộ quy trình"""
-        print("="*80)
-        print("🚀 TIMESERIES RACING v4.0 - ULTIMATE EDITION - 10x Better Info Display!")
-        print("="*80)
-        print("✨ NEW: Statistics Panel, Progress Bar, Rank Changes, Event Annotations & More!")
+        print("="*85)
+        print("🎨 TIMESERIES RACING v5.0 - MULTI-CHART EDITION - Bar📊Line📈Pie🥧Column📉Combo🎨")
+        print("="*85)
+        print("✨ NEW: Multiple Chart Types! Bar, Line, Pie, Column Charts + Combo Mode!")
+        print(f"📊 Selected Chart Type: {self.chart_type.upper()}")
+        if self.chart_type == 'combo':
+            print(f"🎨 Combo Charts: {', '.join(self.combo_charts)} ({self.combo_layout} layout)")
 
         # Bước 1: Đọc dữ liệu
         if not self.read_data():
@@ -957,33 +1319,28 @@ class TimeSeriesRacing:
         if not self.create_animation():
             return False
 
-        print("\n" + "="*80)
-        print("🎉 HOÀN THÀNH! Video với 10x nhiều thông tin hơn đã được tạo!")
-        print("="*80)
-        print("\n💡 V4.0 ULTIMATE Tips:")
-        print("  - 📊 Stats panel hiển thị Total, Leader, Gap, Average real-time")
-        print("  - 📈 Progress bar cho biết vị trí hiện tại trong timeline")
-        print("  - 🎯 Rank indicators show thứ hạng thay đổi (↑↓)")
-        print("  - 🌊 Background gradient tạo chiều sâu visual")
-        print("  - 🏷️  Watermark với --watermark-text 'Your Brand'")
-        print("  - ⚡ Event annotations với --event-annotations")
-        print("\n🎨 Customization Options:")
-        print("  - 10 Premium Palettes: gold, rainbow, fire, ice, cosmic, tropical, etc.")
-        print("  - Tắt features: --no-stats-panel, --no-progress-bar, --no-rank-changes")
-        print("  - Background gradient: --no-background-gradient để tắt")
-        print("  - Custom watermark position: --watermark-position top-right/bottom-left")
-        print("\n✨ V4.0 ULTIMATE Features Summary:")
-        print("  1. 📊 Real-time Statistics Panel (Total, Leader, Gap, Average)")
-        print("  2. 📈 Progress Timeline Bar (shows completion %)")
-        print("  3. 🎯 Rank Change Indicators (visual rank tracking)")
-        print("  4. 💹 Growth Rate Display (% change indicators)")
-        print("  5. 📍 Value Labels on Bars (clear data display)")
-        print("  6. 🌊 Dynamic Background Gradients (visual depth)")
-        print("  7. 🏷️  Custom Watermark/Branding (your logo/text)")
-        print("  8. ⚡ Event Annotations (highlight key moments)")
-        print("  9. 🎨 10 Premium Color Palettes (stunning visuals)")
-        print(" 10. 🎬 Editor-Ready Format (H.264 yuv420p CFR)")
-        print("\n🔥 This is 10x more informative than previous versions!")
+        print("\n" + "="*85)
+        print(f"🎉 HOÀN THÀNH! Video {self.chart_type.upper()} chart đã được tạo với 10x thông tin!")
+        print("="*85)
+        print("\n🎨 V5.0 MULTI-CHART Tips:")
+        print("  - 📊 BAR Chart: --chart-type bar (horizontal bars - classic)")
+        print("  - 📈 LINE Chart: --chart-type line (animated growing lines)")
+        print("  - 🥧 PIE Chart: --chart-type pie (animated pie slices)")
+        print("  - 📉 COLUMN Chart: --chart-type column (vertical bars)")
+        print("  - 🎨 COMBO Mode: --chart-type combo --combo-charts bar,line,pie")
+        print("\n💡 V4.0 Features (vẫn hoạt động với tất cả chart types!):")
+        print("  - 📊 Stats panel, Progress bar, Rank indicators")
+        print("  - 🌊 Background gradients, Watermarks, Event annotations")
+        print("  - 🎨 10 Premium Palettes: gold, rainbow, fire, ice, cosmic, etc.")
+        print("\n✨ V5.0 MULTI-CHART Features:")
+        print("  1. 📊 BAR Chart Race - Horizontal bars (original classic)")
+        print("  2. 📈 LINE Chart Race - Animated growing lines over time")
+        print("  3. 🥧 PIE Chart Race - Dynamic pie chart evolution")
+        print("  4. 📉 COLUMN Chart Race - Vertical bars for compact view")
+        print("  5. 🎨 COMBO Mode - Multiple charts side-by-side or grid")
+        print("  6. ✅ All v4.0 features work with ALL chart types!")
+        print("  7. 🎬 Editor-Ready Format for all charts (H.264 yuv420p CFR)")
+        print(f"\n🔥 Chart Type: {self.chart_type.upper()} - Choose what works best for your data!")
 
         return True
 
@@ -992,33 +1349,35 @@ def main():
     """Hàm main với CLI parser"""
 
     parser = argparse.ArgumentParser(
-        description='TimeSeriesRacing v4.0 - ULTIMATE EDITION - 10x Better Information Display!',
+        description='TimeSeriesRacing v5.0 - MULTI-CHART EDITION - Bar, Line, Pie, Column & Combo!',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Ví dụ sử dụng:
-  # V4.0 - ULTIMATE video với 10x thông tin (mặc định - TẤT CẢ features bật)
-  python TimeSeriesRacing.py data.csv
+Ví dụ sử dụng V5.0 - MULTI-CHART:
 
-  # 📊 Full v4.0 features với custom watermark
-  python TimeSeriesRacing.py data.csv --watermark-text "© Your Company 2024"
+  # 📊 BAR Chart (default - horizontal bars classic)
+  python TimeSeriesRacing.py data.csv --chart-type bar
 
-  # 🌈 Premium palettes với statistics panel
-  python TimeSeriesRacing.py data.csv --palette gold --title "💎 Precious Metals Race"
+  # 📈 LINE Chart Race - Animated growing lines
+  python TimeSeriesRacing.py data.csv --chart-type line --palette ocean
 
-  # 🎯 Ultimate quality - 60fps + 200 DPI + All v4.0 features
-  python TimeSeriesRacing.py data.csv --fps 60 --dpi 200 --palette cosmic
+  # 🥧 PIE Chart Race - Dynamic pie evolution
+  python TimeSeriesRacing.py data.csv --chart-type pie --palette rainbow
 
-  # 📊 Minimal mode - Tắt một số features để giao diện clean hơn
-  python TimeSeriesRacing.py data.csv --no-stats-panel --no-progress-bar
+  # 📉 COLUMN Chart - Vertical bars for compact view
+  python TimeSeriesRacing.py data.csv --chart-type column --palette gold
 
-  # 🏷️ Custom watermark position
-  python TimeSeriesRacing.py data.csv --watermark-text "MyBrand" --watermark-position top-left
+  # 🎨 COMBO Mode - Multiple charts together!
+  python TimeSeriesRacing.py data.csv --chart-type combo --combo-charts bar,line
 
-  # Preset TikTok với full v4.0 features
-  python TimeSeriesRacing.py data.csv --preset tiktok --palette neon
+  # 🎨 COMBO with all 4 chart types in grid layout
+  python TimeSeriesRacing.py data.csv --chart-type combo --combo-charts bar,line,pie,column --combo-layout grid
 
-  # Preset YouTube với v4.0 ULTIMATE display
-  python TimeSeriesRacing.py data.csv --preset youtube --palette sapphire
+  # Precious Metals with LINE chart
+  python TimeSeriesRacing.py examples/sports_data/24_precious_metals_prices.csv \
+    --chart-type line --title "📈 Metals Price Evolution" --palette gold
+
+  # V4.0 features vẫn hoạt động với TẤT CẢ chart types!
+  python TimeSeriesRacing.py data.csv --chart-type pie --watermark-text "© Your Brand"
 
 Palettes có sẵn:
   CLASSIC: vibrant, professional, pastel, neon, ocean, sunset, earth, football
@@ -1067,6 +1426,18 @@ V4.0 Control Flags:
 
     # Tham số bắt buộc
     parser.add_argument('input', help='File dữ liệu đầu vào (CSV, Excel, JSON)')
+
+    # V5.0 - MULTI-CHART EDITION parameters (NEW!)
+    parser.add_argument('--chart-type', type=str,
+                        choices=['bar', 'line', 'pie', 'column', 'combo'],
+                        default='bar',
+                        help='📊 Loại biểu đồ: bar (horizontal), line (đường), pie (tròn), column (vertical), combo (kết hợp)')
+    parser.add_argument('--combo-charts', type=str, default='bar,line',
+                        help='🎨 Charts cho combo mode (vd: "bar,line,pie" - mặc định: "bar,line")')
+    parser.add_argument('--combo-layout', type=str,
+                        choices=['horizontal', 'vertical', 'grid'],
+                        default='horizontal',
+                        help='📐 Layout cho combo mode: horizontal (ngang), vertical (dọc), grid (lưới)')
 
     # Tham số tùy chọn cơ bản
     parser.add_argument('--title', type=str, default='Evolution of Data',
@@ -1176,6 +1547,9 @@ V4.0 Control Flags:
         print(f"❌ File không tồn tại: {args.input}")
         sys.exit(1)
 
+    # V5.0 - Parse combo_charts string to list
+    combo_charts_list = [c.strip() for c in args.combo_charts.split(',')]
+
     # Tạo object và chạy
     racing = TimeSeriesRacing(
         args.input,
@@ -1191,6 +1565,11 @@ V4.0 Control Flags:
         value=args.value,
         period_length=args.period_length,
         steps_per_period=args.steps_per_period,
+        # V5.0 - MULTI-CHART EDITION parameters
+        chart_type=args.chart_type,
+        combo_charts=combo_charts_list,
+        combo_layout=args.combo_layout,
+        # Enhanced parameters
         palette=args.palette,
         bar_style=args.bar_style,
         preset=args.preset,
