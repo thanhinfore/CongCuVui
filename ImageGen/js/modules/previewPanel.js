@@ -236,12 +236,39 @@ export class PreviewPanel {
             alpha: true
         });
 
+        // Apply filters using CSS filters on a temporary canvas
+        const filterString = this.getFilterString();
+        if (filterString && filterString.trim() !== '') {
+            ctx.filter = filterString;
+        }
+
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Reset filter for text rendering
+        ctx.filter = 'none';
 
         const previewScale = canvas.width / img.width;
         this.renderTextCommon(ctx, canvas, config, previewScale);
 
         return canvas;
+    }
+
+    getFilterString() {
+        // Get filter settings from advanced features component
+        if (window.imageTextApp?.components?.advanced?.filters) {
+            const filters = window.imageTextApp.components.advanced.filters;
+            return `
+                brightness(${filters.brightness}%)
+                contrast(${filters.contrast}%)
+                saturate(${filters.saturation}%)
+                blur(${filters.blur}px)
+                hue-rotate(${filters.hue}deg)
+                grayscale(${filters.grayscale}%)
+                sepia(${filters.sepia}%)
+                invert(${filters.invert}%)
+            `.trim();
+        }
+        return '';
     }
 
     getMainFontSize() {
@@ -809,7 +836,16 @@ export class PreviewPanel {
             alpha: true
         });
 
+        // Apply filters for full-size export
+        const filterString = this.getFilterString();
+        if (filterString && filterString.trim() !== '') {
+            ctx.filter = filterString;
+        }
+
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Reset filter for text rendering
+        ctx.filter = 'none';
 
         const textScaleFactor = canvas.width / img.width;
 
