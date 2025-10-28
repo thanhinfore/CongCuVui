@@ -1139,104 +1139,104 @@ class TimeSeriesRacing:
 
                     # V4.0 - Custom bar label function with rank indicators and values
                     def v4_bar_label_func(val, rank):
-                    """Enhanced bar labels with values and rank indicators"""
-                    # Format the value
-                    if self.use_percent:
-                        val_str = f"{val:.1f}%"
-                    elif val >= 1000:
-                        val_str = f"{val:,.0f}"
-                    else:
-                        val_str = f"{val:.1f}"
+                        """Enhanced bar labels with values and rank indicators"""
+                        # Format the value
+                        if self.use_percent:
+                            val_str = f"{val:.1f}%"
+                        elif val >= 1000:
+                            val_str = f"{val:,.0f}"
+                        else:
+                            val_str = f"{val:.1f}"
 
-                    # Add rank indicator if enabled
-                    if self.show_rank_changes and rank in self.prev_ranks.values():
-                        # Find which entity had this rank
-                        prev_entity = None
-                        for entity, prev_rank in self.prev_ranks.items():
-                            if prev_rank == rank:
-                                prev_entity = entity
-                                break
+                        # Add rank indicator if enabled
+                        if self.show_rank_changes and rank in self.prev_ranks.values():
+                            # Find which entity had this rank
+                            prev_entity = None
+                            for entity, prev_rank in self.prev_ranks.items():
+                                if prev_rank == rank:
+                                    prev_entity = entity
+                                    break
 
-                        # Check if rank changed (simplified for now)
-                        indicator = ""  # Will be enhanced in full implementation
-                    else:
-                        indicator = ""
+                            # Check if rank changed (simplified for now)
+                            indicator = ""  # Will be enhanced in full implementation
+                        else:
+                            indicator = ""
 
-                    return val_str
+                        return val_str
 
-                # V4.0 - Custom period summary function with all overlays
-                def v4_period_summary(values_dict, ranks_dict):
-                    """Enhanced period summary with v4.0 information overlays"""
-                    try:
-                        # Get current axis
-                        ax = plt.gca()
-
-                        # Get current period value
-                        period_val = self.df_wide.index[min(self.period_index, len(self.df_wide) - 1)]
-
-                        # Call our v4.0 overlay system
-                        self._create_v4_overlay(ax, values_dict, ranks_dict, period_val)
-
-                        # Return False to hide the default period summary
-                        # Our overlay panels handle all the information display
-                        return False
-
-                    except Exception as e:
-                        # Fallback to simple display if error
-                        import traceback
-                        traceback.print_exc()  # Debug: print the error
+                    # V4.0 - Custom period summary function with all overlays
+                    def v4_period_summary(values_dict, ranks_dict):
+                        """Enhanced period summary with v4.0 information overlays"""
                         try:
-                            if isinstance(values_dict, dict):
-                                total = sum(values_dict.values())
-                            else:
-                                total = np.sum(values_dict)
-                            return {
-                                'x': 0.98,
-                                'y': 0.05,
-                                's': f'Total: {total:,.0f}',
-                                'ha': 'right',
-                                'size': bar_label_size - 2,
-                                'weight': 'bold'
-                            }
-                        except:
-                            return False  # Return False instead of None
+                            # Get current axis
+                            ax = plt.gca()
 
-                bcr.bar_chart_race(
-                    df=self.df_wide,
-                    filename=temp_file,  # Save to temp file first
-                    n_bars=self.top_n,
-                    title=self.title,
-                    figsize=figsize,
-                    period_length=self.period_length,
-                    steps_per_period=self.steps_per_period,
-                    interpolate_period=self.interpolate_period,  # Smooth transitions
-                    cmap=cmap,
-                    bar_size=0.95,
-                    period_label={
-                        **period_label_pos,
-                        'size': period_label_size,
-                        'weight': self.period_label_style,  # V3.2 - Customizable weight
-                        'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF',  # V3.2 - Better contrast
-                        'alpha': 0.9  # V3.2 - Slight transparency for elegance
-                    },
-                    # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
-                    period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
-                    bar_label_size=bar_label_size if self.show_bar_values else 0,  # V3.0 - Control bar values
-                    tick_label_size=tick_label_size,
-                    shared_fontdict={
-                        'family': self.font_family,  # V3.0 - Custom font
-                        'weight': self.title_style,  # V3.2 - Customizable title weight
-                        'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF'  # V3.2 - Better contrast
-                    },
-                    title_size=title_font_size + 2,  # V3.2 - Slightly larger for prominence
-                    scale='linear',
-                    writer='ffmpeg',  # Use default ffmpeg writer
-                    fig=None,
-                    dpi=self.dpi,  # V3.0 - Higher DPI for better quality!
-                    bar_kwargs=bar_kwargs,
-                    filter_column_colors=False,
-                    # V4.0 - ULTIMATE EDITION period summary with full overlay system
-                    period_summary_func=v4_period_summary,
+                            # Get current period value
+                            period_val = self.df_wide.index[min(self.period_index, len(self.df_wide) - 1)]
+
+                            # Call our v4.0 overlay system
+                            self._create_v4_overlay(ax, values_dict, ranks_dict, period_val)
+
+                            # Return False to hide the default period summary
+                            # Our overlay panels handle all the information display
+                            return False
+
+                        except Exception as e:
+                            # Fallback to simple display if error
+                            import traceback
+                            traceback.print_exc()  # Debug: print the error
+                            try:
+                                if isinstance(values_dict, dict):
+                                    total = sum(values_dict.values())
+                                else:
+                                    total = np.sum(values_dict)
+                                return {
+                                    'x': 0.98,
+                                    'y': 0.05,
+                                    's': f'Total: {total:,.0f}',
+                                    'ha': 'right',
+                                    'size': bar_label_size - 2,
+                                    'weight': 'bold'
+                                }
+                            except:
+                                return False  # Return False instead of None
+
+                    bcr.bar_chart_race(
+                        df=self.df_wide,
+                        filename=temp_file,  # Save to temp file first
+                        n_bars=self.top_n,
+                        title=self.title,
+                        figsize=figsize,
+                        period_length=self.period_length,
+                        steps_per_period=self.steps_per_period,
+                        interpolate_period=self.interpolate_period,  # Smooth transitions
+                        cmap=cmap,
+                        bar_size=0.95,
+                        period_label={
+                            **period_label_pos,
+                            'size': period_label_size,
+                            'weight': self.period_label_style,  # V3.2 - Customizable weight
+                            'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF',  # V3.2 - Better contrast
+                            'alpha': 0.9  # V3.2 - Slight transparency for elegance
+                        },
+                        # Dùng :g để bỏ .0 cho số nguyên (2024 thay vì 2024.0)
+                        period_fmt='{x:g}' if isinstance(self.df_wide.index[0], (int, float)) else '{x}',
+                        bar_label_size=bar_label_size if self.show_bar_values else 0,  # V3.0 - Control bar values
+                        tick_label_size=tick_label_size,
+                        shared_fontdict={
+                            'family': self.font_family,  # V3.0 - Custom font
+                            'weight': self.title_style,  # V3.2 - Customizable title weight
+                            'color': '#1a1a1a' if self.theme == 'light' else '#FFFFFF'  # V3.2 - Better contrast
+                        },
+                        title_size=title_font_size + 2,  # V3.2 - Slightly larger for prominence
+                        scale='linear',
+                        writer='ffmpeg',  # Use default ffmpeg writer
+                        fig=None,
+                        dpi=self.dpi,  # V3.0 - Higher DPI for better quality!
+                        bar_kwargs=bar_kwargs,
+                        filter_column_colors=False,
+                        # V4.0 - ULTIMATE EDITION period summary with full overlay system
+                        period_summary_func=v4_period_summary,
                     )
 
                     print(f"  ✅ BAR chart animation rendered to temp file")
