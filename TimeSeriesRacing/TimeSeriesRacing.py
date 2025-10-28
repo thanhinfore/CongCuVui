@@ -628,9 +628,13 @@ class TimeSeriesRacing:
                 family=self.font_family,
                 zorder=2001)
 
-    def _reencode_video(self, temp_file, final_file):
+    def _reencode_video(self, temp_file, final_file, fps=None):
         """Re-encode video with editor-friendly settings using FFmpeg CLI"""
         print(f"  ⚙️  Re-encoding with editor-friendly format...")
+
+        # Use provided fps or fall back to self.fps
+        target_fps = fps if fps is not None else self.fps
+        print(f"     Re-encoding FPS: {target_fps:.2f}")
 
         # FFmpeg command for editor compatibility
         # Key settings:
@@ -647,8 +651,8 @@ class TimeSeriesRacing:
             '-preset', 'medium',                 # Encoding preset
             '-crf', '18',                        # Quality (18 = near lossless)
             '-pix_fmt', 'yuv420p',              # Pixel format (required!)
-            '-r', str(self.fps),                # Force constant frame rate
-            '-g', str(self.fps),                # GOP size (keyframe interval)
+            '-r', str(target_fps),              # Force constant frame rate
+            '-g', str(int(target_fps)),         # GOP size (keyframe interval)
             '-bf', '2',                          # B-frames
             '-profile:v', 'high',                # H.264 high profile
             '-level', '4.2',                     # H.264 level (1080p60)
@@ -1107,52 +1111,61 @@ class TimeSeriesRacing:
             os.close(temp_fd)  # Close file descriptor
 
             try:
+                # Initialize video_fps variable (will be set based on chart type)
+                video_fps = None
+
                 # V5.0 - MULTI-CHART: Route to appropriate chart type
                 if self.chart_type == 'line':
                     # Line chart race
                     fig, anim = self._create_line_chart_race()
                     # Save animation using matplotlib's built-in writer
-                    print(f"  ⏳ Saving LINE chart animation...")
+                    print(f"  ⏳ Step 1/2: Saving LINE chart animation...")
                     # Calculate FPS based on period_length: fps = 1000ms / period_length
                     # E.g., period_length=1000ms → 1 fps → 1 second per frame
                     video_fps = 1000.0 / self.period_length
                     writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
+                    plt.close(fig)
 
                 elif self.chart_type == 'pie':
                     # Pie chart race
                     fig, anim = self._create_pie_chart_race()
-                    print(f"  ⏳ Saving PIE chart animation...")
+                    print(f"  ⏳ Step 1/2: Saving PIE chart animation...")
                     # Calculate FPS based on period_length: fps = 1000ms / period_length
                     video_fps = 1000.0 / self.period_length
                     writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
+                    plt.close(fig)
 
                 elif self.chart_type == 'column':
                     # Column chart race
                     fig, anim = self._create_column_chart_race()
-                    print(f"  ⏳ Saving COLUMN chart animation...")
+                    print(f"  ⏳ Step 1/2: Saving COLUMN chart animation...")
                     # Calculate FPS based on period_length: fps = 1000ms / period_length
                     video_fps = 1000.0 / self.period_length
                     writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
+                    plt.close(fig)
 
                 elif self.chart_type == 'combo':
                     # Combo chart with multiple types
                     fig, anim = self._create_combo_chart_race()
-                    print(f"  ⏳ Saving COMBO chart animation...")
+                    print(f"  ⏳ Step 1/2: Saving COMBO chart animation...")
                     # Calculate FPS based on period_length: fps = 1000ms / period_length
                     video_fps = 1000.0 / self.period_length
                     writer = FFMpegWriter(fps=video_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     print(f"     Using FPS={video_fps:.2f} for proper video duration")
                     anim.save(temp_file, writer=writer)
+                    plt.close(fig)
 
                 elif self.chart_type == 'bar':
                     # Original horizontal bar chart race (using bar_chart_race library)
                     print(f"  ⏳ Step 1/2: Rendering BAR chart animation... (có thể mất vài phút)")
+                    # For bar chart, use self.fps (bar_chart_race handles timing differently)
+                    video_fps = self.fps
 
                     # V4.0 - Custom bar label function with rank indicators and values
                     def v4_bar_label_func(val, rank):
@@ -1264,7 +1277,7 @@ class TimeSeriesRacing:
 
                 # V5.0 - Step 2: Re-encode with editor-friendly settings (for ALL chart types)
                 print(f"  ⏳ Step 2/2: Re-encoding for editor compatibility...")
-                if not self._reencode_video(temp_file, self.output):
+                if not self._reencode_video(temp_file, self.output, fps=video_fps):
                     print(f"  ⚠️  Re-encoding failed, using original file")
                     # Copy temp to output as fallback
                     import shutil
@@ -1289,7 +1302,12 @@ class TimeSeriesRacing:
             print(f"\n📊 Thông số video:")
             print(f"  → Resolution: {'1080×1920' if self.ratio == '9:16' else '1920×1080'}")
             print(f"  → DPI: {self.dpi} {'(Ultra HD)' if self.dpi >= 150 else '(Standard)'}")
-            print(f"  → FPS: {self.fps} (Constant Frame Rate)")
+            # Show the actual FPS used for the video
+            if self.chart_type in ['line', 'pie', 'column', 'combo']:
+                actual_fps = 1000.0 / self.period_length
+                print(f"  → FPS: {actual_fps:.2f} (Constant Frame Rate - calculated from period_length)")
+            else:
+                print(f"  → FPS: {self.fps} (Constant Frame Rate)")
             print(f"  → Codec: H.264 (libx264) + yuv420p")
             print(f"  → Bitrate: 8000 kbps (High Quality)")
             print(f"  → Duration: ~{(len(self.df_wide) * self.period_length) / 1000:.1f}s")
