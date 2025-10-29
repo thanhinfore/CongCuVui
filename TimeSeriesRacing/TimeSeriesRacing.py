@@ -1439,9 +1439,17 @@ class TimeSeriesRacing:
                             # Call our v4.0 overlay system
                             self._create_v4_overlay(ax, values_dict, ranks_dict, period_val)
 
-                            # FIXED: Return None instead of False to hide default period summary
-                            # bar_chart_race expects None or dict, not False
-                            return None
+                            # FIXED: Return invisible dict to hide default period summary
+                            # bar_chart_race requires dict with 'x', 'y', 's' keys (cannot be None)
+                            # We make it invisible by placing it outside visible area
+                            return {
+                                'x': 1.5,  # Outside visible area (right edge is at 1.0)
+                                'y': -0.5,  # Outside visible area (bottom edge is at 0.0)
+                                's': '',  # Empty string
+                                'ha': 'left',
+                                'size': 1,
+                                'alpha': 0  # Completely transparent
+                            }
 
                         except Exception as e:
                             # Fallback to simple display if error
@@ -1461,8 +1469,15 @@ class TimeSeriesRacing:
                                     'weight': 'bold'
                                 }
                             except:
-                                # FIXED: Return None instead of False
-                                return None
+                                # FIXED: Return invisible dict (bar_chart_race doesn't accept None)
+                                return {
+                                    'x': 1.5,
+                                    'y': -0.5,
+                                    's': '',
+                                    'ha': 'left',
+                                    'size': 1,
+                                    'alpha': 0
+                                }
 
                     bcr.bar_chart_race(
                         df=self.df_wide,
