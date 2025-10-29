@@ -1,554 +1,89 @@
 /* =====================================================
-   PRESETS.JS - Preset Templates Module
+   PRESETS.JS - Ultimate Preset Templates Module
+   Now with 35+ Presets, Categories & Search
    ===================================================== */
 
 import { utils } from './utils.js';
+import { presetsData, presetCategories, getPresetsByCategory, searchPresets } from './presetsData.js';
 
 export class PresetsManager {
     constructor(DOM, controlPanel) {
         this.DOM = DOM;
         this.controlPanel = controlPanel;
         this.currentPreset = null;
+        this.currentCategory = 'all';
+        this.searchQuery = '';
 
-        this.builtInPresets = [
-            // ===== PREMIUM EDITION - BRAND QUALITY PRESETS =====
-
-            // 🍎 APPLE INSPIRED - Minimal Perfection
-            {
-                id: 'apple-minimal',
-                name: 'Apple Minimal',
-                description: 'Cupertino minimalism - clean & bold',
-                colors: ['#000000', '#000000'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#86868b',
-                    mainFontSize: 88,
-                    subFontSize: 36,
-                    fontWeight: '700',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'none',
-                    letterSpacing: -2.5,
-                    lineHeight: 1.05,
-                    textOpacity: 100
-                }
-            },
-
-            // ✔️ NIKE INSPIRED - Bold Impact
-            {
-                id: 'nike-bold',
-                name: 'Nike Bold',
-                description: 'Just do it - maximum impact',
-                colors: ['#000000', '#000000'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#000000',
-                    mainFontSize: 96,
-                    subFontSize: 42,
-                    fontWeight: '900',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'uppercase',
-                    letterSpacing: -1.5,
-                    lineHeight: 0.95,
-                    textOpacity: 100
-                }
-            },
-
-            // 🎨 SWISS DESIGN - Mathematical Precision
-            {
-                id: 'swiss-precision',
-                name: 'Swiss Precision',
-                description: 'Helvetica perfection - grid based',
-                colors: ['#000000', '#000000'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#404040',
-                    mainFontSize: 72,
-                    subFontSize: 38,
-                    fontWeight: '500',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: 0,
-                    lineHeight: 1.25,
-                    textOpacity: 100
-                }
-            },
-
-            // 📰 EDITORIAL LUXURY - Magazine Quality
-            {
-                id: 'editorial-luxury',
-                name: 'Editorial Luxury',
-                description: 'Vogue-inspired sophistication',
-                colors: ['#1a1a1a', '#1a1a1a'],
-                settings: {
-                    font: 'Georgia, serif',
-                    colorMode: 'solid',
-                    mainColor: '#1a1a1a',
-                    subColor: '#666666',
-                    mainFontSize: 76,
-                    subFontSize: 32,
-                    fontWeight: '400',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'capitalize',
-                    letterSpacing: 1,
-                    lineHeight: 1.4,
-                    textOpacity: 100
-                }
-            },
-
-            // 🏗️ BRUTALIST - Raw Power
-            {
-                id: 'brutalist-power',
-                name: 'Brutalist Power',
-                description: 'Raw, bold, uncompromising',
-                colors: ['#000000', '#000000'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#000000',
-                    mainFontSize: 104,
-                    subFontSize: 48,
-                    fontWeight: '900',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'top',
-                    textTransform: 'uppercase',
-                    letterSpacing: -2,
-                    lineHeight: 0.9,
-                    textOpacity: 100
-                }
-            },
-
-            // 💼 CORPORATE ELITE - Executive Level
-            {
-                id: 'corporate-elite',
-                name: 'Corporate Elite',
-                description: 'Fortune 500 presentation quality',
-                colors: ['#1e293b', '#1e293b'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#1e293b',
-                    subColor: '#64748b',
-                    mainFontSize: 68,
-                    subFontSize: 34,
-                    fontWeight: '600',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -0.8,
-                    lineHeight: 1.3,
-                    textOpacity: 100
-                }
-            },
-
-            // 🚀 TECH STARTUP - Silicon Valley
-            {
-                id: 'tech-startup',
-                name: 'Tech Startup',
-                description: 'Y Combinator pitch-ready',
-                colors: ['#0f172a', '#6366f1'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#0f172a',
-                    gradientColor2: '#6366f1',
-                    gradientAngle: 135,
-                    mainFontSize: 80,
-                    subFontSize: 38,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'none',
-                    letterSpacing: -1.5,
-                    lineHeight: 1.1,
-                    textOpacity: 100
-                }
-            },
-
-            // 🎯 IMPACT RED - Bloomberg Terminal
-            {
-                id: 'bloomberg-red',
-                name: 'Bloomberg Red',
-                description: 'Financial news impact',
-                colors: ['#dc2626', '#dc2626'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#dc2626',
-                    subColor: '#7f1d1d',
-                    mainFontSize: 92,
-                    subFontSize: 40,
-                    fontWeight: '900',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: -1,
-                    lineHeight: 1.0,
-                    textOpacity: 100
-                }
-            },
-
-            // 💎 LUXURY GOLD - Tiffany & Co
-            {
-                id: 'luxury-gold',
-                name: 'Luxury Gold',
-                description: 'Fifth Avenue sophistication',
-                colors: ['#1a1a1a', '#c4a962'],
-                settings: {
-                    font: 'Georgia, serif',
-                    colorMode: 'solid',
-                    mainColor: '#1a1a1a',
-                    subColor: '#c4a962',
-                    mainFontSize: 82,
-                    subFontSize: 36,
-                    fontWeight: '400',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: 4,
-                    lineHeight: 1.5,
-                    textOpacity: 100
-                }
-            },
-
-            // 🌊 OCEAN GRADIENT - Modern Tech
-            {
-                id: 'ocean-gradient',
-                name: 'Ocean Gradient',
-                description: 'Deep blue sophistication',
-                colors: ['#0c4a6e', '#0ea5e9'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#0c4a6e',
-                    gradientColor2: '#0ea5e9',
-                    gradientAngle: 135,
-                    mainFontSize: 76,
-                    subFontSize: 38,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -1.2,
-                    lineHeight: 1.2,
-                    textOpacity: 100
-                }
-            },
-
-            // 🔥 FIRE GRADIENT - Energy Brand
-            {
-                id: 'fire-gradient',
-                name: 'Fire Gradient',
-                description: 'Red Bull energy style',
-                colors: ['#991b1b', '#f97316'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#991b1b',
-                    gradientColor2: '#f97316',
-                    gradientAngle: 90,
-                    mainFontSize: 88,
-                    subFontSize: 42,
-                    fontWeight: '900',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0,
-                    lineHeight: 1.05,
-                    textOpacity: 100
-                }
-            },
-
-            // 🌿 ECO MINIMAL - Patagonia Style
-            {
-                id: 'eco-minimal',
-                name: 'Eco Minimal',
-                description: 'Sustainable brand aesthetic',
-                colors: ['#14532d', '#14532d'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#14532d',
-                    subColor: '#16a34a',
-                    mainFontSize: 72,
-                    subFontSize: 36,
-                    fontWeight: '600',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -0.5,
-                    lineHeight: 1.35,
-                    textOpacity: 100
-                }
-            },
-
-            // 🎨 CREATIVE PURPLE - Figma Style
-            {
-                id: 'creative-purple',
-                name: 'Creative Purple',
-                description: 'Design tool aesthetic',
-                colors: ['#581c87', '#a855f7'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#581c87',
-                    gradientColor2: '#a855f7',
-                    gradientAngle: 135,
-                    mainFontSize: 78,
-                    subFontSize: 38,
-                    fontWeight: '700',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -1,
-                    lineHeight: 1.2,
-                    textOpacity: 100
-                }
-            },
-
-            // 📱 APP GRADIENT - Uber/Spotify Style
-            {
-                id: 'app-gradient',
-                name: 'App Gradient',
-                description: 'Modern app brand style',
-                colors: ['#1e3a8a', '#8b5cf6'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#1e3a8a',
-                    gradientColor2: '#8b5cf6',
-                    gradientAngle: 120,
-                    mainFontSize: 84,
-                    subFontSize: 40,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'none',
-                    letterSpacing: -1.5,
-                    lineHeight: 1.1,
-                    textOpacity: 100
-                }
-            },
-
-            // 🏆 CHAMPION GOLD - Winner Style
-            {
-                id: 'champion-gold',
-                name: 'Champion Gold',
-                description: 'Victory & achievement',
-                colors: ['#78350f', '#eab308'],
-                settings: {
-                    font: 'Montserrat, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#78350f',
-                    gradientColor2: '#eab308',
-                    gradientAngle: 135,
-                    mainFontSize: 86,
-                    subFontSize: 40,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: 2,
-                    lineHeight: 1.15,
-                    textOpacity: 100
-                }
-            },
-
-            // 🌃 MIDNIGHT - Dark Sophisticated
-            {
-                id: 'midnight-dark',
-                name: 'Midnight',
-                description: 'Dark mode elegance',
-                colors: ['#0f172a', '#1e293b'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#0f172a',
-                    subColor: '#475569',
-                    mainFontSize: 74,
-                    subFontSize: 36,
-                    fontWeight: '700',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -0.8,
-                    lineHeight: 1.3,
-                    textOpacity: 100
-                }
-            },
-
-            // 🎯 RETRO BOLD - 70s Modern
-            {
-                id: 'retro-bold',
-                name: 'Retro Bold',
-                description: '70s aesthetic, modern execution',
-                colors: ['#dc2626', '#facc15'],
-                settings: {
-                    font: 'Poppins, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#dc2626',
-                    subColor: '#ea580c',
-                    mainFontSize: 94,
-                    subFontSize: 44,
-                    fontWeight: '900',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1.5,
-                    lineHeight: 1.0,
-                    textOpacity: 100
-                }
-            },
-
-            // 🌊 GRADIENT TEAL - Airbnb Style
-            {
-                id: 'airbnb-teal',
-                name: 'Airbnb Teal',
-                description: 'Travel & hospitality vibes',
-                colors: ['#0f766e', '#14b8a6'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#0f766e',
-                    gradientColor2: '#14b8a6',
-                    gradientAngle: 135,
-                    mainFontSize: 80,
-                    subFontSize: 38,
-                    fontWeight: '700',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -1,
-                    lineHeight: 1.25,
-                    textOpacity: 100
-                }
-            },
-
-            // ⚡ ELECTRIC BLUE - Tesla Style
-            {
-                id: 'electric-blue',
-                name: 'Electric Blue',
-                description: 'Future tech aesthetic',
-                colors: ['#1e40af', '#3b82f6'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#1e40af',
-                    gradientColor2: '#3b82f6',
-                    gradientAngle: 90,
-                    mainFontSize: 90,
-                    subFontSize: 42,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'middle',
-                    textTransform: 'none',
-                    letterSpacing: -1.8,
-                    lineHeight: 1.05,
-                    textOpacity: 100
-                }
-            },
-
-            // 🖤 ULTRA MINIMAL - Japanese Zen
-            {
-                id: 'zen-minimal',
-                name: 'Zen Minimal',
-                description: 'Japanese minimalism perfection',
-                colors: ['#171717', '#171717'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#171717',
-                    subColor: '#737373',
-                    mainFontSize: 64,
-                    subFontSize: 32,
-                    fontWeight: '300',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: 0.5,
-                    lineHeight: 1.6,
-                    textOpacity: 100
-                }
-            }
-        ];
+        this.builtInPresets = presetsData; // Now using presetsData.js
 
         this.initialize();
     }
 
     initialize() {
+        this.setupCategoryFilter();
+        this.setupSearch();
         this.renderPresets();
         this.setupEventListeners();
-        console.log('Presets manager initialized');
+        console.log(`Presets manager initialized with ${this.builtInPresets.length} presets`);
+    }
+
+    setupCategoryFilter() {
+        const filterContainer = document.getElementById('presetCategoryFilter');
+        if (!filterContainer) return;
+
+        filterContainer.innerHTML = '';
+
+        // Add "All" category button
+        const allBtn = utils.dom.createElement('button', {
+            className: 'category-filter-btn active',
+            textContent: '🌟 All',
+            'data-category': 'all',
+            onclick: () => this.filterByCategory('all')
+        });
+        filterContainer.appendChild(allBtn);
+
+        // Add category buttons
+        Object.entries(presetCategories).forEach(([key, label]) => {
+            const count = presetsData.filter(p => p.category === key).length;
+            const btn = utils.dom.createElement('button', {
+                className: 'category-filter-btn',
+                textContent: `${label} (${count})`,
+                'data-category': key,
+                onclick: () => this.filterByCategory(key)
+            });
+            filterContainer.appendChild(btn);
+        });
+    }
+
+    setupSearch() {
+        const searchInput = document.getElementById('presetSearch');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+            this.searchQuery = e.target.value;
+            this.renderPresets();
+        });
+
+        // Clear button
+        const clearBtn = document.getElementById('clearPresetSearch');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                this.searchQuery = '';
+                this.renderPresets();
+            });
+        }
+    }
+
+    filterByCategory(category) {
+        this.currentCategory = category;
+
+        // Update active button
+        document.querySelectorAll('.category-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === category);
+        });
+
+        this.renderPresets();
     }
 
     renderPresets() {
@@ -557,8 +92,36 @@ export class PresetsManager {
 
         grid.innerHTML = '';
 
-        // Render built-in presets
-        this.builtInPresets.forEach(preset => {
+        // Get filtered presets
+        let presets = this.builtInPresets;
+
+        // Filter by category
+        if (this.currentCategory !== 'all') {
+            presets = getPresetsByCategory(this.currentCategory);
+        }
+
+        // Filter by search
+        if (this.searchQuery.trim()) {
+            presets = searchPresets(this.searchQuery);
+        }
+
+        // Show empty state if no results
+        if (presets.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-presets-state">
+                    <svg viewBox="0 0 24 24" width="64" height="64">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path stroke="currentColor" stroke-width="2" d="M8 12h8M12 8v8"/>
+                    </svg>
+                    <p>No presets found</p>
+                    <small>Try a different search term or category</small>
+                </div>
+            `;
+            return;
+        }
+
+        // Render preset cards
+        presets.forEach(preset => {
             const card = this.createPresetCard(preset);
             grid.appendChild(card);
         });
@@ -569,6 +132,12 @@ export class PresetsManager {
             const card = this.createPresetCard(preset, true);
             grid.appendChild(card);
         });
+
+        // Update count
+        const countElement = document.getElementById('presetCount');
+        if (countElement) {
+            countElement.textContent = `${presets.length + customPresets.length} presets`;
+        }
     }
 
     createPresetCard(preset, isCustom = false) {
@@ -582,16 +151,7 @@ export class PresetsManager {
         card.style.setProperty('--preset-color-1', preset.colors[0]);
         card.style.setProperty('--preset-color-2', preset.colors[1]);
 
-        const name = utils.dom.createElement('div', {
-            className: 'preset-name',
-            textContent: preset.name
-        });
-
-        const description = utils.dom.createElement('div', {
-            className: 'preset-description',
-            textContent: preset.description
-        });
-
+        // Preview
         const preview = utils.dom.createElement('div', {
             className: 'preset-preview'
         });
@@ -601,9 +161,41 @@ export class PresetsManager {
         preview.style.backgroundClip = 'text';
         preview.textContent = 'Aa';
 
-        card.appendChild(name);
-        card.appendChild(description);
-        card.appendChild(preview);
+        // Name
+        const name = utils.dom.createElement('div', {
+            className: 'preset-name',
+            textContent: preset.name
+        });
+
+        // Description
+        const description = utils.dom.createElement('div', {
+            className: 'preset-description',
+            textContent: preset.description
+        });
+
+        // Tags (if any)
+        if (preset.tags && preset.tags.length > 0 && !isCustom) {
+            const tagsContainer = utils.dom.createElement('div', {
+                className: 'preset-tags'
+            });
+
+            preset.tags.slice(0, 3).forEach(tag => {
+                const tagBadge = utils.dom.createElement('span', {
+                    className: 'preset-tag',
+                    textContent: tag
+                });
+                tagsContainer.appendChild(tagBadge);
+            });
+
+            card.appendChild(preview);
+            card.appendChild(name);
+            card.appendChild(description);
+            card.appendChild(tagsContainer);
+        } else {
+            card.appendChild(preview);
+            card.appendChild(name);
+            card.appendChild(description);
+        }
 
         // Add delete button for custom presets
         if (isCustom) {
@@ -775,6 +367,15 @@ export class PresetsManager {
         this.controlPanel.saveSettings();
         this.controlPanel.handleStyleChange();
 
+        // Show toast
+        if (window.imageTextApp?.components?.advanced) {
+            window.imageTextApp.components.advanced.showToast(
+                `Applied ${preset.name} preset`,
+                'success',
+                2000
+            );
+        }
+
         console.log('Applied preset:', preset.name);
     }
 
@@ -832,6 +433,8 @@ export class PresetsManager {
             id,
             name,
             description: 'Custom preset',
+            category: 'custom',
+            tags: ['custom'],
             colors,
             settings: this.getCurrentSettings()
         };
@@ -842,7 +445,13 @@ export class PresetsManager {
         this.renderPresets();
         this.applyPreset(id, true);
 
-        alert('Preset saved successfully!');
+        if (window.imageTextApp?.components?.advanced) {
+            window.imageTextApp.components.advanced.showToast(
+                'Custom preset saved!',
+                'success',
+                2000
+            );
+        }
     }
 
     getCurrentSettings() {
@@ -920,6 +529,13 @@ export class PresetsManager {
         localStorage.setItem('customPresets', JSON.stringify(customPresets));
 
         this.renderPresets();
-        console.log('Deleted custom preset:', presetId);
+
+        if (window.imageTextApp?.components?.advanced) {
+            window.imageTextApp.components.advanced.showToast(
+                'Preset deleted',
+                'success',
+                2000
+            );
+        }
     }
 }

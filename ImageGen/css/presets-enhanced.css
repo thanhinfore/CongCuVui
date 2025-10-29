@@ -1,0 +1,452 @@
+/* =====================================================
+   PRESETS-ENHANCED.CSS - Ultimate Preset UI Styling
+   ===================================================== */
+
+/* Preset Count Badge */
+.preset-count {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 12px;
+    vertical-align: middle;
+}
+
+/* Search Bar */
+.preset-search-bar {
+    margin-bottom: 16px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--color-text-secondary);
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 44px 12px 44px;
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 12px;
+    padding: 6px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-search-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-error);
+}
+
+/* Category Filter */
+.preset-category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--color-bg);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+}
+
+.category-filter-btn {
+    padding: 8px 16px;
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.category-filter-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.category-filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+/* Presets Grid */
+.presets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* Preset Card */
+.preset-card {
+    position: relative;
+    padding: 20px;
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.preset-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--preset-color-1), var(--preset-color-2));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.preset-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primary);
+}
+
+.preset-card:hover::before {
+    opacity: 1;
+}
+
+.preset-card.active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), transparent);
+}
+
+.preset-card.active::before {
+    opacity: 1;
+}
+
+/* Preset Preview */
+.preset-preview {
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--preset-color-1), var(--preset-color-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Preset Info */
+.preset-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.preset-description {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+/* Preset Tags */
+.preset-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.preset-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--color-primary);
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    text-transform: lowercase;
+}
+
+/* Custom Preset Badge */
+.preset-card.custom {
+    border-color: var(--color-success);
+}
+
+.preset-card.custom::before {
+    background: var(--color-success);
+}
+
+.preset-card.custom .preset-tag {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--color-success);
+}
+
+/* Delete Button for Custom Presets */
+.preset-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: var(--color-error);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.preset-card.custom:hover .preset-delete {
+    opacity: 1;
+}
+
+.preset-delete:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+/* Empty State */
+.empty-presets-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    grid-column: 1 / -1;
+}
+
+.empty-presets-state svg {
+    color: var(--color-primary);
+    opacity: 0.3;
+    margin-bottom: 20px;
+}
+
+.empty-presets-state p {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--color-text);
+}
+
+.empty-presets-state small {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Preset Actions */
+.preset-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .presets-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .preset-card {
+        padding: 16px;
+    }
+
+    .preset-preview {
+        font-size: 48px;
+    }
+}
+
+@media (max-width: 768px) {
+    .preset-category-filter {
+        padding: 12px;
+        gap: 6px;
+    }
+
+    .category-filter-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .presets-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
+    .preset-card {
+        padding: 12px;
+    }
+
+    .preset-preview {
+        font-size: 40px;
+        margin-bottom: 8px;
+    }
+
+    .preset-name {
+        font-size: 13px;
+    }
+
+    .preset-description {
+        font-size: 11px;
+    }
+
+    .preset-tags {
+        margin-top: 8px;
+    }
+
+    .preset-tag {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    .search-input {
+        padding: 10px 40px 10px 40px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .presets-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .preset-category-filter {
+        flex-direction: column;
+    }
+
+    .category-filter-btn {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+/* Loading Animation */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.preset-card.loading {
+    background: linear-gradient(
+        90deg,
+        var(--color-surface) 0px,
+        rgba(255, 255, 255, 0.8) 40px,
+        var(--color-surface) 80px
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+}
+
+/* Dark Mode Adjustments */
+@media (prefers-color-scheme: dark) {
+    .search-input {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preset-card {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preset-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .category-filter-btn {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preset-category-filter {
+        background: rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* Smooth Scroll */
+.preset-category-filter {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+}
+
+.preset-category-filter::-webkit-scrollbar {
+    height: 6px;
+}
+
+.preset-category-filter::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.preset-category-filter::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+}
+
+.preset-category-filter::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
+}
