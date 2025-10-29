@@ -1,5 +1,6 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v5 - Full Markdown Support)
+   PREVIEWPANEL.JS - Preview Panel Module (v6.0)
+   Full Markdown Support + Emoji Support + Enhanced Features
    ===================================================== */
 
 import { utils } from './utils.js';
@@ -714,7 +715,8 @@ export class PreviewPanel {
         ctx.textBaseline = 'middle';
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        const canvasFont = selectedFont.replace(/['"]/g, '');
+        // Add emoji font support for canvas rendering
+        const canvasFont = selectedFont.replace(/['"]/g, '') + ', "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
 
         const renderEffects = {
             textShadow: effects.textShadow,
@@ -944,7 +946,8 @@ export class PreviewPanel {
         const creditFontSize = Math.round(baseCreditSize * scaleFactor);
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        const canvasFont = selectedFont.replace(/['"]/g, '');
+        // Add emoji font support for canvas rendering
+        const canvasFont = selectedFont.replace(/['"]/g, '') + ', "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
 
         ctx.font = `bold ${creditFontSize}px ${canvasFont}`;
         ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';

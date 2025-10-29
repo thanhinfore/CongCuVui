@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="keywords" content="image editor, text overlay, image filters, batch processing, professional design">
-    <title>Image Text Generator Pro - SMCC</title>
+    <title>Image Text Generator Pro v6.0 - SMCC</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,34 +22,38 @@
     <link rel="stylesheet" href="css/markdown.css">
     <link rel="stylesheet" href="css/gallery.css">
     <link rel="stylesheet" href="css/presets-enhanced.css">
+    <link rel="stylesheet" href="css/v6.css">
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header">
+        <header class="app-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none;">
             <div class="container">
                 <div class="header-content">
                     <div class="header-left">
                         <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" class="logo" onclick="window.location.reload();" title="Click to reload">
-                        <h1 class="app-title">Biểu diễn Tri thức</h1>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <h1 class="app-title" style="color: white; margin: 0;">Biểu diễn Tri thức</h1>
+                            <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">✨ Version 6.0</span>
+                        </div>
                     </div>
                     <div class="header-actions">
-                        <button id="undoBtn" class="header-btn" title="Undo (Ctrl+Z)" disabled>
+                        <button id="undoBtn" class="header-btn" title="Undo (Ctrl+Z)" disabled style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke="currentColor" stroke-width="2" fill="none" d="M3 7v6h6M3 13a9 9 0 1015-6.7"/>
                             </svg>
                         </button>
-                        <button id="redoBtn" class="header-btn" title="Redo (Ctrl+Y)" disabled>
+                        <button id="redoBtn" class="header-btn" title="Redo (Ctrl+Y)" disabled style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <path stroke="currentColor" stroke-width="2" fill="none" d="M21 7v6h-6M21 13a9 9 0 10-15-6.7"/>
                             </svg>
                         </button>
-                        <button id="keyboardShortcutsBtn" class="header-btn" title="Keyboard Shortcuts (?)">
+                        <button id="keyboardShortcutsBtn" class="header-btn" title="Keyboard Shortcuts (?)" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
                                 <path stroke="currentColor" stroke-width="2" fill="none" d="M6 8h.01M10 8h.01M14 8h.01M6 12h12M6 16h12"/>
                             </svg>
                         </button>
-                        <button id="helpBtn" class="header-btn" title="Help & Tips">
+                        <button id="helpBtn" class="header-btn" title="Help & Tips" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                             <svg viewBox="0 0 24 24" width="20" height="20">
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
                                 <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
