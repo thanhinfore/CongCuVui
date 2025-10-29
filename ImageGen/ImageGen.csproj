@@ -71,7 +71,11 @@
     <Content Include="css\main.css" />
     <Content Include="css\mobile.css" />
     <Content Include="css\preview.css" />
+    <Content Include="images\ashyy16_Bold_gradient_waves_colliding_in_sunset_orange_and_coba_98a20e66-8a36-4110-b98d-f16c44d6a393.png" />
+    <Content Include="images\bbking9103_soft_watercolor_gradient_background_light_blue_to_mi_00653576-a6af-4311-b46b-d40ac63dad5b.png" />
     <Content Include="images\cats666000_vibrant_oil_painting_brush_stroke_background_blue_an_db0ac99c-a4f4-4978-aa47-8d027d153a13.png" />
+    <Content Include="images\u7949395692_pastel_abstract_background_with_soft_flowing_textur_159bbf19-c942-4c60-b799-bca6c383e925.png" />
+    <Content Include="images\vaibhav.devnath_generate_a_high_resolution_background_which_is__1fb3565d-539f-46c5-9f44-1348e304e08a.png" />
     <Content Include="imggen.html" />
     <Content Include="js\app.js" />
     <Content Include="js\modules\controlPanel.js" />
