@@ -1111,15 +1111,24 @@ class TimeSeriesRacing:
                         print(f"  ⚠️  Lỗi khi vẽ line cho {entity}: {e}")
                         continue
 
-                # Styling
-                ax.set_title(self.title, fontsize=self.title_font_size + 2,
-                            weight='bold', pad=20)
+                # V5.1 AESTHETIC: Apply aesthetic principles
+                self._apply_aesthetic_to_axis(ax)
+
+                # V5.1 AESTHETIC: Title with hierarchy and spacing
+                period_val = self.df_wide.index[current_idx] if current_idx < len(self.df_wide) else self.df_wide.index[-1]
+                self._format_title_with_subtitle(ax, self.title, period_val=period_val)
+
+                # V5.1 AESTHETIC: Legend with typography hierarchy
                 if len(top_entities) <= 10:  # Only show legend if not too crowded
-                    ax.legend(loc='upper left', fontsize=self.bar_label_font_size - 2,
-                            framealpha=0.9, ncol=1 if len(top_entities) <= 5 else 2)
-                ax.grid(True, alpha=0.3)
-                ax.set_xlabel('Period', fontsize=self.bar_label_font_size)
-                ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+                    legend_size = self._get_font_size('body')
+                    ax.legend(loc='upper left', fontsize=legend_size,
+                            framealpha=0.9, ncol=1 if len(top_entities) <= 5 else 2,
+                            edgecolor='none', fancybox=True)
+
+                # V5.1 AESTHETIC: Axis labels with typography
+                label_size = self._get_font_size('body')
+                ax.set_xlabel('Period', fontsize=label_size, labelpad=self._get_spacing('sm'))
+                ax.set_ylabel('Value', fontsize=label_size, labelpad=self._get_spacing('sm'))
 
                 # UPGRADED: Set reasonable y-axis limits
                 try:
@@ -1206,31 +1215,45 @@ class TimeSeriesRacing:
                 # Create pie chart only if we have valid data
                 if len(top_data) > 0 and top_data.sum() > 0:
                     try:
+                        # V5.1 AESTHETIC: Use typography hierarchy for labels
+                        label_size = self._get_font_size('body')
+                        pct_size = self._get_font_size('caption')
+
                         wedges, texts, autotexts = ax.pie(
                             top_data.values,
                             labels=top_data.index,
                             colors=colors_list[:len(top_data)],
                             autopct='%1.1f%%',
                             startangle=90,
-                            textprops={'fontsize': self.bar_label_font_size},
+                            textprops={'fontsize': label_size,
+                                      'fontfamily': self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')},
                             pctdistance=0.85
                         )
 
-                        # Make percentage text bold and readable
+                        # V5.1 AESTHETIC: Style percentage text with hierarchy
                         for autotext in autotexts:
                             autotext.set_color('white')
                             autotext.set_fontweight('bold')
-                            autotext.set_fontsize(self.bar_label_font_size - 2)
+                            autotext.set_fontsize(pct_size)
+                            # V5.1 AESTHETIC: Add shadow for depth
+                            self._add_text_shadow(autotext, 'low')
+
+                        # V5.1 AESTHETIC: Add shadow to labels
+                        for text in texts:
+                            self._add_text_shadow(text, 'low')
+
                     except Exception as e:
                         print(f"  ⚠️  Lỗi khi vẽ pie chart tại frame {frame}: {e}")
                         # Draw a message instead
+                        msg_size = self._get_font_size('heading')
                         ax.text(0.5, 0.5, 'No Data', ha='center', va='center',
-                               fontsize=20, transform=ax.transAxes)
+                               fontsize=msg_size, transform=ax.transAxes)
 
-                # Title with period
-                ax.set_title(f"{self.title}\nPeriod: {period_val}",
-                            fontsize=self.title_font_size + 2,
-                            weight='bold', pad=20)
+                # V5.1 AESTHETIC: Apply aesthetic to axis
+                self._apply_aesthetic_to_axis(ax)
+
+                # V5.1 AESTHETIC: Title with hierarchy
+                self._format_title_with_subtitle(ax, self.title, period_val=period_val)
 
                 # Add v4.0 overlays
                 text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
@@ -1308,29 +1331,37 @@ class TimeSeriesRacing:
                                  edgecolor='white',
                                  linewidth=self.bar_border_width)
 
-                    # Add value labels on top of bars
+                    # V5.1 AESTHETIC: Add value labels with typography hierarchy
                     if self.show_bar_values:
+                        value_size = self._get_font_size('caption')
                         for i, (value, bar) in enumerate(zip(top_data.values, bars)):
                             if np.isfinite(value):  # UPGRADED: Check for valid values
                                 height = bar.get_height()
-                                ax.text(bar.get_x() + bar.get_width()/2., height,
+                                text_obj = ax.text(bar.get_x() + bar.get_width()/2., height,
                                        f'{value:,.0f}',
                                        ha='center', va='bottom',
-                                       fontsize=self.bar_label_font_size - 2,
-                                       fontweight='bold')
+                                       fontsize=value_size,
+                                       fontweight='bold',
+                                       fontfamily=self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif'))
+                                # V5.1 AESTHETIC: Add shadow for depth
+                                self._add_text_shadow(text_obj, 'low')
+
                 except Exception as e:
                     print(f"  ⚠️  Lỗi khi vẽ column chart tại frame {frame}: {e}")
                     return
 
-                # Styling
+                # V5.1 AESTHETIC: Apply aesthetic principles
+                self._apply_aesthetic_to_axis(ax)
+
+                # V5.1 AESTHETIC: Styling with typography hierarchy
                 ax.set_xticks(range(len(top_data)))
+                label_size = self._get_font_size('body')
                 ax.set_xticklabels(top_data.index, rotation=45, ha='right',
-                                  fontsize=self.bar_label_font_size - 2)
-                ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
-                ax.set_title(f"{self.title} - Period: {period_val}",
-                            fontsize=self.title_font_size + 2,
-                            weight='bold', pad=20)
-                ax.grid(True, alpha=0.3, axis='y')
+                                  fontsize=label_size)
+                ax.set_ylabel('Value', fontsize=label_size, labelpad=self._get_spacing('sm'))
+
+                # V5.1 AESTHETIC: Title with hierarchy
+                self._format_title_with_subtitle(ax, self.title, period_val=period_val)
 
                 # UPGRADED: Set reasonable y-axis limits
                 try:
