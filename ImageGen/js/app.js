@@ -8,6 +8,7 @@ import { MobileHandler } from './modules/mobileHandler.js';
 import { PresetsManager } from './modules/presets.js';
 import { AdvancedFeatures } from './modules/advancedFeatures.js';
 import { MarkdownUI, setupMarkdownKeyboardShortcuts } from './modules/markdownUI.js';
+import { ImageBrowser } from './modules/imageBrowser.js';
 import { utils } from './modules/utils.js';
 
 class ImageTextApp {
@@ -32,6 +33,7 @@ class ImageTextApp {
             this.components.presets = new PresetsManager(this.DOM, this.components.controls);
             this.components.advanced = new AdvancedFeatures(this);
             this.components.markdown = new MarkdownUI(this.DOM);
+            this.components.imageBrowser = new ImageBrowser(this.state);
 
             this.setupGlobalMethods();
 
@@ -45,13 +47,17 @@ class ImageTextApp {
             // Setup markdown keyboard shortcuts
             setupMarkdownKeyboardShortcuts(this.components.markdown);
 
+            // Initialize image browser
+            await this.components.imageBrowser.init();
+            this.setupImageBrowserHandlers();
+
             this.initialized = true;
-            console.log('Image Text App Pro with Markdown Support initialized successfully');
+            console.log('Image Text App Pro with Markdown & Folder Browser initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.advanced) {
-                    this.components.advanced.showToast('Welcome to Image Text Generator Pro! Now with full Markdown support 📝', 'info', 5000);
+                    this.components.advanced.showToast('Welcome to Image Text Generator Pro! 📝✨ Now with Markdown & Folder Browser', 'info', 5000);
                 }
             }, 500);
 
@@ -619,6 +625,32 @@ class ImageTextApp {
 
     showError(message) {
         this.showNotification(message, 'error');
+    }
+
+    setupImageBrowserHandlers() {
+        // Random 1 image button
+        const random1Btn = document.getElementById('randomImage1Btn');
+        if (random1Btn) {
+            random1Btn.addEventListener('click', () => {
+                this.components.imageBrowser.selectRandomImages(1);
+            });
+        }
+
+        // Random 3 images button
+        const random3Btn = document.getElementById('randomImage3Btn');
+        if (random3Btn) {
+            random3Btn.addEventListener('click', () => {
+                this.components.imageBrowser.selectRandomImages(3);
+            });
+        }
+
+        // Select all button
+        const selectAllBtn = document.getElementById('selectAllFolderBtn');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
+                this.components.imageBrowser.selectAllImages();
+            });
+        }
     }
 }
 
