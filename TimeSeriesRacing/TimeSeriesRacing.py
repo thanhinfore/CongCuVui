@@ -3,7 +3,7 @@
 """
 TimeSeriesRacing - Tạo video biểu đồ động từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
-Version 5.0 - MULTI-CHART EDITION - Bar, Line, Pie, Column Charts & Combo Mode!
+Version 5.1 - AESTHETIC EDITION - Professional Visual Design
 
 UPGRADED VERSION - High Quality, Bug-Free Video Generation:
 ✨ Comprehensive data validation (NaN, Inf, negative values)
@@ -14,6 +14,15 @@ UPGRADED VERSION - High Quality, Bug-Free Video Generation:
 ✨ Proper frame boundary checking
 ✨ Better temp file management
 ✨ Edge case handling for empty/sparse data
+
+NEW v5.1 - AESTHETIC DESIGN PRINCIPLES:
+🎨 Professional layout with hierarchy and breathing space
+🎨 Smooth easing and natural motion rhythm
+🎨 Enhanced typography with clear hierarchy
+🎨 Sophisticated color gradients and depth
+🎨 Cognitive flow optimization
+🎨 Identity layer support (logos/icons)
+🎨 Aesthetic cohesion across all chart types
 """
 
 import pandas as pd
@@ -122,8 +131,57 @@ class ColorPalettes:
         return palettes.get(name.lower(), ColorPalettes.PROFESSIONAL)
 
 
+class AestheticConfig:
+    """V5.1 - Aesthetic Design Configuration"""
+
+    # Typography Hierarchy (Golden Ratio inspired)
+    FONT_SCALE = {
+        'title': 1.618,      # Golden ratio
+        'subtitle': 1.272,   # √(1.618)
+        'heading': 1.0,
+        'body': 0.882,       # 1/1.272
+        'caption': 0.618     # 1/φ
+    }
+
+    # Spacing System (8px baseline)
+    SPACING = {
+        'xs': 4,
+        'sm': 8,
+        'md': 16,
+        'lg': 24,
+        'xl': 32,
+        'xxl': 48
+    }
+
+    # Motion Easing (Natural rhythm)
+    EASING = {
+        'ease_in': 'cubic-bezier(0.4, 0.0, 1.0, 1.0)',
+        'ease_out': 'cubic-bezier(0.0, 0.0, 0.2, 1.0)',
+        'ease_in_out': 'cubic-bezier(0.4, 0.0, 0.2, 1.0)',  # Material Design standard
+        'sharp': 'cubic-bezier(0.4, 0.0, 0.6, 1.0)'
+    }
+
+    # Color Depth (Shadows and elevation)
+    SHADOWS = {
+        'low': {'offset': 2, 'blur': 4, 'alpha': 0.1},
+        'medium': {'offset': 4, 'blur': 8, 'alpha': 0.15},
+        'high': {'offset': 8, 'blur': 16, 'alpha': 0.2}
+    }
+
+    # Layout Golden Rectangle
+    GOLDEN_RATIO = 1.618
+
+    # Professional font pairing
+    FONT_FAMILIES = {
+        'modern': 'Helvetica Neue, Arial, sans-serif',
+        'elegant': 'Georgia, serif',
+        'technical': 'Roboto Mono, Courier New, monospace',
+        'clean': 'Inter, -apple-system, sans-serif'
+    }
+
+
 class StylePresets:
-    """Preset styles cho các use cases khác nhau"""
+    """Preset styles cho các use cases khác nhau - V5.1 Enhanced"""
 
     TIKTOK = {
         'period_length': 600,  # 0.6 giây - nhanh cho viral
@@ -131,7 +189,12 @@ class StylePresets:
         'ratio': '9:16',
         'palette': 'neon',
         'bar_style': 'gradient',
-        'interpolate_period': False  # Tắt để period label không nháy
+        'interpolate_period': False,
+        # V5.1 - Aesthetic enhancements
+        'font_style': 'modern',
+        'title_spacing': 'lg',
+        'enable_shadows': True,
+        'motion_easing': 'ease_out'
     }
 
     YOUTUBE = {
@@ -140,7 +203,12 @@ class StylePresets:
         'ratio': '16:9',
         'palette': 'professional',
         'bar_style': 'solid',
-        'interpolate_period': False  # Tắt để period label không nháy
+        'interpolate_period': False,
+        # V5.1 - Aesthetic enhancements
+        'font_style': 'clean',
+        'title_spacing': 'xl',
+        'enable_shadows': True,
+        'motion_easing': 'ease_in_out'
     }
 
     INSTAGRAM = {
@@ -149,7 +217,12 @@ class StylePresets:
         'ratio': '9:16',
         'palette': 'pastel',
         'bar_style': 'gradient',
-        'interpolate_period': False  # Tắt để period label không nháy
+        'interpolate_period': False,
+        # V5.1 - Aesthetic enhancements
+        'font_style': 'elegant',
+        'title_spacing': 'lg',
+        'enable_shadows': True,
+        'motion_easing': 'ease_in_out'
     }
 
     PRESENTATION = {
@@ -158,7 +231,12 @@ class StylePresets:
         'ratio': '16:9',
         'palette': 'professional',
         'bar_style': 'solid',
-        'interpolate_period': False  # Tắt để period label không nháy
+        'interpolate_period': False,
+        # V5.1 - Aesthetic enhancements
+        'font_style': 'clean',
+        'title_spacing': 'xxl',
+        'enable_shadows': False,  # Clean for presentations
+        'motion_easing': 'ease_in_out'
     }
 
 
