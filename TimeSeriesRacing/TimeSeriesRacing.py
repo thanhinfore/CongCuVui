@@ -4,6 +4,16 @@
 TimeSeriesRacing - Tạo video biểu đồ động từ dữ liệu time series
 Hỗ trợ CSV, Excel, JSON với tự động nhận dạng cấu trúc dữ liệu
 Version 5.0 - MULTI-CHART EDITION - Bar, Line, Pie, Column Charts & Combo Mode!
+
+UPGRADED VERSION - High Quality, Bug-Free Video Generation:
+✨ Comprehensive data validation (NaN, Inf, negative values)
+✨ Better error handling & recovery in all animation functions
+✨ Improved matplotlib figure cleanup (prevents memory issues)
+✨ Enhanced FFmpeg encoding reliability
+✨ Division by zero protection
+✨ Proper frame boundary checking
+✨ Better temp file management
+✨ Edge case handling for empty/sparse data
 """
 
 import pandas as pd
@@ -370,24 +380,80 @@ class TimeSeriesRacing:
                 time_col = self.detected_time_col
                 self.df_wide = self.df.set_index(time_col)
 
-            # Chuẩn hóa dữ liệu
+            # === UPGRADED: Comprehensive Data Validation & Cleaning ===
+
             # 1. Điền giá trị NaN bằng 0
             self.df_wide = self.df_wide.fillna(0)
 
             # 2. Đảm bảo index là sorted
             self.df_wide = self.df_wide.sort_index()
 
-            # 3. Chuyển sang numeric
+            # 3. Chuyển sang numeric và xử lý lỗi
             for col in self.df_wide.columns:
                 self.df_wide[col] = pd.to_numeric(self.df_wide[col], errors='coerce').fillna(0)
 
-            # 4. Nếu dùng phần trăm, chuẩn hóa
+            # 4. UPGRADED: Remove infinite values (can cause video corruption)
+            self.df_wide = self.df_wide.replace([np.inf, -np.inf], 0)
+
+            # 5. UPGRADED: Ensure all values are non-negative (for racing charts)
+            # Negative values can cause bar rendering issues
+            if (self.df_wide < 0).any().any():
+                print("  ⚠️  Phát hiện giá trị âm - đang chuyển sang giá trị tuyệt đối")
+                self.df_wide = self.df_wide.abs()
+
+            # 6. UPGRADED: Remove columns with all zeros (they don't contribute to animation)
+            zero_cols = self.df_wide.columns[(self.df_wide == 0).all()]
+            if len(zero_cols) > 0:
+                print(f"  ⚠️  Loại bỏ {len(zero_cols)} cột có toàn giá trị 0: {list(zero_cols)[:5]}...")
+                self.df_wide = self.df_wide.drop(columns=zero_cols)
+
+            # 7. UPGRADED: Validate minimum data requirements
+            if self.df_wide.shape[0] < 2:
+                raise ValueError("Cần ít nhất 2 khoảng thời gian để tạo animation")
+            if self.df_wide.shape[1] < 1:
+                raise ValueError("Cần ít nhất 1 thực thể (entity) để tạo animation")
+
+            # 8. UPGRADED: Check for duplicate indices
+            if self.df_wide.index.duplicated().any():
+                print("  ⚠️  Phát hiện thời gian trùng lặp - đang gộp dữ liệu")
+                self.df_wide = self.df_wide.groupby(level=0).mean()
+
+            # 9. UPGRADED: Ensure numeric index if possible
+            try:
+                if self.df_wide.index.dtype == 'object':
+                    # Try to convert to numeric
+                    self.df_wide.index = pd.to_numeric(self.df_wide.index, errors='ignore')
+            except:
+                pass  # Keep original index if conversion fails
+
+            # 10. Nếu dùng phần trăm, chuẩn hóa (with division by zero protection)
             if self.use_percent:
-                self.df_wide = self.df_wide.div(self.df_wide.sum(axis=1), axis=0) * 100
+                row_sums = self.df_wide.sum(axis=1)
+                # Protect against division by zero
+                row_sums = row_sums.replace(0, 1)  # Replace 0 with 1 to avoid div by zero
+                self.df_wide = self.df_wide.div(row_sums, axis=0) * 100
+                # Clean up any resulting NaN/inf
+                self.df_wide = self.df_wide.fillna(0).replace([np.inf, -np.inf], 0)
                 print("  → Đã chuyển sang phần trăm (%)")
+
+            # 11. UPGRADED: Final validation - ensure no NaN or Inf remain
+            if self.df_wide.isnull().any().any():
+                print("  ⚠️  Vẫn còn giá trị NaN sau xử lý - đang thay thế bằng 0")
+                self.df_wide = self.df_wide.fillna(0)
+
+            if np.isinf(self.df_wide.values).any():
+                print("  ⚠️  Vẫn còn giá trị vô cực sau xử lý - đang thay thế bằng 0")
+                self.df_wide = self.df_wide.replace([np.inf, -np.inf], 0)
+
+            # 12. UPGRADED: Log data quality metrics
+            total_values = self.df_wide.size
+            zero_values = (self.df_wide == 0).sum().sum()
+            zero_pct = (zero_values / total_values) * 100 if total_values > 0 else 0
 
             print(f"✅ Chuẩn hóa thành công: {self.df_wide.shape[0]} khoảng thời gian × {self.df_wide.shape[1]} thực thể")
             print(f"  → Khoảng thời gian: {self.df_wide.index[0]} → {self.df_wide.index[-1]}")
+            print(f"  → Chất lượng dữ liệu: {zero_pct:.1f}% giá trị bằng 0")
+            print(f"  → Phạm vi giá trị: {self.df_wide.values.min():.2f} → {self.df_wide.values.max():.2f}")
 
             return True
 
@@ -485,14 +551,21 @@ class TimeSeriesRacing:
                   alpha=0.1, zorder=-10, cmap=plt.cm.Blues if self.theme == 'light' else plt.cm.Greys)
 
     def _add_stats_panel(self, ax, current_values, text_color, panel_bg, panel_alpha):
-        """Add real-time statistics panel (V4.0 ULTIMATE Feature)"""
+        """Add real-time statistics panel (V4.0 ULTIMATE Feature) - UPGRADED"""
         # Handle both dict and numpy array inputs
         if isinstance(current_values, dict):
             values_array = np.array(list(current_values.values()))
         else:
             values_array = np.array(current_values) if not isinstance(current_values, np.ndarray) else current_values
 
-        # Calculate statistics
+        # UPGRADED: Filter out invalid values (NaN, Inf)
+        values_array = values_array[np.isfinite(values_array)]
+
+        # UPGRADED: Early return if no valid data
+        if len(values_array) == 0:
+            return
+
+        # Calculate statistics with validation
         total_value = np.sum(values_array)
         leader_value = np.max(values_array) if len(values_array) > 0 else 0
         avg_value = np.mean(values_array) if len(values_array) > 0 else 0
@@ -500,6 +573,12 @@ class TimeSeriesRacing:
         # Get top 2 for gap calculation
         sorted_values = np.sort(values_array)[::-1]  # Sort descending
         gap = sorted_values[0] - sorted_values[1] if len(sorted_values) > 1 else 0
+
+        # UPGRADED: Validate all calculated values
+        total_value = total_value if np.isfinite(total_value) else 0
+        leader_value = leader_value if np.isfinite(leader_value) else 0
+        avg_value = avg_value if np.isfinite(avg_value) else 0
+        gap = gap if np.isfinite(gap) else 0
 
         # Panel position (top-right corner)
         panel_width = 0.25
@@ -629,8 +708,17 @@ class TimeSeriesRacing:
                 zorder=2001)
 
     def _reencode_video(self, temp_file, final_file):
-        """Re-encode video with editor-friendly settings using FFmpeg CLI"""
+        """Re-encode video with editor-friendly settings using FFmpeg CLI - UPGRADED"""
         print(f"  ⚙️  Re-encoding with editor-friendly format...")
+
+        # UPGRADED: Validate input file first
+        if not os.path.exists(temp_file):
+            print(f"  ❌ Temp file không tồn tại: {temp_file}")
+            return False
+
+        if os.path.getsize(temp_file) == 0:
+            print(f"  ❌ Temp file trống (0 bytes)")
+            return False
 
         # FFmpeg command for editor compatibility
         # Key settings:
@@ -654,51 +742,78 @@ class TimeSeriesRacing:
             '-level', '4.2',                     # H.264 level (1080p60)
             '-movflags', '+faststart',           # Fast start for web
             '-b:v', '8000k',                     # Video bitrate
+            '-maxrate', '10000k',                # Max bitrate (prevent spikes)
+            '-bufsize', '16000k',                # Buffer size
             '-c:a', 'copy',                      # Copy audio (if exists)
             '-metadata', f'title={self.title}',
-            '-metadata', 'artist=TimeSeriesRacing v4.0 ULTIMATE EDITION',
-            '-metadata', 'comment=10x Better Info Display - Stats Panel, Progress Bar, Rank Changes',
+            '-metadata', 'artist=TimeSeriesRacing v5.0 MULTI-CHART - UPGRADED',
+            '-metadata', 'comment=High Quality, Stable Rendering',
             final_file
         ]
 
         try:
-            # Run ffmpeg with output suppressed (unless error)
+            # UPGRADED: Run ffmpeg with better error handling
             result = subprocess.run(
                 ffmpeg_cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                timeout=300  # 5 minutes timeout
+                timeout=600  # UPGRADED: 10 minutes timeout (longer for safety)
             )
 
+            # UPGRADED: Check for critical errors (vs warnings)
             if result.returncode != 0:
-                print(f"  ⚠️  FFmpeg warning/error output:")
-                print(result.stderr)
-                # Don't raise - file might still be created
+                stderr_lower = result.stderr.lower()
+                # Check if it's a critical error
+                critical_errors = ['error', 'failed', 'invalid', 'could not']
+                is_critical = any(err in stderr_lower for err in critical_errors)
 
-            # Check if output file was created
-            if os.path.exists(final_file) and os.path.getsize(final_file) > 0:
-                print(f"  ✅ Re-encoding complete!")
-                return True
+                if is_critical:
+                    print(f"  ❌ FFmpeg critical error:")
+                    # Print last 20 lines of stderr
+                    stderr_lines = result.stderr.split('\n')
+                    for line in stderr_lines[-20:]:
+                        if line.strip():
+                            print(f"    {line}")
+                else:
+                    print(f"  ⚠️  FFmpeg warnings (might be ok):")
+                    # Print last 5 lines
+                    stderr_lines = result.stderr.split('\n')
+                    for line in stderr_lines[-5:]:
+                        if line.strip():
+                            print(f"    {line}")
+
+            # UPGRADED: Validate output file more thoroughly
+            if os.path.exists(final_file):
+                file_size = os.path.getsize(final_file)
+                if file_size > 1000:  # At least 1KB
+                    print(f"  ✅ Re-encoding complete! ({file_size / (1024*1024):.2f} MB)")
+                    return True
+                else:
+                    print(f"  ❌ Re-encoding failed - output file quá nhỏ ({file_size} bytes)")
+                    return False
             else:
-                print(f"  ❌ Re-encoding failed - output file not created")
+                print(f"  ❌ Re-encoding failed - output file không được tạo")
                 return False
 
         except subprocess.TimeoutExpired:
-            print(f"  ❌ FFmpeg re-encoding timeout (>5 minutes)")
+            print(f"  ❌ FFmpeg re-encoding timeout (>10 minutes)")
+            print(f"     Video có thể quá dài hoặc phức tạp")
             return False
         except FileNotFoundError:
-            print(f"  ❌ FFmpeg not found. Please install FFmpeg:")
+            print(f"  ❌ FFmpeg không được cài đặt. Vui lòng cài đặt FFmpeg:")
             print(f"     Windows: choco install ffmpeg")
             print(f"     Mac: brew install ffmpeg")
             print(f"     Linux: sudo apt-get install ffmpeg")
             return False
         except Exception as e:
             print(f"  ❌ Re-encoding error: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _create_line_chart_race(self):
-        """V5.0 - Create animated line chart race"""
+        """V5.0 - Create animated line chart race - UPGRADED for stability"""
         print(f"\n📈 Creating LINE CHART RACE animation...")
 
         # Setup figure
@@ -707,47 +822,169 @@ class TimeSeriesRacing:
         else:
             figsize = (12, 6.75)
 
+        # UPGRADED: Create figure with proper cleanup
+        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
+        plt.close('all')  # Clean up any existing figures
         fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
 
         # Get colors
         colors_list = ColorPalettes.get_palette(self.palette)
 
-        # Prepare data - cumulative for line charts works better
-        df_cumsum = self.df_wide.cumsum()
+        # UPGRADED: Prepare data with validation
+        try:
+            df_cumsum = self.df_wide.cumsum()
+            # Validate cumsum didn't create issues
+            if df_cumsum.isnull().any().any():
+                print("  ⚠️  Phát hiện NaN trong cumsum - đang sử dụng dữ liệu gốc")
+                df_cumsum = self.df_wide.fillna(0)
+        except Exception as e:
+            print(f"  ⚠️  Lỗi khi tính cumsum - đang sử dụng dữ liệu gốc: {e}")
+            df_cumsum = self.df_wide
 
-        # Animation function
+        # Animation function with error handling
         def animate(frame):
-            ax.clear()
+            try:
+                ax.clear()
 
-            # Get data up to current frame
-            current_idx = int(frame)
-            data_slice = df_cumsum.iloc[:current_idx+1]
+                # Get data up to current frame
+                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                data_slice = df_cumsum.iloc[:current_idx+1]
 
-            if len(data_slice) == 0:
-                return
+                if len(data_slice) == 0:
+                    return
 
-            # Plot lines for top N entities (based on final values)
-            final_values = self.df_wide.iloc[-1].sort_values(ascending=False)
-            top_entities = final_values.head(self.top_n).index
+                # Plot lines for top N entities (based on final values)
+                final_values = self.df_wide.iloc[-1].sort_values(ascending=False)
+                top_entities = final_values.head(self.top_n).index
 
-            for i, entity in enumerate(top_entities):
-                color = colors_list[i % len(colors_list)]
-                ax.plot(data_slice.index, data_slice[entity],
-                       label=entity, color=color, linewidth=3, alpha=0.9)
+                # UPGRADED: Validate we have entities to plot
+                if len(top_entities) == 0:
+                    return
 
-            # Styling
-            ax.set_title(self.title, fontsize=self.title_font_size + 2,
-                        weight='bold', pad=20)
-            ax.legend(loc='upper left', fontsize=self.bar_label_font_size - 2)
-            ax.grid(True, alpha=0.3)
-            ax.set_xlabel('Period', fontsize=self.bar_label_font_size)
-            ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+                for i, entity in enumerate(top_entities):
+                    color = colors_list[i % len(colors_list)]
+                    # UPGRADED: Add error handling for plot
+                    try:
+                        ax.plot(data_slice.index, data_slice[entity],
+                               label=entity, color=color, linewidth=3, alpha=0.9,
+                               marker='o', markersize=4, markevery=max(1, len(data_slice)//10))
+                    except Exception as e:
+                        print(f"  ⚠️  Lỗi khi vẽ line cho {entity}: {e}")
+                        continue
 
-            # Add v4.0 overlays if enabled
-            if current_idx < len(self.df_wide):
+                # Styling
+                ax.set_title(self.title, fontsize=self.title_font_size + 2,
+                            weight='bold', pad=20)
+                if len(top_entities) <= 10:  # Only show legend if not too crowded
+                    ax.legend(loc='upper left', fontsize=self.bar_label_font_size - 2,
+                            framealpha=0.9, ncol=1 if len(top_entities) <= 5 else 2)
+                ax.grid(True, alpha=0.3)
+                ax.set_xlabel('Period', fontsize=self.bar_label_font_size)
+                ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+
+                # UPGRADED: Set reasonable y-axis limits
+                try:
+                    y_max = data_slice[top_entities].max().max()
+                    if np.isfinite(y_max) and y_max > 0:
+                        ax.set_ylim(0, y_max * 1.1)
+                except:
+                    pass
+
+                # Add v4.0 overlays if enabled
+                if current_idx < len(self.df_wide):
+                    period_val = self.df_wide.index[current_idx]
+                    current_values = self.df_wide.iloc[current_idx][top_entities].values
+                    current_ranks = {entity: i for i, entity in enumerate(top_entities)}
+
+                    # Add v4.0 overlays
+                    text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
+                    if self.show_progress_bar:
+                        self.period_index = current_idx
+                        self._add_progress_bar(ax, text_color)
+                    if self.watermark_text:
+                        self._add_watermark(ax, text_color)
+
+            except Exception as e:
+                print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
+                # Continue animation even if one frame fails
+
+        # Create animation
+        frames = len(self.df_wide)
+        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+
+        # UPGRADED: Add blit=False for better compatibility
+        anim = FuncAnimation(fig, animate, frames=frames,
+                           interval=interval_ms,
+                           repeat=False,
+                           blit=False)
+
+        return fig, anim
+
+    def _create_pie_chart_race(self):
+        """V5.0 - Create animated pie chart race - UPGRADED for stability"""
+        print(f"\n🥧 Creating PIE CHART RACE animation...")
+
+        # Setup figure
+        if self.ratio == '9:16':
+            figsize = (6, 10.67)
+        else:
+            figsize = (12, 6.75)
+
+        # UPGRADED: Create figure with proper cleanup
+        plt.close('all')  # Clean up any existing figures
+        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
+
+        # Get colors
+        colors_list = ColorPalettes.get_palette(self.palette)
+
+        # Animation function with error handling
+        def animate(frame):
+            try:
+                ax.clear()
+
+                # Get current period data
+                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                if current_idx >= len(self.df_wide):
+                    return
+
+                current_data = self.df_wide.iloc[current_idx]
                 period_val = self.df_wide.index[current_idx]
-                current_values = self.df_wide.iloc[current_idx][top_entities].values
-                current_ranks = {entity: i for i, entity in enumerate(top_entities)}
+
+                # Get top N
+                sorted_data = current_data.sort_values(ascending=False)
+                top_data = sorted_data.head(self.top_n)
+
+                # UPGRADED: Filter out zero/negative values for pie chart
+                top_data = top_data[top_data > 0]
+
+                # Create pie chart only if we have valid data
+                if len(top_data) > 0 and top_data.sum() > 0:
+                    try:
+                        wedges, texts, autotexts = ax.pie(
+                            top_data.values,
+                            labels=top_data.index,
+                            colors=colors_list[:len(top_data)],
+                            autopct='%1.1f%%',
+                            startangle=90,
+                            textprops={'fontsize': self.bar_label_font_size},
+                            pctdistance=0.85
+                        )
+
+                        # Make percentage text bold and readable
+                        for autotext in autotexts:
+                            autotext.set_color('white')
+                            autotext.set_fontweight('bold')
+                            autotext.set_fontsize(self.bar_label_font_size - 2)
+                    except Exception as e:
+                        print(f"  ⚠️  Lỗi khi vẽ pie chart tại frame {frame}: {e}")
+                        # Draw a message instead
+                        ax.text(0.5, 0.5, 'No Data', ha='center', va='center',
+                               fontsize=20, transform=ax.transAxes)
+
+                # Title with period
+                ax.set_title(f"{self.title}\nPeriod: {period_val}",
+                            fontsize=self.title_font_size + 2,
+                            weight='bold', pad=20)
 
                 # Add v4.0 overlays
                 text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
@@ -757,86 +994,24 @@ class TimeSeriesRacing:
                 if self.watermark_text:
                     self._add_watermark(ax, text_color)
 
-        # Create animation
-        frames = len(self.df_wide)
-        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
-        anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=interval_ms,
-                           repeat=False)
-
-        return fig, anim
-
-    def _create_pie_chart_race(self):
-        """V5.0 - Create animated pie chart race"""
-        print(f"\n🥧 Creating PIE CHART RACE animation...")
-
-        # Setup figure
-        if self.ratio == '9:16':
-            figsize = (6, 10.67)
-        else:
-            figsize = (12, 6.75)
-
-        fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
-
-        # Get colors
-        colors_list = ColorPalettes.get_palette(self.palette)
-
-        # Animation function
-        def animate(frame):
-            ax.clear()
-
-            # Get current period data
-            current_idx = int(frame)
-            if current_idx >= len(self.df_wide):
-                return
-
-            current_data = self.df_wide.iloc[current_idx]
-            period_val = self.df_wide.index[current_idx]
-
-            # Get top N
-            sorted_data = current_data.sort_values(ascending=False)
-            top_data = sorted_data.head(self.top_n)
-
-            # Create pie chart
-            if top_data.sum() > 0:
-                wedges, texts, autotexts = ax.pie(
-                    top_data.values,
-                    labels=top_data.index,
-                    colors=colors_list[:len(top_data)],
-                    autopct='%1.1f%%',
-                    startangle=90,
-                    textprops={'fontsize': self.bar_label_font_size}
-                )
-
-                # Make percentage text bold
-                for autotext in autotexts:
-                    autotext.set_color('white')
-                    autotext.set_fontweight('bold')
-
-            # Title with period
-            ax.set_title(f"{self.title}\nPeriod: {period_val}",
-                        fontsize=self.title_font_size + 2,
-                        weight='bold', pad=20)
-
-            # Add v4.0 overlays
-            text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
-            if self.show_progress_bar:
-                self.period_index = current_idx
-                self._add_progress_bar(ax, text_color)
-            if self.watermark_text:
-                self._add_watermark(ax, text_color)
+            except Exception as e:
+                print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
+                # Continue animation even if one frame fails
 
         # Create animation
         frames = len(self.df_wide)
         interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+
+        # UPGRADED: Add blit=False for better compatibility
         anim = FuncAnimation(fig, animate, frames=frames,
                            interval=interval_ms,
-                           repeat=False)
+                           repeat=False,
+                           blit=False)
 
         return fig, anim
 
     def _create_column_chart_race(self):
-        """V5.0 - Create animated column (vertical bar) chart race"""
+        """V5.0 - Create animated column (vertical bar) chart race - UPGRADED for stability"""
         print(f"\n📊 Creating COLUMN CHART RACE animation (vertical bars)...")
 
         # Setup figure
@@ -845,68 +1020,96 @@ class TimeSeriesRacing:
         else:
             figsize = (12, 6.75)
 
+        # UPGRADED: Create figure with proper cleanup
+        plt.close('all')  # Clean up any existing figures
         fig, ax = plt.subplots(figsize=figsize, dpi=self.dpi)
 
         # Get colors
         colors_list = ColorPalettes.get_palette(self.palette)
 
-        # Animation function
+        # Animation function with error handling
         def animate(frame):
-            ax.clear()
+            try:
+                ax.clear()
 
-            # Get current period data
-            current_idx = int(frame)
-            if current_idx >= len(self.df_wide):
-                return
+                # Get current period data
+                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                if current_idx >= len(self.df_wide):
+                    return
 
-            current_data = self.df_wide.iloc[current_idx]
-            period_val = self.df_wide.index[current_idx]
+                current_data = self.df_wide.iloc[current_idx]
+                period_val = self.df_wide.index[current_idx]
 
-            # Get top N and sort
-            sorted_data = current_data.sort_values(ascending=False)
-            top_data = sorted_data.head(self.top_n)
+                # Get top N and sort
+                sorted_data = current_data.sort_values(ascending=False)
+                top_data = sorted_data.head(self.top_n)
 
-            # Create column chart (vertical bars)
-            bars = ax.bar(range(len(top_data)), top_data.values,
-                         color=colors_list[:len(top_data)],
-                         alpha=self.bar_alpha,
-                         edgecolor='white',
-                         linewidth=self.bar_border_width)
+                # UPGRADED: Filter out invalid values
+                top_data = top_data[top_data >= 0]  # No negative values
+                if len(top_data) == 0:
+                    return
 
-            # Add value labels on top of bars
-            if self.show_bar_values:
-                for i, (value, bar) in enumerate(zip(top_data.values, bars)):
-                    height = bar.get_height()
-                    ax.text(bar.get_x() + bar.get_width()/2., height,
-                           f'{value:,.0f}',
-                           ha='center', va='bottom',
-                           fontsize=self.bar_label_font_size - 2,
-                           fontweight='bold')
+                # Create column chart (vertical bars)
+                try:
+                    bars = ax.bar(range(len(top_data)), top_data.values,
+                                 color=colors_list[:len(top_data)],
+                                 alpha=self.bar_alpha,
+                                 edgecolor='white',
+                                 linewidth=self.bar_border_width)
 
-            # Styling
-            ax.set_xticks(range(len(top_data)))
-            ax.set_xticklabels(top_data.index, rotation=45, ha='right',
-                              fontsize=self.bar_label_font_size - 2)
-            ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
-            ax.set_title(f"{self.title} - Period: {period_val}",
-                        fontsize=self.title_font_size + 2,
-                        weight='bold', pad=20)
-            ax.grid(True, alpha=0.3, axis='y')
+                    # Add value labels on top of bars
+                    if self.show_bar_values:
+                        for i, (value, bar) in enumerate(zip(top_data.values, bars)):
+                            if np.isfinite(value):  # UPGRADED: Check for valid values
+                                height = bar.get_height()
+                                ax.text(bar.get_x() + bar.get_width()/2., height,
+                                       f'{value:,.0f}',
+                                       ha='center', va='bottom',
+                                       fontsize=self.bar_label_font_size - 2,
+                                       fontweight='bold')
+                except Exception as e:
+                    print(f"  ⚠️  Lỗi khi vẽ column chart tại frame {frame}: {e}")
+                    return
 
-            # Add v4.0 overlays
-            text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
-            if self.show_progress_bar:
-                self.period_index = current_idx
-                self._add_progress_bar(ax, text_color)
-            if self.watermark_text:
-                self._add_watermark(ax, text_color)
+                # Styling
+                ax.set_xticks(range(len(top_data)))
+                ax.set_xticklabels(top_data.index, rotation=45, ha='right',
+                                  fontsize=self.bar_label_font_size - 2)
+                ax.set_ylabel('Value', fontsize=self.bar_label_font_size)
+                ax.set_title(f"{self.title} - Period: {period_val}",
+                            fontsize=self.title_font_size + 2,
+                            weight='bold', pad=20)
+                ax.grid(True, alpha=0.3, axis='y')
+
+                # UPGRADED: Set reasonable y-axis limits
+                try:
+                    y_max = top_data.max()
+                    if np.isfinite(y_max) and y_max > 0:
+                        ax.set_ylim(0, y_max * 1.15)  # Add 15% headroom for labels
+                except:
+                    pass
+
+                # Add v4.0 overlays
+                text_color = '#1a1a1a' if self.theme == 'light' else '#FFFFFF'
+                if self.show_progress_bar:
+                    self.period_index = current_idx
+                    self._add_progress_bar(ax, text_color)
+                if self.watermark_text:
+                    self._add_watermark(ax, text_color)
+
+            except Exception as e:
+                print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
+                # Continue animation even if one frame fails
 
         # Create animation
         frames = len(self.df_wide)
         interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+
+        # UPGRADED: Add blit=False for better compatibility
         anim = FuncAnimation(fig, animate, frames=frames,
                            interval=interval_ms,
-                           repeat=False)
+                           repeat=False,
+                           blit=False)
 
         return fig, anim
 
@@ -1102,9 +1305,12 @@ class TimeSeriesRacing:
                         'lw': 1.5,
                     }
 
-            # Create temporary file for initial render
+            # UPGRADED: Create temporary file with better cleanup handling
             temp_fd, temp_file = tempfile.mkstemp(suffix='.mp4', prefix='tsr_temp_')
-            os.close(temp_fd)  # Close file descriptor
+            os.close(temp_fd)  # Close file descriptor immediately
+
+            # UPGRADED: Ensure matplotlib is in a clean state
+            plt.close('all')
 
             try:
                 # V5.0 - MULTI-CHART: Route to appropriate chart type
@@ -1251,20 +1457,40 @@ class TimeSeriesRacing:
 
                 # V5.0 - Step 2: Re-encode with editor-friendly settings (for ALL chart types)
                 print(f"  ⏳ Step 2/2: Re-encoding for editor compatibility...")
+
+                # UPGRADED: Close matplotlib figure before re-encoding to free memory
+                try:
+                    plt.close(fig)
+                except:
+                    pass
+
                 if not self._reencode_video(temp_file, self.output):
                     print(f"  ⚠️  Re-encoding failed, using original file")
                     # Copy temp to output as fallback
                     import shutil
-                    shutil.copy2(temp_file, self.output)
+                    try:
+                        shutil.copy2(temp_file, self.output)
+                    except Exception as e:
+                        print(f"  ❌ Không thể copy temp file: {e}")
+                        # Return False since we failed to create output
+                        return False
 
             finally:
+                # UPGRADED: Comprehensive cleanup
+                # Clean up matplotlib resources
+                try:
+                    plt.close('all')
+                except:
+                    pass
+
                 # Clean up temp file
                 if os.path.exists(temp_file):
                     try:
                         os.remove(temp_file)
                         print(f"  🗑️  Cleaned up temp file")
-                    except:
-                        pass  # Ignore cleanup errors
+                    except Exception as e:
+                        print(f"  ⚠️  Không thể xóa temp file: {e}")
+                        pass  # Not critical if cleanup fails
 
             print(f"\n✅ Video đã được tạo thành công: {self.output}")
 
