@@ -1,8 +1,9 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v4 - Markdown Bold + Fixed ZIP)
+   PREVIEWPANEL.JS - Preview Panel Module (v5 - Full Markdown Support)
    ===================================================== */
 
 import { utils } from './utils.js';
+import { markdownParser } from './markdownParser.js';
 
 export class PreviewPanel {
     constructor(DOM, state) {
@@ -355,37 +356,30 @@ export class PreviewPanel {
     }
 
     /**
-     * Parse markdown-style bold text: **text** becomes bold
+     * Parse markdown with full support using markdownParser
+     * This method now supports: bold, italic, code, strikethrough, highlight, links
      */
     parseMarkdown(text) {
-        const segments = [];
-        let currentText = '';
-        let inBold = false;
-        let i = 0;
+        const parsed = markdownParser.parseLine(text);
 
-        while (i < text.length) {
-            if (text[i] === '*' && text[i + 1] === '*') {
-                if (currentText) {
-                    segments.push({ text: currentText, bold: inBold });
-                    currentText = '';
-                }
-                inBold = !inBold;
-                i += 2;
-            } else {
-                currentText += text[i];
-                i++;
-            }
-        }
-
-        if (currentText) {
-            segments.push({ text: currentText, bold: inBold });
-        }
-
-        return segments.length > 0 ? segments : [{ text: text, bold: false }];
+        // Convert markdown segments to canvas-compatible segments
+        return parsed.segments.map(segment => {
+            const canvasSegment = {
+                text: segment.text,
+                bold: segment.styles.bold || false,
+                italic: segment.styles.italic || false,
+                code: segment.styles.code || false,
+                strikethrough: segment.styles.strikethrough || false,
+                highlight: segment.styles.highlight || false,
+                link: segment.styles.link || false,
+                url: segment.url
+            };
+            return canvasSegment;
+        });
     }
 
     /**
-     * Wrap text with markdown bold support
+     * Wrap text with full markdown support
      */
     wrapStyledText(ctx, text, maxWidth, fontSize, fontFamily, baseWeight, fontStyle) {
         const userLines = text.split('\\n');
@@ -393,7 +387,7 @@ export class PreviewPanel {
 
         userLines.forEach(userLine => {
             if (!userLine.trim()) {
-                wrappedLines.push({ segments: [{ text: '', bold: false }] });
+                wrappedLines.push({ segments: [{ text: '', bold: false, italic: false }] });
                 return;
             }
 
@@ -408,20 +402,39 @@ export class PreviewPanel {
                     const isLastWord = wordIndex === words.length - 1;
                     const wordText = isLastWord ? word : word + ' ';
 
+                    // Calculate font with proper weight and style
                     const weight = segment.bold ? 'bold' : baseWeight;
-                    ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+                    const style = segment.italic ? 'italic' : fontStyle;
+                    ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
                     const wordWidth = ctx.measureText(wordText).width;
 
                     if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
                         wrappedLines.push({ segments: this.mergeAdjacentSegments(currentLine) });
-                        currentLine = [{ text: wordText, bold: segment.bold }];
+                        currentLine = [{
+                            text: wordText,
+                            bold: segment.bold,
+                            italic: segment.italic,
+                            code: segment.code,
+                            strikethrough: segment.strikethrough,
+                            highlight: segment.highlight,
+                            link: segment.link,
+                            url: segment.url
+                        }];
                         currentWidth = wordWidth;
                     } else {
-                        if (currentLine.length > 0 &&
-                            currentLine[currentLine.length - 1].bold === segment.bold) {
+                        if (currentLine.length > 0 && this.segmentsEqual(currentLine[currentLine.length - 1], segment)) {
                             currentLine[currentLine.length - 1].text += wordText;
                         } else {
-                            currentLine.push({ text: wordText, bold: segment.bold });
+                            currentLine.push({
+                                text: wordText,
+                                bold: segment.bold,
+                                italic: segment.italic,
+                                code: segment.code,
+                                strikethrough: segment.strikethrough,
+                                highlight: segment.highlight,
+                                link: segment.link,
+                                url: segment.url
+                            });
                         }
                         currentWidth += wordWidth;
                     }
@@ -436,6 +449,18 @@ export class PreviewPanel {
         return wrappedLines;
     }
 
+    /**
+     * Check if two segments have the same styles
+     */
+    segmentsEqual(seg1, seg2) {
+        return seg1.bold === seg2.bold &&
+               seg1.italic === seg2.italic &&
+               seg1.code === seg2.code &&
+               seg1.strikethrough === seg2.strikethrough &&
+               seg1.highlight === seg2.highlight &&
+               seg1.link === seg2.link;
+    }
+
     mergeAdjacentSegments(segments) {
         if (segments.length <= 1) return segments;
 
@@ -443,7 +468,7 @@ export class PreviewPanel {
         let current = { ...segments[0] };
 
         for (let i = 1; i < segments.length; i++) {
-            if (segments[i].bold === current.bold) {
+            if (this.segmentsEqual(segments[i], current)) {
                 current.text += segments[i].text;
             } else {
                 merged.push(current);
@@ -462,7 +487,8 @@ export class PreviewPanel {
         let totalWidth = 0;
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
-            ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+            const style = segment.italic ? 'italic' : fontStyle;
+            ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
 
             // Add letter spacing to width calculation
             const chars = segment.text.split('');
@@ -508,10 +534,36 @@ export class PreviewPanel {
 
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
-            ctx.font = `${fontStyle} ${weight} ${fontSize}px ${fontFamily}`;
+            const style = segment.italic ? 'italic' : fontStyle;
+            ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
+
+            // Draw highlight background if needed
+            if (segment.highlight) {
+                const segmentWidth = ctx.measureText(segment.text).width;
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                ctx.fillRect(currentX - 2, y - fontSize * 0.7, segmentWidth + 4, fontSize * 1.1);
+            }
+
+            // Draw code background if needed
+            if (segment.code) {
+                const segmentWidth = ctx.measureText(segment.text).width;
+                ctx.fillStyle = 'rgba(128, 128, 128, 0.2)';
+                const codeRadius = fontSize * 0.15;
+                utils.canvas.drawRoundedRect(
+                    ctx,
+                    currentX - 2,
+                    y - fontSize * 0.7,
+                    segmentWidth + 4,
+                    fontSize * 1.1,
+                    codeRadius,
+                    'rgba(128, 128, 128, 0.2)'
+                );
+            }
 
             // Render each character with letter spacing
             const chars = segment.text.split('');
+            const segmentStartX = currentX;
+
             chars.forEach((char, i) => {
                 // Set color (gradient or solid)
                 if (color.mode === 'gradient' && canvas) {
@@ -521,7 +573,14 @@ export class PreviewPanel {
                         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
                     }
                 } else {
-                    ctx.fillStyle = color.mainColor || color;
+                    // Use different color for code
+                    if (segment.code) {
+                        ctx.fillStyle = '#e74c3c';
+                    } else if (segment.link) {
+                        ctx.fillStyle = '#3498db';
+                    } else {
+                        ctx.fillStyle = color.mainColor || color;
+                    }
                     if (effects.textBorder) {
                         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
                     }
@@ -538,6 +597,28 @@ export class PreviewPanel {
                     currentX += letterSpacing;
                 }
             });
+
+            // Draw strikethrough if needed
+            if (segment.strikethrough) {
+                const segmentWidth = currentX - segmentStartX;
+                ctx.strokeStyle = color.mainColor || color;
+                ctx.lineWidth = Math.max(1, fontSize * 0.06);
+                ctx.beginPath();
+                ctx.moveTo(segmentStartX, y - fontSize * 0.2);
+                ctx.lineTo(segmentStartX + segmentWidth, y - fontSize * 0.2);
+                ctx.stroke();
+            }
+
+            // Draw underline for links
+            if (segment.link) {
+                const segmentWidth = currentX - segmentStartX;
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = Math.max(1, fontSize * 0.05);
+                ctx.beginPath();
+                ctx.moveTo(segmentStartX, y + fontSize * 0.25);
+                ctx.lineTo(segmentStartX + segmentWidth, y + fontSize * 0.25);
+                ctx.stroke();
+            }
         });
 
         // Reset shadow
