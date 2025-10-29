@@ -11,110 +11,309 @@ export class PresetsManager {
         this.currentPreset = null;
 
         this.builtInPresets = [
-            // ===== PRESETS FOR WHITE BACKGROUNDS =====
+            // ===== PREMIUM EDITION - BRAND QUALITY PRESETS =====
+
+            // 🍎 APPLE INSPIRED - Minimal Perfection
             {
-                id: 'dark-bold',
-                name: 'Dark Bold',
-                description: 'Perfect for white backgrounds',
-                colors: ['#1a1a1a', '#1a1a1a'],
+                id: 'apple-minimal',
+                name: 'Apple Minimal',
+                description: 'Cupertino minimalism - clean & bold',
+                colors: ['#000000', '#000000'],
                 settings: {
                     font: 'Inter, sans-serif',
                     colorMode: 'solid',
-                    mainColor: '#1a1a1a',
-                    subColor: '#4a4a4a',
-                    mainFontSize: 72,
-                    subFontSize: 42,
-                    fontWeight: '800',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: -1,
-                    lineHeight: 1.2
-                }
-            },
-            {
-                id: 'blue-professional',
-                name: 'Blue Professional',
-                description: 'Corporate & trustworthy',
-                colors: ['#1e40af', '#1e40af'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#1e40af',
-                    subColor: '#3b82f6',
-                    mainFontSize: 68,
-                    subFontSize: 38,
+                    mainColor: '#000000',
+                    subColor: '#86868b',
+                    mainFontSize: 88,
+                    subFontSize: 36,
                     fontWeight: '700',
                     fontStyle: 'normal',
                     textAlign: 'center',
                     textBorder: false,
                     textShadow: false,
-                    position: 'bottom',
+                    position: 'middle',
                     textTransform: 'none',
-                    letterSpacing: -0.5,
-                    lineHeight: 1.3
+                    letterSpacing: -2.5,
+                    lineHeight: 1.05,
+                    textOpacity: 100
                 }
             },
+
+            // ✔️ NIKE INSPIRED - Bold Impact
             {
-                id: 'red-impact',
-                name: 'Red Impact',
-                description: 'Bold & attention-grabbing',
-                colors: ['#dc2626', '#dc2626'],
+                id: 'nike-bold',
+                name: 'Nike Bold',
+                description: 'Just do it - maximum impact',
+                colors: ['#000000', '#000000'],
                 settings: {
                     font: 'Inter, sans-serif',
                     colorMode: 'solid',
-                    mainColor: '#dc2626',
-                    subColor: '#991b1b',
+                    mainColor: '#000000',
+                    subColor: '#000000',
+                    mainFontSize: 96,
+                    subFontSize: 42,
+                    fontWeight: '900',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'bottom',
+                    textTransform: 'uppercase',
+                    letterSpacing: -1.5,
+                    lineHeight: 0.95,
+                    textOpacity: 100
+                }
+            },
+
+            // 🎨 SWISS DESIGN - Mathematical Precision
+            {
+                id: 'swiss-precision',
+                name: 'Swiss Precision',
+                description: 'Helvetica perfection - grid based',
+                colors: ['#000000', '#000000'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'solid',
+                    mainColor: '#000000',
+                    subColor: '#404040',
+                    mainFontSize: 72,
+                    subFontSize: 38,
+                    fontWeight: '500',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'bottom',
+                    textTransform: 'none',
+                    letterSpacing: 0,
+                    lineHeight: 1.25,
+                    textOpacity: 100
+                }
+            },
+
+            // 📰 EDITORIAL LUXURY - Magazine Quality
+            {
+                id: 'editorial-luxury',
+                name: 'Editorial Luxury',
+                description: 'Vogue-inspired sophistication',
+                colors: ['#1a1a1a', '#1a1a1a'],
+                settings: {
+                    font: 'Georgia, serif',
+                    colorMode: 'solid',
+                    mainColor: '#1a1a1a',
+                    subColor: '#666666',
                     mainFontSize: 76,
-                    subFontSize: 44,
+                    subFontSize: 32,
+                    fontWeight: '400',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'bottom',
+                    textTransform: 'capitalize',
+                    letterSpacing: 1,
+                    lineHeight: 1.4,
+                    textOpacity: 100
+                }
+            },
+
+            // 🏗️ BRUTALIST - Raw Power
+            {
+                id: 'brutalist-power',
+                name: 'Brutalist Power',
+                description: 'Raw, bold, uncompromising',
+                colors: ['#000000', '#000000'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'solid',
+                    mainColor: '#000000',
+                    subColor: '#000000',
+                    mainFontSize: 104,
+                    subFontSize: 48,
+                    fontWeight: '900',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'top',
+                    textTransform: 'uppercase',
+                    letterSpacing: -2,
+                    lineHeight: 0.9,
+                    textOpacity: 100
+                }
+            },
+
+            // 💼 CORPORATE ELITE - Executive Level
+            {
+                id: 'corporate-elite',
+                name: 'Corporate Elite',
+                description: 'Fortune 500 presentation quality',
+                colors: ['#1e293b', '#1e293b'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'solid',
+                    mainColor: '#1e293b',
+                    subColor: '#64748b',
+                    mainFontSize: 68,
+                    subFontSize: 34,
+                    fontWeight: '600',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'bottom',
+                    textTransform: 'none',
+                    letterSpacing: -0.8,
+                    lineHeight: 1.3,
+                    textOpacity: 100
+                }
+            },
+
+            // 🚀 TECH STARTUP - Silicon Valley
+            {
+                id: 'tech-startup',
+                name: 'Tech Startup',
+                description: 'Y Combinator pitch-ready',
+                colors: ['#0f172a', '#6366f1'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'gradient',
+                    gradientColor1: '#0f172a',
+                    gradientColor2: '#6366f1',
+                    gradientAngle: 135,
+                    mainFontSize: 80,
+                    subFontSize: 38,
                     fontWeight: '800',
                     fontStyle: 'normal',
                     textAlign: 'center',
                     textBorder: false,
                     textShadow: false,
                     position: 'middle',
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    lineHeight: 1.2
+                    textTransform: 'none',
+                    letterSpacing: -1.5,
+                    lineHeight: 1.1,
+                    textOpacity: 100
                 }
             },
+
+            // 🎯 IMPACT RED - Bloomberg Terminal
             {
-                id: 'black-gold',
-                name: 'Black & Gold',
-                description: 'Luxury & elegance',
-                colors: ['#000000', '#d4af37'],
+                id: 'bloomberg-red',
+                name: 'Bloomberg Red',
+                description: 'Financial news impact',
+                colors: ['#dc2626', '#dc2626'],
                 settings: {
-                    font: 'Montserrat, sans-serif',
+                    font: 'Inter, sans-serif',
                     colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#d4af37',
-                    mainFontSize: 70,
+                    mainColor: '#dc2626',
+                    subColor: '#7f1d1d',
+                    mainFontSize: 92,
                     subFontSize: 40,
-                    fontWeight: '700',
+                    fontWeight: '900',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'middle',
+                    textTransform: 'uppercase',
+                    letterSpacing: -1,
+                    lineHeight: 1.0,
+                    textOpacity: 100
+                }
+            },
+
+            // 💎 LUXURY GOLD - Tiffany & Co
+            {
+                id: 'luxury-gold',
+                name: 'Luxury Gold',
+                description: 'Fifth Avenue sophistication',
+                colors: ['#1a1a1a', '#c4a962'],
+                settings: {
+                    font: 'Georgia, serif',
+                    colorMode: 'solid',
+                    mainColor: '#1a1a1a',
+                    subColor: '#c4a962',
+                    mainFontSize: 82,
+                    subFontSize: 36,
+                    fontWeight: '400',
+                    fontStyle: 'normal',
+                    textAlign: 'center',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'middle',
+                    textTransform: 'uppercase',
+                    letterSpacing: 4,
+                    lineHeight: 1.5,
+                    textOpacity: 100
+                }
+            },
+
+            // 🌊 OCEAN GRADIENT - Modern Tech
+            {
+                id: 'ocean-gradient',
+                name: 'Ocean Gradient',
+                description: 'Deep blue sophistication',
+                colors: ['#0c4a6e', '#0ea5e9'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'gradient',
+                    gradientColor1: '#0c4a6e',
+                    gradientColor2: '#0ea5e9',
+                    gradientAngle: 135,
+                    mainFontSize: 76,
+                    subFontSize: 38,
+                    fontWeight: '800',
                     fontStyle: 'normal',
                     textAlign: 'center',
                     textBorder: false,
                     textShadow: false,
                     position: 'bottom',
-                    textTransform: 'uppercase',
-                    letterSpacing: 3,
-                    lineHeight: 1.4
+                    textTransform: 'none',
+                    letterSpacing: -1.2,
+                    lineHeight: 1.2,
+                    textOpacity: 100
                 }
             },
+
+            // 🔥 FIRE GRADIENT - Energy Brand
             {
-                id: 'navy-corporate',
-                name: 'Navy Corporate',
-                description: 'Professional & modern',
-                colors: ['#0f172a', '#0f172a'],
+                id: 'fire-gradient',
+                name: 'Fire Gradient',
+                description: 'Red Bull energy style',
+                colors: ['#991b1b', '#f97316'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'gradient',
+                    gradientColor1: '#991b1b',
+                    gradientColor2: '#f97316',
+                    gradientAngle: 90,
+                    mainFontSize: 88,
+                    subFontSize: 42,
+                    fontWeight: '900',
+                    fontStyle: 'normal',
+                    textAlign: 'center',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'middle',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0,
+                    lineHeight: 1.05,
+                    textOpacity: 100
+                }
+            },
+
+            // 🌿 ECO MINIMAL - Patagonia Style
+            {
+                id: 'eco-minimal',
+                name: 'Eco Minimal',
+                description: 'Sustainable brand aesthetic',
+                colors: ['#14532d', '#14532d'],
                 settings: {
                     font: 'Inter, sans-serif',
                     colorMode: 'solid',
-                    mainColor: '#0f172a',
-                    subColor: '#475569',
-                    mainFontSize: 64,
+                    mainColor: '#14532d',
+                    subColor: '#16a34a',
+                    mainFontSize: 72,
                     subFontSize: 36,
                     fontWeight: '600',
                     fontStyle: 'normal',
@@ -124,43 +323,24 @@ export class PresetsManager {
                     position: 'bottom',
                     textTransform: 'none',
                     letterSpacing: -0.5,
-                    lineHeight: 1.4
+                    lineHeight: 1.35,
+                    textOpacity: 100
                 }
             },
+
+            // 🎨 CREATIVE PURPLE - Figma Style
             {
-                id: 'deep-purple',
-                name: 'Deep Purple',
-                description: 'Creative & modern',
-                colors: ['#6b21a8', '#6b21a8'],
-                settings: {
-                    font: 'Poppins, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#6b21a8',
-                    subColor: '#9333ea',
-                    mainFontSize: 70,
-                    subFontSize: 40,
-                    fontWeight: '700',
-                    fontStyle: 'normal',
-                    textAlign: 'center',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: 0,
-                    lineHeight: 1.3
-                }
-            },
-            {
-                id: 'forest-green',
-                name: 'Forest Green',
-                description: 'Natural & fresh',
-                colors: ['#065f46', '#065f46'],
+                id: 'creative-purple',
+                name: 'Creative Purple',
+                description: 'Design tool aesthetic',
+                colors: ['#581c87', '#a855f7'],
                 settings: {
                     font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#065f46',
-                    subColor: '#059669',
-                    mainFontSize: 68,
+                    colorMode: 'gradient',
+                    gradientColor1: '#581c87',
+                    gradientColor2: '#a855f7',
+                    gradientAngle: 135,
+                    mainFontSize: 78,
                     subFontSize: 38,
                     fontWeight: '700',
                     fontStyle: 'normal',
@@ -169,47 +349,53 @@ export class PresetsManager {
                     textShadow: false,
                     position: 'bottom',
                     textTransform: 'none',
-                    letterSpacing: -0.5,
-                    lineHeight: 1.3
+                    letterSpacing: -1,
+                    lineHeight: 1.2,
+                    textOpacity: 100
                 }
             },
+
+            // 📱 APP GRADIENT - Uber/Spotify Style
             {
-                id: 'gradient-blue-purple',
-                name: 'Blue Purple Gradient',
-                description: 'Modern gradient for white BG',
-                colors: ['#1e40af', '#7c3aed'],
+                id: 'app-gradient',
+                name: 'App Gradient',
+                description: 'Modern app brand style',
+                colors: ['#1e3a8a', '#8b5cf6'],
                 settings: {
                     font: 'Inter, sans-serif',
                     colorMode: 'gradient',
-                    gradientColor1: '#1e40af',
-                    gradientColor2: '#7c3aed',
-                    gradientAngle: 135,
-                    mainFontSize: 72,
-                    subFontSize: 42,
+                    gradientColor1: '#1e3a8a',
+                    gradientColor2: '#8b5cf6',
+                    gradientAngle: 120,
+                    mainFontSize: 84,
+                    subFontSize: 40,
                     fontWeight: '800',
                     fontStyle: 'normal',
                     textAlign: 'center',
                     textBorder: false,
                     textShadow: false,
-                    position: 'bottom',
+                    position: 'middle',
                     textTransform: 'none',
-                    letterSpacing: -1,
-                    lineHeight: 1.2
+                    letterSpacing: -1.5,
+                    lineHeight: 1.1,
+                    textOpacity: 100
                 }
             },
+
+            // 🏆 CHAMPION GOLD - Winner Style
             {
-                id: 'gradient-red-orange',
-                name: 'Red Orange Gradient',
-                description: 'Vibrant & energetic',
-                colors: ['#dc2626', '#ea580c'],
+                id: 'champion-gold',
+                name: 'Champion Gold',
+                description: 'Victory & achievement',
+                colors: ['#78350f', '#eab308'],
                 settings: {
-                    font: 'Inter, sans-serif',
+                    font: 'Montserrat, sans-serif',
                     colorMode: 'gradient',
-                    gradientColor1: '#dc2626',
-                    gradientColor2: '#ea580c',
-                    gradientAngle: 90,
-                    mainFontSize: 74,
-                    subFontSize: 44,
+                    gradientColor1: '#78350f',
+                    gradientColor2: '#eab308',
+                    gradientAngle: 135,
+                    mainFontSize: 86,
+                    subFontSize: 40,
                     fontWeight: '800',
                     fontStyle: 'normal',
                     textAlign: 'center',
@@ -217,46 +403,25 @@ export class PresetsManager {
                     textShadow: false,
                     position: 'middle',
                     textTransform: 'uppercase',
-                    letterSpacing: 0.5,
-                    lineHeight: 1.2
+                    letterSpacing: 2,
+                    lineHeight: 1.15,
+                    textOpacity: 100
                 }
             },
+
+            // 🌃 MIDNIGHT - Dark Sophisticated
             {
-                id: 'minimal-black',
-                name: 'Minimal Black',
-                description: 'Ultra clean & minimal',
-                colors: ['#000000', '#000000'],
+                id: 'midnight-dark',
+                name: 'Midnight',
+                description: 'Dark mode elegance',
+                colors: ['#0f172a', '#1e293b'],
                 settings: {
                     font: 'Inter, sans-serif',
                     colorMode: 'solid',
-                    mainColor: '#000000',
-                    subColor: '#666666',
-                    mainFontSize: 60,
-                    subFontSize: 34,
-                    fontWeight: '400',
-                    fontStyle: 'normal',
-                    textAlign: 'left',
-                    textBorder: false,
-                    textShadow: false,
-                    position: 'bottom',
-                    textTransform: 'none',
-                    letterSpacing: 0,
-                    lineHeight: 1.6
-                }
-            },
-            {
-                id: 'gradient-green-blue',
-                name: 'Green Blue Gradient',
-                description: 'Fresh & professional',
-                colors: ['#059669', '#0284c7'],
-                settings: {
-                    font: 'Inter, sans-serif',
-                    colorMode: 'gradient',
-                    gradientColor1: '#059669',
-                    gradientColor2: '#0284c7',
-                    gradientAngle: 120,
-                    mainFontSize: 70,
-                    subFontSize: 40,
+                    mainColor: '#0f172a',
+                    subColor: '#475569',
+                    mainFontSize: 74,
+                    subFontSize: 36,
                     fontWeight: '700',
                     fontStyle: 'normal',
                     textAlign: 'center',
@@ -264,31 +429,115 @@ export class PresetsManager {
                     textShadow: false,
                     position: 'bottom',
                     textTransform: 'none',
-                    letterSpacing: -0.5,
-                    lineHeight: 1.3
+                    letterSpacing: -0.8,
+                    lineHeight: 1.3,
+                    textOpacity: 100
                 }
             },
+
+            // 🎯 RETRO BOLD - 70s Modern
             {
-                id: 'orange-bold',
-                name: 'Orange Bold',
-                description: 'Energetic & warm',
-                colors: ['#ea580c', '#ea580c'],
+                id: 'retro-bold',
+                name: 'Retro Bold',
+                description: '70s aesthetic, modern execution',
+                colors: ['#dc2626', '#facc15'],
+                settings: {
+                    font: 'Poppins, sans-serif',
+                    colorMode: 'solid',
+                    mainColor: '#dc2626',
+                    subColor: '#ea580c',
+                    mainFontSize: 94,
+                    subFontSize: 44,
+                    fontWeight: '900',
+                    fontStyle: 'normal',
+                    textAlign: 'center',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'middle',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1.5,
+                    lineHeight: 1.0,
+                    textOpacity: 100
+                }
+            },
+
+            // 🌊 GRADIENT TEAL - Airbnb Style
+            {
+                id: 'airbnb-teal',
+                name: 'Airbnb Teal',
+                description: 'Travel & hospitality vibes',
+                colors: ['#0f766e', '#14b8a6'],
                 settings: {
                     font: 'Inter, sans-serif',
-                    colorMode: 'solid',
-                    mainColor: '#ea580c',
-                    subColor: '#c2410c',
-                    mainFontSize: 72,
-                    subFontSize: 42,
-                    fontWeight: '800',
+                    colorMode: 'gradient',
+                    gradientColor1: '#0f766e',
+                    gradientColor2: '#14b8a6',
+                    gradientAngle: 135,
+                    mainFontSize: 80,
+                    subFontSize: 38,
+                    fontWeight: '700',
                     fontStyle: 'normal',
                     textAlign: 'center',
                     textBorder: false,
                     textShadow: false,
                     position: 'bottom',
                     textTransform: 'none',
-                    letterSpacing: -0.5,
-                    lineHeight: 1.2
+                    letterSpacing: -1,
+                    lineHeight: 1.25,
+                    textOpacity: 100
+                }
+            },
+
+            // ⚡ ELECTRIC BLUE - Tesla Style
+            {
+                id: 'electric-blue',
+                name: 'Electric Blue',
+                description: 'Future tech aesthetic',
+                colors: ['#1e40af', '#3b82f6'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'gradient',
+                    gradientColor1: '#1e40af',
+                    gradientColor2: '#3b82f6',
+                    gradientAngle: 90,
+                    mainFontSize: 90,
+                    subFontSize: 42,
+                    fontWeight: '800',
+                    fontStyle: 'normal',
+                    textAlign: 'center',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'middle',
+                    textTransform: 'none',
+                    letterSpacing: -1.8,
+                    lineHeight: 1.05,
+                    textOpacity: 100
+                }
+            },
+
+            // 🖤 ULTRA MINIMAL - Japanese Zen
+            {
+                id: 'zen-minimal',
+                name: 'Zen Minimal',
+                description: 'Japanese minimalism perfection',
+                colors: ['#171717', '#171717'],
+                settings: {
+                    font: 'Inter, sans-serif',
+                    colorMode: 'solid',
+                    mainColor: '#171717',
+                    subColor: '#737373',
+                    mainFontSize: 64,
+                    subFontSize: 32,
+                    fontWeight: '300',
+                    fontStyle: 'normal',
+                    textAlign: 'left',
+                    textBorder: false,
+                    textShadow: false,
+                    position: 'bottom',
+                    textTransform: 'none',
+                    letterSpacing: 0.5,
+                    lineHeight: 1.6,
+                    textOpacity: 100
                 }
             }
         ];
