@@ -7,6 +7,7 @@ import { PreviewPanel } from './modules/previewPanel.js';
 import { MobileHandler } from './modules/mobileHandler.js';
 import { PresetsManager } from './modules/presets.js';
 import { AdvancedFeatures } from './modules/advancedFeatures.js';
+import { MarkdownUI, setupMarkdownKeyboardShortcuts } from './modules/markdownUI.js';
 import { utils } from './modules/utils.js';
 
 class ImageTextApp {
@@ -30,6 +31,7 @@ class ImageTextApp {
             this.components.mobile = new MobileHandler();
             this.components.presets = new PresetsManager(this.DOM, this.components.controls);
             this.components.advanced = new AdvancedFeatures(this);
+            this.components.markdown = new MarkdownUI(this.DOM);
 
             this.setupGlobalMethods();
 
@@ -40,13 +42,16 @@ class ImageTextApp {
             this.setupEventListeners();
             this.loadSavedState();
 
+            // Setup markdown keyboard shortcuts
+            setupMarkdownKeyboardShortcuts(this.components.markdown);
+
             this.initialized = true;
-            console.log('Image Text App Pro initialized successfully');
+            console.log('Image Text App Pro with Markdown Support initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.advanced) {
-                    this.components.advanced.showToast('Welcome to Image Text Generator Pro! Press ? for shortcuts.', 'info', 5000);
+                    this.components.advanced.showToast('Welcome to Image Text Generator Pro! Now with full Markdown support 📝', 'info', 5000);
                 }
             }, 500);
 
