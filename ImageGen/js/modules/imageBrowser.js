@@ -146,7 +146,7 @@ export class ImageBrowser {
         return item;
     }
 
-    async selectImage(image, itemElement) {
+    async selectImage(image, itemElement, showToast = true) {
         try {
             // Load image as File object
             const response = await fetch(image.path);
@@ -156,35 +156,37 @@ export class ImageBrowser {
             // Add to state
             await this.addImageToState(file);
 
-            // Visual feedback
-            itemElement.classList.add('selected');
-            const btn = itemElement.querySelector('.gallery-select-btn');
-            if (btn) {
-                btn.innerHTML = `
-                    <svg viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke="currentColor" stroke-width="2" fill="none" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    Selected
-                `;
-                btn.classList.add('selected');
-            }
-
-            // Auto-deselect after animation
-            setTimeout(() => {
-                itemElement.classList.remove('selected');
+            // Visual feedback (only if itemElement is provided)
+            if (itemElement) {
+                itemElement.classList.add('selected');
+                const btn = itemElement.querySelector('.gallery-select-btn');
                 if (btn) {
                     btn.innerHTML = `
                         <svg viewBox="0 0 24 24" width="20" height="20">
                             <path stroke="currentColor" stroke-width="2" fill="none" d="M5 13l4 4L19 7"/>
                         </svg>
-                        Select
+                        Selected
                     `;
-                    btn.classList.remove('selected');
+                    btn.classList.add('selected');
                 }
-            }, 1500);
 
-            // Show toast
-            if (window.imageTextApp?.components?.advanced) {
+                // Auto-deselect after animation
+                setTimeout(() => {
+                    itemElement.classList.remove('selected');
+                    if (btn) {
+                        btn.innerHTML = `
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path stroke="currentColor" stroke-width="2" fill="none" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Select
+                        `;
+                        btn.classList.remove('selected');
+                    }
+                }, 1500);
+            }
+
+            // Show toast only if requested (avoid spam when selecting multiple)
+            if (showToast && window.imageTextApp?.components?.advanced) {
                 window.imageTextApp.components.advanced.showToast(`Added ${image.name}`, 'success', 2000);
             }
 
@@ -298,7 +300,7 @@ export class ImageBrowser {
 
         for (const image of selected) {
             try {
-                await this.selectImage(image, null);
+                await this.selectImage(image, null, false); // Don't show individual toasts
             } catch (error) {
                 console.error('Error selecting random image:', error);
             }
@@ -318,7 +320,7 @@ export class ImageBrowser {
 
         for (const image of this.availableImages) {
             try {
-                await this.selectImage(image, null);
+                await this.selectImage(image, null, false); // Don't show individual toasts
             } catch (error) {
                 console.error('Error selecting image:', error);
             }
