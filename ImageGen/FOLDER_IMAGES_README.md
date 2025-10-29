@@ -1,162 +1,76 @@
-# 📁 Folder Images Feature
+# 📁 Folder Images Feature - Simple Guide
 
-## Overview
+## Quick Start
 
-The Image Text Generator now supports browsing and selecting images from a local `images/` folder, in addition to the traditional file upload method.
+### 1. Add Your Images
 
-## Features
-
-- ✨ Browse images from the `images/` folder
-- 🎲 Random selection (1 or 3 images)
-- ✅ Select all images at once
-- 👁️ Preview images before selection
-- 🖼️ Beautiful gallery grid layout
-
-## Setup
-
-### 1. Add Images to the Folder
-
-Place your background images in the `ImageGen/images/` folder:
+Put your background images in the `images/` folder:
 
 ```bash
-cd ImageGen
-mkdir -p images
-# Add your images (.jpg, .png, .gif, .webp, etc.)
-cp /path/to/your/images/*.jpg images/
+cd ImageGen/images
+# Copy your images here
+cp /path/to/your/backgrounds/* .
 ```
 
-### 2. Generate Images List
+### 2. Update Config
 
-Run the Python script to scan and generate the images list:
+Edit `images/config.json` and add your image names:
 
-```bash
-cd ImageGen
-python3 generate-images-list.py
+```json
+{
+  "images": [
+    {
+      "name": "My Background 1",
+      "path": "images/my-bg-1.jpg"
+    },
+    {
+      "name": "My Background 2",
+      "path": "images/my-bg-2.png"
+    },
+    {
+      "name": "My Background 3",
+      "path": "images/my-bg-3.jpg"
+    }
+  ]
+}
 ```
 
-This will:
-- Scan the `images/` folder
-- Find all image files
-- Generate `js/modules/images-list.js` with the list
+### 3. Refresh & Use
 
-**Output example:**
-```
-🖼️  Image List Generator
-==================================================
-📁 Scanning: images/
-📝 Output:   js/modules/images-list.js
-==================================================
-
-  📷 background1.jpg (2.3 MB)
-  📷 background2.png (1.8 MB)
-  📷 sample1.jpg (3.1 MB)
-
-✅ Successfully generated js/modules/images-list.js
-📊 Total: 3 images, 7.2 MB
-```
-
-### 3. Refresh the Application
-
-Refresh your browser to see the new images in the gallery.
+Refresh your browser and you'll see the images in the **"Browse Images from Folder"** section!
 
 ## Usage
 
-### Browse Images
+### Browse & Select
+- **Gallery View**: See all your images in a beautiful grid
+- **Click to Preview**: View full-size before selecting
+- **Hover to Select**: Quick select button on hover
 
-1. Open the **"Browse Images from Folder"** section
-2. You'll see a gallery grid of all available images
-3. Hover over an image to see its name and select button
+### Quick Actions
+- **Random 1 Image**: Get 1 random background
+- **Random 3 Images**: Get 3 random backgrounds
+- **Select All**: Add all images at once
 
-### Random Selection
+## Config File Format
 
-- **Random 1 Image**: Select 1 random image
-- **Random 3 Images**: Select 3 random images
+The `images/config.json` file is simple:
 
-### Select All
-
-Click **"Select All"** to add all images from the folder to your project.
-
-### Preview Images
-
-- Click on any image thumbnail to open a preview modal
-- View the full-size image
-- Select directly from the preview
-
-## Automation
-
-### Auto-regenerate Images List
-
-You can set up a watch script to automatically regenerate the list when images change:
-
-**Option 1: Using Python watchdog**
-
-```bash
-pip install watchdog
-python3 -c "
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-import subprocess
-import time
-
-class ImageHandler(FileSystemEventHandler):
-    def on_any_event(self, event):
-        if event.src_path.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')):
-            print('Regenerating images list...')
-            subprocess.run(['python3', 'generate-images-list.py'])
-
-observer = Observer()
-observer.schedule(ImageHandler(), 'images', recursive=False)
-observer.start()
-print('Watching images/ folder...')
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    observer.stop()
-observer.join()
-"
-```
-
-**Option 2: Using Node.js chokidar**
-
-```javascript
-// watch-images.js
-const chokidar = require('chokidar');
-const { exec } = require('child_process');
-
-chokidar.watch('images/**/*.{jpg,jpeg,png,gif,webp}').on('all', (event, path) => {
-  console.log(`Detected ${event} in ${path}`);
-  exec('python3 generate-images-list.py', (error, stdout) => {
-    if (error) {
-      console.error('Error:', error);
-      return;
+```json
+{
+  "images": [
+    {
+      "name": "Display Name",
+      "path": "images/filename.jpg"
     }
-    console.log(stdout);
-  });
-});
-
-console.log('Watching images/ folder...');
+  ]
+}
 ```
 
-## File Structure
+**Fields:**
+- `name`: The display name shown in gallery (can be anything)
+- `path`: Path to the image file (always starts with `images/`)
 
-```
-ImageGen/
-├── images/                          # Your image files
-│   ├── background1.jpg
-│   ├── background2.png
-│   └── sample1.jpg
-├── generate-images-list.py          # Script to generate images list
-├── js/
-│   └── modules/
-│       ├── imageBrowser.js          # Image browser module
-│       └── images-list.js           # Auto-generated images list
-├── css/
-│   └── gallery.css                  # Gallery styles
-└── imggen.html                      # Main HTML file
-```
-
-## Supported Image Formats
+## Supported Formats
 
 - `.jpg` / `.jpeg`
 - `.png`
@@ -165,69 +79,149 @@ ImageGen/
 - `.bmp`
 - `.svg`
 
+## Examples
+
+### Example 1: Simple Config
+
+```json
+{
+  "images": [
+    {"name": "Beach", "path": "images/beach.jpg"},
+    {"name": "Mountain", "path": "images/mountain.png"},
+    {"name": "City", "path": "images/city.jpg"}
+  ]
+}
+```
+
+### Example 2: Organized Names
+
+```json
+{
+  "images": [
+    {"name": "Nature - Forest", "path": "images/forest.jpg"},
+    {"name": "Nature - Ocean", "path": "images/ocean.jpg"},
+    {"name": "Urban - Street", "path": "images/street.jpg"},
+    {"name": "Urban - Building", "path": "images/building.jpg"}
+  ]
+}
+```
+
+### Example 3: Many Images
+
+```json
+{
+  "images": [
+    {"name": "BG 1", "path": "images/bg1.jpg"},
+    {"name": "BG 2", "path": "images/bg2.jpg"},
+    {"name": "BG 3", "path": "images/bg3.jpg"},
+    {"name": "BG 4", "path": "images/bg4.jpg"},
+    {"name": "BG 5", "path": "images/bg5.jpg"}
+  ]
+}
+```
+
+## File Structure
+
+```
+ImageGen/
+├── images/                    # Your image files
+│   ├── config.json           # Config file (edit this!)
+│   ├── beach.jpg
+│   ├── mountain.png
+│   └── city.jpg
+├── imggen.html               # Main app
+└── js/
+    └── modules/
+        └── imageBrowser.js   # Browser module
+```
+
 ## Tips
 
-1. **Organize by categories**: Create subfolders in `images/` and modify the script to scan recursively
-2. **Optimize images**: Use smaller file sizes for better performance
-3. **Naming convention**: Use descriptive names for easy identification
-4. **Preview images**: Always preview before selecting to ensure quality
+✅ **DO:**
+- Use descriptive names for easy identification
+- Keep file sizes reasonable (< 5MB per image)
+- Use consistent naming convention
+- Organize by category in the name field
+
+❌ **DON'T:**
+- Don't use special characters in filenames
+- Don't put images in subfolders (keep them flat in `images/`)
+- Don't forget to update config.json after adding new images
 
 ## Troubleshooting
 
-### No images showing
+### Images not showing?
 
-1. Check if images exist in `ImageGen/images/` folder
-2. Run `python3 generate-images-list.py`
-3. Check browser console for errors
-4. Refresh the page
+1. ✅ Check images are in `ImageGen/images/` folder
+2. ✅ Check `images/config.json` exists and is valid JSON
+3. ✅ Check file paths match exactly (case-sensitive!)
+4. ✅ Refresh the browser (Ctrl+F5)
 
-### Images not loading
+### Image fails to load?
 
-1. Verify image paths in `js/modules/images-list.js`
-2. Check file permissions
-3. Make sure images are accessible via HTTP (not blocked by CORS)
+1. ✅ Check file extension matches actual file type
+2. ✅ Check image is not corrupted
+3. ✅ Check file permissions
+4. ✅ Open browser console to see error messages
 
-### Script errors
+### Syntax error in JSON?
 
-```bash
-# Make sure Python 3 is installed
-python3 --version
+Use a JSON validator like [jsonlint.com](https://jsonlint.com) to check your config file.
 
-# Run the script with verbose output
-python3 generate-images-list.py
+Common mistakes:
+- Missing comma between items
+- Extra comma after last item
+- Missing quotes around strings
+- Wrong brackets `[]` vs `{}`
+
+## Workflow
+
+**Old way (upload every time):**
+```
+Upload → Select → Process → Repeat
 ```
 
-## Advanced Usage
+**New way (folder + random):**
+```
+Setup once → Click "Random" → Done! ✨
+```
 
-### Custom Image Sources
+## Advanced Tips
 
-You can modify `imageBrowser.js` to load images from:
-- External URLs
-- CDN services
-- Backend API endpoints
+### Quick Config Generator
 
-### Filtering and Search
+If you have many images, use this bash one-liner to generate the JSON:
 
-Add custom filtering logic to show only:
-- Specific categories
-- Images by date
-- Images by size
-- Custom metadata
+```bash
+cd ImageGen/images
+for img in *.{jpg,png,gif}; do
+  [ -f "$img" ] && echo "    {\"name\": \"$img\", \"path\": \"images/$img\"},"
+done
+```
 
-## Future Enhancements
+Copy the output to your config.json (don't forget to remove last comma and wrap in proper JSON structure).
 
-- [ ] Search and filter images
-- [ ] Image categories/tags
-- [ ] Drag and drop to reorder
-- [ ] Bulk image upload to folder
-- [ ] Image metadata display (size, dimensions)
-- [ ] Lazy loading for large galleries
-- [ ] Virtual scrolling for performance
+### Organize by Categories
+
+```json
+{
+  "images": [
+    {"name": "🌅 Sunrise", "path": "images/sunrise.jpg"},
+    {"name": "🌅 Sunset", "path": "images/sunset.jpg"},
+    {"name": "🏙️ City Day", "path": "images/city-day.jpg"},
+    {"name": "🏙️ City Night", "path": "images/city-night.jpg"},
+    {"name": "🌊 Ocean", "path": "images/ocean.jpg"}
+  ]
+}
+```
 
 ## Support
 
-For issues or questions, please open an issue on the GitHub repository.
+Having issues? Check:
+1. Browser console (F12) for error messages
+2. Network tab to see if config.json loads
+3. File paths are correct
 
 ---
 
-**Happy creating! 🎨✨**
+**That's it! Simple and easy to use. Happy creating! 🎨✨**

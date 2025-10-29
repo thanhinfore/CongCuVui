@@ -1,0 +1,28 @@
+{
+  "images": [
+    {
+      "name": "Sample 1",
+      "path": "images/sample1.jpg"
+    },
+    {
+      "name": "Sample 2",
+      "path": "images/sample2.jpg"
+    },
+    {
+      "name": "Sample 3",
+      "path": "images/sample3.jpg"
+    }
+  ],
+  "instructions": {
+    "howToUse": [
+      "1. Add your images to ImageGen/images/ folder",
+      "2. Update this JSON file with image names and paths",
+      "3. Refresh the browser to see changes"
+    ],
+    "example": {
+      "name": "Your Image Name",
+      "path": "images/your-image.jpg"
+    },
+    "supportedFormats": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]
+  }
+}
