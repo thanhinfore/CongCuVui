@@ -27,11 +27,15 @@ export class ImageBrowser {
 
     async loadImagesList() {
         try {
-            // Import the images list configuration
-            const { imagesList } = await import('./images-list.js');
-            this.availableImages = imagesList;
+            // Load from JSON config file
+            const response = await fetch('images/config.json');
+            if (!response.ok) {
+                throw new Error('Failed to load config.json');
+            }
+            const config = await response.json();
+            this.availableImages = config.images || [];
         } catch (error) {
-            console.warn('No images-list.js found, using fallback', error);
+            console.warn('No images/config.json found, using fallback', error);
             // Fallback: try to load some common image names
             this.availableImages = this.getFallbackImagesList();
         }
@@ -63,8 +67,8 @@ export class ImageBrowser {
                         <path stroke="currentColor" stroke-width="2" fill="none" d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2z"/>
                         <path stroke="currentColor" stroke-width="2" fill="none" d="M3 16l5-5 6 6 5-5"/>
                     </svg>
-                    <p>No images found in the images folder</p>
-                    <small>Add images to <code>ImageGen/images/</code> and update <code>images-list.js</code></small>
+                    <p>No images configured</p>
+                    <small>Add images to <code>ImageGen/images/</code> and update <code>images/config.json</code></small>
                 </div>
             `;
             return;
