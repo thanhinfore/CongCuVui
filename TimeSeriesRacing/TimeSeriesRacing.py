@@ -1439,9 +1439,9 @@ class TimeSeriesRacing:
                             # Call our v4.0 overlay system
                             self._create_v4_overlay(ax, values_dict, ranks_dict, period_val)
 
-                            # Return False to hide the default period summary
-                            # Our overlay panels handle all the information display
-                            return False
+                            # FIXED: Return None instead of False to hide default period summary
+                            # bar_chart_race expects None or dict, not False
+                            return None
 
                         except Exception as e:
                             # Fallback to simple display if error
@@ -1461,7 +1461,8 @@ class TimeSeriesRacing:
                                     'weight': 'bold'
                                 }
                             except:
-                                return False  # Return False instead of None
+                                # FIXED: Return None instead of False
+                                return None
 
                     bcr.bar_chart_race(
                         df=self.df_wide,
