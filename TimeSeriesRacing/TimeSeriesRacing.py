@@ -810,16 +810,32 @@ class TimeSeriesRacing:
         avg_value = avg_value if np.isfinite(avg_value) else 0
         gap = gap if np.isfinite(gap) else 0
 
-        # Panel position (top-right corner)
+        # V5.1 AESTHETIC: Panel position with spacing system
+        spacing = self._get_spacing('md') / 1000  # Convert to axis units
         panel_width = 0.25
-        panel_height = 0.18
+        panel_height = 0.20  # Slightly taller for better spacing
         panel_x = 0.73
-        panel_y = 0.80
+        panel_y = 0.78
 
-        # Draw panel background
+        # V5.1 AESTHETIC: Draw panel background with shadow effect
+        if self.enable_shadows:
+            # Shadow layer
+            shadow_offset = 0.005
+            shadow_panel = FancyBboxPatch(
+                (panel_x + shadow_offset, panel_y - shadow_offset), panel_width, panel_height,
+                boxstyle="round,pad=0.01",
+                transform=ax.transAxes,
+                facecolor='black',
+                alpha=0.15,
+                linewidth=0,
+                zorder=999
+            )
+            ax.add_patch(shadow_panel)
+
+        # Main panel
         panel = FancyBboxPatch(
             (panel_x, panel_y), panel_width, panel_height,
-            boxstyle="round,pad=0.01",
+            boxstyle="round,pad=0.015",  # More padding
             transform=ax.transAxes,
             facecolor=panel_bg,
             edgecolor=text_color,
@@ -829,61 +845,106 @@ class TimeSeriesRacing:
         )
         ax.add_patch(panel)
 
-        # Add statistics text
-        stats_text = f"📊 STATISTICS\n"
-        stats_text += f"Total: {total_value:,.0f}\n"
-        stats_text += f"Leader: {leader_value:,.0f}\n"
-        stats_text += f"Gap: {gap:,.0f}\n"
-        stats_text += f"Average: {avg_value:,.0f}"
+        # V5.1 AESTHETIC: Typography hierarchy for panel
+        heading_size = self._get_font_size('body')
+        value_size = self._get_font_size('caption')
+        font_family = self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
 
-        ax.text(panel_x + 0.125, panel_y + 0.09, stats_text,
+        # Panel title
+        title_y = panel_y + panel_height - 0.03
+        title_obj = ax.text(panel_x + 0.125, title_y, "📊 STATISTICS",
                 transform=ax.transAxes,
-                fontsize=9,
-                ha='center', va='center',
+                fontsize=heading_size,
+                ha='center', va='top',
                 color=text_color,
                 weight='bold',
-                family=self.font_family,
-                zorder=1001)
+                family=font_family,
+                zorder=1002)
+        self._add_text_shadow(title_obj, 'low')
+
+        # Statistics values with hierarchy
+        stats = [
+            ("Total", total_value),
+            ("Leader", leader_value),
+            ("Gap", gap),
+            ("Average", avg_value)
+        ]
+
+        y_start = title_y - 0.04
+        line_spacing = 0.03
+
+        for i, (label, value) in enumerate(stats):
+            y_pos = y_start - (i * line_spacing)
+            # Label + Value on same line with different weights
+            text_obj = ax.text(panel_x + 0.125, y_pos,
+                    f"{label}: {value:,.0f}",
+                    transform=ax.transAxes,
+                    fontsize=value_size,
+                    ha='center', va='center',
+                    color=text_color,
+                    weight='normal',
+                    family=font_family,
+                    zorder=1001)
+            self._add_text_shadow(text_obj, 'low')
 
     def _add_progress_bar(self, ax, text_color):
-        """Add timeline progress bar at bottom (V4.0 ULTIMATE Feature)"""
+        """Add timeline progress bar at bottom (V4.0 ULTIMATE Feature) - V5.1 AESTHETIC"""
         progress = self.period_index / max(1, self._total_periods - 1)
 
-        # Progress bar position (bottom of chart)
-        bar_height = 0.02
-        bar_y = 0.02
-        bar_width = 0.96
-        bar_x = 0.02
+        # V5.1 AESTHETIC: Progress bar position with spacing
+        spacing = self._get_spacing('sm') / 1000
+        bar_height = 0.025  # Slightly taller for better visibility
+        bar_y = 0.02 + spacing
+        bar_width = 0.94
+        bar_x = 0.03
 
-        # Background bar
+        # V5.1 AESTHETIC: Shadow effect on progress bar
+        if self.enable_shadows:
+            shadow_offset = 0.003
+            shadow_bar = Rectangle(
+                (bar_x + shadow_offset, bar_y - shadow_offset), bar_width, bar_height,
+                transform=ax.transAxes,
+                facecolor='black',
+                alpha=0.1,
+                zorder=999
+            )
+            ax.add_patch(shadow_bar)
+
+        # Background bar with rounded corners effect
         bg_bar = Rectangle(
             (bar_x, bar_y), bar_width, bar_height,
             transform=ax.transAxes,
-            facecolor='#CCCCCC',
-            alpha=0.5,
+            facecolor='#CCCCCC' if self.theme == 'light' else '#444444',
+            alpha=0.4,
             zorder=1000
         )
         ax.add_patch(bg_bar)
 
-        # Progress bar
+        # Progress bar with theme-aware color
+        progress_color = '#4CAF50' if self.theme == 'light' else '#66BB6A'
         progress_bar = Rectangle(
             (bar_x, bar_y), bar_width * progress, bar_height,
             transform=ax.transAxes,
-            facecolor='#4CAF50',
-            alpha=0.9,
+            facecolor=progress_color,
+            alpha=0.95,
             zorder=1001
         )
         ax.add_patch(progress_bar)
 
-        # Progress text
+        # V5.1 AESTHETIC: Progress text with typography
+        caption_size = self._get_font_size('caption')
+        font_family = self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
         progress_text = f"{progress*100:.0f}%"
-        ax.text(bar_x + bar_width/2, bar_y + bar_height/2, progress_text,
+        text_obj = ax.text(bar_x + bar_width/2, bar_y + bar_height/2, progress_text,
                 transform=ax.transAxes,
-                fontsize=7,
+                fontsize=caption_size,
                 ha='center', va='center',
                 color='white',
                 weight='bold',
+                family=font_family,
                 zorder=1002)
+        # Subtle shadow on percentage text
+        self._add_text_shadow(text_obj, 'low')
 
     def _add_rank_indicators(self, ax, current_ranks, text_color):
         """Add rank change indicators (arrows) next to entity names (V4.0 ULTIMATE Feature)"""
@@ -892,26 +953,36 @@ class TimeSeriesRacing:
         pass  # Implementation is integrated into the main rendering
 
     def _add_watermark(self, ax, text_color):
-        """Add custom watermark/branding (V4.0 ULTIMATE Feature)"""
+        """Add custom watermark/branding (V4.0 ULTIMATE Feature) - V5.1 AESTHETIC"""
+        # V5.1 AESTHETIC: Spacing-aware positions
+        spacing = self._get_spacing('sm') / 1000
         positions = {
-            'bottom-right': (0.98, 0.06),
-            'bottom-left': (0.02, 0.06),
-            'top-right': (0.98, 0.94),
-            'top-left': (0.02, 0.94)
+            'bottom-right': (0.98 - spacing, 0.06 + spacing),
+            'bottom-left': (0.02 + spacing, 0.06 + spacing),
+            'top-right': (0.98 - spacing, 0.94 - spacing),
+            'top-left': (0.02 + spacing, 0.94 - spacing)
         }
 
-        x, y = positions.get(self.watermark_position, (0.98, 0.06))
+        x, y = positions.get(self.watermark_position, (0.98 - spacing, 0.06 + spacing))
         ha = 'right' if 'right' in self.watermark_position else 'left'
 
-        ax.text(x, y, self.watermark_text,
+        # V5.1 AESTHETIC: Typography hierarchy for watermark
+        caption_size = self._get_font_size('caption')
+        font_family = self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+
+        text_obj = ax.text(x, y, self.watermark_text,
                 transform=ax.transAxes,
-                fontsize=8,
+                fontsize=caption_size,
                 ha=ha, va='bottom',
                 color=text_color,
-                alpha=0.6,
+                alpha=0.5,  # More subtle
                 style='italic',
-                family=self.font_family,
+                family=font_family,
                 zorder=1003)
+
+        # V5.1 AESTHETIC: Subtle shadow on watermark
+        if self.enable_shadows:
+            self._add_text_shadow(text_obj, 'low')
 
     def _add_event_annotation(self, ax, event_text, text_color):
         """Add event annotation for key moments (V4.0 ULTIMATE Feature)"""
@@ -1454,8 +1525,17 @@ class TimeSeriesRacing:
             sorted_data = current_data.sort_values(ascending=False)
             top_data = sorted_data.head(self.top_n)
 
+            # V5.1 AESTHETIC: Get typography sizes
+            heading_size = self._get_font_size('heading')
+            body_size = self._get_font_size('body')
+            caption_size = self._get_font_size('caption')
+            font_family = self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+
             for ax, chart_type in zip(axes, self.combo_charts):
                 ax.clear()
+
+                # V5.1 AESTHETIC: Apply aesthetic to each subplot
+                self._apply_aesthetic_to_axis(ax)
 
                 try:
                     if chart_type == 'bar':
@@ -1464,9 +1544,12 @@ class TimeSeriesRacing:
                                color=colors_list[:len(top_data)],
                                alpha=self.bar_alpha)
                         ax.set_yticks(range(len(top_data)))
-                        ax.set_yticklabels(top_data.index, fontsize=self.bar_label_font_size - 2)
+                        ax.set_yticklabels(top_data.index, fontsize=body_size, fontfamily=font_family)
                         ax.invert_yaxis()
-                        ax.set_title('Bar Chart', fontsize=self.bar_label_font_size)
+                        # V5.1 AESTHETIC: Subtitle for chart type
+                        title_obj = ax.set_title('Bar Chart', fontsize=heading_size, fontweight='bold',
+                                                fontfamily=font_family, pad=self._get_spacing('sm'))
+                        self._add_text_shadow(title_obj, 'low')
 
                     elif chart_type == 'column':
                         # Vertical bar chart
@@ -1475,8 +1558,10 @@ class TimeSeriesRacing:
                               alpha=self.bar_alpha)
                         ax.set_xticks(range(len(top_data)))
                         ax.set_xticklabels(top_data.index, rotation=45, ha='right',
-                                          fontsize=self.bar_label_font_size - 2)
-                        ax.set_title('Column Chart', fontsize=self.bar_label_font_size)
+                                          fontsize=body_size, fontfamily=font_family)
+                        title_obj = ax.set_title('Column Chart', fontsize=heading_size, fontweight='bold',
+                                                fontfamily=font_family, pad=self._get_spacing('sm'))
+                        self._add_text_shadow(title_obj, 'low')
 
                     elif chart_type == 'line':
                         # Line chart (cumulative)
@@ -1484,10 +1569,13 @@ class TimeSeriesRacing:
                         for i, entity in enumerate(top_data.index):
                             ax.plot(data_slice.index, data_slice[entity],
                                    color=colors_list[i % len(colors_list)],
-                                   linewidth=2)
-                        ax.set_title('Line Chart', fontsize=self.bar_label_font_size)
+                                   linewidth=2.5, alpha=0.9)
+                        title_obj = ax.set_title('Line Chart', fontsize=heading_size, fontweight='bold',
+                                                fontfamily=font_family, pad=self._get_spacing('sm'))
+                        self._add_text_shadow(title_obj, 'low')
                         if len(top_data) <= 5:  # Only show legend if not too many
-                            ax.legend(top_data.index, fontsize=7, loc='upper left')
+                            ax.legend(top_data.index, fontsize=caption_size, loc='upper left',
+                                    framealpha=0.9, edgecolor='none')
 
                     elif chart_type == 'pie':
                         # Pie chart
@@ -1495,18 +1583,26 @@ class TimeSeriesRacing:
                         if len(pie_data) > 0 and pie_data.sum() > 0:
                             ax.pie(pie_data.values, labels=pie_data.index,
                                   colors=colors_list[:len(pie_data)],
-                                  autopct='%1.1f%%', textprops={'fontsize': 8})
-                        ax.set_title('Pie Chart', fontsize=self.bar_label_font_size)
-
-                    ax.grid(True, alpha=0.3)
+                                  autopct='%1.1f%%',
+                                  textprops={'fontsize': caption_size, 'fontfamily': font_family})
+                        title_obj = ax.set_title('Pie Chart', fontsize=heading_size, fontweight='bold',
+                                                fontfamily=font_family, pad=self._get_spacing('sm'))
+                        self._add_text_shadow(title_obj, 'low')
 
                 except Exception as e:
                     print(f"  ⚠️  Lỗi khi vẽ {chart_type} chart: {e}")
 
-            # Main title
-            fig.suptitle(f"{self.title} - Period: {period_val}",
-                        fontsize=self.title_font_size + 4,
-                        weight='bold', y=0.98)
+            # V5.1 AESTHETIC: Main title with hierarchy and shadow
+            title_size = self._get_font_size('title', self.title_font_size)
+            spacing = self._get_spacing(self.title_spacing)
+            suptitle_obj = fig.suptitle(
+                f"{self.title} - Period: {period_val}",
+                fontsize=title_size,
+                fontweight='bold',
+                fontfamily=font_family,
+                y=0.98
+            )
+            self._add_text_shadow(suptitle_obj, 'medium')
 
         # Create animation with interpolated frames
         interval_per_frame = self.period_length / self.steps_per_period
