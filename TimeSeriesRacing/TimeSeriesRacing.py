@@ -841,13 +841,22 @@ class TimeSeriesRacing:
             print(f"  ⚠️  Lỗi khi tính cumsum - đang sử dụng dữ liệu gốc: {e}")
             df_cumsum = self.df_wide
 
+        # FIXED: Calculate total frames with interpolation for smooth animation
+        # Total frames = periods * steps_per_period (like bar_chart_race does)
+        n_periods = len(self.df_wide)
+        total_frames = n_periods * self.steps_per_period
+
         # Animation function with error handling
         def animate(frame):
             try:
                 ax.clear()
 
-                # Get data up to current frame
-                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                # FIXED: Map frame to period with interpolation
+                # frame goes from 0 to total_frames-1
+                # We want to map this to period 0 to n_periods-1
+                period_float = frame / self.steps_per_period
+                current_idx = int(min(period_float, n_periods - 1))
+
                 data_slice = df_cumsum.iloc[:current_idx+1]
 
                 if len(data_slice) == 0:
@@ -908,13 +917,14 @@ class TimeSeriesRacing:
                 print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
                 # Continue animation even if one frame fails
 
-        # Create animation
-        frames = len(self.df_wide)
-        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+        # Create animation with interpolated frames
+        # FIXED: Use total_frames instead of just periods
+        # Interval is now per-frame, not per-period
+        interval_per_frame = self.period_length / self.steps_per_period
 
         # UPGRADED: Add blit=False for better compatibility
-        anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=interval_ms,
+        anim = FuncAnimation(fig, animate, frames=total_frames,
+                           interval=interval_per_frame,
                            repeat=False,
                            blit=False)
 
@@ -937,13 +947,19 @@ class TimeSeriesRacing:
         # Get colors
         colors_list = ColorPalettes.get_palette(self.palette)
 
+        # FIXED: Calculate total frames with interpolation
+        n_periods = len(self.df_wide)
+        total_frames = n_periods * self.steps_per_period
+
         # Animation function with error handling
         def animate(frame):
             try:
                 ax.clear()
 
-                # Get current period data
-                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                # FIXED: Map frame to period with interpolation
+                period_float = frame / self.steps_per_period
+                current_idx = int(min(period_float, n_periods - 1))
+
                 if current_idx >= len(self.df_wide):
                     return
 
@@ -998,13 +1014,12 @@ class TimeSeriesRacing:
                 print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
                 # Continue animation even if one frame fails
 
-        # Create animation
-        frames = len(self.df_wide)
-        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+        # Create animation with interpolated frames
+        interval_per_frame = self.period_length / self.steps_per_period
 
         # UPGRADED: Add blit=False for better compatibility
-        anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=interval_ms,
+        anim = FuncAnimation(fig, animate, frames=total_frames,
+                           interval=interval_per_frame,
                            repeat=False,
                            blit=False)
 
@@ -1027,13 +1042,19 @@ class TimeSeriesRacing:
         # Get colors
         colors_list = ColorPalettes.get_palette(self.palette)
 
+        # FIXED: Calculate total frames with interpolation
+        n_periods = len(self.df_wide)
+        total_frames = n_periods * self.steps_per_period
+
         # Animation function with error handling
         def animate(frame):
             try:
                 ax.clear()
 
-                # Get current period data
-                current_idx = int(min(frame, len(self.df_wide) - 1))  # UPGRADED: Bound check
+                # FIXED: Map frame to period with interpolation
+                period_float = frame / self.steps_per_period
+                current_idx = int(min(period_float, n_periods - 1))
+
                 if current_idx >= len(self.df_wide):
                     return
 
@@ -1101,20 +1122,19 @@ class TimeSeriesRacing:
                 print(f"  ⚠️  Lỗi trong frame {frame}: {e}")
                 # Continue animation even if one frame fails
 
-        # Create animation
-        frames = len(self.df_wide)
-        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
+        # Create animation with interpolated frames
+        interval_per_frame = self.period_length / self.steps_per_period
 
         # UPGRADED: Add blit=False for better compatibility
-        anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=interval_ms,
+        anim = FuncAnimation(fig, animate, frames=total_frames,
+                           interval=interval_per_frame,
                            repeat=False,
                            blit=False)
 
         return fig, anim
 
     def _create_combo_chart_race(self):
-        """V5.0 - Create combo chart with multiple chart types"""
+        """V5.0 - Create combo chart with multiple chart types - FIXED timing"""
         print(f"\n🎨 Creating COMBO CHART RACE with {', '.join(self.combo_charts)}...")
 
         # Setup figure with subplots
@@ -1124,6 +1144,9 @@ class TimeSeriesRacing:
             base_figsize = (12, 6.75)
 
         n_charts = len(self.combo_charts)
+
+        # UPGRADED: Clean up before creating figure
+        plt.close('all')
 
         if self.combo_layout == 'horizontal':
             fig = plt.figure(figsize=(base_figsize[0] * n_charts, base_figsize[1]), dpi=self.dpi)
@@ -1150,9 +1173,16 @@ class TimeSeriesRacing:
         # Get colors
         colors_list = ColorPalettes.get_palette(self.palette)
 
+        # FIXED: Calculate total frames with interpolation
+        n_periods = len(self.df_wide)
+        total_frames = n_periods * self.steps_per_period
+
         # Animation function
         def animate(frame):
-            current_idx = int(frame)
+            # FIXED: Map frame to period with interpolation
+            period_float = frame / self.steps_per_period
+            current_idx = int(min(period_float, n_periods - 1))
+
             if current_idx >= len(self.df_wide):
                 return
 
@@ -1166,56 +1196,64 @@ class TimeSeriesRacing:
             for ax, chart_type in zip(axes, self.combo_charts):
                 ax.clear()
 
-                if chart_type == 'bar':
-                    # Horizontal bar chart
-                    ax.barh(range(len(top_data)), top_data.values,
-                           color=colors_list[:len(top_data)],
-                           alpha=self.bar_alpha)
-                    ax.set_yticks(range(len(top_data)))
-                    ax.set_yticklabels(top_data.index)
-                    ax.invert_yaxis()
-                    ax.set_title('Bar Chart', fontsize=self.bar_label_font_size)
+                try:
+                    if chart_type == 'bar':
+                        # Horizontal bar chart
+                        ax.barh(range(len(top_data)), top_data.values,
+                               color=colors_list[:len(top_data)],
+                               alpha=self.bar_alpha)
+                        ax.set_yticks(range(len(top_data)))
+                        ax.set_yticklabels(top_data.index, fontsize=self.bar_label_font_size - 2)
+                        ax.invert_yaxis()
+                        ax.set_title('Bar Chart', fontsize=self.bar_label_font_size)
 
-                elif chart_type == 'column':
-                    # Vertical bar chart
-                    ax.bar(range(len(top_data)), top_data.values,
-                          color=colors_list[:len(top_data)],
-                          alpha=self.bar_alpha)
-                    ax.set_xticks(range(len(top_data)))
-                    ax.set_xticklabels(top_data.index, rotation=45, ha='right')
-                    ax.set_title('Column Chart', fontsize=self.bar_label_font_size)
+                    elif chart_type == 'column':
+                        # Vertical bar chart
+                        ax.bar(range(len(top_data)), top_data.values,
+                              color=colors_list[:len(top_data)],
+                              alpha=self.bar_alpha)
+                        ax.set_xticks(range(len(top_data)))
+                        ax.set_xticklabels(top_data.index, rotation=45, ha='right',
+                                          fontsize=self.bar_label_font_size - 2)
+                        ax.set_title('Column Chart', fontsize=self.bar_label_font_size)
 
-                elif chart_type == 'line':
-                    # Line chart (cumulative)
-                    data_slice = self.df_wide.iloc[:current_idx+1]
-                    for i, entity in enumerate(top_data.index):
-                        ax.plot(data_slice.index, data_slice[entity],
-                               color=colors_list[i % len(colors_list)],
-                               linewidth=2)
-                    ax.set_title('Line Chart', fontsize=self.bar_label_font_size)
-                    ax.legend(top_data.index, fontsize=8, loc='upper left')
+                    elif chart_type == 'line':
+                        # Line chart (cumulative)
+                        data_slice = self.df_wide.iloc[:current_idx+1]
+                        for i, entity in enumerate(top_data.index):
+                            ax.plot(data_slice.index, data_slice[entity],
+                                   color=colors_list[i % len(colors_list)],
+                                   linewidth=2)
+                        ax.set_title('Line Chart', fontsize=self.bar_label_font_size)
+                        if len(top_data) <= 5:  # Only show legend if not too many
+                            ax.legend(top_data.index, fontsize=7, loc='upper left')
 
-                elif chart_type == 'pie':
-                    # Pie chart
-                    if top_data.sum() > 0:
-                        ax.pie(top_data.values, labels=top_data.index,
-                              colors=colors_list[:len(top_data)],
-                              autopct='%1.1f%%')
-                    ax.set_title('Pie Chart', fontsize=self.bar_label_font_size)
+                    elif chart_type == 'pie':
+                        # Pie chart
+                        pie_data = top_data[top_data > 0]  # Filter out zeros
+                        if len(pie_data) > 0 and pie_data.sum() > 0:
+                            ax.pie(pie_data.values, labels=pie_data.index,
+                                  colors=colors_list[:len(pie_data)],
+                                  autopct='%1.1f%%', textprops={'fontsize': 8})
+                        ax.set_title('Pie Chart', fontsize=self.bar_label_font_size)
 
-                ax.grid(True, alpha=0.3)
+                    ax.grid(True, alpha=0.3)
+
+                except Exception as e:
+                    print(f"  ⚠️  Lỗi khi vẽ {chart_type} chart: {e}")
 
             # Main title
             fig.suptitle(f"{self.title} - Period: {period_val}",
                         fontsize=self.title_font_size + 4,
                         weight='bold', y=0.98)
 
-        # Create animation
-        frames = len(self.df_wide)
-        interval_ms = self.period_length  # Each frame = one period (e.g., 1000ms = 1 second per year)
-        anim = FuncAnimation(fig, animate, frames=frames,
-                           interval=interval_ms,
-                           repeat=False)
+        # Create animation with interpolated frames
+        interval_per_frame = self.period_length / self.steps_per_period
+
+        anim = FuncAnimation(fig, animate, frames=total_frames,
+                           interval=interval_per_frame,
+                           repeat=False,
+                           blit=False)
 
         return fig, anim
 
@@ -1319,28 +1357,42 @@ class TimeSeriesRacing:
                     fig, anim = self._create_line_chart_race()
                     # Save animation using matplotlib's built-in writer
                     print(f"  ⏳ Saving LINE chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # FIXED: Calculate correct FPS for desired video duration
+                    # fps = (1000ms / period_length) * steps_per_period
+                    # This ensures each period lasts exactly period_length milliseconds
+                    save_fps = (1000 / self.period_length) * self.steps_per_period
+                    print(f"      → Calculated FPS: {save_fps:.1f} (for {self.period_length}ms per period)")
+                    writer = FFMpegWriter(fps=save_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'pie':
                     # Pie chart race
                     fig, anim = self._create_pie_chart_race()
                     print(f"  ⏳ Saving PIE chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # FIXED: Calculate correct FPS
+                    save_fps = (1000 / self.period_length) * self.steps_per_period
+                    print(f"      → Calculated FPS: {save_fps:.1f} (for {self.period_length}ms per period)")
+                    writer = FFMpegWriter(fps=save_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'column':
                     # Column chart race
                     fig, anim = self._create_column_chart_race()
                     print(f"  ⏳ Saving COLUMN chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # FIXED: Calculate correct FPS
+                    save_fps = (1000 / self.period_length) * self.steps_per_period
+                    print(f"      → Calculated FPS: {save_fps:.1f} (for {self.period_length}ms per period)")
+                    writer = FFMpegWriter(fps=save_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'combo':
                     # Combo chart with multiple types
                     fig, anim = self._create_combo_chart_race()
                     print(f"  ⏳ Saving COMBO chart animation...")
-                    writer = FFMpegWriter(fps=self.fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
+                    # FIXED: Calculate correct FPS
+                    save_fps = (1000 / self.period_length) * self.steps_per_period
+                    print(f"      → Calculated FPS: {save_fps:.1f} (for {self.period_length}ms per period)")
+                    writer = FFMpegWriter(fps=save_fps, metadata={'artist': 'TimeSeriesRacing v5.0'})
                     anim.save(temp_file, writer=writer)
 
                 elif self.chart_type == 'bar':
@@ -1499,14 +1551,20 @@ class TimeSeriesRacing:
             print(f"  → Kích thước: {file_size:.2f} MB")
 
             # Show specs
+            # FIXED: Calculate actual video FPS and duration
+            actual_fps = (1000 / self.period_length) * self.steps_per_period
+            total_frames = len(self.df_wide) * self.steps_per_period
+            actual_duration = total_frames / actual_fps  # in seconds
+
             print(f"\n📊 Thông số video:")
             print(f"  → Resolution: {'1080×1920' if self.ratio == '9:16' else '1920×1080'}")
             print(f"  → DPI: {self.dpi} {'(Ultra HD)' if self.dpi >= 150 else '(Standard)'}")
-            print(f"  → FPS: {self.fps} (Constant Frame Rate)")
+            print(f"  → FPS: {actual_fps:.1f} (Constant Frame Rate)")
             print(f"  → Codec: H.264 (libx264) + yuv420p")
             print(f"  → Bitrate: 8000 kbps (High Quality)")
-            print(f"  → Duration: ~{(len(self.df_wide) * self.period_length) / 1000:.1f}s")
-            print(f"  → Period length: {self.period_length}ms ({self.period_length/1000:.1f}s/frame)")
+            print(f"  → Duration: {actual_duration:.1f}s ({len(self.df_wide)} periods × {self.period_length/1000:.1f}s)")
+            print(f"  → Total frames: {total_frames:,} ({len(self.df_wide)} periods × {self.steps_per_period} steps)")
+            print(f"  → Period length: {self.period_length}ms ({self.period_length/1000:.1f}s/period)")
             print(f"  → Animation quality: {'Ultra Smooth' if self.steps_per_period >= 20 else 'Smooth' if self.steps_per_period >= 15 else 'Standard'}")
             print(f"  → Bar values: {'Yes' if self.show_bar_values else 'No'}")
             print(f"  → Visual effects: {'Enabled' if self.enable_effects else 'Disabled'}")
