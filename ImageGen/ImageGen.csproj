@@ -71,6 +71,7 @@
     <Content Include="css\main.css" />
     <Content Include="css\mobile.css" />
     <Content Include="css\preview.css" />
+    <Content Include="images\cats666000_vibrant_oil_painting_brush_stroke_background_blue_an_db0ac99c-a4f4-4978-aa47-8d027d153a13.png" />
     <Content Include="imggen.html" />
     <Content Include="js\app.js" />
     <Content Include="js\modules\controlPanel.js" />
