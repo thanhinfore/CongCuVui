@@ -316,6 +316,16 @@ class TimeSeriesRacing:
         self.prev_values = {}  # Track previous values for growth rate
         self.period_index = 0  # Current period index
 
+        # V5.1 - AESTHETIC EDITION parameters
+        self.subtitle = kwargs.get('subtitle', '')  # Subtitle for context
+        self.subtitle_template = kwargs.get('subtitle_template', None)  # Dynamic subtitle template
+        self.enable_shadows = kwargs.get('enable_shadows', True)  # Shadow effects for depth
+        self.font_style = kwargs.get('font_style', 'clean')  # modern/elegant/technical/clean
+        self.title_spacing = kwargs.get('title_spacing', 'lg')  # xs/sm/md/lg/xl/xxl
+
+        # Initialize aesthetic helper
+        self.aesthetic = AestheticConfig()
+
         # Apply preset if specified
         if self.preset:
             self._apply_preset()
@@ -340,9 +350,151 @@ class TimeSeriesRacing:
             self.palette = preset['palette']
             self.bar_style = preset['bar_style']
             self.interpolate_period = preset.get('interpolate_period', False)
+            # V5.1 - Apply aesthetic parameters from preset
+            self.font_style = preset.get('font_style', 'clean')
+            self.title_spacing = preset.get('title_spacing', 'lg')
+            self.enable_shadows = preset.get('enable_shadows', True)
             print(f"✨ Đã áp dụng preset: {self.preset.upper()}")
             print(f"  → Period: {self.period_length}ms, Steps: {self.steps_per_period}")
-            print(f"  → Interpolate: {'Yes' if self.interpolate_period else 'No (period label sẽ nhảy từng năm)'}")
+            print(f"  → Aesthetic: {self.font_style} fonts, {self.title_spacing} spacing")
+
+    # ==================== V5.1 AESTHETIC HELPER METHODS ====================
+
+    def _get_font_size(self, level='heading', base_size=None):
+        """
+        V5.1 - Get font size based on typography hierarchy
+
+        Args:
+            level: 'title', 'subtitle', 'heading', 'body', 'caption'
+            base_size: Base font size (default from settings)
+
+        Returns:
+            Calculated font size
+        """
+        if base_size is None:
+            base_size = self.bar_label_font_size
+
+        scale = self.aesthetic.FONT_SCALE.get(level, 1.0)
+        return int(base_size * scale)
+
+    def _get_spacing(self, size='md'):
+        """
+        V5.1 - Get spacing value from spacing system
+
+        Args:
+            size: 'xs', 'sm', 'md', 'lg', 'xl', 'xxl'
+
+        Returns:
+            Spacing value in points
+        """
+        return self.aesthetic.SPACING.get(size, 16)
+
+    def _add_text_shadow(self, text_obj, shadow_level='medium'):
+        """
+        V5.1 - Add shadow effect to text for depth
+
+        Args:
+            text_obj: Matplotlib text object
+            shadow_level: 'low', 'medium', 'high'
+        """
+        if not self.enable_shadows:
+            return
+
+        shadow = self.aesthetic.SHADOWS.get(shadow_level, self.aesthetic.SHADOWS['medium'])
+
+        # Matplotlib doesn't have built-in shadows, but we can simulate with path effects
+        try:
+            from matplotlib import patheffects as pe
+            text_obj.set_path_effects([
+                pe.withStroke(linewidth=shadow['blur']/2,
+                            foreground=(0, 0, 0, shadow['alpha']),
+                            offset=(shadow['offset'], -shadow['offset']))
+            ])
+        except:
+            pass  # Fallback if path effects not available
+
+    def _format_title_with_subtitle(self, ax, title, subtitle=None, period_val=None):
+        """
+        V5.1 - Format title with proper hierarchy and spacing
+
+        Args:
+            ax: Matplotlib axis
+            title: Main title text
+            subtitle: Subtitle text (optional)
+            period_val: Current period value for dynamic subtitle
+        """
+        # Calculate sizes using typography hierarchy
+        title_size = self._get_font_size('title', self.title_font_size)
+        subtitle_size = self._get_font_size('subtitle', self.title_font_size)
+
+        # Get spacing
+        spacing = self._get_spacing(self.title_spacing)
+
+        # Format subtitle with context if template provided
+        if subtitle is None and self.subtitle_template and period_val:
+            subtitle = self.subtitle_template.format(period=period_val)
+        elif subtitle is None and self.subtitle:
+            subtitle = self.subtitle
+
+        # Create title with hierarchy
+        if subtitle:
+            # Title + Subtitle with proper spacing
+            title_obj = ax.text(
+                0.5, 1.0 + spacing/100, title,
+                transform=ax.transAxes,
+                ha='center', va='bottom',
+                fontsize=title_size,
+                fontweight='bold',
+                fontfamily=self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+            )
+
+            subtitle_obj = ax.text(
+                0.5, 1.0 + spacing/200, subtitle,
+                transform=ax.transAxes,
+                ha='center', va='bottom',
+                fontsize=subtitle_size,
+                fontweight='normal',
+                alpha=0.8,
+                fontfamily=self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+            )
+
+            # Add shadows for depth
+            self._add_text_shadow(title_obj, 'medium')
+            self._add_text_shadow(subtitle_obj, 'low')
+        else:
+            # Just title
+            title_obj = ax.text(
+                0.5, 1.0 + spacing/200, title,
+                transform=ax.transAxes,
+                ha='center', va='bottom',
+                fontsize=title_size,
+                fontweight='bold',
+                fontfamily=self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+            )
+            self._add_text_shadow(title_obj, 'medium')
+
+    def _apply_aesthetic_to_axis(self, ax):
+        """
+        V5.1 - Apply aesthetic principles to axis
+
+        Args:
+            ax: Matplotlib axis
+        """
+        # Set background with subtle gradient if enabled
+        if self.enable_background_gradient:
+            ax.set_facecolor('#FAFAFA' if self.theme == 'light' else '#1A1A1A')
+
+        # Grid styling with breathing space
+        if self.show_grid:
+            ax.grid(True, alpha=0.15, linestyle='--', linewidth=0.5, zorder=0)
+
+        # Set font for all text elements
+        font_family = self.aesthetic.FONT_FAMILIES.get(self.font_style, 'sans-serif')
+        for text in ax.get_xticklabels() + ax.get_yticklabels():
+            text.set_fontfamily(font_family)
+            text.set_fontsize(self._get_font_size('body'))
+
+    # ==================== END AESTHETIC HELPER METHODS ====================
 
     def read_data(self):
         """Đọc dữ liệu từ file CSV, Excel, hoặc JSON"""
