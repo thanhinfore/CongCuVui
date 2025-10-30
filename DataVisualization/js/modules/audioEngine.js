@@ -11,7 +11,7 @@ export class AudioEngine {
         this.sourceNode = null;
         this.gainNode = null;
         this.isPlaying = false;
-        this.isLoaded = false;
+        this._isLoaded = false;  // Private property
         this.volume = 0.5; // Default 50%
         this.frequencyData = null;
         this.timeDomainData = null;
@@ -88,13 +88,13 @@ export class AudioEngine {
             this.analyser.connect(this.gainNode);
             this.gainNode.connect(this.audioContext.destination);
 
-            this.isLoaded = true;
+            this._isLoaded = true;
             console.log('✅ Audio loaded:', source);
             return true;
 
         } catch (error) {
             console.error('❌ Failed to load audio:', error);
-            this.isLoaded = false;
+            this._isLoaded = false;
             return false;
         }
     }
@@ -120,7 +120,7 @@ export class AudioEngine {
      * Play audio
      */
     async play() {
-        if (!this.isLoaded) {
+        if (!this._isLoaded) {
             console.warn('No audio loaded');
             return false;
         }
@@ -205,6 +205,14 @@ export class AudioEngine {
     }
 
     /**
+     * Check if audio is loaded
+     * @returns {boolean} True if audio is loaded
+     */
+    isLoaded() {
+        return this._isLoaded;
+    }
+
+    /**
      * Get frequency data for visualization
      * @returns {Uint8Array} Frequency data (0-255)
      */
@@ -266,7 +274,7 @@ export class AudioEngine {
      * @param {number} totalDuration - Total animation duration in seconds
      */
     syncWithAnimation(animationProgress, totalDuration) {
-        if (!this.isLoaded) return;
+        if (!this._isLoaded) return;
 
         const targetTime = animationProgress * this.getDuration();
         const currentTime = this.getCurrentTime();
