@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v8.1)
-   Perfect Balance, Enhanced Canvas Sizes, Emoji Fix
+   APP.JS - Main Application Entry Point (v9.0)
+   Advanced Text Positioning, Freedom Over Presets
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -12,6 +12,7 @@ import { MarkdownUI, setupMarkdownKeyboardShortcuts } from './modules/markdownUI
 import { ImageBrowser } from './modules/imageBrowser.js';
 import { SolidBackgroundGenerator } from './modules/solidBackground.js';
 import { ModeManager } from './modules/modeManager.js';
+import { TextPositioning } from './modules/textPositioning.js';
 import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
 
@@ -40,7 +41,11 @@ class ImageTextApp {
             this.components.imageBrowser = new ImageBrowser(this.state);
             this.components.solidBg = new SolidBackgroundGenerator(this.state);
             this.components.modeManager = new ModeManager();
+            this.components.textPositioning = new TextPositioning(this.DOM, this.state);
             this.components.v6ui = new V6UI();
+
+            // Connect text positioning to preview panel
+            this.components.preview.setTextPositioning(this.components.textPositioning);
 
             this.setupGlobalMethods();
 
@@ -64,12 +69,12 @@ class ImageTextApp {
             }
 
             this.initialized = true;
-            console.log('✨ Image Text App Pro v8.1 initialized successfully');
+            console.log('✨ Image Text App Pro v9.0 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('⚙️ Version 8.1! Equal Layout, 17 Canvas Sizes, Emoji Fixed!', 'success', 6000);
+                    this.components.v6ui.showToast('🎯 Version 9.0! Căn Chỉnh Tự Do, Tùy Biến Vị Trí Text!', 'success', 6000);
                 }
             }, 500);
 

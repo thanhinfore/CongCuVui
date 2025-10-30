@@ -1,0 +1,455 @@
+/* =====================================================
+   V9.0 CSS - Advanced Text Positioning
+   Focus on custom positioning over presets
+   ===================================================== */
+
+/* ========================================
+   ADVANCED POSITIONING SECTION
+   ======================================== */
+
+.v9-positioning-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.v9-positioning-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.v9-positioning-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.v9-positioning-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Free Mode Toggle */
+.v9-free-mode-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.v9-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+}
+
+.v9-toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 13px;
+    transition: background 0.3s;
+}
+
+.v9-toggle-switch input[type="checkbox"] {
+    display: none;
+}
+
+.v9-toggle-switch input[type="checkbox"]:checked + .v9-toggle-slider {
+    transform: translateX(24px);
+    background: #4ade80;
+}
+
+.v9-toggle-switch input[type="checkbox"]:checked ~ .v9-toggle-switch {
+    background: rgba(74, 222, 128, 0.3);
+}
+
+.v9-toggle-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s, background 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Position Controls Container */
+.v9-position-controls {
+    display: none; /* Hidden by default, shown when free mode is enabled */
+}
+
+.v9-position-controls.active {
+    display: block;
+    animation: v9FadeIn 0.3s ease-out;
+}
+
+@keyframes v9FadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Text Layer Tabs */
+.v9-text-layers {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.v9-layer-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.v9-layer-tab.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.v9-layer-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Position Sliders */
+.v9-pos-group {
+    margin-bottom: 16px;
+}
+
+.v9-pos-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.v9-pos-value {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+.v9-pos-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.v9-pos-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.v9-pos-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.v9-pos-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.v9-pos-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Position Grid */
+.v9-pos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+/* Quick Presets */
+.v9-quick-presets {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.v9-quick-preset-title {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.v9-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.v9-quick-pos-btn {
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.v9-quick-pos-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.v9-quick-pos-btn:active {
+    transform: translateY(0);
+}
+
+/* Reset Button */
+.v9-reset-pos-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 12px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.v9-reset-pos-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Grid Overlay Toggle */
+.v9-grid-toggle {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.v9-grid-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* De-emphasize Presets Section (v9.0 philosophy) */
+.v9-deemphasize-presets #presetsSection {
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.v9-deemphasize-presets #presetsSection:hover {
+    opacity: 1;
+}
+
+.v9-deemphasize-presets #presetsSection .section-header::after {
+    content: "(Optional)";
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 8px;
+}
+
+/* Positioning Info Panel */
+.v9-position-info {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.v9-position-info strong {
+    color: white;
+    font-weight: 600;
+}
+
+/* Canvas Grid Overlay (rendered on canvas) */
+.v9-canvas-with-grid {
+    position: relative;
+}
+
+.v9-canvas-grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 33.33% 33.33%;
+}
+
+.v9-canvas-center-guides {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.v9-canvas-center-guides::before,
+.v9-canvas-center-guides::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.v9-canvas-center-guides::before {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: translateY(-0.5px);
+}
+
+.v9-canvas-center-guides::after {
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-0.5px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .v9-positioning-section {
+        padding: 16px;
+    }
+
+    .v9-preset-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+    }
+
+    .v9-quick-pos-btn {
+        padding: 6px;
+        font-size: 0.7rem;
+    }
+
+    .v9-pos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tooltip for positioning controls */
+.v9-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.v9-tooltip .v9-tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.8rem;
+}
+
+.v9-tooltip:hover .v9-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Emphasis on positioning over presets */
+.v9-emphasis-positioning .v9-positioning-section {
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+    animation: v9Glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes v9Glow {
+    from {
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+    }
+    to {
+        box-shadow: 0 8px 48px rgba(102, 126, 234, 0.6);
+    }
+}

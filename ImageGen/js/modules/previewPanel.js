@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v8.1)
-   Full Markdown Support + Emoji Support + Enhanced Features
+   PREVIEWPANEL.JS - Preview Panel Module (v9.0)
+   Full Markdown Support + Emoji Support + Advanced Positioning
    ===================================================== */
 
 import { utils } from './utils.js';
@@ -15,8 +15,13 @@ export class PreviewPanel {
         this.lazyLoadObserver = null;
         this.canvasPool = [];
         this.emojiRenderer = getEmojiRenderer();
+        this.textPositioning = null; // Will be set by app.js
 
         this.initialize();
+    }
+
+    setTextPositioning(textPositioning) {
+        this.textPositioning = textPositioning;
     }
 
     initialize() {
@@ -698,24 +703,42 @@ export class PreviewPanel {
         const LINE_SPACING = advanced.lineHeight || 2.0;
         const MAIN_PADDING = 1.5;
 
+        // V9.0: Check if free positioning mode is enabled
         let y;
-        switch (config.position) {
-            case 'top':
-                y = mainFontSize * MAIN_PADDING;
-                break;
-            case 'upper-middle':
-                y = canvas.height * 0.25 - mainFontSize;
-                break;
-            case 'middle':
-                y = canvas.height * 0.5 - mainFontSize;
-                break;
-            case 'lower-middle':
-                y = canvas.height * 0.75 - mainFontSize;
-                break;
-            case 'bottom':
-            default:
+        let mainCustomPos = null;
+        let subCustomPos = null;
+
+        if (this.textPositioning && this.textPositioning.positioning.freeMode) {
+            // Use custom positioning from v9.0
+            mainCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'main');
+            subCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'subtitle');
+
+            if (mainCustomPos) {
+                y = mainCustomPos.y;
+            } else {
+                // Fallback to default
                 y = canvas.height - mainFontSize * (LINE_SPACING + 2);
-                break;
+            }
+        } else {
+            // Use traditional position picker
+            switch (config.position) {
+                case 'top':
+                    y = mainFontSize * MAIN_PADDING;
+                    break;
+                case 'upper-middle':
+                    y = canvas.height * 0.25 - mainFontSize;
+                    break;
+                case 'middle':
+                    y = canvas.height * 0.5 - mainFontSize;
+                    break;
+                case 'lower-middle':
+                    y = canvas.height * 0.75 - mainFontSize;
+                    break;
+                case 'bottom':
+                default:
+                    y = canvas.height - mainFontSize * (LINE_SPACING + 2);
+                    break;
+            }
         }
 
         ctx.textBaseline = 'middle';
@@ -789,6 +812,12 @@ export class PreviewPanel {
         ctx.shadowOffsetY = 0;
 
         if (subtitle) {
+            // V9.0: Use custom subtitle position if available
+            let subtitleY = y;
+            if (subCustomPos) {
+                subtitleY = subCustomPos.y;
+            }
+
             const subLines = this.wrapStyledText(
                 ctx,
                 subtitle,
@@ -829,7 +858,7 @@ export class PreviewPanel {
                 utils.canvas.drawRoundedRect(
                     ctx,
                     (canvas.width - maxWidth) / 2 - padding,
-                    y - subFontSize * 0.5 - padding,
+                    subtitleY - subFontSize * 0.5 - padding,
                     maxWidth + padding * 2,
                     bgHeight,
                     borderRadius,
@@ -838,7 +867,7 @@ export class PreviewPanel {
             }
 
             subLines.forEach((line, index) => {
-                const lineY = y + (index * subFontSize * 1.5);
+                const lineY = subtitleY + (index * subFontSize * 1.5);
                 this.renderStyledLine(
                     ctx,
                     line,
