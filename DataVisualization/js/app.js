@@ -7,7 +7,7 @@ import { DataHandler } from './modules/dataHandler.js';
 import { ChartEngine } from './modules/chartEngine.js';
 import { AnimationEngine } from './modules/animationEngine.js';
 import { AudioEngine } from './modules/audioEngine.js';
-import { VIDEO_RATIOS, PLATFORM_PRESETS, applyPlatformPreset, calculateFontSizes } from './modules/videoRatios.js';
+import { VIDEO_RATIOS, PLATFORM_PRESETS, calculateFontSizes, getPresetConfig } from './modules/videoRatios.js';
 
 class TimeSeriesRacingApp {
     constructor() {
@@ -169,21 +169,49 @@ class TimeSeriesRacingApp {
             });
         });
 
-        // Drag & drop support for CSV
+        // Drag & drop support for CSV (Fixed)
         const uploadLabel = document.querySelector('.upload-label');
-        uploadLabel.addEventListener('dragover', (e) => {
+
+        // Prevent default behavior for dragenter
+        uploadLabel.addEventListener('dragenter', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             uploadLabel.style.borderColor = 'var(--primary-color)';
         });
-        uploadLabel.addEventListener('dragleave', () => {
+
+        // Prevent default behavior for dragover
+        uploadLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadLabel.style.borderColor = 'var(--primary-color)';
+        });
+
+        // Restore styling on dragleave
+        uploadLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             uploadLabel.style.borderColor = 'var(--border-color)';
         });
+
+        // Handle drop
         uploadLabel.addEventListener('drop', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             uploadLabel.style.borderColor = 'var(--border-color)';
-            if (e.dataTransfer.files.length > 0) {
-                this.handleFileUpload(e.dataTransfer.files[0]);
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                this.handleFileUpload(file);
             }
+        });
+
+        // Prevent default drag behavior on document level
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
         });
     }
 
