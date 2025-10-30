@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v7.0)
-   Solid Backgrounds, Better UX, Enhanced Features
+   APP.JS - Main Application Entry Point (v8.0)
+   Ultimate UX, Mode Toggle, Perfect Emoji Support
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -11,6 +11,7 @@ import { AdvancedFeatures } from './modules/advancedFeatures.js';
 import { MarkdownUI, setupMarkdownKeyboardShortcuts } from './modules/markdownUI.js';
 import { ImageBrowser } from './modules/imageBrowser.js';
 import { SolidBackgroundGenerator } from './modules/solidBackground.js';
+import { ModeManager } from './modules/modeManager.js';
 import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
 
@@ -38,6 +39,7 @@ class ImageTextApp {
             this.components.markdown = new MarkdownUI(this.DOM);
             this.components.imageBrowser = new ImageBrowser(this.state);
             this.components.solidBg = new SolidBackgroundGenerator(this.state);
+            this.components.modeManager = new ModeManager();
             this.components.v6ui = new V6UI();
 
             this.setupGlobalMethods();
@@ -56,13 +58,18 @@ class ImageTextApp {
             await this.components.imageBrowser.init();
             this.setupImageBrowserHandlers();
 
+            // Restore saved mode
+            if (this.components.modeManager) {
+                this.components.modeManager.restoreSavedMode();
+            }
+
             this.initialized = true;
-            console.log('✨ Image Text App Pro v7.0 initialized successfully');
+            console.log('✨ Image Text App Pro v8.0 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🎉 Version 7.0! Solid Backgrounds, Better UX, More Features', 'success', 6000);
+                    this.components.v6ui.showToast('🎉 Version 8.0! Smart Modes, Perfect Emoji, Ultimate UX', 'success', 6000);
                 }
             }, 500);
 
