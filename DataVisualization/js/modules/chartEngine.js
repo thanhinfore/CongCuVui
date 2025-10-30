@@ -1,6 +1,6 @@
 // ========================================
-// Chart Engine Module - MULTI-PLATFORM EDITION v3.0
-// Enhanced graphics, audio visualization, multiple ratios, particles
+// Chart Engine Module - ULTRA PREMIUM EDITION v5.5
+// Visual Tracking Revolution: Motion trails, ghost effects, staggered animations
 // ========================================
 
 export class ChartEngine {
@@ -26,6 +26,13 @@ export class ChartEngine {
         this.currentRanks = new Map(); // v4.5: Current rankings
         this.movingBars = new Set(); // v4.5: Bars currently changing position
         this.rankChangeTimers = new Map(); // v4.5: Timers for highlight duration
+
+        // v5.5: Advanced visual tracking
+        this.previousBarPositions = new Map(); // Track bar Y positions for motion trails
+        this.ghostBars = new Map(); // Ghost/afterimage at previous positions
+        this.movementTrails = []; // Motion trail particles
+        this.barAnimationStart = new Map(); // Track when each bar started moving
+        this.rankChangeDirection = new Map(); // Track direction of rank changes (up/down)
     }
 
     /**
@@ -84,7 +91,7 @@ export class ChartEngine {
         this.ctx.textRendering = 'optimizeLegibility';
         this.ctx.fontKerning = 'normal';
 
-        console.log(`🎨 v5.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI)`);
+        console.log(`🎨 v5.5 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Visual Tracking Enabled`);
 
         // Initialize rank tracking
         this.initializeRankTracking();
@@ -155,35 +162,53 @@ export class ChartEngine {
                 indexAxis: 'y',
                 responsive: false,
                 maintainAspectRatio: false,
-                // v5.0: Ultra-smooth premium animations
+                // v5.5: Ultra-slow tracking-optimized animations
                 animation: {
-                    duration: 1000,  // v5.0: Longer for smoother perception
-                    easing: 'easeInOutCubic',  // v5.0: Professional cubic bezier
-                    // v5.0: Differentiated axis animations
+                    duration: 1800,  // v5.5: Much longer for easy tracking (was 1000ms)
+                    easing: 'easeInOutQuart',  // v5.5: Slower acceleration/deceleration
+                    delay: (context) => {
+                        // v5.5: Staggered animation based on rank change
+                        if (!context.chart) return 0;
+                        const dataIndex = context.dataIndex;
+                        const entity = context.chart.data.labels[dataIndex];
+
+                        // Get rank change distance
+                        const currentRank = dataIndex;
+                        const previousRank = this.previousRanks.get(entity);
+
+                        if (previousRank === undefined) return 0;
+
+                        const rankChange = Math.abs(currentRank - previousRank);
+                        // Larger rank changes get slightly more delay for anticipation
+                        return rankChange * 30;  // 30ms per position changed
+                    },
+                    // v5.5: Differentiated axis animations
                     x: {
-                        duration: 1000,
-                        easing: 'easeOutCubic',  // Values grow smoothly
+                        duration: 1500,  // v5.5: Slower value changes
+                        easing: 'easeOutQuart',  // Smooth value growth
                         from: (ctx) => ctx.chart ? ctx.chart.scales.x.min : 0
                     },
                     y: {
-                        duration: 1200,  // v5.0: Slightly longer for position changes
-                        easing: 'easeInOutQuint',  // Extra smooth ranking shifts
+                        duration: 2000,  // v5.5: VERY slow position changes for tracking (was 1200ms)
+                        easing: 'easeInOutQuint',  // Ultra smooth ranking shifts
                         from: (ctx) => {
                             // Smooth entrance from below
                             return ctx.chart ? ctx.chart.chartArea.bottom : 0;
                         }
                     },
-                    // v5.0: Progressive reveal for new bars
+                    // v5.5: Progressive reveal for new bars
                     borderRadius: {
-                        duration: 800,
+                        duration: 1000,  // v5.5: Slower shape morphing
                         easing: 'easeOutBack'  // Subtle bounce effect
                     },
-                    // v5.0: Animation callbacks for micro-interactions
-                    onProgress: function(animation) {
-                        // Smooth progress tracking
+                    // v5.5: Animation callbacks for tracking
+                    onProgress: (animation) => {
+                        // Update motion trails during animation
+                        this.updateMotionTrails();
                     },
-                    onComplete: function(animation) {
-                        // Animation complete - trigger next micro-animation
+                    onComplete: (animation) => {
+                        // Clean up ghost bars after animation
+                        this.cleanupGhostBars();
                     }
                 },
                 // v5.0: Advanced transitions for interaction states
@@ -339,7 +364,113 @@ export class ChartEngine {
                     }
                 },
                 {
-                    // v4.5: Moving bars highlight plugin
+                    // v5.5: Ghost bars / Afterimage effect - Draw BEFORE main bars
+                    id: 'ghostBars',
+                    beforeDatasetsDraw: (chart) => {
+                        if (this.ghostBars.size === 0) return;
+
+                        const ctx = chart.ctx;
+                        ctx.save();
+
+                        // Draw each ghost bar
+                        this.ghostBars.forEach((ghostData, entity) => {
+                            const { y, height, width, x, color, opacity } = ghostData;
+
+                            // Fade out ghost over time
+                            const fadeOpacity = Math.max(0, opacity - 0.05);
+                            this.ghostBars.set(entity, { ...ghostData, opacity: fadeOpacity });
+
+                            if (fadeOpacity <= 0) return;
+
+                            // Draw ghost bar with fading opacity
+                            ctx.globalAlpha = fadeOpacity * 0.3;  // Max 30% opacity
+                            ctx.fillStyle = color;
+                            ctx.strokeStyle = this.darkenColor(color, 0.4);
+                            ctx.lineWidth = 1.5;
+
+                            // Draw rounded rectangle for ghost
+                            ctx.beginPath();
+                            const radius = 20;
+                            ctx.moveTo(x + radius, y);
+                            ctx.lineTo(x + width - radius, y);
+                            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                            ctx.lineTo(x + width, y + height - radius);
+                            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                            ctx.lineTo(x + radius, y + height);
+                            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                            ctx.lineTo(x, y + radius);
+                            ctx.quadraticCurveTo(x, y, x + radius, y);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.stroke();
+
+                            // Add dashed outline to emphasize it's a ghost
+                            ctx.globalAlpha = fadeOpacity * 0.5;
+                            ctx.setLineDash([5, 5]);
+                            ctx.strokeStyle = 'rgba(102, 126, 234, 0.6)';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                        });
+
+                        ctx.globalAlpha = 1;
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v5.5: Motion trails - Curved path from old to new position
+                    id: 'motionTrails',
+                    beforeDatasetsDraw: (chart) => {
+                        if (this.movementTrails.length === 0) return;
+
+                        const ctx = chart.ctx;
+                        ctx.save();
+
+                        // Draw each motion trail
+                        this.movementTrails.forEach((trail) => {
+                            const { fromY, toY, x, progress, color } = trail;
+
+                            // Calculate current position along the path
+                            const currentY = fromY + (toY - fromY) * this.easeInOutQuint(progress);
+
+                            // Draw trail as gradient line
+                            const trailGradient = ctx.createLinearGradient(x, fromY, x, currentY);
+                            trailGradient.addColorStop(0, `${color}00`);  // Transparent at start
+                            trailGradient.addColorStop(0.5, `${color}40`);  // Semi-transparent middle
+                            trailGradient.addColorStop(1, `${color}80`);  // More visible at current position
+
+                            ctx.strokeStyle = trailGradient;
+                            ctx.lineWidth = 4;
+                            ctx.lineCap = 'round';
+
+                            // Draw curved path
+                            ctx.beginPath();
+                            ctx.moveTo(x, fromY);
+
+                            // Control point for smooth curve
+                            const controlX = x - 30;  // Curve to the left
+                            const controlY = (fromY + currentY) / 2;
+
+                            ctx.quadraticCurveTo(controlX, controlY, x, currentY);
+                            ctx.stroke();
+
+                            // Draw arrow at current position
+                            const arrowSize = 8;
+                            const direction = toY > fromY ? 1 : -1;  // Down or up
+                            ctx.fillStyle = color + '80';
+                            ctx.beginPath();
+                            ctx.moveTo(x, currentY);
+                            ctx.lineTo(x - arrowSize, currentY - arrowSize * direction);
+                            ctx.lineTo(x + arrowSize, currentY - arrowSize * direction);
+                            ctx.closePath();
+                            ctx.fill();
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v4.5/v5.5 Enhanced: Moving bars highlight plugin with direction arrows
                     id: 'movingBarsHighlight',
                     afterDatasetsDraw: (chart) => {
                         if (this.movingBars.size === 0) return;
@@ -384,6 +515,33 @@ export class ChartEngine {
                                 bar.width - 4,
                                 bar.height + 6
                             );
+
+                            // v5.5: Add directional arrow showing movement
+                            const direction = this.rankChangeDirection.get(entity);
+                            if (direction) {
+                                const arrowX = bar.x - 50;
+                                const arrowY = bar.y + bar.height / 2;
+                                const arrowSize = 15;
+
+                                ctx.fillStyle = direction === 'up' ? '#4CAF50' : '#f44336';
+                                ctx.shadowBlur = 10;
+                                ctx.shadowColor = ctx.fillStyle;
+
+                                ctx.beginPath();
+                                if (direction === 'up') {
+                                    // Upward arrow
+                                    ctx.moveTo(arrowX, arrowY - arrowSize);
+                                    ctx.lineTo(arrowX - arrowSize / 2, arrowY);
+                                    ctx.lineTo(arrowX + arrowSize / 2, arrowY);
+                                } else {
+                                    // Downward arrow
+                                    ctx.moveTo(arrowX, arrowY + arrowSize);
+                                    ctx.lineTo(arrowX - arrowSize / 2, arrowY);
+                                    ctx.lineTo(arrowX + arrowSize / 2, arrowY);
+                                }
+                                ctx.closePath();
+                                ctx.fill();
+                            }
                         });
 
                         ctx.restore();
@@ -572,7 +730,7 @@ export class ChartEngine {
             currentRanks.set(pair.entity, rank);
         });
 
-        // v4.5: Detect ranking changes and mark moving bars
+        // v4.5/v5.5: Detect ranking changes and mark moving bars with enhanced tracking
         topN.forEach((pair) => {
             const entity = pair.entity;
             const newRank = currentRanks.get(entity);
@@ -582,16 +740,66 @@ export class ChartEngine {
             if (oldRank !== undefined && oldRank !== newRank) {
                 this.movingBars.add(entity);
 
+                // v5.5: Store rank change direction
+                if (newRank < oldRank) {
+                    this.rankChangeDirection.set(entity, 'up');
+                } else {
+                    this.rankChangeDirection.set(entity, 'down');
+                }
+
+                // v5.5: Create ghost bar at previous position
+                if (this.chart && this.chart.chartArea) {
+                    const chartArea = this.chart.chartArea;
+                    const barHeight = (chartArea.bottom - chartArea.top) / this.config.topN;
+                    const oldY = chartArea.top + oldRank * barHeight;
+                    const newY = chartArea.top + newRank * barHeight;
+
+                    // Get color for this entity
+                    const colors = this.getColorPalette(this.config.palette);
+                    const color = colors[pair.originalIndex % colors.length];
+
+                    // Store ghost bar data
+                    const meta = this.chart.getDatasetMeta(0);
+                    const currentBarIndex = topN.findIndex(p => p.entity === entity);
+                    if (currentBarIndex !== -1 && meta.data[currentBarIndex]) {
+                        const bar = meta.data[currentBarIndex];
+                        this.ghostBars.set(entity, {
+                            x: bar.x || chartArea.left,
+                            y: oldY,
+                            width: bar.width || 100,
+                            height: barHeight - 10,
+                            color: color,
+                            opacity: 1.0
+                        });
+
+                        // v5.5: Create motion trail
+                        // Convert hex to rgb for trail gradient
+                        const rgb = this.hexToRgb(color);
+                        const rgbColor = rgb ? `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})` : color;
+
+                        this.movementTrails.push({
+                            entity: entity,
+                            fromY: oldY + barHeight / 2,
+                            toY: newY + barHeight / 2,
+                            x: chartArea.left - 60,
+                            progress: 0,
+                            color: rgbColor,
+                            startTime: Date.now()
+                        });
+                    }
+                }
+
                 // Clear any existing timer
                 if (this.rankChangeTimers.has(entity)) {
                     clearTimeout(this.rankChangeTimers.get(entity));
                 }
 
-                // Remove from movingBars after animation completes (1 second)
+                // Remove from movingBars after animation completes (v5.5: 2 seconds - longer)
                 const timer = setTimeout(() => {
                     this.movingBars.delete(entity);
                     this.rankChangeTimers.delete(entity);
-                }, 1000);
+                    this.rankChangeDirection.delete(entity);
+                }, 2000);  // v5.5: Increased from 1000ms
 
                 this.rankChangeTimers.set(entity, timer);
 
@@ -966,6 +1174,41 @@ export class ChartEngine {
     }
 
     /**
+     * v5.5: Ease in-out quint function for ultra-smooth interpolation
+     */
+    easeInOutQuint(t) {
+        return t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+    }
+
+    /**
+     * v5.5: Update motion trails progress
+     */
+    updateMotionTrails() {
+        const now = Date.now();
+        const trailDuration = 2000;  // 2 seconds to match animation
+
+        this.movementTrails = this.movementTrails.filter(trail => {
+            const elapsed = now - trail.startTime;
+            trail.progress = Math.min(1, elapsed / trailDuration);
+
+            // Keep trail until animation completes
+            return trail.progress < 1;
+        });
+    }
+
+    /**
+     * v5.5: Clean up ghost bars that have fully faded
+     */
+    cleanupGhostBars() {
+        // Remove ghost bars with zero opacity
+        this.ghostBars.forEach((ghostData, entity) => {
+            if (ghostData.opacity <= 0) {
+                this.ghostBars.delete(entity);
+            }
+        });
+    }
+
+    /**
      * Format number for display
      */
     formatNumber(num) {
@@ -1063,19 +1306,26 @@ export class ChartEngine {
     }
 
     /**
-     * Darken a hex color
+     * Convert hex color to RGB object (v5.5 Helper)
      */
-    darkenColor(color, amount) {
-        const hex = color.replace('#', '');
+    hexToRgb(hex) {
+        // Remove # if present
+        hex = hex.replace('#', '');
+
+        // Handle 3-digit hex codes
+        if (hex.length === 3) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+
+        if (hex.length !== 6) {
+            return null;
+        }
+
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
 
-        const newR = Math.floor(r * (1 - amount));
-        const newG = Math.floor(g * (1 - amount));
-        const newB = Math.floor(b * (1 - amount));
-
-        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        return { r, g, b };
     }
 
     /**
@@ -1280,5 +1530,15 @@ export class ChartEngine {
             this.chart = null;
         }
         this.particles = [];
+
+        // v5.5: Clean up visual tracking structures
+        this.previousBarPositions.clear();
+        this.ghostBars.clear();
+        this.movementTrails = [];
+        this.barAnimationStart.clear();
+        this.rankChangeDirection.clear();
+        this.movingBars.clear();
+        this.rankChangeTimers.forEach(timer => clearTimeout(timer));
+        this.rankChangeTimers.clear();
     }
 }
