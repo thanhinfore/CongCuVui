@@ -23,6 +23,9 @@ export class ChartEngine {
         this.previousValues = new Map(); // Track value changes for growth rate
         this.particles = []; // Particle effects
         this.gradientOffset = 0; // For animated gradients
+        this.currentRanks = new Map(); // v4.5: Current rankings
+        this.movingBars = new Set(); // v4.5: Bars currently changing position
+        this.rankChangeTimers = new Map(); // v4.5: Timers for highlight duration
     }
 
     /**
@@ -135,7 +138,35 @@ export class ChartEngine {
                 indexAxis: 'y',
                 responsive: false,
                 maintainAspectRatio: false,
-                animation: false,
+                // v4.5: Enable smooth animations for ranking changes
+                animation: {
+                    duration: 800,  // Smooth 800ms transitions
+                    easing: 'easeOutQuart',  // Natural deceleration
+                    // Animate all properties
+                    x: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    y: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    // v4.5: Special handling for bar movements
+                    onProgress: function(animation) {
+                        // Smooth progress tracking
+                    },
+                    onComplete: function(animation) {
+                        // Animation complete
+                    }
+                },
+                // v4.5: Smooth transitions between data updates
+                transitions: {
+                    active: {
+                        animation: {
+                            duration: 400
+                        }
+                    }
+                },
                 layout: {
                     padding: {
                         top: this.config.showStatsPanel ? this.config.padding.top : this.config.padding.top - 60,
@@ -235,6 +266,57 @@ export class ChartEngine {
                     afterDatasetsDraw: (chart) => {
                         if (!this.config.enableShadows) return;
                         chart.ctx.restore();
+                    }
+                },
+                {
+                    // v4.5: Moving bars highlight plugin
+                    id: 'movingBarsHighlight',
+                    afterDatasetsDraw: (chart) => {
+                        if (this.movingBars.size === 0) return;
+
+                        const ctx = chart.ctx;
+                        const chartArea = chart.chartArea;
+                        const meta = chart.getDatasetMeta(0);
+
+                        ctx.save();
+
+                        // Highlight each moving bar
+                        this.movingBars.forEach((entity) => {
+                            const barIndex = chart.data.labels.indexOf(entity);
+                            if (barIndex === -1) return;
+
+                            const bar = meta.data[barIndex];
+                            if (!bar) return;
+
+                            // Pulsing glow effect
+                            const time = Date.now() / 1000;
+                            const pulse = 0.7 + Math.sin(time * 4) * 0.3; // 0.4 to 1.0
+
+                            // Draw outer glow
+                            ctx.shadowColor = `rgba(102, 126, 234, ${pulse * 0.6})`;
+                            ctx.shadowBlur = 20 * pulse;
+                            ctx.strokeStyle = `rgba(102, 126, 234, ${pulse * 0.8})`;
+                            ctx.lineWidth = 4;
+                            ctx.strokeRect(
+                                bar.x,
+                                bar.y - 5,
+                                bar.width,
+                                bar.height + 10
+                            );
+
+                            // Inner highlight line
+                            ctx.shadowBlur = 0;
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${pulse * 0.9})`;
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(
+                                bar.x + 2,
+                                bar.y - 3,
+                                bar.width - 4,
+                                bar.height + 6
+                            );
+                        });
+
+                        ctx.restore();
                     }
                 },
                 {
@@ -358,6 +440,53 @@ export class ChartEngine {
         topN.forEach((pair, rank) => {
             currentRanks.set(pair.entity, rank);
         });
+
+        // v4.5: Detect ranking changes and mark moving bars
+        topN.forEach((pair) => {
+            const entity = pair.entity;
+            const newRank = currentRanks.get(entity);
+            const oldRank = this.currentRanks.get(entity);
+
+            // If rank changed, mark as moving
+            if (oldRank !== undefined && oldRank !== newRank) {
+                this.movingBars.add(entity);
+
+                // Clear any existing timer
+                if (this.rankChangeTimers.has(entity)) {
+                    clearTimeout(this.rankChangeTimers.get(entity));
+                }
+
+                // Remove from movingBars after animation completes (1 second)
+                const timer = setTimeout(() => {
+                    this.movingBars.delete(entity);
+                    this.rankChangeTimers.delete(entity);
+                }, 1000);
+
+                this.rankChangeTimers.set(entity, timer);
+
+                // v4.5: Create particles for dramatic rank changes (3+ positions)
+                if (Math.abs(newRank - oldRank) >= 3 && this.config.enableParticles) {
+                    // Find bar position for particles
+                    const barIndex = topN.findIndex(p => p.entity === entity);
+                    if (barIndex !== -1 && this.chart.chartArea) {
+                        const chartArea = this.chart.chartArea;
+                        const barHeight = (chartArea.bottom - chartArea.top) / this.config.topN;
+                        const y = chartArea.top + (barIndex + 0.5) * barHeight;
+                        const x = chartArea.left + 50;
+
+                        // Get color for this entity
+                        const colors = this.getColorPalette(this.config.palette);
+                        const color = colors[pair.originalIndex % colors.length];
+
+                        // Create burst of particles
+                        this.createParticles(x, y, color, 15);
+                    }
+                }
+            }
+        });
+
+        // Update current ranks for next comparison
+        this.currentRanks = new Map(currentRanks);
 
         // Update chart data
         this.chart.data.labels = topN.map(p => p.entity);
