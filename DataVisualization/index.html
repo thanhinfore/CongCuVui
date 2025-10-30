@@ -11,8 +11,9 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>📊 TimeSeriesRacing - Web Edition</h1>
-                <p>Create animated racing charts directly in your browser</p>
+                <h1>📊 TimeSeriesRacing - Premium Web Edition v2.0</h1>
+                <p>Create stunning animated racing charts with advanced graphics & effects</p>
+                <div class="version-badge">✨ Premium Features: Stats Panel | Gradients | Rank Indicators | Growth Rate</div>
             </div>
         </header>
 
@@ -42,12 +43,17 @@
 
                     <div class="form-group">
                         <label for="titleInput">Title:</label>
-                        <input type="text" id="titleInput" value="Data Evolution" class="form-control">
+                        <input type="text" id="titleInput" value="Programming Languages Popularity" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subtitleInput">Subtitle (optional):</label>
+                        <input type="text" id="subtitleInput" value="1990 - 2020" class="form-control" placeholder="Leave empty for no subtitle">
                     </div>
 
                     <div class="form-group">
                         <label for="topNInput">Top N items:</label>
-                        <input type="number" id="topNInput" value="10" min="5" max="20" class="form-control">
+                        <input type="number" id="topNInput" value="8" min="5" max="20" class="form-control">
                     </div>
 
                     <div class="form-group">
@@ -67,7 +73,7 @@
                     <div class="form-group">
                         <label for="paletteSelect">Color Palette:</label>
                         <select id="paletteSelect" class="form-control">
-                            <option value="vibrant">Vibrant</option>
+                            <option value="vibrant" selected>Vibrant</option>
                             <option value="professional">Professional</option>
                             <option value="neon">Neon</option>
                             <option value="gold">Gold</option>
@@ -75,6 +81,54 @@
                             <option value="sunset">Sunset</option>
                             <option value="pastel">Pastel</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="barStyleSelect">Bar Style:</label>
+                        <select id="barStyleSelect" class="form-control">
+                            <option value="gradient" selected>Gradient (Premium)</option>
+                            <option value="solid">Solid Color</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Visual Effects -->
+                <div class="section">
+                    <h3>✨ Visual Effects</h3>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showStatsPanelCheck" checked>
+                            <span>📊 Stats Panel (Total, Leader, Gap, Avg)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showValueLabelsCheck" checked>
+                            <span>🏷️ Value Labels on Bars</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showRankIndicatorsCheck" checked>
+                            <span>↕️ Rank Change Indicators</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showGrowthRateCheck" checked>
+                            <span>📈 Growth Rate (%)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enableShadowsCheck" checked>
+                            <span>🌓 Shadows & Effects</span>
+                        </label>
                     </div>
                 </div>
 
