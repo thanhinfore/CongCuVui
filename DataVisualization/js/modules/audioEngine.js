@@ -278,6 +278,14 @@ export class AudioEngine {
     }
 
     /**
+     * Get audio element for stream capture (v3.0)
+     * @returns {HTMLAudioElement} Audio element
+     */
+    getAudioElement() {
+        return this.audioElement;
+    }
+
+    /**
      * Destroy audio engine
      */
     destroy() {
