@@ -476,6 +476,81 @@ export class ChartEngine {
                     }
                 },
                 {
+                    // v7.0: Overtake Flash - When bars cross each other
+                    id: 'overtakeFlash',
+                    afterDatasetsDraw: (chart) => {
+                        if (this.overtakeFlashes.size === 0) return;
+
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        ctx.save();
+
+                        // Draw flash for each overtaking entity
+                        this.overtakeFlashes.forEach((flashData, entity) => {
+                            const { intensity, startTime, type } = flashData;
+                            const elapsed = Date.now() - startTime;
+
+                            // Flash duration based on type
+                            const duration = type === 'leader_overtake' ? 800 : 500;
+
+                            if (elapsed > duration) {
+                                this.overtakeFlashes.delete(entity);
+                                return;
+                            }
+
+                            // Find bar
+                            const barIndex = chart.data.labels.indexOf(entity);
+                            if (barIndex === -1) return;
+
+                            const bar = meta.data[barIndex];
+                            if (!bar) return;
+
+                            // Pulsing flash with color based on type
+                            const progress = elapsed / duration;
+                            const flashIntensity = Math.sin(progress * Math.PI) * intensity;
+
+                            let flashColor;
+                            if (type === 'leader_overtake') {
+                                flashColor = `rgba(255, 215, 0, ${flashIntensity})`; // Gold for leader
+                            } else if (type === 'major_overtake') {
+                                flashColor = `rgba(0, 255, 150, ${flashIntensity})`; // Bright green
+                            } else {
+                                flashColor = `rgba(100, 200, 255, ${flashIntensity})`; // Light blue
+                            }
+
+                            // Draw swoosh effect (diagonal streak)
+                            ctx.shadowColor = flashColor;
+                            ctx.shadowBlur = 30;
+                            ctx.strokeStyle = flashColor;
+                            ctx.lineWidth = 8;
+                            ctx.lineCap = 'round';
+
+                            // Animated streak from left to right
+                            const streakProgress = progress;
+                            const startX = bar.x - 50;
+                            const endX = bar.x + bar.width * streakProgress;
+                            const centerY = bar.y + bar.height / 2;
+
+                            ctx.beginPath();
+                            ctx.moveTo(startX, centerY - 5);
+                            ctx.lineTo(endX, centerY + 5);
+                            ctx.stroke();
+
+                            // Bright halo around bar
+                            ctx.strokeStyle = flashColor;
+                            ctx.lineWidth = 6;
+                            ctx.strokeRect(
+                                bar.x - 8,
+                                bar.y - 8,
+                                bar.width + 16,
+                                bar.height + 16
+                            );
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
                     // v5.5/v6.0 Enhanced: Ghost bars with higher visibility
                     id: 'ghostBars',
                     beforeDatasetsDraw: (chart) => {
@@ -1016,7 +1091,30 @@ export class ChartEngine {
             currentRanks.set(pair.entity, rank);
         });
 
-        // v6.0: Detect ranking changes with anticipation flash
+        // v7.0: Detect leader changes for intelligent pause
+        const newLeader = topN.length > 0 ? topN[0].entity : null;
+        if (newLeader !== this.currentLeader && this.currentLeader !== null) {
+            // Leader changed!
+            console.log(`👑 Leader changed: ${this.currentLeader} → ${newLeader}`);
+
+            this.leaderTransitions.push({
+                from: this.currentLeader,
+                to: newLeader,
+                timestamp: Date.now()
+            });
+
+            // v7.0: Trigger overtake flash for new leader
+            if (this.config.enableOvertakeFlash) {
+                this.overtakeFlashes.set(newLeader, {
+                    intensity: 1.0,
+                    startTime: Date.now(),
+                    type: 'leader_overtake'
+                });
+            }
+        }
+        this.currentLeader = newLeader;
+
+        // v6.0/v7.0: Detect ranking changes with anticipation flash and overtake detection
         topN.forEach((pair) => {
             const entity = pair.entity;
             const newRank = currentRanks.get(entity);
@@ -1025,6 +1123,16 @@ export class ChartEngine {
             // If rank changed, mark as moving
             if (oldRank !== undefined && oldRank !== newRank) {
                 const rankChange = Math.abs(newRank - oldRank);
+
+                // v7.0: Detect overtakes (crossing another bar)
+                if (this.config.enableOvertakeFlash && rankChange > 0) {
+                    // Flash for any position change
+                    this.overtakeFlashes.set(entity, {
+                        intensity: Math.min(rankChange / 3, 1.0),  // Stronger flash for bigger jumps
+                        startTime: Date.now(),
+                        type: rankChange >= 3 ? 'major_overtake' : 'minor_overtake'
+                    });
+                }
 
                 // v6.0: Trigger anticipation flash
                 this.anticipationFlashes.set(entity, {
@@ -1898,5 +2006,15 @@ export class ChartEngine {
         this.dramaticChanges.clear();
         this.midPointPauses.clear();
         this.colorBoosts.clear();
+
+        // v7.0: Clean up storytelling structures
+        this.overtakeFlashes.clear();
+        this.leaderTransitions = [];
+        this.currentLeader = null;
+        this.previousLeader = null;
+        if (this.pauseTimer) {
+            clearTimeout(this.pauseTimer);
+            this.pauseTimer = null;
+        }
     }
 }
