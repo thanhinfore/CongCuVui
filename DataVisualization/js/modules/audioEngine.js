@@ -189,6 +189,49 @@ export class AudioEngine {
     }
 
     /**
+     * Start fade out effect (v4.0)
+     * @param {number} duration - Fade duration in seconds (default: 3)
+     */
+    startFadeOut(duration = 3) {
+        if (!this._isLoaded || !this.gainNode) return;
+
+        const currentVolume = this.volume;
+        const fadeSteps = 60; // 60 steps for smooth fade
+        const stepDuration = (duration * 1000) / fadeSteps;
+        const volumeDecrement = currentVolume / fadeSteps;
+
+        let step = 0;
+        const fadeInterval = setInterval(() => {
+            step++;
+            const newVolume = Math.max(0, currentVolume - (volumeDecrement * step));
+
+            if (this.gainNode) {
+                this.gainNode.gain.value = newVolume;
+            }
+            if (this.audioElement) {
+                this.audioElement.volume = newVolume;
+            }
+
+            if (step >= fadeSteps || newVolume <= 0) {
+                clearInterval(fadeInterval);
+                console.log('🔇 Audio faded out');
+            }
+        }, stepDuration);
+
+        this.fadeOutInterval = fadeInterval;
+    }
+
+    /**
+     * Cancel fade out (v4.0)
+     */
+    cancelFadeOut() {
+        if (this.fadeOutInterval) {
+            clearInterval(this.fadeOutInterval);
+            this.fadeOutInterval = null;
+        }
+    }
+
+    /**
      * Get current playback time
      * @returns {number} Current time in seconds
      */

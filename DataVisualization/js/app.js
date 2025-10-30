@@ -428,8 +428,8 @@ class TimeSeriesRacingApp {
         this.chartEngine = new ChartEngine('chartCanvas', config, this.audioEngine);
         this.chartEngine.initialize(data);
 
-        // Create animation engine
-        this.animationEngine = new AnimationEngine(this.chartEngine, config);
+        // Create animation engine (v4.0: Pass audioEngine for fade out)
+        this.animationEngine = new AnimationEngine(this.chartEngine, config, this.audioEngine);
         this.animationEngine.createTimeline(data);
 
         // Set up callbacks
