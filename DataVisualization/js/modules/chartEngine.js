@@ -1,6 +1,6 @@
 // ========================================
-// Chart Engine Module - ULTRA PREMIUM EDITION v5.5
-// Visual Tracking Revolution: Motion trails, ghost effects, staggered animations
+// Chart Engine Module - PROFESSIONAL VISUALIZATION MASTER v6.0
+// Ultimate Observability: Anticipation effects, adaptive speed, rank badges, enhanced visuals
 // ========================================
 
 export class ChartEngine {
@@ -33,6 +33,15 @@ export class ChartEngine {
         this.movementTrails = []; // Motion trail particles
         this.barAnimationStart = new Map(); // Track when each bar started moving
         this.rankChangeDirection = new Map(); // Track direction of rank changes (up/down)
+
+        // v6.0: Professional visualization enhancements
+        this.anticipationFlashes = new Map(); // Pre-movement flash effects
+        this.rankBadges = new Map(); // Rank number badges for each entity
+        this.floatingLabels = new Map(); // Floating labels that follow bars
+        this.changeMagnitudes = new Map(); // Size of rank change for each entity
+        this.dramaticChanges = new Set(); // Entities with 5+ position changes
+        this.midPointPauses = new Map(); // Mid-animation pause tracking
+        this.colorBoosts = new Map(); // Enhanced saturation for moving bars
     }
 
     /**
@@ -91,7 +100,7 @@ export class ChartEngine {
         this.ctx.textRendering = 'optimizeLegibility';
         this.ctx.fontKerning = 'normal';
 
-        console.log(`🎨 v5.5 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Visual Tracking Enabled`);
+        console.log(`🎨 v6.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Professional Visualization Master`);
 
         // Initialize rank tracking
         this.initializeRankTracking();
@@ -162,13 +171,34 @@ export class ChartEngine {
                 indexAxis: 'y',
                 responsive: false,
                 maintainAspectRatio: false,
-                // v5.5: Ultra-slow tracking-optimized animations
+                // v6.0: Adaptive ultra-slow animations with anticipation
                 animation: {
-                    duration: 1800,  // v5.5: Much longer for easy tracking (was 1000ms)
+                    duration: (context) => {
+                        // v6.0: Adaptive duration based on change magnitude
+                        if (!context || !context.chart) return 2500;  // Default 2500ms
+
+                        const dataIndex = context.dataIndex;
+                        const entity = context.chart.data.labels[dataIndex];
+                        const currentRank = dataIndex;
+                        const previousRank = this.previousRanks.get(entity);
+
+                        if (previousRank === undefined) return 2500;
+
+                        const rankChange = Math.abs(currentRank - previousRank);
+
+                        // v6.0: Dramatic changes get 2x slower (5+ positions)
+                        if (rankChange >= 5) {
+                            return 5000;  // 5 seconds for dramatic changes!
+                        } else if (rankChange >= 3) {
+                            return 3500;  // 3.5 seconds for significant changes
+                        } else {
+                            return 2500;  // 2.5 seconds for normal changes
+                        }
+                    },
                     easing: 'easeInOutQuart',  // v5.5: Slower acceleration/deceleration
                     delay: (context) => {
-                        // v5.5: Staggered animation based on rank change
-                        if (!context.chart) return 0;
+                        // v6.0: Anticipation delay + stagger
+                        if (!context.chart) return 300;  // v6.0: Default 300ms anticipation
                         const dataIndex = context.dataIndex;
                         const entity = context.chart.data.labels[dataIndex];
 
@@ -176,20 +206,41 @@ export class ChartEngine {
                         const currentRank = dataIndex;
                         const previousRank = this.previousRanks.get(entity);
 
-                        if (previousRank === undefined) return 0;
+                        if (previousRank === undefined) return 300;
 
                         const rankChange = Math.abs(currentRank - previousRank);
-                        // Larger rank changes get slightly more delay for anticipation
-                        return rankChange * 30;  // 30ms per position changed
+
+                        // v6.0: 300ms anticipation + 50ms per position (increased from 30ms)
+                        return 300 + (rankChange * 50);
                     },
-                    // v5.5: Differentiated axis animations
+                    // v6.0: Adaptive axis animations
                     x: {
-                        duration: 1500,  // v5.5: Slower value changes
+                        duration: 2000,  // v6.0: Slower value changes
                         easing: 'easeOutQuart',  // Smooth value growth
                         from: (ctx) => ctx.chart ? ctx.chart.scales.x.min : 0
                     },
                     y: {
-                        duration: 2000,  // v5.5: VERY slow position changes for tracking (was 1200ms)
+                        duration: (context) => {
+                            // v6.0: Adaptive Y-axis duration (matches main duration)
+                            if (!context || !context.chart) return 2500;
+
+                            const dataIndex = context.dataIndex;
+                            const entity = context.chart.data.labels[dataIndex];
+                            const currentRank = dataIndex;
+                            const previousRank = this.previousRanks.get(entity);
+
+                            if (previousRank === undefined) return 2500;
+
+                            const rankChange = Math.abs(currentRank - previousRank);
+
+                            if (rankChange >= 5) {
+                                return 5000;  // Match main duration for consistency
+                            } else if (rankChange >= 3) {
+                                return 3500;
+                            } else {
+                                return 2500;
+                            }
+                        },
                         easing: 'easeInOutQuint',  // Ultra smooth ranking shifts
                         from: (ctx) => {
                             // Smooth entrance from below
@@ -364,7 +415,55 @@ export class ChartEngine {
                     }
                 },
                 {
-                    // v5.5: Ghost bars / Afterimage effect - Draw BEFORE main bars
+                    // v6.0: Anticipation Flash - Pre-movement warning
+                    id: 'anticipationFlash',
+                    beforeDatasetsDraw: (chart) => {
+                        if (this.anticipationFlashes.size === 0) return;
+
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        ctx.save();
+
+                        // Draw flash for each entity about to move
+                        this.anticipationFlashes.forEach((flashData, entity) => {
+                            const { intensity, startTime } = flashData;
+                            const elapsed = Date.now() - startTime;
+
+                            // Flash for 300ms
+                            if (elapsed > 300) {
+                                this.anticipationFlashes.delete(entity);
+                                return;
+                            }
+
+                            // Find bar
+                            const barIndex = chart.data.labels.indexOf(entity);
+                            if (barIndex === -1) return;
+
+                            const bar = meta.data[barIndex];
+                            if (!bar) return;
+
+                            // Pulsing flash (0 → 1 → 0 over 300ms)
+                            const progress = elapsed / 300;
+                            const flashIntensity = Math.sin(progress * Math.PI) * 0.8;
+
+                            // Draw bright flash around bar
+                            ctx.shadowColor = `rgba(255, 255, 100, ${flashIntensity})`;
+                            ctx.shadowBlur = 40;
+                            ctx.strokeStyle = `rgba(255, 255, 100, ${flashIntensity})`;
+                            ctx.lineWidth = 6;
+                            ctx.strokeRect(
+                                bar.x - 10,
+                                bar.y - 10,
+                                bar.width + 20,
+                                bar.height + 20
+                            );
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v5.5/v6.0 Enhanced: Ghost bars with higher visibility
                     id: 'ghostBars',
                     beforeDatasetsDraw: (chart) => {
                         if (this.ghostBars.size === 0) return;
@@ -377,13 +476,13 @@ export class ChartEngine {
                             const { y, height, width, x, color, opacity } = ghostData;
 
                             // Fade out ghost over time
-                            const fadeOpacity = Math.max(0, opacity - 0.05);
+                            const fadeOpacity = Math.max(0, opacity - 0.03);  // v6.0: Slower fade (was 0.05)
                             this.ghostBars.set(entity, { ...ghostData, opacity: fadeOpacity });
 
                             if (fadeOpacity <= 0) return;
 
-                            // Draw ghost bar with fading opacity
-                            ctx.globalAlpha = fadeOpacity * 0.3;  // Max 30% opacity
+                            // v6.0: Draw ghost bar with higher opacity (50% max vs 30%)
+                            ctx.globalAlpha = fadeOpacity * 0.5;  // v6.0: Increased from 0.3
                             ctx.fillStyle = color;
                             ctx.strokeStyle = this.darkenColor(color, 0.4);
                             ctx.lineWidth = 1.5;
@@ -418,7 +517,7 @@ export class ChartEngine {
                     }
                 },
                 {
-                    // v5.5: Motion trails - Curved path from old to new position
+                    // v6.0: Enhanced Motion trails - Thicker, brighter with glow
                     id: 'motionTrails',
                     beforeDatasetsDraw: (chart) => {
                         if (this.movementTrails.length === 0) return;
@@ -428,20 +527,27 @@ export class ChartEngine {
 
                         // Draw each motion trail
                         this.movementTrails.forEach((trail) => {
-                            const { fromY, toY, x, progress, color } = trail;
+                            const { fromY, toY, x, progress, color, entity } = trail;
 
                             // Calculate current position along the path
                             const currentY = fromY + (toY - fromY) * this.easeInOutQuint(progress);
 
+                            // v6.0: Thicker line width (4px → 10px)
+                            const lineWidth = 10;
+
+                            // v6.0: Add glow effect
+                            ctx.shadowColor = color;
+                            ctx.shadowBlur = 20;
+
                             // Draw trail as gradient line
                             const trailGradient = ctx.createLinearGradient(x, fromY, x, currentY);
-                            // Convert rgb to rgba with alpha values
+                            // v6.0: Higher opacity (0.25 → 0.4, 0.5 → 0.7)
                             trailGradient.addColorStop(0, this.rgbToRgba(color, 0));      // Transparent at start
-                            trailGradient.addColorStop(0.5, this.rgbToRgba(color, 0.25)); // Semi-transparent middle
-                            trailGradient.addColorStop(1, this.rgbToRgba(color, 0.5));    // More visible at current position
+                            trailGradient.addColorStop(0.5, this.rgbToRgba(color, 0.4));  // Semi-transparent middle
+                            trailGradient.addColorStop(1, this.rgbToRgba(color, 0.7));    // More visible at current position
 
                             ctx.strokeStyle = trailGradient;
-                            ctx.lineWidth = 4;
+                            ctx.lineWidth = lineWidth;
                             ctx.lineCap = 'round';
 
                             // Draw curved path
@@ -449,16 +555,17 @@ export class ChartEngine {
                             ctx.moveTo(x, fromY);
 
                             // Control point for smooth curve
-                            const controlX = x - 30;  // Curve to the left
+                            const controlX = x - 40;  // v6.0: More curve (30 → 40)
                             const controlY = (fromY + currentY) / 2;
 
                             ctx.quadraticCurveTo(controlX, controlY, x, currentY);
                             ctx.stroke();
 
-                            // Draw arrow at current position
-                            const arrowSize = 8;
+                            // v6.0: Larger arrow at current position (8px → 12px)
+                            const arrowSize = 12;
                             const direction = toY > fromY ? 1 : -1;  // Down or up
-                            ctx.fillStyle = this.rgbToRgba(color, 0.5);
+                            ctx.shadowBlur = 15;
+                            ctx.fillStyle = this.rgbToRgba(color, 0.8);
                             ctx.beginPath();
                             ctx.moveTo(x, currentY);
                             ctx.lineTo(x - arrowSize, currentY - arrowSize * direction);
@@ -467,6 +574,7 @@ export class ChartEngine {
                             ctx.fill();
                         });
 
+                        ctx.shadowBlur = 0;
                         ctx.restore();
                     }
                 },
@@ -517,32 +625,172 @@ export class ChartEngine {
                                 bar.height + 6
                             );
 
-                            // v5.5: Add directional arrow showing movement
+                            // v6.0: Enhanced directional arrow with pulsing animation
                             const direction = this.rankChangeDirection.get(entity);
                             if (direction) {
-                                const arrowX = bar.x - 50;
+                                const arrowX = bar.x - 60;  // v6.0: Further left for larger arrow
                                 const arrowY = bar.y + bar.height / 2;
-                                const arrowSize = 15;
+                                const arrowSize = 25;  // v6.0: Much larger (15 → 25)
+
+                                // v6.0: Pulsing size animation
+                                const time = Date.now() / 1000;
+                                const pulseScale = 1 + Math.sin(time * 5) * 0.2;  // 0.8 to 1.2
 
                                 ctx.fillStyle = direction === 'up' ? '#4CAF50' : '#f44336';
-                                ctx.shadowBlur = 10;
+                                ctx.shadowBlur = 20 * pulseScale;  // v6.0: Larger glow
                                 ctx.shadowColor = ctx.fillStyle;
+
+                                ctx.save();
+                                ctx.translate(arrowX, arrowY);
+                                ctx.scale(pulseScale, pulseScale);
+                                ctx.translate(-arrowX, -arrowY);
 
                                 ctx.beginPath();
                                 if (direction === 'up') {
-                                    // Upward arrow
+                                    // Upward arrow (triangle)
                                     ctx.moveTo(arrowX, arrowY - arrowSize);
                                     ctx.lineTo(arrowX - arrowSize / 2, arrowY);
                                     ctx.lineTo(arrowX + arrowSize / 2, arrowY);
                                 } else {
-                                    // Downward arrow
+                                    // Downward arrow (triangle)
                                     ctx.moveTo(arrowX, arrowY + arrowSize);
                                     ctx.lineTo(arrowX - arrowSize / 2, arrowY);
                                     ctx.lineTo(arrowX + arrowSize / 2, arrowY);
                                 }
                                 ctx.closePath();
                                 ctx.fill();
+
+                                // v6.0: Add white stroke for better visibility
+                                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                                ctx.lineWidth = 2;
+                                ctx.stroke();
+
+                                ctx.restore();
                             }
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v6.0: Rank Number Badges
+                    id: 'rankBadges',
+                    afterDatasetsDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        const chartArea = chart.chartArea;
+
+                        ctx.save();
+
+                        // Draw rank badge for each bar
+                        chart.data.labels.forEach((entity, index) => {
+                            const bar = meta.data[index];
+                            if (!bar) return;
+
+                            const rank = index + 1;  // 1-indexed
+
+                            // Badge position (left side of bar)
+                            const badgeX = chartArea.left - 100;
+                            const badgeY = bar.y + bar.height / 2;
+                            const badgeRadius = 22;  // Circle radius
+
+                            // Badge colors based on rank
+                            let badgeColor, textColor;
+                            if (rank === 1) {
+                                badgeColor = '#FFD700';  // Gold
+                                textColor = '#000000';
+                            } else if (rank === 2) {
+                                badgeColor = '#C0C0C0';  // Silver
+                                textColor = '#000000';
+                            } else if (rank === 3) {
+                                badgeColor = '#CD7F32';  // Bronze
+                                textColor = '#FFFFFF';
+                            } else {
+                                badgeColor = '#667eea';  // Purple
+                                textColor = '#FFFFFF';
+                            }
+
+                            // Draw circle background
+                            ctx.fillStyle = badgeColor;
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 3;
+                            ctx.beginPath();
+                            ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
+                            ctx.fill();
+
+                            // Draw rank number
+                            ctx.shadowBlur = 0;
+                            ctx.fillStyle = textColor;
+                            ctx.font = 'bold 20px Inter, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(`#${rank}`, badgeX, badgeY);
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v6.0: Floating Entity Labels
+                    id: 'floatingLabels',
+                    afterDatasetsDraw: (chart) => {
+                        // Only show for moving bars
+                        if (this.movingBars.size === 0) return;
+
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+
+                        ctx.save();
+
+                        this.movingBars.forEach((entity) => {
+                            const barIndex = chart.data.labels.indexOf(entity);
+                            if (barIndex === -1) return;
+
+                            const bar = meta.data[barIndex];
+                            if (!bar) return;
+
+                            // Label position (above bar)
+                            const labelX = bar.x + bar.width / 2;
+                            const labelY = bar.y - 30;
+
+                            // Background pill shape
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 2;
+
+                            const text = entity;
+                            ctx.font = 'bold 16px Inter, sans-serif';
+                            const textWidth = ctx.measureText(text).width;
+
+                            // Draw rounded rectangle
+                            const padding = 12;
+                            const rectX = labelX - textWidth / 2 - padding;
+                            const rectY = labelY - 12;
+                            const rectWidth = textWidth + padding * 2;
+                            const rectHeight = 24;
+                            const radius = 12;
+
+                            ctx.beginPath();
+                            ctx.moveTo(rectX + radius, rectY);
+                            ctx.lineTo(rectX + rectWidth - radius, rectY);
+                            ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radius);
+                            ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radius);
+                            ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radius, rectY + rectHeight);
+                            ctx.lineTo(rectX + radius, rectY + rectHeight);
+                            ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
+                            ctx.lineTo(rectX, rectY + radius);
+                            ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+                            ctx.closePath();
+                            ctx.fill();
+
+                            // Draw text
+                            ctx.shadowBlur = 0;
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(text, labelX, labelY);
                         });
 
                         ctx.restore();
@@ -731,7 +979,7 @@ export class ChartEngine {
             currentRanks.set(pair.entity, rank);
         });
 
-        // v4.5/v5.5: Detect ranking changes and mark moving bars with enhanced tracking
+        // v6.0: Detect ranking changes with anticipation flash
         topN.forEach((pair) => {
             const entity = pair.entity;
             const newRank = currentRanks.get(entity);
@@ -739,6 +987,24 @@ export class ChartEngine {
 
             // If rank changed, mark as moving
             if (oldRank !== undefined && oldRank !== newRank) {
+                const rankChange = Math.abs(newRank - oldRank);
+
+                // v6.0: Trigger anticipation flash
+                this.anticipationFlashes.set(entity, {
+                    intensity: 1.0,
+                    startTime: Date.now()
+                });
+
+                // v6.0: Mark dramatic changes (5+ positions)
+                if (rankChange >= 5) {
+                    this.dramaticChanges.add(entity);
+                    // Remove after adaptive duration (5 seconds)
+                    setTimeout(() => this.dramaticChanges.delete(entity), 5000);
+                }
+
+                // v6.0: Store change magnitude
+                this.changeMagnitudes.set(entity, rankChange);
+
                 this.movingBars.add(entity);
 
                 // v5.5: Store rank change direction
@@ -795,12 +1061,23 @@ export class ChartEngine {
                     clearTimeout(this.rankChangeTimers.get(entity));
                 }
 
-                // Remove from movingBars after animation completes (v5.5: 2 seconds - longer)
+                // v6.0: Adaptive timeout based on change magnitude
+                let animationDuration;
+                if (rankChange >= 5) {
+                    animationDuration = 5000;  // 5 seconds for dramatic changes
+                } else if (rankChange >= 3) {
+                    animationDuration = 3500;  // 3.5 seconds for significant changes
+                } else {
+                    animationDuration = 2500;  // 2.5 seconds for normal changes
+                }
+
+                // Remove from movingBars after animation completes
                 const timer = setTimeout(() => {
                     this.movingBars.delete(entity);
                     this.rankChangeTimers.delete(entity);
                     this.rankChangeDirection.delete(entity);
-                }, 2000);  // v5.5: Increased from 1000ms
+                    this.changeMagnitudes.delete(entity);
+                }, animationDuration);
 
                 this.rankChangeTimers.set(entity, timer);
 
@@ -1575,5 +1852,14 @@ export class ChartEngine {
         this.movingBars.clear();
         this.rankChangeTimers.forEach(timer => clearTimeout(timer));
         this.rankChangeTimers.clear();
+
+        // v6.0: Clean up professional visualization structures
+        this.anticipationFlashes.clear();
+        this.rankBadges.clear();
+        this.floatingLabels.clear();
+        this.changeMagnitudes.clear();
+        this.dramaticChanges.clear();
+        this.midPointPauses.clear();
+        this.colorBoosts.clear();
     }
 }
