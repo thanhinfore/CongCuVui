@@ -1,0 +1,366 @@
+/* =====================================================
+   V8.1.CSS - Version 8.1 Perfect Balance
+   Equal Layout, Better Canvas Sizes, Enhanced UX
+   ===================================================== */
+
+/* ==================== V8.1 Balanced Layout ==================== */
+
+/* Main grid with equal columns */
+.v81-balanced-layout .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--v6-space-6);
+    align-items: start;
+}
+
+/* Ensure control panel takes full height available */
+.v81-balanced-layout .control-panel {
+    width: 100%;
+    max-width: none;
+}
+
+/* Preview panel matches width */
+.v81-balanced-layout .preview-panel {
+    width: 100%;
+}
+
+/* Remove sticky positioning for better balance */
+.v81-balanced-layout .control-panel {
+    position: relative;
+    top: auto;
+    max-height: none;
+}
+
+/* Better scrolling for both panels */
+.v81-balanced-layout .control-panel,
+.v81-balanced-layout .preview-panel {
+    overflow-y: auto;
+    max-height: calc(100vh - 140px);
+}
+
+/* ==================== V8.1 Enhanced Canvas Sizes ==================== */
+
+.v81-canvas-size-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--v6-space-2);
+    margin-top: var(--v6-space-2);
+}
+
+.v81-canvas-size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--v6-space-3);
+    background: var(--v6-surface);
+    border: 2px solid var(--v6-border);
+    border-radius: var(--v6-radius-lg);
+    cursor: pointer;
+    transition: all var(--v6-transition-fast);
+    gap: var(--v6-space-1);
+}
+
+.v81-canvas-size-btn:hover {
+    border-color: var(--v6-primary);
+    background: var(--v6-primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--v6-shadow-md);
+}
+
+.v81-canvas-size-btn.active {
+    border-color: var(--v6-primary);
+    background: var(--v6-primary);
+    color: white;
+}
+
+.v81-canvas-size-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.v81-canvas-size-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.v81-canvas-size-dimensions {
+    font-size: 0.6875rem;
+    opacity: 0.7;
+}
+
+/* Orientation badges */
+.v81-orientation-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--v6-space-1);
+    padding: 2px 6px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--v6-primary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: var(--v6-radius-sm);
+    margin-left: var(--v6-space-1);
+}
+
+.v81-orientation-badge.landscape {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--v6-success);
+}
+
+.v81-orientation-badge.portrait {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--v6-accent);
+}
+
+/* ==================== V8.1 Preset Style Editing ==================== */
+
+.v81-preset-editing-note {
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-3);
+    background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+    border-left: 4px solid var(--v6-primary);
+    border-radius: var(--v6-radius-md);
+    margin-top: var(--v6-space-3);
+    font-size: 0.8125rem;
+    color: var(--v6-text-primary);
+}
+
+.v81-preset-editing-note svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    stroke: var(--v6-primary);
+}
+
+/* ==================== V8.1 Emoji Support Indicator ==================== */
+
+.v81-emoji-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-2) var(--v6-space-3);
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    border-radius: var(--v6-radius-md);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #155724;
+    margin-top: var(--v6-space-2);
+}
+
+.v81-emoji-status svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+}
+
+/* ==================== V8.1 Enhanced Preview Grid ==================== */
+
+.v81-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--v6-space-4);
+    padding: var(--v6-space-4);
+}
+
+@media (max-width: 1400px) {
+    .v81-preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 1200px) {
+    .v81-preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+/* ==================== V8.1 Section Organization ==================== */
+
+.v81-section-group {
+    margin-bottom: var(--v6-space-4);
+}
+
+.v81-section-group-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--v6-text-tertiary);
+    margin-bottom: var(--v6-space-2);
+    padding: 0 var(--v6-space-2);
+}
+
+/* ==================== V8.1 Quick Size Selector ==================== */
+
+.v81-quick-size-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--v6-space-2);
+}
+
+.v81-quick-size-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--v6-space-1);
+    padding: var(--v6-space-2);
+    background: var(--v6-surface);
+    border: 1px solid var(--v6-border);
+    border-radius: var(--v6-radius-md);
+    cursor: pointer;
+    transition: all var(--v6-transition-fast);
+    font-size: 0.75rem;
+}
+
+.v81-quick-size-btn:hover {
+    border-color: var(--v6-primary);
+    background: var(--v6-primary-light);
+}
+
+.v81-quick-size-btn.active {
+    border-color: var(--v6-primary);
+    background: var(--v6-primary);
+    color: white;
+}
+
+.v81-quick-size-icon {
+    font-size: 1.5rem;
+}
+
+/* ==================== V8.1 Responsive Improvements ==================== */
+
+@media (max-width: 1024px) {
+    .v81-balanced-layout .content-grid {
+        grid-template-columns: 1fr;
+        gap: var(--v6-space-4);
+    }
+
+    .v81-balanced-layout .control-panel,
+    .v81-balanced-layout .preview-panel {
+        max-height: none;
+    }
+
+    .v81-canvas-size-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .v81-quick-size-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .v81-preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== V8.1 Smooth Transitions ==================== */
+
+.v81-smooth-transition {
+    transition: all var(--v6-transition-slow);
+}
+
+.v81-fade-in {
+    animation: v81-fadeIn 0.4s ease;
+}
+
+@keyframes v81-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== V8.1 Better Scrollbars ==================== */
+
+.v81-balanced-layout .control-panel::-webkit-scrollbar,
+.v81-balanced-layout .preview-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.v81-balanced-layout .control-panel::-webkit-scrollbar-track,
+.v81-balanced-layout .preview-panel::-webkit-scrollbar-track {
+    background: var(--v6-gray-100);
+    border-radius: var(--v6-radius-sm);
+}
+
+.v81-balanced-layout .control-panel::-webkit-scrollbar-thumb,
+.v81-balanced-layout .preview-panel::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--v6-radius-sm);
+}
+
+/* ==================== V8.1 Enhanced Canvas Preview ==================== */
+
+.v81-canvas-preview {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    background: linear-gradient(135deg, var(--v6-gray-100) 0%, var(--v6-gray-200) 100%);
+    border-radius: var(--v6-radius-md);
+    margin-top: var(--v6-space-2);
+    padding: var(--v6-space-3);
+}
+
+.v81-canvas-preview-rect {
+    background: white;
+    border: 2px solid var(--v6-primary);
+    border-radius: var(--v6-radius-sm);
+    box-shadow: var(--v6-shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--v6-text-tertiary);
+    font-weight: 600;
+}
+
+/* ==================== V8.1 Utilities ==================== */
+
+.v81-text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.v81-badge-new {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #875a00;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: var(--v6-radius-full);
+    margin-left: var(--v6-space-2);
+    animation: v81-pulse 2s ease infinite;
+}
+
+@keyframes v81-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}

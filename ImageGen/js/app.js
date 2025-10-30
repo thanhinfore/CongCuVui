@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v8.0)
-   Ultimate UX, Mode Toggle, Perfect Emoji Support
+   APP.JS - Main Application Entry Point (v8.1)
+   Perfect Balance, Enhanced Canvas Sizes, Emoji Fix
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -64,12 +64,12 @@ class ImageTextApp {
             }
 
             this.initialized = true;
-            console.log('✨ Image Text App Pro v8.0 initialized successfully');
+            console.log('✨ Image Text App Pro v8.1 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🎉 Version 8.0! Smart Modes, Perfect Emoji, Ultimate UX', 'success', 6000);
+                    this.components.v6ui.showToast('⚙️ Version 8.1! Equal Layout, 17 Canvas Sizes, Emoji Fixed!', 'success', 6000);
                 }
             }, 500);
 

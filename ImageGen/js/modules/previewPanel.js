@@ -1,10 +1,11 @@
 ﻿/* =====================================================
-   PREVIEWPANEL.JS - Preview Panel Module (v6.0)
+   PREVIEWPANEL.JS - Preview Panel Module (v8.1)
    Full Markdown Support + Emoji Support + Enhanced Features
    ===================================================== */
 
 import { utils } from './utils.js';
 import { markdownParser } from './markdownParser.js';
+import { getEmojiRenderer } from './emojiRenderer.js';
 
 export class PreviewPanel {
     constructor(DOM, state) {
@@ -13,6 +14,7 @@ export class PreviewPanel {
         this.textConfigs = [];
         this.lazyLoadObserver = null;
         this.canvasPool = [];
+        this.emojiRenderer = getEmojiRenderer();
 
         this.initialize();
     }
@@ -489,7 +491,9 @@ export class PreviewPanel {
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
             const style = segment.italic ? 'italic' : fontStyle;
-            ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
+
+            // Use EmojiRenderer to build font string with emoji fallbacks
+            ctx.font = this.emojiRenderer.buildFontString(style, weight, fontSize, fontFamily);
 
             // Add letter spacing to width calculation
             const chars = segment.text.split('');
@@ -536,7 +540,9 @@ export class PreviewPanel {
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
             const style = segment.italic ? 'italic' : fontStyle;
-            ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
+
+            // Use EmojiRenderer to build font string with emoji fallbacks
+            ctx.font = this.emojiRenderer.buildFontString(style, weight, fontSize, fontFamily);
 
             // Draw highlight background if needed
             if (segment.highlight) {
@@ -715,8 +721,8 @@ export class PreviewPanel {
         ctx.textBaseline = 'middle';
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        // Add emoji font support for canvas rendering
-        const canvasFont = selectedFont.replace(/['"]/g, '') + ', "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+        // Use EmojiRenderer for proper emoji font support
+        const canvasFont = this.emojiRenderer.buildFontString('normal', '400', 16, selectedFont).split('16px ')[1];
 
         const renderEffects = {
             textShadow: effects.textShadow,
@@ -946,10 +952,8 @@ export class PreviewPanel {
         const creditFontSize = Math.round(baseCreditSize * scaleFactor);
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        // Add emoji font support for canvas rendering
-        const canvasFont = selectedFont.replace(/['"]/g, '') + ', "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
-
-        ctx.font = `bold ${creditFontSize}px ${canvasFont}`;
+        // Use EmojiRenderer for proper emoji font support
+        ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', creditFontSize, selectedFont);
         ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
         ctx.textAlign = 'right';
         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
