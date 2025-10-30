@@ -1,6 +1,6 @@
 // ========================================
-// Chart Engine Module - PROFESSIONAL VISUALIZATION MASTER v6.0
-// Ultimate Observability: Anticipation effects, adaptive speed, rank badges, enhanced visuals
+// Chart Engine Module - ULTIMATE DATA STORYTELLING v7.0
+// Professional Cinematography: Intelligent pauses, leader crowns, overtake effects, vibrant colors
 // ========================================
 
 export class ChartEngine {
@@ -42,6 +42,14 @@ export class ChartEngine {
         this.dramaticChanges = new Set(); // Entities with 5+ position changes
         this.midPointPauses = new Map(); // Mid-animation pause tracking
         this.colorBoosts = new Map(); // Enhanced saturation for moving bars
+
+        // v7.0: Ultimate data storytelling
+        this.currentLeader = null; // Track current #1 entity
+        this.previousLeader = null; // Track previous #1 for overtake detection
+        this.overtakeFlashes = new Map(); // Overtake flash effects
+        this.leaderTransitions = []; // Leader change history
+        this.isPaused = false; // Intelligent pause state
+        this.pauseTimer = null; // Pause timer
     }
 
     /**
@@ -54,20 +62,25 @@ export class ChartEngine {
             topN: config.topN || 10,
             fps: config.fps || 30,
             periodLength: config.periodLength || 1000,
-            palette: config.palette || 'vibrant',
+            palette: config.palette || 'vibrant',  // v7.0: Default to vibrant (NOT pastel!)
             width: config.width || 1920,
             height: config.height || 1080,
-            showStatsPanel: config.showStatsPanel !== false,
+            showStatsPanel: config.showStatsPanel === true,  // v7.0: Hidden by default (clutter!)
             showValueLabels: config.showValueLabels !== false,
             showRankIndicators: config.showRankIndicators !== false,
             showGrowthRate: config.showGrowthRate !== false,
-            barStyle: config.barStyle || 'gradient', // 'solid' or 'gradient'
+            barStyle: config.barStyle || 'gradient',
             enableShadows: config.enableShadows !== false,
-            enableParticles: config.enableParticles !== false, // NEW v3.0
-            showAudioVisualizer: config.showAudioVisualizer !== false, // NEW v3.0
-            animatedBackground: config.animatedBackground !== false, // NEW v3.0
-            padding: config.padding || { top: 180, right: 120, bottom: 120, left: 80 },
-            fontSizes: config.fontSizes || null, // Auto-calculated from ratio
+            enableParticles: config.enableParticles !== false,
+            showAudioVisualizer: config.showAudioVisualizer === true,  // v7.0: Hidden by default (distracting!)
+            animatedBackground: config.animatedBackground !== false,
+            // v7.0: Ultimate data storytelling features
+            enableLeaderCrown: config.enableLeaderCrown !== false,  // Crown for #1
+            enableOvertakeFlash: config.enableOvertakeFlash !== false,  // Flash on overtakes
+            intelligentPause: config.intelligentPause !== false,  // Pause on dramatic moments
+            pauseDuration: config.pauseDuration || 1500,  // 1.5s pause on leader changes
+            padding: config.padding || { top: 100, right: 120, bottom: 120, left: 80 },  // v7.0: Less top padding (no stats)
+            fontSizes: config.fontSizes || null,
             ...config
         };
     }
@@ -100,7 +113,7 @@ export class ChartEngine {
         this.ctx.textRendering = 'optimizeLegibility';
         this.ctx.fontKerning = 'normal';
 
-        console.log(`🎨 v6.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Professional Visualization Master`);
+        console.log(`🎨 v7.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Ultimate Data Storytelling`);
 
         // Initialize rank tracking
         this.initializeRankTracking();
@@ -726,6 +739,30 @@ export class ChartEngine {
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
                             ctx.fillText(`#${rank}`, badgeX, badgeY);
+
+                            // v7.0: Leader Crown Effect
+                            if (rank === 1 && this.config.enableLeaderCrown) {
+                                // Draw pulsing crown above #1
+                                const time = Date.now() / 1000;
+                                const pulse = 1 + Math.sin(time * 3) * 0.15;  // 0.85-1.15 scale
+                                const crownX = bar.x + bar.width + 20;
+                                const crownY = bar.y - 15;
+                                const crownSize = 30 * pulse;
+
+                                // Enhanced glow
+                                ctx.shadowColor = '#FFD700';
+                                ctx.shadowBlur = 20 * pulse;
+                                ctx.font = `${crownSize}px Arial`;
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText('👑', crownX, crownY);
+
+                                // Highlight leader bar with golden glow
+                                ctx.shadowBlur = 0;
+                                ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
+                                ctx.lineWidth = 5;
+                                ctx.strokeRect(bar.x - 5, bar.y - 5, bar.width + 10, bar.height + 10);
+                            }
                         });
 
                         ctx.restore();
