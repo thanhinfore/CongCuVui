@@ -1,0 +1,738 @@
+/* =====================================================
+   V6.CSS - Image Text Generator Pro Version 6.0
+   Modern UI/UX Redesign - Ultimate User Experience
+   ===================================================== */
+
+/* ==================== Version 6.0 Design Tokens ==================== */
+:root {
+    /* Modern Color Palette - Professional & Vibrant */
+    --v6-primary: #6366f1;
+    --v6-primary-hover: #4f46e5;
+    --v6-primary-light: #eef2ff;
+    --v6-primary-dark: #4338ca;
+
+    --v6-accent: #8b5cf6;
+    --v6-accent-hover: #7c3aed;
+
+    --v6-success: #10b981;
+    --v6-warning: #f59e0b;
+    --v6-error: #ef4444;
+    --v6-info: #06b6d4;
+
+    /* Neutral Colors */
+    --v6-gray-50: #f9fafb;
+    --v6-gray-100: #f3f4f6;
+    --v6-gray-200: #e5e7eb;
+    --v6-gray-300: #d1d5db;
+    --v6-gray-400: #9ca3af;
+    --v6-gray-500: #6b7280;
+    --v6-gray-600: #4b5563;
+    --v6-gray-700: #374151;
+    --v6-gray-800: #1f2937;
+    --v6-gray-900: #111827;
+
+    /* Surfaces */
+    --v6-surface: #ffffff;
+    --v6-surface-elevated: #ffffff;
+    --v6-background: #fafbfc;
+    --v6-background-alt: #f3f4f6;
+
+    /* Text Colors */
+    --v6-text-primary: #111827;
+    --v6-text-secondary: #6b7280;
+    --v6-text-tertiary: #9ca3af;
+
+    /* Border Colors */
+    --v6-border: #e5e7eb;
+    --v6-border-hover: #d1d5db;
+    --v6-border-focus: #6366f1;
+
+    /* Shadows - Elevated Design */
+    --v6-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --v6-shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --v6-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --v6-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --v6-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+    /* Gradients */
+    --v6-gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --v6-gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    --v6-gradient-warm: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    --v6-gradient-cool: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+
+    /* Spacing Scale - Consistent Rhythm */
+    --v6-space-0: 0;
+    --v6-space-1: 0.25rem;  /* 4px */
+    --v6-space-2: 0.5rem;   /* 8px */
+    --v6-space-3: 0.75rem;  /* 12px */
+    --v6-space-4: 1rem;     /* 16px */
+    --v6-space-5: 1.25rem;  /* 20px */
+    --v6-space-6: 1.5rem;   /* 24px */
+    --v6-space-8: 2rem;     /* 32px */
+    --v6-space-10: 2.5rem;  /* 40px */
+    --v6-space-12: 3rem;    /* 48px */
+    --v6-space-16: 4rem;    /* 64px */
+
+    /* Border Radius - Soft & Modern */
+    --v6-radius-sm: 0.375rem;  /* 6px */
+    --v6-radius-md: 0.5rem;    /* 8px */
+    --v6-radius-lg: 0.75rem;   /* 12px */
+    --v6-radius-xl: 1rem;      /* 16px */
+    --v6-radius-2xl: 1.5rem;   /* 24px */
+    --v6-radius-full: 9999px;
+
+    /* Transitions - Smooth & Professional */
+    --v6-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --v6-transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --v6-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Z-index Layers */
+    --v6-z-base: 0;
+    --v6-z-dropdown: 100;
+    --v6-z-sticky: 200;
+    --v6-z-fixed: 300;
+    --v6-z-modal-backdrop: 400;
+    --v6-z-modal: 500;
+    --v6-z-tooltip: 600;
+
+    /* Typography */
+    --v6-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --v6-font-display: 'Inter', sans-serif;
+}
+
+/* ==================== Version 6.0 Header - Premium Look ==================== */
+.v6-header {
+    background: var(--v6-surface);
+    border-bottom: 1px solid var(--v6-border);
+    position: sticky;
+    top: 0;
+    z-index: var(--v6-z-sticky);
+    backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: var(--v6-shadow-sm);
+}
+
+.v6-header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--v6-space-4) var(--v6-space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--v6-space-4);
+}
+
+.v6-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-4);
+}
+
+.v6-header-logo {
+    height: 40px;
+    cursor: pointer;
+    transition: transform var(--v6-transition-base);
+}
+
+.v6-header-logo:hover {
+    transform: scale(1.05);
+}
+
+.v6-header-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--v6-space-1);
+}
+
+.v6-header-title h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--v6-text-primary);
+    margin: 0;
+}
+
+.v6-header-version {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--v6-primary);
+    background: var(--v6-primary-light);
+    padding: var(--v6-space-1) var(--v6-space-3);
+    border-radius: var(--v6-radius-full);
+}
+
+.v6-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+}
+
+.v6-header-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--v6-border);
+    border-radius: var(--v6-radius-md);
+    color: var(--v6-text-secondary);
+    cursor: pointer;
+    transition: all var(--v6-transition-fast);
+}
+
+.v6-header-btn:hover:not(:disabled) {
+    background: var(--v6-gray-50);
+    border-color: var(--v6-border-hover);
+    color: var(--v6-text-primary);
+}
+
+.v6-header-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ==================== Version 6.0 Main Layout - Responsive Grid ==================== */
+.v6-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--v6-space-6);
+}
+
+.v6-main-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: var(--v6-space-6);
+    align-items: start;
+}
+
+/* ==================== Version 6.0 Control Panel - Beautiful Sidebar ==================== */
+.v6-control-panel {
+    background: var(--v6-surface);
+    border-radius: var(--v6-radius-xl);
+    border: 1px solid var(--v6-border);
+    box-shadow: var(--v6-shadow-base);
+    position: sticky;
+    top: calc(var(--v6-space-6) + 72px);
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tab Navigation - Modern Pills */
+.v6-tabs {
+    display: flex;
+    padding: var(--v6-space-4);
+    gap: var(--v6-space-2);
+    border-bottom: 1px solid var(--v6-border);
+    background: var(--v6-gray-50);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.v6-tab {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-2) var(--v6-space-4);
+    border-radius: var(--v6-radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--v6-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--v6-transition-fast);
+    white-space: nowrap;
+}
+
+.v6-tab:hover {
+    background: var(--v6-surface);
+    color: var(--v6-text-primary);
+}
+
+.v6-tab.active {
+    background: var(--v6-surface);
+    border-color: var(--v6-border);
+    color: var(--v6-primary);
+    box-shadow: var(--v6-shadow-sm);
+}
+
+.v6-tab-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+/* Tab Content Area */
+.v6-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--v6-space-4);
+}
+
+.v6-tab-panel {
+    display: none;
+    animation: v6-fadeIn 0.3s ease;
+}
+
+.v6-tab-panel.active {
+    display: block;
+}
+
+@keyframes v6-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== Version 6.0 Sections - Collapsible Cards ==================== */
+.v6-section {
+    margin-bottom: var(--v6-space-4);
+    border-radius: var(--v6-radius-lg);
+    border: 1px solid var(--v6-border);
+    overflow: hidden;
+    transition: all var(--v6-transition-base);
+}
+
+.v6-section:hover {
+    border-color: var(--v6-border-hover);
+    box-shadow: var(--v6-shadow-sm);
+}
+
+.v6-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--v6-space-4);
+    background: var(--v6-gray-50);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--v6-transition-fast);
+}
+
+.v6-section-header:hover {
+    background: var(--v6-gray-100);
+}
+
+.v6-section-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-3);
+    flex: 1;
+}
+
+.v6-section-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--v6-primary);
+    flex-shrink: 0;
+}
+
+.v6-section-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--v6-text-primary);
+    margin: 0;
+}
+
+.v6-section-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--v6-primary);
+    background: var(--v6-primary-light);
+    padding: var(--v6-space-1) var(--v6-space-2);
+    border-radius: var(--v6-radius-sm);
+}
+
+.v6-section-toggle {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--v6-radius-sm);
+    transition: all var(--v6-transition-fast);
+    color: var(--v6-text-tertiary);
+}
+
+.v6-section-toggle svg {
+    width: 16px;
+    height: 16px;
+    transition: transform var(--v6-transition-base);
+}
+
+.v6-section.collapsed .v6-section-toggle svg {
+    transform: rotate(-90deg);
+}
+
+.v6-section-content {
+    padding: var(--v6-space-4);
+    background: var(--v6-surface);
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height var(--v6-transition-slow), padding var(--v6-transition-slow);
+}
+
+.v6-section.collapsed .v6-section-content {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* ==================== Version 6.0 Form Controls - Modern Inputs ==================== */
+.v6-form-group {
+    margin-bottom: var(--v6-space-4);
+}
+
+.v6-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.v6-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--v6-text-primary);
+    margin-bottom: var(--v6-space-2);
+}
+
+.v6-input,
+.v6-textarea,
+.v6-select {
+    width: 100%;
+    padding: var(--v6-space-3) var(--v6-space-4);
+    border: 1px solid var(--v6-border);
+    border-radius: var(--v6-radius-md);
+    background: var(--v6-surface);
+    color: var(--v6-text-primary);
+    font-size: 0.9375rem;
+    font-family: var(--v6-font-sans);
+    transition: all var(--v6-transition-fast);
+}
+
+.v6-input:hover,
+.v6-textarea:hover,
+.v6-select:hover {
+    border-color: var(--v6-border-hover);
+}
+
+.v6-input:focus,
+.v6-textarea:focus,
+.v6-select:focus {
+    outline: none;
+    border-color: var(--v6-border-focus);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.v6-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* ==================== Version 6.0 Buttons - Beautiful Actions ==================== */
+.v6-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-3) var(--v6-space-5);
+    border-radius: var(--v6-radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-family: var(--v6-font-sans);
+    cursor: pointer;
+    transition: all var(--v6-transition-fast);
+    border: none;
+    white-space: nowrap;
+}
+
+.v6-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.v6-btn-primary {
+    background: var(--v6-gradient-primary);
+    color: white;
+    box-shadow: var(--v6-shadow-sm);
+}
+
+.v6-btn-primary:hover:not(:disabled) {
+    box-shadow: var(--v6-shadow-md);
+    transform: translateY(-1px);
+}
+
+.v6-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.v6-btn-secondary {
+    background: var(--v6-surface);
+    border: 1px solid var(--v6-border);
+    color: var(--v6-text-primary);
+}
+
+.v6-btn-secondary:hover:not(:disabled) {
+    background: var(--v6-gray-50);
+    border-color: var(--v6-border-hover);
+}
+
+.v6-btn-ghost {
+    background: transparent;
+    color: var(--v6-text-secondary);
+}
+
+.v6-btn-ghost:hover:not(:disabled) {
+    background: var(--v6-gray-100);
+    color: var(--v6-text-primary);
+}
+
+.v6-btn-sm {
+    padding: var(--v6-space-2) var(--v6-space-3);
+    font-size: 0.875rem;
+}
+
+.v6-btn-lg {
+    padding: var(--v6-space-4) var(--v6-space-6);
+    font-size: 1rem;
+}
+
+.v6-btn-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Button Group */
+.v6-btn-group {
+    display: flex;
+    gap: var(--v6-space-2);
+    flex-wrap: wrap;
+}
+
+/* ==================== Version 6.0 Range Slider - Beautiful Control ==================== */
+.v6-range-group {
+    margin-bottom: var(--v6-space-4);
+}
+
+.v6-range-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--v6-space-3);
+}
+
+.v6-range-label span:first-child {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--v6-text-primary);
+}
+
+.v6-range-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--v6-primary);
+    background: var(--v6-primary-light);
+    padding: var(--v6-space-1) var(--v6-space-2);
+    border-radius: var(--v6-radius-sm);
+}
+
+.v6-range-input {
+    width: 100%;
+    height: 6px;
+    border-radius: var(--v6-radius-full);
+    background: var(--v6-gray-200);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.v6-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--v6-primary);
+    cursor: pointer;
+    box-shadow: var(--v6-shadow-sm);
+    transition: all var(--v6-transition-fast);
+}
+
+.v6-range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: var(--v6-shadow-md);
+}
+
+.v6-range-input::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--v6-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--v6-shadow-sm);
+    transition: all var(--v6-transition-fast);
+}
+
+.v6-range-input::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: var(--v6-shadow-md);
+}
+
+/* ==================== Version 6.0 Preview Panel - Elegant Display ==================== */
+.v6-preview-panel {
+    background: var(--v6-surface);
+    border-radius: var(--v6-radius-xl);
+    border: 1px solid var(--v6-border);
+    box-shadow: var(--v6-shadow-base);
+    overflow: hidden;
+}
+
+.v6-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--v6-space-4) var(--v6-space-5);
+    border-bottom: 1px solid var(--v6-border);
+    background: var(--v6-gray-50);
+}
+
+.v6-preview-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--v6-text-primary);
+    margin: 0;
+}
+
+.v6-preview-content {
+    padding: var(--v6-space-5);
+    min-height: 400px;
+}
+
+/* ==================== Version 6.0 Responsive Design ==================== */
+@media (max-width: 1024px) {
+    .v6-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .v6-control-panel {
+        position: static;
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .v6-container {
+        padding: var(--v6-space-4);
+    }
+
+    .v6-header-content {
+        padding: var(--v6-space-3) var(--v6-space-4);
+    }
+
+    .v6-header-title h1 {
+        font-size: 1rem;
+    }
+
+    .v6-tabs {
+        padding: var(--v6-space-2);
+        gap: var(--v6-space-1);
+    }
+
+    .v6-tab {
+        padding: var(--v6-space-2) var(--v6-space-3);
+        font-size: 0.8125rem;
+    }
+}
+
+/* ==================== Version 6.0 Toast Notifications - Modern Alerts ==================== */
+.v6-toast {
+    position: fixed;
+    bottom: var(--v6-space-6);
+    right: var(--v6-space-6);
+    background: var(--v6-surface);
+    border: 1px solid var(--v6-border);
+    border-radius: var(--v6-radius-lg);
+    padding: var(--v6-space-4);
+    box-shadow: var(--v6-shadow-xl);
+    min-width: 300px;
+    max-width: 500px;
+    z-index: var(--v6-z-tooltip);
+    animation: v6-slideUp 0.3s ease;
+}
+
+@keyframes v6-slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.v6-toast.success {
+    border-left: 4px solid var(--v6-success);
+}
+
+.v6-toast.error {
+    border-left: 4px solid var(--v6-error);
+}
+
+.v6-toast.warning {
+    border-left: 4px solid var(--v6-warning);
+}
+
+.v6-toast.info {
+    border-left: 4px solid var(--v6-info);
+}
+
+/* ==================== Version 6.0 Loading States - Smooth Feedback ==================== */
+.v6-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--v6-gray-200);
+    border-top-color: var(--v6-primary);
+    border-radius: 50%;
+    animation: v6-spin 0.8s linear infinite;
+}
+
+@keyframes v6-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== Version 6.0 Utilities ==================== */
+.v6-divider {
+    height: 1px;
+    background: var(--v6-border);
+    margin: var(--v6-space-4) 0;
+}
+
+.v6-text-muted {
+    color: var(--v6-text-secondary);
+}
+
+.v6-text-xs {
+    font-size: 0.75rem;
+}
+
+.v6-text-sm {
+    font-size: 0.875rem;
+}
+
+.v6-text-base {
+    font-size: 0.9375rem;
+}
