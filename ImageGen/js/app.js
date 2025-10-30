@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v6.0)
-   Modern UI, Enhanced Features, Complete Experience
+   APP.JS - Main Application Entry Point (v7.0)
+   Solid Backgrounds, Better UX, Enhanced Features
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -10,6 +10,7 @@ import { PresetsManager } from './modules/presets.js';
 import { AdvancedFeatures } from './modules/advancedFeatures.js';
 import { MarkdownUI, setupMarkdownKeyboardShortcuts } from './modules/markdownUI.js';
 import { ImageBrowser } from './modules/imageBrowser.js';
+import { SolidBackgroundGenerator } from './modules/solidBackground.js';
 import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
 
@@ -36,6 +37,7 @@ class ImageTextApp {
             this.components.advanced = new AdvancedFeatures(this);
             this.components.markdown = new MarkdownUI(this.DOM);
             this.components.imageBrowser = new ImageBrowser(this.state);
+            this.components.solidBg = new SolidBackgroundGenerator(this.state);
             this.components.v6ui = new V6UI();
 
             this.setupGlobalMethods();
@@ -55,12 +57,12 @@ class ImageTextApp {
             this.setupImageBrowserHandlers();
 
             this.initialized = true;
-            console.log('✨ Image Text App Pro v6.0 initialized successfully');
+            console.log('✨ Image Text App Pro v7.0 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🎉 Welcome to Version 6.0! New UI, Enhanced Features, Emoji Support', 'success', 6000);
+                    this.components.v6ui.showToast('🎉 Version 7.0! Solid Backgrounds, Better UX, More Features', 'success', 6000);
                 }
             }, 500);
 
