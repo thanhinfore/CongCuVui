@@ -57,19 +57,34 @@ export class ChartEngine {
     }
 
     /**
-     * Initialize chart with data
+     * Initialize chart with data (v5.0 Enhanced - 4K Quality)
      */
     initialize(data) {
         this.data = data;
 
-        // Set canvas size with higher DPI for better quality
-        const dpr = window.devicePixelRatio || 1;
-        this.canvas.width = this.config.width;
-        this.canvas.height = this.config.height;
+        // v5.0: Ultra-high DPI for premium quality (2x or 3x on retina)
+        const dpr = Math.min(window.devicePixelRatio || 1, 3); // Cap at 3x for performance
 
-        // Scale for retina displays
+        // Set physical canvas size (actual pixels)
+        this.canvas.width = this.config.width * dpr;
+        this.canvas.height = this.config.height * dpr;
+
+        // Set CSS display size (visual size)
         this.canvas.style.width = this.config.width + 'px';
         this.canvas.style.height = this.config.height + 'px';
+
+        // Scale context to match DPI
+        this.ctx.scale(dpr, dpr);
+
+        // v5.0: Premium rendering quality settings
+        this.ctx.imageSmoothingEnabled = true;
+        this.ctx.imageSmoothingQuality = 'high';
+
+        // v5.0: Font rendering optimization
+        this.ctx.textRendering = 'optimizeLegibility';
+        this.ctx.fontKerning = 'normal';
+
+        console.log(`🎨 v5.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI)`);
 
         // Initialize rank tracking
         this.initializeRankTracking();
@@ -121,49 +136,80 @@ export class ChartEngine {
                     data: [],
                     backgroundColor: this.config.barStyle === 'gradient' ?
                         colors.map(c => this.createGradient(c)) : colors,
-                    borderColor: colors.map(c => this.darkenColor(c, 0.3)),
-                    borderWidth: 2,              // v4.0: Thinner border for cleaner look
-                    borderRadius: 16,            // v4.0: More rounded for modern look
+                    borderColor: colors.map(c => this.darkenColor(c, 0.4)),  // v5.0: Deeper border
+                    borderWidth: 1.5,            // v5.0: Ultra-thin for glass effect
+                    borderRadius: 20,            // v5.0: Maximum roundness for premium feel
                     borderSkipped: false,
-                    barPercentage: 0.88,         // v4.0: Slightly larger bars
-                    categoryPercentage: 0.92,    // v4.0: Better spacing
-                    // v4.0: Enhanced shadow via Chart.js shadowOffsetX/Y
+                    barPercentage: 0.90,         // v5.0: Larger bars for impact
+                    categoryPercentage: 0.94,    // v5.0: Optimized spacing
+                    // v5.0: Multi-layer shadow for depth
                     shadowOffsetX: 0,
-                    shadowOffsetY: 4,
-                    shadowBlur: 12,
-                    shadowColor: 'rgba(0, 0, 0, 0.15)'
+                    shadowOffsetY: 6,
+                    shadowBlur: 20,
+                    shadowColor: 'rgba(0, 0, 0, 0.25)',
+                    // v5.0: Smooth edges
+                    tension: 0.4
                 }]
             },
             options: {
                 indexAxis: 'y',
                 responsive: false,
                 maintainAspectRatio: false,
-                // v4.5: Enable smooth animations for ranking changes
+                // v5.0: Ultra-smooth premium animations
                 animation: {
-                    duration: 800,  // Smooth 800ms transitions
-                    easing: 'easeOutQuart',  // Natural deceleration
-                    // Animate all properties
+                    duration: 1000,  // v5.0: Longer for smoother perception
+                    easing: 'easeInOutCubic',  // v5.0: Professional cubic bezier
+                    // v5.0: Differentiated axis animations
                     x: {
-                        duration: 800,
-                        easing: 'easeOutQuart'
+                        duration: 1000,
+                        easing: 'easeOutCubic',  // Values grow smoothly
+                        from: (ctx) => ctx.chart ? ctx.chart.scales.x.min : 0
                     },
                     y: {
-                        duration: 800,
-                        easing: 'easeOutQuart'
+                        duration: 1200,  // v5.0: Slightly longer for position changes
+                        easing: 'easeInOutQuint',  // Extra smooth ranking shifts
+                        from: (ctx) => {
+                            // Smooth entrance from below
+                            return ctx.chart ? ctx.chart.chartArea.bottom : 0;
+                        }
                     },
-                    // v4.5: Special handling for bar movements
+                    // v5.0: Progressive reveal for new bars
+                    borderRadius: {
+                        duration: 800,
+                        easing: 'easeOutBack'  // Subtle bounce effect
+                    },
+                    // v5.0: Animation callbacks for micro-interactions
                     onProgress: function(animation) {
                         // Smooth progress tracking
                     },
                     onComplete: function(animation) {
-                        // Animation complete
+                        // Animation complete - trigger next micro-animation
                     }
                 },
-                // v4.5: Smooth transitions between data updates
+                // v5.0: Advanced transitions for interaction states
                 transitions: {
                     active: {
                         animation: {
-                            duration: 400
+                            duration: 600,
+                            easing: 'easeOutQuint'
+                        }
+                    },
+                    resize: {
+                        animation: {
+                            duration: 800,
+                            easing: 'easeInOutQuart'
+                        }
+                    },
+                    show: {
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutCubic'
+                        }
+                    },
+                    hide: {
+                        animation: {
+                            duration: 400,
+                            easing: 'easeInCubic'
                         }
                     }
                 },
@@ -249,7 +295,7 @@ export class ChartEngine {
             },
             plugins: [
                 {
-                    // v4.0: Bar shadow plugin for depth
+                    // v5.0: Multi-layer shadow system for premium depth
                     id: 'barShadows',
                     beforeDatasetsDraw: (chart) => {
                         if (!this.config.enableShadows) return;
@@ -257,14 +303,38 @@ export class ChartEngine {
                         const ctx = chart.ctx;
                         ctx.save();
 
-                        // Enhanced shadow for bars
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-                        ctx.shadowBlur = 15;
+                        // v5.0: Layer 1 - Deep ambient shadow (far)
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                        ctx.shadowBlur = 30;
                         ctx.shadowOffsetX = 0;
-                        ctx.shadowOffsetY = 5;
+                        ctx.shadowOffsetY = 10;
+
+                        // Note: Chart.js will render bars here, then we add more in after
                     },
                     afterDatasetsDraw: (chart) => {
                         if (!this.config.enableShadows) return;
+
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+
+                        // v5.0: Layer 2 - Contact shadow (close)
+                        meta.data.forEach((bar) => {
+                            if (!bar) return;
+
+                            ctx.save();
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                            ctx.shadowBlur = 8;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 2;
+
+                            // Draw invisible stroke to create shadow only
+                            ctx.strokeStyle = 'transparent';
+                            ctx.lineWidth = 0.5;
+                            ctx.strokeRect(bar.x, bar.y, bar.width, bar.height);
+
+                            ctx.restore();
+                        });
+
                         chart.ctx.restore();
                     }
                 },
@@ -320,6 +390,61 @@ export class ChartEngine {
                     }
                 },
                 {
+                    // v5.0: Glass morphism overlay effect
+                    id: 'glassMorphism',
+                    afterDatasetsDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+
+                        ctx.save();
+
+                        meta.data.forEach((bar, index) => {
+                            if (!bar) return;
+
+                            // v5.0: Glass highlight on top edge
+                            const highlightGradient = ctx.createLinearGradient(
+                                bar.x, bar.y,
+                                bar.x, bar.y + 10
+                            );
+                            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                            ctx.fillStyle = highlightGradient;
+                            ctx.fillRect(bar.x, bar.y, bar.width, 10);
+
+                            // v5.0: Subtle inner glow
+                            const innerGlow = ctx.createLinearGradient(
+                                bar.x, bar.y,
+                                bar.x, bar.y + bar.height
+                            );
+                            innerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+                            innerGlow.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
+                            innerGlow.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+
+                            ctx.fillStyle = innerGlow;
+                            ctx.fillRect(bar.x + 2, bar.y + 2, bar.width - 4, bar.height - 4);
+
+                            // v5.0: Specular highlight (light reflection)
+                            const specular = ctx.createRadialGradient(
+                                bar.x + bar.width * 0.3,
+                                bar.y + bar.height * 0.2,
+                                0,
+                                bar.x + bar.width * 0.3,
+                                bar.y + bar.height * 0.2,
+                                bar.width * 0.4
+                            );
+                            specular.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                            specular.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+                            specular.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                            ctx.fillStyle = specular;
+                            ctx.fillRect(bar.x, bar.y, bar.width, bar.height * 0.5);
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
                     id: 'customElements',
                     beforeDraw: (chart) => {
                         // v3.0: Animated background
@@ -351,14 +476,20 @@ export class ChartEngine {
     }
 
     /**
-     * Create gradient for bar (v4.0 Enhanced - 3-stop gradient)
+     * Create advanced gradient for bar (v5.0 Ultra Premium - 7-stop mesh-like gradient)
      */
     createGradient(color) {
         const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, 0);
-        // v4.0: 3-stop gradient for more depth
-        gradient.addColorStop(0, this.lightenColor(color, 0.4));
-        gradient.addColorStop(0.5, color);
-        gradient.addColorStop(1, this.darkenColor(color, 0.2));
+
+        // v5.0: Ultra-smooth 7-stop gradient for glass-like depth
+        gradient.addColorStop(0, this.lightenColor(color, 0.6));      // Bright highlight
+        gradient.addColorStop(0.15, this.lightenColor(color, 0.45));  // Soft transition
+        gradient.addColorStop(0.35, this.lightenColor(color, 0.25));  // Light area
+        gradient.addColorStop(0.5, color);                             // Core color
+        gradient.addColorStop(0.65, this.darkenColor(color, 0.15));   // Start shadow
+        gradient.addColorStop(0.85, this.darkenColor(color, 0.3));    // Deep shadow
+        gradient.addColorStop(1, this.darkenColor(color, 0.4));       // Edge shadow
+
         return gradient;
     }
 
