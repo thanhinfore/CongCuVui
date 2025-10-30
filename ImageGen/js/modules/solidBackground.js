@@ -20,12 +20,30 @@ export class SolidBackgroundGenerator {
         ];
 
         this.sizes = [
-            { name: 'Instagram Square', width: 1080, height: 1080 },
-            { name: 'Instagram Story', width: 1080, height: 1920 },
-            { name: 'Facebook Post', width: 1200, height: 630 },
-            { name: 'Twitter Post', width: 1200, height: 675 },
-            { name: 'YouTube Thumbnail', width: 1280, height: 720 },
-            { name: 'Custom', width: 1080, height: 1080 }
+            // Square formats
+            { name: 'Instagram Square', width: 1080, height: 1080, icon: '⬛', orientation: 'square' },
+            { name: 'Square 1:1', width: 1000, height: 1000, icon: '⬛', orientation: 'square' },
+
+            // Landscape formats
+            { name: 'Facebook Post', width: 1200, height: 630, icon: '▭', orientation: 'landscape' },
+            { name: 'Twitter Post', width: 1200, height: 675, icon: '▭', orientation: 'landscape' },
+            { name: 'YouTube Thumbnail', width: 1280, height: 720, icon: '▭', orientation: 'landscape' },
+            { name: 'LinkedIn Post', width: 1200, height: 627, icon: '▭', orientation: 'landscape' },
+            { name: 'Twitter Header', width: 1500, height: 500, icon: '▭', orientation: 'landscape' },
+            { name: 'Facebook Cover', width: 820, height: 312, icon: '▭', orientation: 'landscape' },
+            { name: 'Landscape 16:9', width: 1920, height: 1080, icon: '▭', orientation: 'landscape' },
+            { name: 'Landscape 4:3', width: 1600, height: 1200, icon: '▭', orientation: 'landscape' },
+
+            // Portrait formats
+            { name: 'Instagram Story', width: 1080, height: 1920, icon: '▯', orientation: 'portrait' },
+            { name: 'Pinterest Pin', width: 1000, height: 1500, icon: '▯', orientation: 'portrait' },
+            { name: 'Instagram Reel', width: 1080, height: 1920, icon: '▯', orientation: 'portrait' },
+            { name: 'TikTok Video', width: 1080, height: 1920, icon: '▯', orientation: 'portrait' },
+            { name: 'Portrait 9:16', width: 1080, height: 1920, icon: '▯', orientation: 'portrait' },
+            { name: 'Portrait 2:3', width: 1000, height: 1500, icon: '▯', orientation: 'portrait' },
+
+            // Custom
+            { name: 'Custom', width: 1080, height: 1080, icon: '⚙️', orientation: 'custom' }
         ];
 
         this.initialize();
@@ -46,12 +64,16 @@ export class SolidBackgroundGenerator {
             <div class="v7-solid-bg-controls">
                 <!-- Size Selection -->
                 <div class="v7-form-group">
-                    <label class="v7-label">Canvas Size</label>
+                    <label class="v7-label">Canvas Size <span class="v81-badge-new">17 sizes!</span></label>
                     <select id="solidBgSize" class="v7-select">
                         ${this.sizes.map((size, idx) => `
-                            <option value="${idx}">${size.name} (${size.width}×${size.height})</option>
+                            <option value="${idx}">${size.icon} ${size.name} (${size.width}×${size.height})</option>
                         `).join('')}
                     </select>
+                    <div class="v81-emoji-status" style="margin-top: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"/></svg>
+                        <span>Square, Landscape & Portrait formats available!</span>
+                    </div>
                 </div>
 
                 <!-- Custom Size (hidden by default) -->
