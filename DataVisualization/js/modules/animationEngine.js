@@ -4,15 +4,17 @@
 // ========================================
 
 export class AnimationEngine {
-    constructor(chartEngine, config) {
+    constructor(chartEngine, config, audioEngine = null) {
         this.chartEngine = chartEngine;
         this.config = config;
+        this.audioEngine = audioEngine;  // v4.0: Audio engine for fade out
         this.timeline = null;
         this.isPlaying = false;
         this.isPaused = false;
         this.currentPeriodIndex = 0;
         this.onProgressCallback = null;
         this.onCompleteCallback = null;
+        this.fadeOutStarted = false;    // v4.0: Track fade out state
     }
 
     /**
@@ -34,11 +36,11 @@ export class AnimationEngine {
         const periodDuration = this.config.periodLength / 1000; // Convert to seconds
         const stepsPerPeriod = Math.ceil(this.config.fps * periodDuration);
 
-        // Create animation for each period
+        // Create animation for each period (v4.0: Smoother easing)
         data.periods.forEach((period, index) => {
             this.timeline.to(this, {
                 duration: periodDuration,
-                ease: 'none',
+                ease: 'power2.inOut',  // v4.0: Smooth easing instead of linear
                 onStart: () => {
                     this.currentPeriodIndex = index;
                 },
@@ -46,6 +48,15 @@ export class AnimationEngine {
                     // Calculate progress within current period (0-1)
                     const timelineProgress = this.timeline.progress();
                     const periodProgress = (timelineProgress * data.periods.length) % 1;
+
+                    // v4.0: Start audio fade out at 80% progress
+                    if (!this.fadeOutStarted && timelineProgress >= 0.80) {
+                        this.fadeOutStarted = true;
+                        if (this.audioEngine && this.audioEngine.isLoaded()) {
+                            this.audioEngine.startFadeOut(3); // 3 second fade out
+                            console.log('🔉 Audio fade out started at 80% progress');
+                        }
+                    }
 
                     // Update chart with interpolated values
                     this.chartEngine.updateChart(this.currentPeriodIndex, periodProgress);
@@ -61,6 +72,30 @@ export class AnimationEngine {
                     }
                 }
             });
+        });
+
+        // v4.0: Add 5-second freeze frame at the end
+        this.timeline.to(this, {
+            duration: 5,
+            ease: 'none',
+            onStart: () => {
+                console.log('📸 Freeze frame: Showing final results for 5 seconds');
+            },
+            onUpdate: () => {
+                // Keep showing the last frame
+                const lastPeriodIndex = data.periods.length - 1;
+                this.chartEngine.updateChart(lastPeriodIndex, 1);
+
+                // Update progress for UI
+                if (this.onProgressCallback) {
+                    this.onProgressCallback({
+                        periodIndex: lastPeriodIndex,
+                        period: data.periods[lastPeriodIndex],
+                        progress: this.timeline.progress(),
+                        periodProgress: 1
+                    });
+                }
+            }
         });
 
         return this.timeline;
@@ -111,6 +146,13 @@ export class AnimationEngine {
         this.isPlaying = false;
         this.isPaused = false;
         this.currentPeriodIndex = 0;
+        this.fadeOutStarted = false;  // v4.0: Reset fade out flag
+
+        // v4.0: Cancel any ongoing fade out
+        if (this.audioEngine) {
+            this.audioEngine.cancelFadeOut();
+        }
+
         this.timeline.restart();
         this.timeline.pause();
 

@@ -119,11 +119,16 @@ export class ChartEngine {
                     backgroundColor: this.config.barStyle === 'gradient' ?
                         colors.map(c => this.createGradient(c)) : colors,
                     borderColor: colors.map(c => this.darkenColor(c, 0.3)),
-                    borderWidth: 3,
-                    borderRadius: 12,
+                    borderWidth: 2,              // v4.0: Thinner border for cleaner look
+                    borderRadius: 16,            // v4.0: More rounded for modern look
                     borderSkipped: false,
-                    barPercentage: 0.85,
-                    categoryPercentage: 0.9
+                    barPercentage: 0.88,         // v4.0: Slightly larger bars
+                    categoryPercentage: 0.92,    // v4.0: Better spacing
+                    // v4.0: Enhanced shadow via Chart.js shadowOffsetX/Y
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 4,
+                    shadowBlur: 12,
+                    shadowColor: 'rgba(0, 0, 0, 0.15)'
                 }]
             },
             options: {
@@ -211,20 +216,42 @@ export class ChartEngine {
                     }
                 }
             },
-            plugins: [{
-                id: 'customElements',
-                beforeDraw: (chart) => {
-                    // v3.0: Animated background
-                    this.drawAnimatedBackground(chart);
+            plugins: [
+                {
+                    // v4.0: Bar shadow plugin for depth
+                    id: 'barShadows',
+                    beforeDatasetsDraw: (chart) => {
+                        if (!this.config.enableShadows) return;
+
+                        const ctx = chart.ctx;
+                        ctx.save();
+
+                        // Enhanced shadow for bars
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                        ctx.shadowBlur = 15;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 5;
+                    },
+                    afterDatasetsDraw: (chart) => {
+                        if (!this.config.enableShadows) return;
+                        chart.ctx.restore();
+                    }
                 },
-                afterDraw: (chart) => {
-                    this.drawCustomElements(chart);
-                    // v3.0: Audio visualizer
-                    this.drawAudioVisualizer(chart);
-                    // v3.0: Particle effects
-                    this.drawParticles(chart);
+                {
+                    id: 'customElements',
+                    beforeDraw: (chart) => {
+                        // v3.0: Animated background
+                        this.drawAnimatedBackground(chart);
+                    },
+                    afterDraw: (chart) => {
+                        this.drawCustomElements(chart);
+                        // v3.0: Audio visualizer
+                        this.drawAudioVisualizer(chart);
+                        // v3.0: Particle effects
+                        this.drawParticles(chart);
+                    }
                 }
-            }]
+            ]
         });
     }
 
@@ -242,28 +269,56 @@ export class ChartEngine {
     }
 
     /**
-     * Create gradient for bar
+     * Create gradient for bar (v4.0 Enhanced - 3-stop gradient)
      */
     createGradient(color) {
         const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, 0);
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(1, this.lightenColor(color, 0.3));
+        // v4.0: 3-stop gradient for more depth
+        gradient.addColorStop(0, this.lightenColor(color, 0.4));
+        gradient.addColorStop(0.5, color);
+        gradient.addColorStop(1, this.darkenColor(color, 0.2));
         return gradient;
     }
 
     /**
-     * Draw background gradient
+     * Darken color (v4.0 New Helper)
+     */
+    darkenColor(color, factor) {
+        const rgb = this.hexToRgb(color);
+        if (!rgb) return color;
+
+        const r = Math.max(0, Math.floor(rgb.r * (1 - factor)));
+        const g = Math.max(0, Math.floor(rgb.g * (1 - factor)));
+        const b = Math.max(0, Math.floor(rgb.b * (1 - factor)));
+
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    /**
+     * Draw background gradient (v4.0 Enhanced - More Premium Look)
      */
     drawBackgroundGradient(chart) {
         const ctx = chart.ctx;
         const chartArea = chart.chartArea;
 
-        // Subtle gradient background
+        // v4.0: Premium multi-stop gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, chart.height);
-        gradient.addColorStop(0, '#f8f9fa');
-        gradient.addColorStop(1, '#e9ecef');
+        gradient.addColorStop(0, '#fafbfc');
+        gradient.addColorStop(0.5, '#f0f3f7');
+        gradient.addColorStop(1, '#e8ecf1');
 
         ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, chart.width, chart.height);
+
+        // v4.0: Add subtle vignette effect
+        const vignette = ctx.createRadialGradient(
+            chart.width / 2, chart.height / 2, 0,
+            chart.width / 2, chart.height / 2, chart.width * 0.8
+        );
+        vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vignette.addColorStop(1, 'rgba(0, 0, 0, 0.03)');
+
+        ctx.fillStyle = vignette;
         ctx.fillRect(0, 0, chart.width, chart.height);
     }
 
@@ -575,6 +630,9 @@ export class ChartEngine {
     /**
      * Draw period label at bottom
      */
+    /**
+     * Draw period label (v4.0 Enhanced - Much More Visible)
+     */
     drawPeriodLabel(chart) {
         if (!this.currentPeriod) return;
 
@@ -582,15 +640,61 @@ export class ChartEngine {
         const chartArea = chart.chartArea;
 
         ctx.save();
-        ctx.font = '900 80px Inter, sans-serif';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+
+        // v4.0: Larger, bolder font
+        ctx.font = '900 100px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const x = (chartArea.left + chartArea.right) / 2;
-        const y = chartArea.bottom + 60;
+        const y = chartArea.bottom + 70;
 
+        // v4.0: Measure text for background
+        const textMetrics = ctx.measureText(this.currentPeriod);
+        const textWidth = textMetrics.width;
+        const textHeight = 100;
+
+        // v4.0: Draw background with gradient
+        const bgGradient = ctx.createLinearGradient(
+            x - textWidth / 2 - 40, y - textHeight / 2,
+            x + textWidth / 2 + 40, y + textHeight / 2
+        );
+        bgGradient.addColorStop(0, 'rgba(102, 126, 234, 0.15)');
+        bgGradient.addColorStop(0.5, 'rgba(118, 75, 162, 0.15)');
+        bgGradient.addColorStop(1, 'rgba(102, 126, 234, 0.15)');
+
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(
+            x - textWidth / 2 - 40,
+            y - textHeight / 2 - 10,
+            textWidth + 80,
+            textHeight + 20
+        );
+
+        // v4.0: Multiple shadow layers for depth
+        ctx.shadowColor = 'rgba(102, 126, 234, 0.5)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
+
+        // v4.0: Draw text with gradient fill
+        const textGradient = ctx.createLinearGradient(
+            x - textWidth / 2, y - textHeight / 2,
+            x + textWidth / 2, y + textHeight / 2
+        );
+        textGradient.addColorStop(0, 'rgba(102, 126, 234, 0.85)');
+        textGradient.addColorStop(0.5, 'rgba(118, 75, 162, 0.95)');
+        textGradient.addColorStop(1, 'rgba(102, 126, 234, 0.85)');
+
+        ctx.fillStyle = textGradient;
         ctx.fillText(this.currentPeriod, x, y);
+
+        // v4.0: Add stroke for extra clarity
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = 'rgba(118, 75, 162, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.strokeText(this.currentPeriod, x, y);
+
         ctx.restore();
     }
 
