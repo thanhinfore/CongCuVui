@@ -1,0 +1,439 @@
+/* =====================================================
+   V8.CSS - Version 8.0 Ultimate UX
+   Mode Toggle, Enhanced Navigation, Better Experience
+   ===================================================== */
+
+/* ==================== V8 Mode Selector ==================== */
+.v8-mode-selector {
+    margin-bottom: var(--v6-space-4);
+    padding: var(--v6-space-4);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--v6-radius-xl);
+    box-shadow: var(--v6-shadow-lg);
+}
+
+.v8-mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--v6-space-2);
+    margin-bottom: var(--v6-space-3);
+}
+
+.v8-mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-3) var(--v6-space-4);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--v6-radius-lg);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--v6-transition-base);
+    backdrop-filter: blur(10px);
+}
+
+.v8-mode-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.v8-mode-btn.active {
+    background: white;
+    border-color: white;
+    color: #667eea;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.v8-mode-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.v8-mode-description {
+    text-align: center;
+}
+
+.v8-mode-description p {
+    margin: 0;
+    color: white;
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* ==================== V8 Fade In Animation ==================== */
+@keyframes v8-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.v8-fade-in {
+    animation: v8-fadeIn 0.4s ease;
+}
+
+/* ==================== V8 Enhanced Sections ==================== */
+.v8-enhanced-section .panel-section {
+    margin-bottom: var(--v6-space-3);
+    border-radius: var(--v6-radius-lg);
+    overflow: hidden;
+    transition: all var(--v6-transition-base);
+}
+
+.v8-enhanced-section .panel-section:hover {
+    box-shadow: var(--v6-shadow-md);
+}
+
+.v8-enhanced-section .section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid var(--v6-border);
+}
+
+/* ==================== V8 Better Control Panel ==================== */
+.v8-control-panel {
+    position: relative;
+}
+
+.v8-control-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    background-size: 200% 100%;
+    animation: v8-shimmer 3s ease infinite;
+}
+
+@keyframes v8-shimmer {
+    0%, 100% {
+        background-position: 0% 0%;
+    }
+    50% {
+        background-position: 100% 0%;
+    }
+}
+
+/* ==================== V8 Emoji Support Indicator ==================== */
+.v8-emoji-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--v6-space-1);
+    padding: var(--v6-space-1) var(--v6-space-2);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--v6-success);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--v6-radius-sm);
+    margin-left: var(--v6-space-2);
+}
+
+.v8-emoji-indicator::before {
+    content: '✓';
+    display: inline-block;
+    font-weight: bold;
+}
+
+/* ==================== V8 Section Badges ==================== */
+.v8-section-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: var(--v6-primary-light);
+    color: var(--v6-primary);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: var(--v6-radius-full);
+    margin-left: var(--v6-space-2);
+}
+
+.v8-section-badge.highlight {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #875a00;
+    animation: v8-pulse 2s ease infinite;
+}
+
+@keyframes v8-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+/* ==================== V8 Improved Upload Area ==================== */
+.v8-upload-area {
+    position: relative;
+    overflow: hidden;
+}
+
+.v8-upload-area::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: v8-shine 3s ease infinite;
+}
+
+@keyframes v8-shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+/* ==================== V8 Better Tooltips ==================== */
+.v8-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.v8-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: var(--v6-space-2) var(--v6-space-3);
+    background: var(--v6-gray-900);
+    color: white;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    border-radius: var(--v6-radius-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--v6-transition-base);
+}
+
+.v8-tooltip:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px);
+}
+
+/* ==================== V8 Enhanced Preview Cards ==================== */
+.v8-preview-card {
+    position: relative;
+    border-radius: var(--v6-radius-lg);
+    overflow: hidden;
+    transition: all var(--v6-transition-base);
+}
+
+.v8-preview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0) 0%, rgba(139, 92, 246, 0.1) 100%);
+    opacity: 0;
+    transition: opacity var(--v6-transition-base);
+}
+
+.v8-preview-card:hover::before {
+    opacity: 1;
+}
+
+.v8-preview-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--v6-shadow-xl);
+}
+
+/* ==================== V8 Status Indicators ==================== */
+.v8-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-2) var(--v6-space-3);
+    background: var(--v6-gray-100);
+    border-radius: var(--v6-radius-md);
+    font-size: 0.875rem;
+}
+
+.v8-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--v6-gray-400);
+}
+
+.v8-status.active .v8-status-dot {
+    background: var(--v6-success);
+    animation: v8-blink 1.5s ease infinite;
+}
+
+@keyframes v8-blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* ==================== V8 Enhanced Buttons ==================== */
+.v8-btn-enhanced {
+    position: relative;
+    overflow: hidden;
+}
+
+.v8-btn-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.v8-btn-enhanced:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* ==================== V8 Better Scrollbar ==================== */
+.v8-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.v8-scrollbar::-webkit-scrollbar-track {
+    background: var(--v6-gray-100);
+    border-radius: var(--v6-radius-sm);
+}
+
+.v8-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--v6-radius-sm);
+}
+
+.v8-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #6a408c 100%);
+}
+
+/* ==================== V8 Responsive Improvements ==================== */
+@media (max-width: 768px) {
+    .v8-mode-toggle {
+        grid-template-columns: 1fr;
+    }
+
+    .v8-mode-btn {
+        padding: var(--v6-space-4);
+    }
+
+    .v8-mode-selector {
+        margin-bottom: var(--v6-space-3);
+        padding: var(--v6-space-3);
+    }
+}
+
+/* ==================== V8 Loading States ==================== */
+.v8-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.v8-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 3px solid var(--v6-gray-300);
+    border-top-color: var(--v6-primary);
+    border-radius: 50%;
+    animation: v8-spin 0.8s linear infinite;
+}
+
+@keyframes v8-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== V8 Success States ==================== */
+.v8-success-message {
+    display: flex;
+    align-items: center;
+    gap: var(--v6-space-2);
+    padding: var(--v6-space-3) var(--v6-space-4);
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    color: #155724;
+    border-radius: var(--v6-radius-lg);
+    font-weight: 600;
+    animation: v8-slideIn 0.4s ease;
+}
+
+@keyframes v8-slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==================== V8 Better Focus States ==================== */
+.v8-focus:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+    border-color: #667eea;
+}
+
+/* ==================== V8 Utilities ==================== */
+.v8-hidden {
+    display: none !important;
+}
+
+.v8-visible {
+    display: block !important;
+}
+
+.v8-flex {
+    display: flex !important;
+}
+
+.v8-grid {
+    display: grid !important;
+}
+
+.v8-text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
