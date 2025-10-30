@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v9.0)
-   Advanced Text Positioning, Freedom Over Presets
+   APP.JS - Main Application Entry Point (v9.1)
+   Clean UI, Fixed Mode Switching
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -44,6 +44,9 @@ class ImageTextApp {
             this.components.textPositioning = new TextPositioning(this.DOM, this.state);
             this.components.v6ui = new V6UI();
 
+            // V9.1: Connect state to mode manager for proper cleanup
+            this.components.modeManager.setState(this.state);
+
             // Connect text positioning to preview panel
             this.components.preview.setTextPositioning(this.components.textPositioning);
 
@@ -69,12 +72,12 @@ class ImageTextApp {
             }
 
             this.initialized = true;
-            console.log('✨ Image Text App Pro v9.0 initialized successfully');
+            console.log('✨ Image Text App Pro v9.1 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🎯 Version 9.0! Căn Chỉnh Tự Do, Tùy Biến Vị Trí Text!', 'success', 6000);
+                    this.components.v6ui.showToast('✨ Version 9.1! Giao Diện Gọn Gàng, Sửa Lỗi Mode Switching!', 'success', 6000);
                 }
             }, 500);
 
