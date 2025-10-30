@@ -1,19 +1,25 @@
 /* =====================================================
-   MODE-MANAGER.JS - Version 8.0 Mode Management
+   MODE-MANAGER.JS - Version 9.1 Mode Management
    Toggle between Upload Images and Solid Background modes
+   Fixed: Clear images when switching modes
    ===================================================== */
 
 export class ModeManager {
     constructor() {
         this.currentMode = 'upload'; // 'upload' or 'background'
+        this.state = null; // Will be set by app.js
         this.initialize();
+    }
+
+    setState(state) {
+        this.state = state;
     }
 
     initialize() {
         this.setupUI();
         this.setupEventListeners();
         this.applyMode('upload'); // Default mode
-        console.log('✨ V8 Mode Manager initialized');
+        console.log('✨ V9.1 Mode Manager initialized');
     }
 
     setupUI() {
@@ -64,6 +70,9 @@ export class ModeManager {
     switchMode(mode) {
         if (this.currentMode === mode) return;
 
+        // V9.1: Clear images and preview when switching modes
+        this.clearCurrentMode();
+
         this.currentMode = mode;
         this.applyMode(mode);
 
@@ -85,14 +94,57 @@ export class ModeManager {
         // Show toast
         if (window.imageTextApp?.components?.v6ui) {
             const messages = {
-                upload: '📤 Upload Mode: Add your own images',
-                background: '🎨 Background Mode: Generate solid color backgrounds'
+                upload: '📤 Upload Mode: Ready to add your images',
+                background: '🎨 Background Mode: Ready to create backgrounds'
             };
             window.imageTextApp.components.v6ui.showToast(messages[mode], 'info', 3000);
         }
 
         // Save preference
         localStorage.setItem('v8-mode', mode);
+    }
+
+    clearCurrentMode() {
+        // V9.1: Clear images from state
+        if (this.state) {
+            this.state.images = [];
+            this.state.imageFiles = [];
+            this.state.minWidth = Infinity;
+        }
+
+        // Clear preview canvas
+        const canvasContainer = document.getElementById('canvasContainer');
+        if (canvasContainer) {
+            // Remove all preview items except empty state
+            const previewItems = canvasContainer.querySelectorAll('.preview-item');
+            previewItems.forEach(item => item.remove());
+
+            // Show empty state
+            const emptyState = canvasContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+            }
+        }
+
+        // Clear file input
+        const imageLoader = document.getElementById('imageLoader');
+        if (imageLoader) {
+            imageLoader.value = '';
+        }
+
+        // Disable add text button
+        const addTextButton = document.getElementById('addTextButton');
+        if (addTextButton) {
+            addTextButton.disabled = true;
+        }
+
+        // Clear download all button
+        const downloadAllZip = document.getElementById('downloadAllZip');
+        if (downloadAllZip) {
+            downloadAllZip.disabled = true;
+        }
+
+        console.log('🧹 Cleared previous mode data');
     }
 
     applyMode(mode) {

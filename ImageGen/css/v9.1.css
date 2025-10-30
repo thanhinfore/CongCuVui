@@ -1,0 +1,351 @@
+/* =====================================================
+   V9.1 CSS - Clean & Minimal UI
+   Remove clutter, focus on essentials
+   ===================================================== */
+
+/* ========================================
+   HIDE NON-ESSENTIAL SECTIONS
+   ======================================== */
+
+/* Hide folder images section - rarely used */
+.v91-clean #folderImagesSection {
+    display: none !important;
+}
+
+/* Hide credit section - not essential for most users */
+.v91-clean #creditSection {
+    display: none !important;
+}
+
+/* Hide export section - download button is enough */
+.v91-clean #exportSection {
+    display: none !important;
+}
+
+/* Make preset section completely collapsible */
+.v91-clean #presetsSection {
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.v91-clean #presetsSection:hover {
+    opacity: 1;
+}
+
+.v91-clean #presetsSection .section-header::after {
+    content: " (Optional - Click to expand)";
+    font-size: 0.7rem;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+/* Collapse preset section by default */
+.v91-clean #presetsSection .section-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.v91-clean #presetsSection.expanded .section-content {
+    max-height: 2000px;
+}
+
+.v91-clean #presetsSection .section-header {
+    cursor: pointer;
+}
+
+/* ========================================
+   STREAMLINED STYLE SECTION
+   ======================================== */
+
+/* Make font effects more compact */
+.v91-clean .text-effects-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+/* Compact color controls */
+.v91-clean .color-grid {
+    gap: 12px;
+}
+
+/* ========================================
+   SIMPLIFIED MODE SELECTOR
+   ======================================== */
+
+.v91-clean .v8-mode-selector {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.v91-clean .v8-mode-description {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 12px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* ========================================
+   COMPACT FILTERS SECTION
+   ======================================== */
+
+.v91-clean #filtersSection .style-group {
+    margin-bottom: 12px;
+}
+
+.v91-clean #filtersSection .range-group {
+    margin-bottom: 8px;
+}
+
+/* Hide filter presets - too cluttered */
+.v91-clean #filtersSection .preset-actions {
+    display: none;
+}
+
+/* ========================================
+   ACTION BUTTON ENHANCEMENT
+   ======================================== */
+
+.v91-clean .action-section {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(249, 250, 251, 1) 80%, rgba(249, 250, 251, 0));
+    padding: 16px 0;
+    margin-top: 20px;
+    z-index: 10;
+}
+
+.v91-clean #addTextButton {
+    font-size: 1.1rem;
+    padding: 16px 24px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    transition: all 0.3s;
+}
+
+.v91-clean #addTextButton:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
+}
+
+/* ========================================
+   CLEAN PREVIEW PANEL
+   ======================================== */
+
+.v91-clean .preview-panel {
+    background: #ffffff;
+}
+
+.v91-clean .panel-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px 12px 0 0;
+    margin: -20px -20px 20px -20px;
+}
+
+.v91-clean .panel-title {
+    color: white;
+    font-weight: 600;
+}
+
+/* ========================================
+   MINIMAL SECTION HEADERS
+   ======================================== */
+
+.v91-clean .section-header {
+    padding: 12px 16px;
+    margin: -16px -16px 16px -16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 8px 8px 0 0;
+}
+
+.v91-clean .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.v91-clean .section-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ========================================
+   COLLAPSIBLE SECTIONS
+   ======================================== */
+
+.v91-collapsible-section .section-header {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.v91-collapsible-section .section-header::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    transition: transform 0.3s;
+    opacity: 0.5;
+}
+
+.v91-collapsible-section.collapsed .section-header::after {
+    transform: rotate(-90deg);
+}
+
+.v91-collapsible-section.collapsed .section-content {
+    display: none;
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .v91-clean .control-panel {
+        padding: 12px;
+    }
+
+    .v91-clean .panel-section {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .v91-clean .v8-mode-selector {
+        padding: 12px;
+    }
+}
+
+/* ========================================
+   FOCUS INDICATORS
+   ======================================== */
+
+.v91-clean .v9-positioning-section {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    animation: v91PulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes v91PulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.2), 0 12px 48px rgba(102, 126, 234, 0.4);
+    }
+}
+
+/* ========================================
+   SIMPLIFIED CONTROLS
+   ======================================== */
+
+/* Make sliders more prominent */
+.v91-clean .range-input {
+    height: 8px;
+    cursor: pointer;
+}
+
+.v91-clean .range-input::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+}
+
+.v91-clean .range-input::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+}
+
+/* Larger hit targets for checkboxes */
+.v91-clean .checkbox-label {
+    padding: 10px 12px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.v91-clean .checkbox-label:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+/* ========================================
+   CLEAN TYPOGRAPHY
+   ======================================== */
+
+.v91-clean .form-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.v91-clean .v7-label {
+    font-weight: 600;
+    color: white;
+}
+
+/* ========================================
+   REDUCED ANIMATION
+   ======================================== */
+
+.v91-clean * {
+    animation-duration: 0.2s !important;
+}
+
+/* ========================================
+   COMPACT SPACING
+   ======================================== */
+
+.v91-clean .style-group {
+    margin-bottom: 16px;
+}
+
+.v91-clean .range-group {
+    margin-bottom: 10px;
+}
+
+.v91-clean .button-group {
+    gap: 8px;
+}
+
+/* ========================================
+   CLEAR STATUS MESSAGES
+   ======================================== */
+
+.v91-status-message {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.v91-warning-message {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.v91-error-message {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
