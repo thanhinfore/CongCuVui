@@ -32,10 +32,19 @@ class TimeSeriesRacingApp {
 
             // Configuration
             titleInput: document.getElementById('titleInput'),
+            subtitleInput: document.getElementById('subtitleInput'),
             topNInput: document.getElementById('topNInput'),
             fpsInput: document.getElementById('fpsInput'),
             periodLengthInput: document.getElementById('periodLengthInput'),
             paletteSelect: document.getElementById('paletteSelect'),
+            barStyleSelect: document.getElementById('barStyleSelect'),
+
+            // Visual Effects
+            showStatsPanelCheck: document.getElementById('showStatsPanelCheck'),
+            showValueLabelsCheck: document.getElementById('showValueLabelsCheck'),
+            showRankIndicatorsCheck: document.getElementById('showRankIndicatorsCheck'),
+            showGrowthRateCheck: document.getElementById('showGrowthRateCheck'),
+            enableShadowsCheck: document.getElementById('enableShadowsCheck'),
 
             // Controls
             playBtn: document.getElementById('playBtn'),
@@ -77,14 +86,24 @@ class TimeSeriesRacingApp {
         this.elements.exportBtn.addEventListener('click', () => this.exportVideo());
 
         // Configuration changes - auto-update
-        [this.elements.titleInput, this.elements.topNInput, this.elements.paletteSelect]
-            .forEach(elem => {
-                elem.addEventListener('change', () => {
-                    if (this.chartEngine && this.dataHandler.normalizedData) {
-                        this.reinitializeChart();
-                    }
-                });
+        [
+            this.elements.titleInput,
+            this.elements.subtitleInput,
+            this.elements.topNInput,
+            this.elements.paletteSelect,
+            this.elements.barStyleSelect,
+            this.elements.showStatsPanelCheck,
+            this.elements.showValueLabelsCheck,
+            this.elements.showRankIndicatorsCheck,
+            this.elements.showGrowthRateCheck,
+            this.elements.enableShadowsCheck
+        ].forEach(elem => {
+            elem.addEventListener('change', () => {
+                if (this.chartEngine && this.dataHandler.normalizedData) {
+                    this.reinitializeChart();
+                }
             });
+        });
 
         // Drag & drop support
         const uploadLabel = document.querySelector('.upload-label');
@@ -259,10 +278,17 @@ class TimeSeriesRacingApp {
     getConfig() {
         return {
             title: this.elements.titleInput.value || 'Data Evolution',
+            subtitle: this.elements.subtitleInput.value || '',
             topN: parseInt(this.elements.topNInput.value) || 10,
             fps: parseInt(this.elements.fpsInput.value) || 30,
             periodLength: parseInt(this.elements.periodLengthInput.value) || 1000,
             palette: this.elements.paletteSelect.value || 'vibrant',
+            barStyle: this.elements.barStyleSelect.value || 'gradient',
+            showStatsPanel: this.elements.showStatsPanelCheck.checked,
+            showValueLabels: this.elements.showValueLabelsCheck.checked,
+            showRankIndicators: this.elements.showRankIndicatorsCheck.checked,
+            showGrowthRate: this.elements.showGrowthRateCheck.checked,
+            enableShadows: this.elements.enableShadowsCheck.checked,
             width: 1920,
             height: 1080
         };

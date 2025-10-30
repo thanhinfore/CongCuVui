@@ -1,29 +1,69 @@
-# TimeSeriesRacing - Web Edition
+# TimeSeriesRacing - Premium Web Edition v2.0
 
-Phiên bản web-based của TimeSeriesRacing, cho phép tạo animated racing charts trực tiếp trong trình duyệt mà không cần cài đặt Python hay bất kỳ dependencies nào!
+Phiên bản web-based CAO CẤP của TimeSeriesRacing, cho phép tạo animated racing charts với đồ họa VƯỢT TRỘI trực tiếp trong trình duyệt!
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.0.0--premium-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-web-orange)
+![Graphics](https://img.shields.io/badge/graphics-premium-gold)
 
 ## ✨ Tính năng
 
-### 🎯 Core Features
+### 🎯 Core Features (v1.0)
 - ✅ **Upload CSV** - Kéo thả hoặc chọn file CSV
 - ✅ **Auto-detect Format** - Tự động nhận diện format LONG hoặc WIDE
 - ✅ **Bar Chart Racing** - Animation đua thanh ngang mượt mà
 - ✅ **Real-time Preview** - Xem trước dữ liệu và cấu hình
 - ✅ **Video Export** - Xuất video WebM trực tiếp trong browser
-- ✅ **Multiple Palettes** - 7 bảng màu đẹp (vibrant, neon, gold, ocean, sunset, professional, pastel)
+- ✅ **Multiple Palettes** - 7 bảng màu đẹp (15 colors mỗi palette!)
 - ✅ **Responsive Design** - Hoạt động tốt trên mọi kích thước màn hình
 - ✅ **Zero Installation** - Chỉ cần trình duyệt web!
 
+### 🚀 NEW in v2.0 - Premium Graphics!
+
+#### 🎨 Stunning Visual Effects
+- ✨ **Gradient Bars** - Thanh gradient ngang tuyệt đẹp (solid cũng có)
+- 🌓 **Drop Shadows** - Bóng đổ tinh tế tạo chiều sâu
+- 📐 **Rounded Corners** - Bo tròn 12px hiện đại
+- 🎯 **High-Quality Rendering** - Anti-aliasing mượt mà
+- 🌈 **Background Gradient** - Nền gradient xám tinh tế
+
+#### 📊 Information-Rich Display
+- **📊 Stats Panel** - Hiển thị real-time:
+  - 🔵 TOTAL (tổng tất cả values)
+  - 🟢 LEADER (giá trị #1)
+  - 🟠 GAP (khoảng cách #1 - #2)
+  - 🟣 AVERAGE (trung bình)
+- **🏷️ Value Labels** - Số liệu trên mỗi bar với smart formatting
+- **↕️ Rank Indicators** - Mũi tên hiển thị xu hướng:
+  - ↑ (xanh lá - tăng hạng)
+  - ↓ (đỏ - giảm hạng)
+  - → (xám - giữ nguyên)
+- **📈 Growth Rate** - % tăng trưởng theo thời gian thực
+
+#### 🎯 Typography Excellence
+- 🔤 **Google Fonts** - Inter font family (400-900)
+- 📝 **Subtitle Support** - Thêm subtitle tùy chọn
+- 💪 **Font Hierarchy** - Title 56px, labels 26px, ticks 20px
+- 🎭 **Massive Period Label** - 80px watermark-style
+
+#### ⚙️ Full Control Panel
+- 🎨 **Bar Style Toggle** - Gradient hoặc Solid
+- ✅ **5 Visual Toggles**:
+  - Stats Panel on/off
+  - Value Labels on/off
+  - Rank Indicators on/off
+  - Growth Rate on/off
+  - Shadows & Effects on/off
+
 ### 🎨 Customization Options
-- Tùy chỉnh tiêu đề và subtitle
+- Tùy chỉnh **title và subtitle**
 - Chọn số lượng items hiển thị (Top 5-20)
 - Điều chỉnh tốc độ animation (200-3000ms)
 - Chọn frame rate (30fps hoặc 60fps)
-- 7 color palettes chuyên nghiệp
+- **7 color palettes** chuyên nghiệp (**15 colors** mỗi palette!)
+- **2 bar styles** (gradient hoặc solid)
+- **Toggle tất cả effects** theo ý muốn
 
 ## 🚀 Quick Start
 
