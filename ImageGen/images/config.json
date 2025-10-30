@@ -2,15 +2,23 @@
   "images": [
     {
       "name": "Sample 1",
-      "path": "images/sample1.jpg"
+      "path": "images/sample1.png"
     },
     {
       "name": "Sample 2",
-      "path": "images/sample2.jpg"
+      "path": "images/sample2.png"
     },
     {
       "name": "Sample 3",
-      "path": "images/sample3.jpg"
+      "path": "images/sample3.png"
+    },
+    {
+      "name": "Sample 4",
+      "path": "images/sample4.png"
+    },
+    {
+      "name": "Sample 5",
+      "path": "images/sample5.png"
     }
   ],
   "instructions": {
@@ -21,8 +29,8 @@
     ],
     "example": {
       "name": "Your Image Name",
-      "path": "images/your-image.jpg"
+      "path": "images/your-image.png"
     },
-    "supportedFormats": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]
+    "supportedFormats": [".png", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]
   }
 }
