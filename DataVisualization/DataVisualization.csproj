@@ -67,13 +67,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="css\main.css" />
+    <Content Include="index.html" />
+    <Content Include="js\app.js" />
+    <Content Include="js\modules\animationEngine.js" />
+    <Content Include="js\modules\chartEngine.js" />
+    <Content Include="js\modules\dataHandler.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="examples\sample.csv" />
     <None Include="packages.config" />
+    <Content Include="README.md" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
