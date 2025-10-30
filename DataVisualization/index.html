@@ -11,9 +11,9 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>📊 TimeSeriesRacing - Premium Web Edition v2.0</h1>
-                <p>Create stunning animated racing charts with advanced graphics & effects</p>
-                <div class="version-badge">✨ Premium Features: Stats Panel | Gradients | Rank Indicators | Growth Rate</div>
+                <h1>📊 TimeSeriesRacing - Multi-Platform Edition v3.0</h1>
+                <p>Create stunning animated racing charts with audio & multi-platform support</p>
+                <div class="version-badge">🚀 v3.0 Features: Audio Engine | 15 Video Ratios | Particle Effects | Audio Visualizer</div>
             </div>
         </header>
 
@@ -35,6 +35,95 @@
                         </label>
                     </div>
                     <button id="loadSampleBtn" class="btn btn-secondary">Load Sample Data</button>
+                </div>
+
+                <!-- Audio Settings (NEW v3.0) -->
+                <div class="section">
+                    <h3>🎵 Audio Settings</h3>
+
+                    <div class="upload-box" style="margin-bottom: 10px;">
+                        <input type="file" id="audioInput" accept=".mp3,.wav,.ogg" style="display: none;">
+                        <label for="audioInput" class="upload-label" style="padding: 15px;">
+                            <span class="upload-icon" style="font-size: 2rem;">🎵</span>
+                            <span class="upload-text" style="font-size: 0.9rem;">Upload Background Music</span>
+                            <small>MP3, WAV, OGG (Optional)</small>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volumeSlider">Volume: <span id="volumeValue">50</span>%</label>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="50" class="form-control-range">
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showAudioVisualizerCheck" checked>
+                            <span>🎼 Audio Visualizer (128 bars)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="audioReactiveCheck" checked>
+                            <span>🔊 Audio-Reactive Effects</span>
+                        </label>
+                    </div>
+
+                    <div id="audioStatus" class="audio-status">
+                        <small>ℹ️ No audio loaded. Will use background.wav if present.</small>
+                    </div>
+                </div>
+
+                <!-- Video Ratio & Platform (NEW v3.0) -->
+                <div class="section">
+                    <h3>📱 Video Format</h3>
+
+                    <div class="form-group">
+                        <label for="platformPresetSelect">Platform Preset:</label>
+                        <select id="platformPresetSelect" class="form-control">
+                            <option value="">Custom (Manual)</option>
+                            <option value="youtube" selected>📺 YouTube (1920x1080)</option>
+                            <option value="tiktok">📱 TikTok/Shorts (1080x1920)</option>
+                            <option value="instagram">📷 Instagram Feed (1080x1080)</option>
+                            <option value="instagram_story">📲 Instagram Story (1080x1920)</option>
+                            <option value="presentation">📊 Presentation (1920x1080)</option>
+                        </select>
+                        <small>One-click platform optimization</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="videoRatioSelect">Video Ratio:</label>
+                        <select id="videoRatioSelect" class="form-control">
+                            <optgroup label="YouTube">
+                                <option value="youtube_hd" selected>16:9 HD (1920x1080)</option>
+                                <option value="youtube_4k">16:9 4K (3840x2160)</option>
+                            </optgroup>
+                            <optgroup label="TikTok / Shorts">
+                                <option value="tiktok">9:16 (1080x1920)</option>
+                                <option value="tiktok_hd">9:16 HD (1440x2560)</option>
+                            </optgroup>
+                            <optgroup label="Instagram">
+                                <option value="instagram_square">1:1 Square (1080x1080)</option>
+                                <option value="instagram_portrait">4:5 Portrait (1080x1350)</option>
+                                <option value="instagram_story">9:16 Story (1080x1920)</option>
+                            </optgroup>
+                            <optgroup label="Facebook">
+                                <option value="facebook_landscape">16:9 (1280x720)</option>
+                                <option value="facebook_square">1:1 (1080x1080)</option>
+                            </optgroup>
+                            <optgroup label="Other Platforms">
+                                <option value="twitter_landscape">Twitter 16:9 (1280x720)</option>
+                                <option value="linkedin_landscape">LinkedIn 16:9 (1280x720)</option>
+                                <option value="linkedin_square">LinkedIn 1:1 (1080x1080)</option>
+                            </optgroup>
+                            <optgroup label="Special">
+                                <option value="cinema_21_9">Cinema 21:9 (2560x1080)</option>
+                                <option value="presentation_4_3">Presentation 4:3 (1024x768)</option>
+                                <option value="presentation_16_9">Presentation 16:9 (1920x1080)</option>
+                            </optgroup>
+                        </select>
+                        <small id="ratioInfo">YouTube HD - Standard desktop viewing</small>
+                    </div>
                 </div>
 
                 <!-- Chart Settings -->
@@ -94,7 +183,7 @@
 
                 <!-- Visual Effects -->
                 <div class="section">
-                    <h3>✨ Visual Effects</h3>
+                    <h3>✨ Visual Effects (v2.0)</h3>
 
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
@@ -128,6 +217,39 @@
                         <label class="checkbox-label">
                             <input type="checkbox" id="enableShadowsCheck" checked>
                             <span>🌓 Shadows & Effects</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Advanced Effects (NEW v3.0) -->
+                <div class="section">
+                    <h3>✨✨ Advanced Effects (v3.0)</h3>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enableParticlesCheck" checked>
+                            <span>💥 Particle Effects (Physics-based)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="animatedBackgroundCheck" checked>
+                            <span>🌈 Animated Background Gradient</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enableBloomCheck" checked>
+                            <span>✨ Bloom & Glow Effects</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="smoothTransitionsCheck" checked>
+                            <span>🎬 Smooth Transitions (Elastic)</span>
                         </label>
                     </div>
                 </div>

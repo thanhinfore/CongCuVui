@@ -1,24 +1,38 @@
 // ========================================
-// Main Application
+// Main Application - v3.0 Multi-Platform Edition
 // Orchestrates all modules and handles UI interactions
 // ========================================
 
 import { DataHandler } from './modules/dataHandler.js';
 import { ChartEngine } from './modules/chartEngine.js';
 import { AnimationEngine } from './modules/animationEngine.js';
+import { AudioEngine } from './modules/audioEngine.js';
+import { VIDEO_RATIOS, PLATFORM_PRESETS, applyPlatformPreset, calculateFontSizes } from './modules/videoRatios.js';
 
 class TimeSeriesRacingApp {
     constructor() {
         this.dataHandler = new DataHandler();
         this.chartEngine = null;
         this.animationEngine = null;
+        this.audioEngine = null;
         this.videoRecorder = null;
         this.isRecording = false;
+        this.currentRatioConfig = VIDEO_RATIOS.youtube_hd; // Default
 
+        this.initializeAudio();
         this.initializeUI();
         this.attachEventListeners();
+        this.tryLoadDefaultAudio();
 
-        console.log('✅ TimeSeriesRacing Web Edition initialized');
+        console.log('✅ TimeSeriesRacing Web Edition v3.0 initialized');
+    }
+
+    /**
+     * Initialize Audio Engine
+     */
+    initializeAudio() {
+        this.audioEngine = new AudioEngine();
+        console.log('🎵 Audio Engine initialized');
     }
 
     /**
@@ -30,6 +44,19 @@ class TimeSeriesRacingApp {
             fileInput: document.getElementById('fileInput'),
             loadSampleBtn: document.getElementById('loadSampleBtn'),
 
+            // Audio (NEW v3.0)
+            audioInput: document.getElementById('audioInput'),
+            volumeSlider: document.getElementById('volumeSlider'),
+            volumeValue: document.getElementById('volumeValue'),
+            showAudioVisualizerCheck: document.getElementById('showAudioVisualizerCheck'),
+            audioReactiveCheck: document.getElementById('audioReactiveCheck'),
+            audioStatus: document.getElementById('audioStatus'),
+
+            // Video Ratio (NEW v3.0)
+            platformPresetSelect: document.getElementById('platformPresetSelect'),
+            videoRatioSelect: document.getElementById('videoRatioSelect'),
+            ratioInfo: document.getElementById('ratioInfo'),
+
             // Configuration
             titleInput: document.getElementById('titleInput'),
             subtitleInput: document.getElementById('subtitleInput'),
@@ -39,12 +66,18 @@ class TimeSeriesRacingApp {
             paletteSelect: document.getElementById('paletteSelect'),
             barStyleSelect: document.getElementById('barStyleSelect'),
 
-            // Visual Effects
+            // Visual Effects (v2.0)
             showStatsPanelCheck: document.getElementById('showStatsPanelCheck'),
             showValueLabelsCheck: document.getElementById('showValueLabelsCheck'),
             showRankIndicatorsCheck: document.getElementById('showRankIndicatorsCheck'),
             showGrowthRateCheck: document.getElementById('showGrowthRateCheck'),
             enableShadowsCheck: document.getElementById('enableShadowsCheck'),
+
+            // Advanced Effects (NEW v3.0)
+            enableParticlesCheck: document.getElementById('enableParticlesCheck'),
+            animatedBackgroundCheck: document.getElementById('animatedBackgroundCheck'),
+            enableBloomCheck: document.getElementById('enableBloomCheck'),
+            smoothTransitionsCheck: document.getElementById('smoothTransitionsCheck'),
 
             // Controls
             playBtn: document.getElementById('playBtn'),
@@ -79,6 +112,30 @@ class TimeSeriesRacingApp {
             this.loadSampleData();
         });
 
+        // Audio upload (NEW v3.0)
+        this.elements.audioInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                this.handleAudioUpload(e.target.files[0]);
+            }
+        });
+
+        // Volume slider (NEW v3.0)
+        this.elements.volumeSlider.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value);
+            this.elements.volumeValue.textContent = volume;
+            this.audioEngine.setVolume(volume / 100);
+        });
+
+        // Platform preset selector (NEW v3.0)
+        this.elements.platformPresetSelect.addEventListener('change', (e) => {
+            this.handlePlatformPresetChange(e.target.value);
+        });
+
+        // Video ratio selector (NEW v3.0)
+        this.elements.videoRatioSelect.addEventListener('change', (e) => {
+            this.handleVideoRatioChange(e.target.value);
+        });
+
         // Controls
         this.elements.playBtn.addEventListener('click', () => this.play());
         this.elements.pauseBtn.addEventListener('click', () => this.pause());
@@ -96,7 +153,14 @@ class TimeSeriesRacingApp {
             this.elements.showValueLabelsCheck,
             this.elements.showRankIndicatorsCheck,
             this.elements.showGrowthRateCheck,
-            this.elements.enableShadowsCheck
+            this.elements.enableShadowsCheck,
+            // NEW v3.0 toggles
+            this.elements.showAudioVisualizerCheck,
+            this.elements.audioReactiveCheck,
+            this.elements.enableParticlesCheck,
+            this.elements.animatedBackgroundCheck,
+            this.elements.enableBloomCheck,
+            this.elements.smoothTransitionsCheck
         ].forEach(elem => {
             elem.addEventListener('change', () => {
                 if (this.chartEngine && this.dataHandler.normalizedData) {
@@ -105,7 +169,7 @@ class TimeSeriesRacingApp {
             });
         });
 
-        // Drag & drop support
+        // Drag & drop support for CSV
         const uploadLabel = document.querySelector('.upload-label');
         uploadLabel.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -192,6 +256,108 @@ class TimeSeriesRacingApp {
     }
 
     /**
+     * Try to load default background audio (NEW v3.0)
+     */
+    async tryLoadDefaultAudio() {
+        try {
+            await this.audioEngine.loadAudio('../background.wav');
+            this.updateAudioStatus('loaded', '✅ Default audio loaded: background.wav');
+            console.log('🎵 Default background.wav loaded');
+        } catch (error) {
+            // Default audio not found - this is fine
+            this.updateAudioStatus('info', 'ℹ️ No audio loaded. Upload audio or use default background.wav');
+            console.log('ℹ️ No default background.wav found (optional)');
+        }
+    }
+
+    /**
+     * Handle audio file upload (NEW v3.0)
+     * @param {File} file - Audio file
+     */
+    async handleAudioUpload(file) {
+        const validTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg'];
+        if (!validTypes.includes(file.type)) {
+            this.showError('Please upload a valid audio file (MP3, WAV, OGG)');
+            return;
+        }
+
+        try {
+            this.updateAudioStatus('loading', '⏳ Loading audio...');
+
+            // Create object URL for the file
+            const audioURL = URL.createObjectURL(file);
+            await this.audioEngine.loadAudio(audioURL);
+
+            this.updateAudioStatus('loaded', `✅ Audio loaded: ${file.name}`);
+            this.showSuccess(`✅ Audio loaded: ${file.name}`);
+            console.log(`🎵 Audio loaded: ${file.name}`);
+        } catch (error) {
+            this.updateAudioStatus('error', `❌ Failed to load audio: ${error.message}`);
+            this.showError(`Failed to load audio: ${error.message}`);
+            console.error(error);
+        }
+    }
+
+    /**
+     * Update audio status display (NEW v3.0)
+     * @param {String} status - Status type (info, loading, loaded, error)
+     * @param {String} message - Status message
+     */
+    updateAudioStatus(status, message) {
+        const statusEl = this.elements.audioStatus;
+        statusEl.className = 'audio-status';
+
+        if (status === 'loaded') {
+            statusEl.classList.add('loaded');
+        } else if (status === 'error') {
+            statusEl.classList.add('error');
+        }
+
+        statusEl.innerHTML = `<small>${message}</small>`;
+    }
+
+    /**
+     * Handle platform preset selection (NEW v3.0)
+     * @param {String} presetKey - Platform preset key
+     */
+    handlePlatformPresetChange(presetKey) {
+        if (!presetKey) return; // Custom mode selected
+
+        const preset = PLATFORM_PRESETS[presetKey];
+        if (!preset) return;
+
+        // Apply preset to video ratio selector
+        this.elements.videoRatioSelect.value = preset.ratioKey;
+
+        // Update ratio config
+        this.handleVideoRatioChange(preset.ratioKey);
+
+        console.log(`📱 Platform preset applied: ${preset.name}`);
+    }
+
+    /**
+     * Handle video ratio selection (NEW v3.0)
+     * @param {String} ratioKey - Video ratio key
+     */
+    handleVideoRatioChange(ratioKey) {
+        const ratioConfig = VIDEO_RATIOS[ratioKey];
+        if (!ratioConfig) return;
+
+        this.currentRatioConfig = ratioConfig;
+
+        // Update info display
+        this.elements.ratioInfo.textContent = ratioConfig.description ||
+            `${ratioConfig.platform} ${ratioConfig.ratio} - ${ratioConfig.width}x${ratioConfig.height}`;
+
+        // Reinitialize chart with new dimensions if data loaded
+        if (this.chartEngine && this.dataHandler.normalizedData) {
+            this.reinitializeChart();
+        }
+
+        console.log(`📐 Video ratio changed: ${ratioConfig.platform} ${ratioConfig.ratio} (${ratioConfig.width}x${ratioConfig.height})`);
+    }
+
+    /**
      * Show data preview
      * @param {Object} data - Normalized data
      */
@@ -216,7 +382,7 @@ class TimeSeriesRacingApp {
     }
 
     /**
-     * Initialize chart and animation
+     * Initialize chart and animation (v3.0 Enhanced)
      * @param {Object} data - Normalized data
      */
     initializeChart(data) {
@@ -230,8 +396,8 @@ class TimeSeriesRacingApp {
             this.animationEngine.destroy();
         }
 
-        // Create chart engine
-        this.chartEngine = new ChartEngine('chartCanvas', config);
+        // Create chart engine with audio support (NEW v3.0)
+        this.chartEngine = new ChartEngine('chartCanvas', config, this.audioEngine);
         this.chartEngine.initialize(data);
 
         // Create animation engine
@@ -272,11 +438,16 @@ class TimeSeriesRacingApp {
     }
 
     /**
-     * Get current configuration
+     * Get current configuration (v3.0 Enhanced)
      * @returns {Object} Configuration object
      */
     getConfig() {
+        // Apply ratio configuration
+        const ratioConfig = this.currentRatioConfig || VIDEO_RATIOS.youtube_hd;
+        const fontSizes = calculateFontSizes(ratioConfig);
+
         return {
+            // Basic settings
             title: this.elements.titleInput.value || 'Data Evolution',
             subtitle: this.elements.subtitleInput.value || '',
             topN: parseInt(this.elements.topNInput.value) || 10,
@@ -284,18 +455,39 @@ class TimeSeriesRacingApp {
             periodLength: parseInt(this.elements.periodLengthInput.value) || 1000,
             palette: this.elements.paletteSelect.value || 'vibrant',
             barStyle: this.elements.barStyleSelect.value || 'gradient',
+
+            // Visual effects (v2.0)
             showStatsPanel: this.elements.showStatsPanelCheck.checked,
             showValueLabels: this.elements.showValueLabelsCheck.checked,
             showRankIndicators: this.elements.showRankIndicatorsCheck.checked,
             showGrowthRate: this.elements.showGrowthRateCheck.checked,
             enableShadows: this.elements.enableShadowsCheck.checked,
-            width: 1920,
-            height: 1080
+
+            // Audio settings (NEW v3.0)
+            showAudioVisualizer: this.elements.showAudioVisualizerCheck.checked,
+            audioReactive: this.elements.audioReactiveCheck.checked,
+
+            // Advanced effects (NEW v3.0)
+            enableParticles: this.elements.enableParticlesCheck.checked,
+            animatedBackground: this.elements.animatedBackgroundCheck.checked,
+            enableBloom: this.elements.enableBloomCheck.checked,
+            smoothTransitions: this.elements.smoothTransitionsCheck.checked,
+
+            // Video ratio configuration (NEW v3.0)
+            width: ratioConfig.width,
+            height: ratioConfig.height,
+            padding: ratioConfig.padding,
+            fontSizes: fontSizes,
+            ratioInfo: {
+                ratio: ratioConfig.ratio,
+                platform: ratioConfig.platform,
+                orientation: ratioConfig.orientation
+            }
         };
     }
 
     /**
-     * Play animation
+     * Play animation (v3.0 with audio)
      */
     play() {
         if (!this.animationEngine) return;
@@ -308,32 +500,49 @@ class TimeSeriesRacingApp {
             this.animationEngine.play();
         }
 
+        // Play audio if loaded (NEW v3.0)
+        if (this.audioEngine && this.audioEngine.isLoaded()) {
+            this.audioEngine.play();
+        }
+
         this.updateControlButtons(true);
     }
 
     /**
-     * Pause animation
+     * Pause animation (v3.0 with audio)
      */
     pause() {
         if (!this.animationEngine) return;
 
         this.animationEngine.pause();
+
+        // Pause audio (NEW v3.0)
+        if (this.audioEngine && this.audioEngine.isLoaded()) {
+            this.audioEngine.pause();
+        }
+
         this.updateControlButtons(false);
     }
 
     /**
-     * Reset animation
+     * Reset animation (v3.0 with audio)
      */
     reset() {
         if (!this.animationEngine) return;
 
         this.animationEngine.reset();
+
+        // Stop and reset audio (NEW v3.0)
+        if (this.audioEngine && this.audioEngine.isLoaded()) {
+            this.audioEngine.stop();
+        }
+
         this.updateControlButtons(false);
         this.updateTimeline(0);
     }
 
     /**
-     * Export video
+     * Export video (v3.0 with audio support)
      */
     async exportVideo() {
         if (!this.animationEngine || !this.chartEngine) return;
@@ -346,9 +555,17 @@ class TimeSeriesRacingApp {
             // Start recording
             await this.startRecording();
 
-            // Reset and play animation
+            // Reset animation and audio
             this.animationEngine.reset();
+            if (this.audioEngine && this.audioEngine.isLoaded()) {
+                this.audioEngine.stop();
+            }
+
+            // Play animation and audio together
             this.animationEngine.play();
+            if (this.audioEngine && this.audioEngine.isLoaded()) {
+                this.audioEngine.play();
+            }
 
         } catch (error) {
             this.showError(`Export failed: ${error.message}`);
@@ -360,16 +577,55 @@ class TimeSeriesRacingApp {
     }
 
     /**
-     * Start video recording
+     * Start video recording with audio (v3.0 CRITICAL FIX)
      */
     async startRecording() {
         const canvas = this.chartEngine.getCanvas();
-        const stream = canvas.captureStream(this.getConfig().fps);
+        const fps = this.getConfig().fps;
+
+        // Get canvas stream
+        const canvasStream = canvas.captureStream(fps);
+        const videoTrack = canvasStream.getVideoTracks()[0];
+
+        let combinedStream;
+        let mimeType;
+
+        // CRITICAL: Combine video + audio streams if audio is loaded
+        if (this.audioEngine && this.audioEngine.isLoaded()) {
+            try {
+                // Get audio stream from audio element
+                const audioElement = this.audioEngine.getAudioElement();
+                const audioStream = audioElement.captureStream();
+                const audioTrack = audioStream.getAudioTracks()[0];
+
+                // Create combined stream with both video and audio
+                combinedStream = new MediaStream([videoTrack, audioTrack]);
+                mimeType = 'video/webm;codecs=vp9,opus'; // VP9 video + Opus audio
+
+                console.log('🎥 Recording with audio: VP9 + Opus');
+            } catch (error) {
+                console.warn('⚠️ Audio stream capture failed, recording video only:', error);
+                combinedStream = canvasStream;
+                mimeType = 'video/webm;codecs=vp9';
+            }
+        } else {
+            // No audio loaded, record video only
+            combinedStream = canvasStream;
+            mimeType = 'video/webm;codecs=vp9';
+            console.log('🎥 Recording video only (no audio loaded)');
+        }
+
+        // Check if browser supports the mimeType
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            console.warn(`⚠️ ${mimeType} not supported, falling back to default`);
+            mimeType = 'video/webm';
+        }
 
         const chunks = [];
-        this.videoRecorder = new MediaRecorder(stream, {
-            mimeType: 'video/webm;codecs=vp9',
-            videoBitsPerSecond: 8000000 // 8 Mbps
+        this.videoRecorder = new MediaRecorder(combinedStream, {
+            mimeType: mimeType,
+            videoBitsPerSecond: 8000000, // 8 Mbps for video
+            audioBitsPerSecond: 128000   // 128 kbps for audio
         });
 
         this.videoRecorder.ondataavailable = (event) => {
@@ -381,6 +637,11 @@ class TimeSeriesRacingApp {
         this.videoRecorder.onstop = () => {
             const blob = new Blob(chunks, { type: 'video/webm' });
             this.downloadVideo(blob);
+
+            // Stop audio
+            if (this.audioEngine && this.audioEngine.isLoaded()) {
+                this.audioEngine.stop();
+            }
 
             this.elements.exportBtn.disabled = false;
             this.elements.exportBtn.textContent = '💾 Export Video (WebM)';
@@ -398,6 +659,7 @@ class TimeSeriesRacingApp {
         });
 
         this.videoRecorder.start();
+        console.log('🎬 Recording started');
     }
 
     /**
