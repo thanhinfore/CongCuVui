@@ -435,9 +435,10 @@ export class ChartEngine {
 
                             // Draw trail as gradient line
                             const trailGradient = ctx.createLinearGradient(x, fromY, x, currentY);
-                            trailGradient.addColorStop(0, `${color}00`);  // Transparent at start
-                            trailGradient.addColorStop(0.5, `${color}40`);  // Semi-transparent middle
-                            trailGradient.addColorStop(1, `${color}80`);  // More visible at current position
+                            // Convert rgb to rgba with alpha values
+                            trailGradient.addColorStop(0, this.rgbToRgba(color, 0));      // Transparent at start
+                            trailGradient.addColorStop(0.5, this.rgbToRgba(color, 0.25)); // Semi-transparent middle
+                            trailGradient.addColorStop(1, this.rgbToRgba(color, 0.5));    // More visible at current position
 
                             ctx.strokeStyle = trailGradient;
                             ctx.lineWidth = 4;
@@ -457,7 +458,7 @@ export class ChartEngine {
                             // Draw arrow at current position
                             const arrowSize = 8;
                             const direction = toY > fromY ? 1 : -1;  // Down or up
-                            ctx.fillStyle = color + '80';
+                            ctx.fillStyle = this.rgbToRgba(color, 0.5);
                             ctx.beginPath();
                             ctx.moveTo(x, currentY);
                             ctx.lineTo(x - arrowSize, currentY - arrowSize * direction);
@@ -1326,6 +1327,40 @@ export class ChartEngine {
         const b = parseInt(hex.substr(4, 2), 16);
 
         return { r, g, b };
+    }
+
+    /**
+     * Convert rgb()/rgba() string to rgba() with specified alpha (v5.5 Helper)
+     */
+    rgbToRgba(colorStr, alpha) {
+        // If already rgba, extract RGB values and replace alpha
+        if (colorStr.startsWith('rgba')) {
+            // Extract rgb values: rgba(r, g, b, a) -> [r, g, b]
+            const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (match) {
+                return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${alpha})`;
+            }
+        }
+
+        // If rgb, add alpha
+        if (colorStr.startsWith('rgb')) {
+            // Extract rgb values: rgb(r, g, b) -> rgba(r, g, b, alpha)
+            const match = colorStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (match) {
+                return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${alpha})`;
+            }
+        }
+
+        // Fallback: if it's a hex color, convert it
+        if (colorStr.startsWith('#')) {
+            const rgb = this.hexToRgb(colorStr);
+            if (rgb) {
+                return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+            }
+        }
+
+        // Default fallback
+        return `rgba(0, 0, 0, ${alpha})`;
     }
 
     /**
