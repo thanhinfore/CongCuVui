@@ -13,6 +13,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TimeSeriesRacing", "TimeSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiscTools", "MiscTools\MiscTools.csproj", "{0494058C-7820-4B40-B406-9790E019769C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataVisualization", "DataVisualization\DataVisualization.csproj", "{16B7FE42-A93B-49D3-8244-945FBFE4DBB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{0494058C-7820-4B40-B406-9790E019769C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0494058C-7820-4B40-B406-9790E019769C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0494058C-7820-4B40-B406-9790E019769C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16B7FE42-A93B-49D3-8244-945FBFE4DBB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16B7FE42-A93B-49D3-8244-945FBFE4DBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16B7FE42-A93B-49D3-8244-945FBFE4DBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16B7FE42-A93B-49D3-8244-945FBFE4DBB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
