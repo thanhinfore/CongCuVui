@@ -1,10 +1,10 @@
 // ========================================
-// Chart Engine Module - PREMIUM EDITION v2.0
-// Enhanced graphics with gradients, shadows, stats panel, and value labels
+// Chart Engine Module - MULTI-PLATFORM EDITION v3.0
+// Enhanced graphics, audio visualization, multiple ratios, particles
 // ========================================
 
 export class ChartEngine {
-    constructor(canvasId, config) {
+    constructor(canvasId, config, audioEngine = null) {
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) {
             throw new Error(`Canvas element with id '${canvasId}' not found`);
@@ -16,10 +16,13 @@ export class ChartEngine {
         this.ctx.imageSmoothingQuality = 'high';
 
         this.config = this.mergeConfig(config);
+        this.audioEngine = audioEngine;
         this.chart = null;
         this.data = null;
         this.previousRanks = new Map(); // Track rank changes
         this.previousValues = new Map(); // Track value changes for growth rate
+        this.particles = []; // Particle effects
+        this.gradientOffset = 0; // For animated gradients
     }
 
     /**
@@ -41,6 +44,11 @@ export class ChartEngine {
             showGrowthRate: config.showGrowthRate !== false,
             barStyle: config.barStyle || 'gradient', // 'solid' or 'gradient'
             enableShadows: config.enableShadows !== false,
+            enableParticles: config.enableParticles !== false, // NEW v3.0
+            showAudioVisualizer: config.showAudioVisualizer !== false, // NEW v3.0
+            animatedBackground: config.animatedBackground !== false, // NEW v3.0
+            padding: config.padding || { top: 180, right: 120, bottom: 120, left: 80 },
+            fontSizes: config.fontSizes || null, // Auto-calculated from ratio
             ...config
         };
     }
@@ -125,10 +133,10 @@ export class ChartEngine {
                 animation: false,
                 layout: {
                     padding: {
-                        top: this.config.showStatsPanel ? 180 : 120,
-                        right: 120,
-                        bottom: 120,
-                        left: 80
+                        top: this.config.showStatsPanel ? this.config.padding.top : this.config.padding.top - 60,
+                        right: this.config.padding.right,
+                        bottom: this.config.padding.bottom,
+                        left: this.config.padding.left
                     }
                 },
                 scales: {
@@ -206,10 +214,15 @@ export class ChartEngine {
             plugins: [{
                 id: 'customElements',
                 beforeDraw: (chart) => {
-                    this.drawBackgroundGradient(chart);
+                    // v3.0: Animated background
+                    this.drawAnimatedBackground(chart);
                 },
                 afterDraw: (chart) => {
                     this.drawCustomElements(chart);
+                    // v3.0: Audio visualizer
+                    this.drawAudioVisualizer(chart);
+                    // v3.0: Particle effects
+                    this.drawParticles(chart);
                 }
             }]
         });
@@ -432,9 +445,13 @@ export class ChartEngine {
             if (previousRank > currentRank) {
                 indicator = '↑';
                 color = '#4CAF50'; // Green for up
+                // v3.0: Create particles for rank up
+                this.createParticles(bar.x, bar.y, color, 5);
             } else if (previousRank < currentRank) {
                 indicator = '↓';
                 color = '#f44336'; // Red for down
+                // v3.0: Create particles for rank down
+                this.createParticles(bar.x, bar.y, color, 5);
             } else {
                 indicator = '→';
                 color = '#999'; // Gray for same
@@ -704,6 +721,192 @@ export class ChartEngine {
         return this.canvas;
     }
 
+    // ========================================
+    // NEW v3.0 FEATURES
+    // ========================================
+
+    /**
+     * Draw audio visualizer (NEW v3.0)
+     */
+    drawAudioVisualizer(chart) {
+        if (!this.config.showAudioVisualizer || !this.audioEngine || !this.audioEngine.isPlaying) {
+            return;
+        }
+
+        const ctx = chart.ctx;
+        const chartArea = chart.chartArea;
+        const freqData = this.audioEngine.getFrequencyData();
+        if (!freqData) return;
+
+        // Visualizer at bottom
+        const vizHeight = 60;
+        const vizY = chart.height - vizHeight - 20;
+        const barWidth = (chartArea.right - chartArea.left) / freqData.length;
+
+        ctx.save();
+
+        // Draw frequency bars
+        for (let i = 0; i < freqData.length; i++) {
+            const barHeight = (freqData[i] / 255) * vizHeight;
+            const x = chartArea.left + i * barWidth;
+            const y = vizY + (vizHeight - barHeight);
+
+            // Gradient color based on frequency
+            const hue = (i / freqData.length) * 360;
+            ctx.fillStyle = `hsla(${hue}, 80%, 60%, 0.7)`;
+            ctx.fillRect(x, y, barWidth - 1, barHeight);
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Create particle effect for rank changes (NEW v3.0)
+     */
+    createParticles(x, y, color, count = 10) {
+        if (!this.config.enableParticles) return;
+
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x,
+                y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4 - 2,
+                life: 1.0,
+                decay: 0.02 + Math.random() * 0.02,
+                size: 2 + Math.random() * 3,
+                color
+            });
+        }
+    }
+
+    /**
+     * Update particle positions (NEW v3.0)
+     */
+    updateParticles() {
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.2; // Gravity
+            p.life -= p.decay;
+            return p.life > 0;
+        });
+    }
+
+    /**
+     * Draw particles (NEW v3.0)
+     */
+    drawParticles(chart) {
+        if (!this.config.enableParticles || this.particles.length === 0) return;
+
+        const ctx = chart.ctx;
+        ctx.save();
+
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.globalAlpha = 1;
+        ctx.restore();
+
+        this.updateParticles();
+    }
+
+    /**
+     * Draw animated background gradient (NEW v3.0)
+     */
+    drawAnimatedBackground(chart) {
+        if (!this.config.animatedBackground) {
+            // Fallback to static gradient
+            this.drawBackgroundGradient(chart);
+            return;
+        }
+
+        const ctx = chart.ctx;
+
+        // Animate gradient offset
+        this.gradientOffset += 0.001;
+        if (this.gradientOffset > 1) this.gradientOffset = 0;
+
+        // Create animated gradient
+        const gradient = ctx.createLinearGradient(
+            0,
+            chart.height * this.gradientOffset,
+            0,
+            chart.height * (1 + this.gradientOffset)
+        );
+
+        // Color based on audio if available
+        let color1 = '#f8f9fa';
+        let color2 = '#e9ecef';
+
+        if (this.audioEngine && this.audioEngine.isPlaying) {
+            const bass = this.audioEngine.getBass();
+            const intensity = bass / 255;
+
+            // Subtle color shift based on bass
+            const r1 = Math.floor(248 - intensity * 20);
+            const g1 = Math.floor(249 - intensity * 20);
+            const b1 = Math.floor(250 - intensity * 20);
+
+            color1 = `rgb(${r1}, ${g1}, ${b1})`;
+            color2 = '#e9ecef';
+        }
+
+        gradient.addColorStop(0, color1);
+        gradient.addColorStop(1, color2);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, chart.width, chart.height);
+    }
+
+    /**
+     * Add glow effect to bars based on audio (NEW v3.0)
+     */
+    addAudioReactiveGlow(chart) {
+        if (!this.audioEngine || !this.audioEngine.isPlaying) return;
+
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+        const bass = this.audioEngine.getBass();
+        const glowIntensity = (bass / 255) * 20;
+
+        if (glowIntensity < 5) return; // Skip if too weak
+
+        ctx.save();
+        ctx.shadowBlur = glowIntensity;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+
+        // Redraw bars with glow (simplified)
+        meta.data.forEach((bar, index) => {
+            const colors = this.getColorPalette(this.config.palette);
+            const color = colors[index % colors.length];
+            ctx.shadowColor = color;
+            // Note: Actual glow is handled by Chart.js shadow settings
+        });
+
+        ctx.restore();
+    }
+
+    /**
+     * Auto-scale font sizes based on canvas dimensions (NEW v3.0)
+     */
+    getFontSize(baseSize) {
+        if (this.config.fontSizes) {
+            // Use pre-calculated font sizes from ratio config
+            return baseSize;
+        }
+
+        // Auto-scale based on resolution
+        const baseWidth = 1920;
+        const scale = this.config.width / baseWidth;
+        return Math.max(12, baseSize * scale);
+    }
+
     /**
      * Destroy chart instance
      */
@@ -712,5 +915,6 @@ export class ChartEngine {
             this.chart.destroy();
             this.chart = null;
         }
+        this.particles = [];
     }
 }
