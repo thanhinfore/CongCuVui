@@ -1,10 +1,14 @@
 // ========================================
-// Main Application - v3.0 Multi-Platform Edition
+// Main Application - v10.0 Multi-Visualization Edition
 // Orchestrates all modules and handles UI interactions
+// Supports 4 visualization modes: Bar Race, Bump Chart, Stream Graph, Heat Map
 // ========================================
 
 import { DataHandler } from './modules/dataHandler.js';
 import { ChartEngine } from './modules/chartEngine.js';
+import { BumpChartEngine } from './modules/bumpChartEngine.js';
+import { StreamGraphEngine } from './modules/streamGraphEngine.js';
+import { HeatMapEngine } from './modules/heatMapEngine.js';
 import { AnimationEngine } from './modules/animationEngine.js';
 import { AudioEngine } from './modules/audioEngine.js';
 import { VIDEO_RATIOS, PLATFORM_PRESETS, calculateFontSizes, getPresetConfig } from './modules/videoRatios.js';
@@ -18,13 +22,14 @@ class TimeSeriesRacingApp {
         this.videoRecorder = null;
         this.isRecording = false;
         this.currentRatioConfig = VIDEO_RATIOS.youtube_hd; // Default
+        this.currentVisualizationMode = 'bar-race'; // v10.0: Default mode
 
         this.initializeAudio();
         this.initializeUI();
         this.attachEventListeners();
         this.tryLoadDefaultAudio();
 
-        console.log('✅ TimeSeriesRacing Web Edition v3.0 initialized');
+        console.log('✅ TimeSeriesRacing Web Edition v10.0 initialized - Multi-Visualization Mode');
     }
 
     /**
@@ -56,6 +61,13 @@ class TimeSeriesRacingApp {
             platformPresetSelect: document.getElementById('platformPresetSelect'),
             videoRatioSelect: document.getElementById('videoRatioSelect'),
             ratioInfo: document.getElementById('ratioInfo'),
+
+            // Visualization Mode (NEW v10.0)
+            visualizationModeSelect: document.getElementById('visualizationModeSelect'),
+            modeInfo: document.getElementById('modeInfo'),
+            modeTitle: document.getElementById('modeTitle'),
+            modeDesc: document.getElementById('modeDesc'),
+            modeUseCase: document.getElementById('modeUseCase'),
 
             // Configuration
             titleInput: document.getElementById('titleInput'),
@@ -134,6 +146,11 @@ class TimeSeriesRacingApp {
         // Video ratio selector (NEW v3.0)
         this.elements.videoRatioSelect.addEventListener('change', (e) => {
             this.handleVideoRatioChange(e.target.value);
+        });
+
+        // Visualization mode selector (NEW v10.0)
+        this.elements.visualizationModeSelect.addEventListener('change', (e) => {
+            this.handleVisualizationModeChange(e.target.value);
         });
 
         // Controls
@@ -386,6 +403,57 @@ class TimeSeriesRacingApp {
     }
 
     /**
+     * Handle visualization mode selection (NEW v10.0)
+     * @param {String} mode - Visualization mode
+     */
+    handleVisualizationModeChange(mode) {
+        this.currentVisualizationMode = mode;
+
+        // Mode descriptions
+        const modeDescriptions = {
+            'bar-race': {
+                title: 'Bar Chart Race:',
+                desc: 'Best for viral videos and social media. Shows dramatic ranking changes with smooth animations.',
+                useCase: 'Video content, presentations, storytelling',
+                info: 'Engaging animated bars - perfect for video content'
+            },
+            'bump-chart': {
+                title: 'Bump Chart:',
+                desc: 'Focus on ranking changes over time. Perfect for tracking who\'s winning and trajectory analysis.',
+                useCase: 'Rank tracking, sports leagues, search rankings',
+                info: 'Clear rank visualization - best for analytical insights'
+            },
+            'stream-graph': {
+                title: 'Stream Graph:',
+                desc: 'Beautiful flowing visualization showing composition over time. Organic, artistic feel.',
+                useCase: 'Composition analysis, music trends, social media activity',
+                info: 'Artistic flow chart - perfect for aesthetic appeal'
+            },
+            'heat-map': {
+                title: 'Heat Map:',
+                desc: 'Matrix view showing all data at once. Excellent for pattern detection and comprehensive overview.',
+                useCase: 'Pattern analysis, dashboards, reports',
+                info: 'Comprehensive matrix view - ideal for static analysis'
+            }
+        };
+
+        const desc = modeDescriptions[mode];
+        if (desc) {
+            this.elements.modeInfo.textContent = desc.info;
+            this.elements.modeTitle.textContent = desc.title;
+            this.elements.modeDesc.textContent = desc.desc;
+            this.elements.modeUseCase.innerHTML = `<strong>Use for:</strong> ${desc.useCase}`;
+        }
+
+        // Reinitialize chart with new mode if data loaded
+        if (this.chartEngine && this.dataHandler.normalizedData) {
+            this.reinitializeChart();
+        }
+
+        console.log(`🎨 Visualization mode changed: ${mode}`);
+    }
+
+    /**
      * Show data preview
      * @param {Object} data - Normalized data
      */
@@ -410,7 +478,7 @@ class TimeSeriesRacingApp {
     }
 
     /**
-     * Initialize chart and animation (v3.0 Enhanced)
+     * Initialize chart and animation (v10.0 Multi-Visualization)
      * @param {Object} data - Normalized data
      */
     initializeChart(data) {
@@ -424,13 +492,158 @@ class TimeSeriesRacingApp {
             this.animationEngine.destroy();
         }
 
-        // Create chart engine with audio support (NEW v3.0)
-        this.chartEngine = new ChartEngine('chartCanvas', config, this.audioEngine);
+        // v10.0: Create appropriate engine based on visualization mode
+        switch (this.currentVisualizationMode) {
+            case 'bump-chart':
+                this.chartEngine = new BumpChartEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'stream-graph':
+                this.chartEngine = new StreamGraphEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'heat-map':
+                this.chartEngine = new HeatMapEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'bar-race':
+            default:
+                this.chartEngine = new ChartEngine('chartCanvas', config, this.audioEngine);
+                break;
+        }
+
         this.chartEngine.initialize(data);
 
-        // Create animation engine (v4.0: Pass audioEngine for fade out)
-        this.animationEngine = new AnimationEngine(this.chartEngine, config, this.audioEngine);
-        this.animationEngine.createTimeline(data);
+        // Create animation engine (only for bar-race mode - others handle animation internally)
+        if (this.currentVisualizationMode === 'bar-race') {
+            this.animationEngine = new AnimationEngine(this.chartEngine, config, this.audioEngine);
+            this.animationEngine.createTimeline(data);
+
+            // Set up callbacks
+            this.animationEngine.onProgress((state) => {
+                this.updateTimeline(state.progress);
+                this.updateCurrentPeriod(state.period);
+            });
+
+            this.animationEngine.onComplete(() => {
+                this.handleAnimationComplete();
+            });
+        } else {
+            // v10.0: For other modes, create simple animation timeline
+            this.createSimpleAnimationEngine(data);
+        }
+
+        // Update to first frame
+        this.chartEngine.updateChart(0, 0);
+        this.updateCurrentPeriod(data.periods[0]);
+
+        // Enable controls
+        this.enableControls(true);
+    }
+
+    /**
+     * Create simple animation engine for non-bar-race modes (v10.0)
+     * @param {Object} data - Normalized data
+     */
+    createSimpleAnimationEngine(data) {
+        // Simple animation controller without GSAP dependency
+        this.animationEngine = {
+            isPlaying: false,
+            currentPeriod: 0,
+            totalPeriods: data.periods.length,
+            data: data,
+            progressCallbacks: [],
+            completeCallbacks: [],
+            animationFrameId: null,
+            startTime: null,
+            pauseTime: null,
+
+            onProgress(callback) {
+                this.progressCallbacks.push(callback);
+            },
+
+            onComplete(callback) {
+                this.completeCallbacks.push(callback);
+            },
+
+            play() {
+                this.isPlaying = true;
+                this.startTime = performance.now();
+                this.animate();
+            },
+
+            pause() {
+                this.isPlaying = false;
+                this.pauseTime = performance.now();
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+            },
+
+            resume() {
+                if (this.pauseTime) {
+                    const pauseDuration = performance.now() - this.pauseTime;
+                    this.startTime += pauseDuration;
+                }
+                this.play();
+            },
+
+            reset() {
+                this.isPlaying = false;
+                this.currentPeriod = 0;
+                this.startTime = null;
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+                if (window.app && window.app.chartEngine) {
+                    window.app.chartEngine.updateChart(0, 0);
+                }
+            },
+
+            animate: function() {
+                if (!this.isPlaying) return;
+
+                const elapsed = performance.now() - this.startTime;
+                const periodDuration = window.app.config.periodLength || 2000;
+                const newPeriod = Math.floor(elapsed / periodDuration);
+                const progress = (elapsed % periodDuration) / periodDuration;
+
+                if (newPeriod >= this.totalPeriods) {
+                    // Animation complete
+                    this.isPlaying = false;
+                    this.currentPeriod = this.totalPeriods - 1;
+                    window.app.chartEngine.updateChart(this.currentPeriod, 1);
+
+                    this.completeCallbacks.forEach(cb => cb());
+                    return;
+                }
+
+                this.currentPeriod = newPeriod;
+
+                // Update chart
+                if (window.app && window.app.chartEngine) {
+                    window.app.chartEngine.updateChart(newPeriod, progress);
+                }
+
+                // Call progress callbacks
+                this.progressCallbacks.forEach(cb => {
+                    cb({
+                        period: this.data.periods[newPeriod],
+                        progress: (newPeriod + progress) / this.totalPeriods
+                    });
+                });
+
+                this.animationFrameId = requestAnimationFrame(() => this.animate());
+            }.bind(this),
+
+            getState() {
+                return {
+                    isPaused: !this.isPlaying,
+                    currentPeriod: this.currentPeriod
+                };
+            },
+
+            destroy() {
+                this.reset();
+            }
+        };
 
         // Set up callbacks
         this.animationEngine.onProgress((state) => {
@@ -441,13 +654,6 @@ class TimeSeriesRacingApp {
         this.animationEngine.onComplete(() => {
             this.handleAnimationComplete();
         });
-
-        // Update to first frame
-        this.chartEngine.updateChart(0, 0);
-        this.updateCurrentPeriod(data.periods[0]);
-
-        // Enable controls
-        this.enableControls(true);
     }
 
     /**
