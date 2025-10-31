@@ -56,6 +56,8 @@ export class ChartEngine {
         this.rankVelocities = new Map(); // Track velocity of rank changes
         this.previousPeriodRanks = new Map(); // Ranks from previous period for velocity calculation
         this.barColors = new Map(); // Track bar colors for smooth transitions
+        this.firstAppearance = new Map(); // Track when each entity first appears (for stable sort)
+        this.currentPeriodIndex = 0; // Track current period for appearance detection
     }
 
     /**
@@ -1098,6 +1100,7 @@ export class ChartEngine {
     /**
      * Update chart with data for specific period
      * v7.0 Phase 3 FIXED: Only called once per period, Chart.js handles smooth animation
+     * v8.0: Added stable sort with first-appearance tiebreaker
      */
     updateChart(periodIndex, progress = 1) {
         if (!this.data || !this.chart) return;
@@ -1105,9 +1108,22 @@ export class ChartEngine {
         const currentPeriod = this.data.periods[periodIndex];
         const currentValues = this.data.values[periodIndex];
 
+        // v8.0: Track current period for first appearance detection
+        this.currentPeriodIndex = periodIndex;
+
         // v7.0 Phase 3 FIXED: No more frame-by-frame interpolation
         // Just use the period's data directly and let Chart.js animate smoothly
         let displayValues = currentValues;
+
+        // v8.0: Track first appearance for each entity with value > 0
+        this.data.entities.forEach((entity, i) => {
+            const value = displayValues[i];
+            // Only track entities that have appeared (value > 0)
+            if (value > 0 && !this.firstAppearance.has(entity)) {
+                this.firstAppearance.set(entity, periodIndex);
+                console.log(`📍 First appearance: ${entity} at period ${periodIndex} (${currentPeriod})`);
+            }
+        });
 
         // Create pairs of [entity, value, index]
         const pairs = this.data.entities.map((entity, i) => ({
@@ -1116,8 +1132,26 @@ export class ChartEngine {
             originalIndex: i
         }));
 
-        // Sort by value (descending)
-        pairs.sort((a, b) => b.value - a.value);
+        // v8.0: Stable sort with tiebreaker
+        // Primary: Sort by value (descending)
+        // Tiebreaker: If values are equal, entity that appeared first ranks higher
+        pairs.sort((a, b) => {
+            // Primary sort: by value (descending)
+            if (b.value !== a.value) {
+                return b.value - a.value;
+            }
+
+            // Tiebreaker: by first appearance (ascending - earlier = higher rank)
+            const aAppearance = this.firstAppearance.get(a.entity) ?? Infinity;
+            const bAppearance = this.firstAppearance.get(b.entity) ?? Infinity;
+
+            if (aAppearance !== bAppearance) {
+                return aAppearance - bAppearance;  // Earlier appearance = higher rank
+            }
+
+            // Final tiebreaker: original index (for stability)
+            return a.originalIndex - b.originalIndex;
+        });
 
         // Take top N
         const topN = pairs.slice(0, this.config.topN);
@@ -2105,5 +2139,12 @@ export class ChartEngine {
             clearTimeout(this.pauseTimer);
             this.pauseTimer = null;
         }
+
+        // v8.0: Clean up professional visualization structures
+        this.rankVelocities.clear();
+        this.previousPeriodRanks.clear();
+        this.barColors.clear();
+        this.firstAppearance.clear();
+        this.currentPeriodIndex = 0;
     }
 }
