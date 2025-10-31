@@ -72,8 +72,10 @@
     <Content Include="index.html" />
     <Content Include="js\app.js" />
     <Content Include="js\modules\animationEngine.js" />
+    <Content Include="js\modules\audioEngine.js" />
     <Content Include="js\modules\chartEngine.js" />
     <Content Include="js\modules\dataHandler.js" />
+    <Content Include="js\modules\videoRatios.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
