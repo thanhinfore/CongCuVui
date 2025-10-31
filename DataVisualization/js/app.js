@@ -493,23 +493,31 @@ class TimeSeriesRacingApp {
         }
 
         // v10.0: Create appropriate engine based on visualization mode
+        console.log(`🎨 Creating visualization engine: ${this.currentVisualizationMode}`);
+
         switch (this.currentVisualizationMode) {
             case 'bump-chart':
+                console.log('📈 Initializing Bump Chart Engine...');
                 this.chartEngine = new BumpChartEngine('chartCanvas', config, this.audioEngine);
                 break;
             case 'stream-graph':
+                console.log('🌊 Initializing Stream Graph Engine...');
                 this.chartEngine = new StreamGraphEngine('chartCanvas', config, this.audioEngine);
                 break;
             case 'heat-map':
+                console.log('🔥 Initializing Heat Map Engine...');
                 this.chartEngine = new HeatMapEngine('chartCanvas', config, this.audioEngine);
                 break;
             case 'bar-race':
             default:
+                console.log('🏆 Initializing Bar Chart Race Engine...');
                 this.chartEngine = new ChartEngine('chartCanvas', config, this.audioEngine);
                 break;
         }
 
+        console.log('📊 Initializing engine with data...');
         this.chartEngine.initialize(data);
+        console.log('✅ Engine initialized successfully!');
 
         // Create animation engine (only for bar-race mode - others handle animation internally)
         if (this.currentVisualizationMode === 'bar-race') {
@@ -543,6 +551,8 @@ class TimeSeriesRacingApp {
      * @param {Object} data - Normalized data
      */
     createSimpleAnimationEngine(data) {
+        const self = this; // Store reference to app instance
+
         // Simple animation controller without GSAP dependency
         this.animationEngine = {
             isPlaying: false,
@@ -564,62 +574,79 @@ class TimeSeriesRacingApp {
             },
 
             play() {
+                console.log('🎬 Simple animation engine: play()');
                 this.isPlaying = true;
                 this.startTime = performance.now();
                 this.animate();
             },
 
             pause() {
+                console.log('⏸️ Simple animation engine: pause()');
                 this.isPlaying = false;
                 this.pauseTime = performance.now();
                 if (this.animationFrameId) {
                     cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
                 }
             },
 
             resume() {
+                console.log('▶️ Simple animation engine: resume()');
                 if (this.pauseTime) {
                     const pauseDuration = performance.now() - this.pauseTime;
                     this.startTime += pauseDuration;
+                    this.pauseTime = null;
                 }
                 this.play();
             },
 
             reset() {
+                console.log('⏮️ Simple animation engine: reset()');
                 this.isPlaying = false;
                 this.currentPeriod = 0;
                 this.startTime = null;
+                this.pauseTime = null;
                 if (this.animationFrameId) {
                     cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
                 }
-                if (window.app && window.app.chartEngine) {
-                    window.app.chartEngine.updateChart(0, 0);
+                if (self.chartEngine) {
+                    self.chartEngine.updateChart(0, 0);
                 }
             },
 
-            animate: function() {
+            animate() {
                 if (!this.isPlaying) return;
 
                 const elapsed = performance.now() - this.startTime;
-                const periodDuration = (window.app && window.app.getConfig().periodLength) || 2000;
+                const config = self.getConfig();
+                const periodDuration = config.periodLength || 2000;
                 const newPeriod = Math.floor(elapsed / periodDuration);
                 const progress = (elapsed % periodDuration) / periodDuration;
 
                 if (newPeriod >= this.totalPeriods) {
                     // Animation complete
+                    console.log('✅ Animation complete!');
                     this.isPlaying = false;
                     this.currentPeriod = this.totalPeriods - 1;
-                    window.app.chartEngine.updateChart(this.currentPeriod, 1);
+
+                    if (self.chartEngine) {
+                        self.chartEngine.updateChart(this.currentPeriod, 1);
+                    }
 
                     this.completeCallbacks.forEach(cb => cb());
                     return;
                 }
 
-                this.currentPeriod = newPeriod;
+                // Update current period
+                if (newPeriod !== this.currentPeriod) {
+                    this.currentPeriod = newPeriod;
+                    console.log(`📊 Period ${newPeriod + 1}/${this.totalPeriods}: ${this.data.periods[newPeriod]}`);
+                }
 
                 // Update chart
-                if (window.app && window.app.chartEngine) {
-                    window.app.chartEngine.updateChart(newPeriod, progress);
+                if (self.chartEngine) {
+                    self.chartEngine.updateChart(newPeriod, progress);
                 }
 
                 // Call progress callbacks
@@ -630,8 +657,9 @@ class TimeSeriesRacingApp {
                     });
                 });
 
+                // Continue animation
                 this.animationFrameId = requestAnimationFrame(() => this.animate());
-            }.bind(this),
+            },
 
             getState() {
                 return {
@@ -641,9 +669,16 @@ class TimeSeriesRacingApp {
             },
 
             destroy() {
-                this.reset();
+                console.log('🗑️ Simple animation engine: destroy()');
+                this.pause();
+                this.currentPeriod = 0;
+                this.progressCallbacks = [];
+                this.completeCallbacks = [];
             }
         };
+
+        // Bind animate function to preserve this context
+        this.animationEngine.animate = this.animationEngine.animate.bind(this.animationEngine);
 
         // Set up callbacks
         this.animationEngine.onProgress((state) => {
@@ -654,6 +689,8 @@ class TimeSeriesRacingApp {
         this.animationEngine.onComplete(() => {
             this.handleAnimationComplete();
         });
+
+        console.log('✅ Simple animation engine created');
     }
 
     /**
