@@ -329,7 +329,8 @@ export class ChartEngine {
 
                         // v5.0: Layer 2 - Contact shadow (close)
                         meta.data.forEach((bar) => {
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             ctx.save();
                             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
@@ -374,7 +375,8 @@ export class ChartEngine {
                             if (barIndex === -1) return;
 
                             const bar = meta.data[barIndex];
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             // Pulsing flash (0 → 1 → 0 over 300ms)
                             const progress = elapsed / 300;
@@ -424,7 +426,8 @@ export class ChartEngine {
                             if (barIndex === -1) return;
 
                             const bar = meta.data[barIndex];
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             // Pulsing flash with color based on type
                             const progress = elapsed / duration;
@@ -605,7 +608,8 @@ export class ChartEngine {
                             if (barIndex === -1) return;
 
                             const bar = meta.data[barIndex];
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             // Pulsing glow effect
                             const time = Date.now() / 1000;
@@ -694,7 +698,8 @@ export class ChartEngine {
                         // Draw rank badge for each bar
                         chart.data.labels.forEach((entity, index) => {
                             const bar = meta.data[index];
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             const rank = index + 1;  // 1-indexed
 
@@ -781,7 +786,8 @@ export class ChartEngine {
                             if (barIndex === -1) return;
 
                             const bar = meta.data[barIndex];
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar dimensions
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             // Label position (above bar)
                             const labelX = bar.x + bar.width / 2;
@@ -839,7 +845,8 @@ export class ChartEngine {
                         ctx.save();
 
                         meta.data.forEach((bar, index) => {
-                            if (!bar) return;
+                            // v7.0 Phase 3 FIXED: Validate bar has valid dimensions before drawing
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
 
                             // v5.0: Glass highlight on top edge
                             const highlightGradient = ctx.createLinearGradient(
@@ -1262,6 +1269,10 @@ export class ChartEngine {
         ctx.fillStyle = '#1a1a1a';
 
         meta.data.forEach((bar, index) => {
+            // v7.0 Phase 3 FIXED: Validate bar dimensions
+            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
+            if (!this.currentTopN || !this.currentTopN[index]) return;
+
             const value = this.currentTopN[index].value;
             const formattedValue = this.formatNumber(value);
 
@@ -1295,6 +1306,10 @@ export class ChartEngine {
         ctx.textBaseline = 'middle';
 
         meta.data.forEach((bar, index) => {
+            // v7.0 Phase 3 FIXED: Validate bar dimensions
+            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
+            if (!this.currentTopN || !this.currentTopN[index]) return;
+
             const entity = this.currentTopN[index].entity;
             const currentRank = index;
             const previousRank = this.previousRanks.get(entity);
@@ -1348,6 +1363,10 @@ export class ChartEngine {
         ctx.textBaseline = 'middle';
 
         meta.data.forEach((bar, index) => {
+            // v7.0 Phase 3 FIXED: Validate bar dimensions
+            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
+            if (!this.currentTopN || !this.currentTopN[index]) return;
+
             const entity = this.currentTopN[index].entity;
             const currentValue = this.currentTopN[index].value;
             const previousValue = this.previousValues.get(entity);
