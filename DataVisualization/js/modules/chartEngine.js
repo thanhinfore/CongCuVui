@@ -1,5 +1,6 @@
 // ========================================
-// Chart Engine Module - ULTIMATE DATA STORYTELLING v7.0
+// Chart Engine Module - ULTIMATE DATA STORYTELLING v7.0 Phase 3
+// SMOOTH MOTION MASTER: Ultra-smooth 60 FPS, exponential easing, extended durations for cinematic flow
 // Professional Cinematography: Intelligent pauses, leader crowns, overtake effects, vibrant colors
 // ========================================
 
@@ -60,7 +61,7 @@ export class ChartEngine {
             title: config.title || 'Data Evolution',
             subtitle: config.subtitle || '',
             topN: config.topN || 10,
-            fps: config.fps || 30,
+            fps: config.fps || 60,  // v7.0 Phase 3: 60 FPS for ultra-smooth motion
             periodLength: config.periodLength || 1000,
             palette: config.palette || 'vibrant',  // v7.0: Default to vibrant (NOT pastel!)
             width: config.width || 1920,
@@ -184,31 +185,31 @@ export class ChartEngine {
                 indexAxis: 'y',
                 responsive: false,
                 maintainAspectRatio: false,
-                // v6.0: Adaptive ultra-slow animations with anticipation
+                // v7.0 Phase 3: ULTRA-SMOOTH animations with exponential easing
                 animation: {
                     duration: (context) => {
-                        // v6.0: Adaptive duration based on change magnitude
-                        if (!context || !context.chart) return 2500;  // Default 2500ms
+                        // v7.0 Phase 3: Extended durations for cinematic smoothness
+                        if (!context || !context.chart) return 4000;  // Default 4000ms (increased from 2500ms)
 
                         const dataIndex = context.dataIndex;
                         const entity = context.chart.data.labels[dataIndex];
                         const currentRank = dataIndex;
                         const previousRank = this.previousRanks.get(entity);
 
-                        if (previousRank === undefined) return 2500;
+                        if (previousRank === undefined) return 4000;
 
                         const rankChange = Math.abs(currentRank - previousRank);
 
-                        // v6.0: Dramatic changes get 2x slower (5+ positions)
+                        // v7.0 Phase 3: Even longer durations for ultra-smooth perception
                         if (rankChange >= 5) {
-                            return 5000;  // 5 seconds for dramatic changes!
+                            return 6000;  // 6 seconds for dramatic changes (was 5000ms)
                         } else if (rankChange >= 3) {
-                            return 3500;  // 3.5 seconds for significant changes
+                            return 5000;  // 5 seconds for significant changes (was 3500ms)
                         } else {
-                            return 2500;  // 2.5 seconds for normal changes
+                            return 4000;  // 4 seconds for normal changes (was 2500ms)
                         }
                     },
-                    easing: 'easeInOutQuart',  // v5.5: Slower acceleration/deceleration
+                    easing: 'easeInOutExpo',  // v7.0 Phase 3: Exponential easing for ultra-smooth motion
                     delay: (context) => {
                         // v6.0: Anticipation delay + stagger
                         if (!context.chart) return 300;  // v6.0: Default 300ms anticipation
@@ -226,35 +227,35 @@ export class ChartEngine {
                         // v6.0: 300ms anticipation + 50ms per position (increased from 30ms)
                         return 300 + (rankChange * 50);
                     },
-                    // v6.0: Adaptive axis animations
+                    // v7.0 Phase 3: Ultra-smooth axis animations with exponential easing
                     x: {
-                        duration: 2000,  // v6.0: Slower value changes
-                        easing: 'easeOutQuart',  // Smooth value growth
+                        duration: 4000,  // v7.0 Phase 3: Extended for smoother value changes (was 2000ms)
+                        easing: 'easeInOutExpo',  // v7.0 Phase 3: Exponential easing for smooth growth
                         from: (ctx) => ctx.chart ? ctx.chart.scales.x.min : 0
                     },
                     y: {
                         duration: (context) => {
-                            // v6.0: Adaptive Y-axis duration (matches main duration)
-                            if (!context || !context.chart) return 2500;
+                            // v7.0 Phase 3: Extended Y-axis duration (matches main duration)
+                            if (!context || !context.chart) return 4000;
 
                             const dataIndex = context.dataIndex;
                             const entity = context.chart.data.labels[dataIndex];
                             const currentRank = dataIndex;
                             const previousRank = this.previousRanks.get(entity);
 
-                            if (previousRank === undefined) return 2500;
+                            if (previousRank === undefined) return 4000;
 
                             const rankChange = Math.abs(currentRank - previousRank);
 
                             if (rankChange >= 5) {
-                                return 5000;  // Match main duration for consistency
+                                return 6000;  // Match main duration for consistency (was 5000ms)
                             } else if (rankChange >= 3) {
-                                return 3500;
+                                return 5000;  // (was 3500ms)
                             } else {
-                                return 2500;
+                                return 4000;  // (was 2500ms)
                             }
                         },
-                        easing: 'easeInOutQuint',  // Ultra smooth ranking shifts
+                        easing: 'easeInOutExpo',  // v7.0 Phase 3: Exponential easing for ultra-smooth ranking shifts
                         from: (ctx) => {
                             // Smooth entrance from below
                             return ctx.chart ? ctx.chart.chartArea.bottom : 0;
@@ -1063,12 +1064,13 @@ export class ChartEngine {
         const currentPeriod = this.data.periods[periodIndex];
         const currentValues = this.data.values[periodIndex];
 
-        // Interpolate with next period if available
+        // v7.0 Phase 3: Ultra-smooth interpolation with exponential easing
         let displayValues = currentValues;
         if (progress < 1 && periodIndex < this.data.values.length - 1) {
             const nextValues = this.data.values[periodIndex + 1];
             displayValues = currentValues.map((val, i) => {
-                return val + (nextValues[i] - val) * this.easeInOutCubic(progress);
+                // v7.0 Phase 3: Use easeInOutExpo for smoothest possible transitions (was easeInOutCubic)
+                return val + (nextValues[i] - val) * this.easeInOutExpo(progress);
             });
         }
 
@@ -1206,14 +1208,14 @@ export class ChartEngine {
                     clearTimeout(this.rankChangeTimers.get(entity));
                 }
 
-                // v6.0: Adaptive timeout based on change magnitude
+                // v7.0 Phase 3: Extended timeouts to match new animation durations
                 let animationDuration;
                 if (rankChange >= 5) {
-                    animationDuration = 5000;  // 5 seconds for dramatic changes
+                    animationDuration = 6000;  // 6 seconds for dramatic changes (was 5000ms)
                 } else if (rankChange >= 3) {
-                    animationDuration = 3500;  // 3.5 seconds for significant changes
+                    animationDuration = 5000;  // 5 seconds for significant changes (was 3500ms)
                 } else {
-                    animationDuration = 2500;  // 2.5 seconds for normal changes
+                    animationDuration = 4000;  // 4 seconds for normal changes (was 2500ms)
                 }
 
                 // Remove from movingBars after animation completes
@@ -1604,11 +1606,26 @@ export class ChartEngine {
     }
 
     /**
-     * v5.5: Update motion trails progress
+     * v7.0 Phase 3: Ease in-out exponential function for ULTIMATE smoothness
+     * This creates the smoothest possible motion - slow at start/end, fast in middle
+     * Eliminates the "jerky" feeling by using exponential curves
+     */
+    easeInOutExpo(t) {
+        if (t === 0) return 0;
+        if (t === 1) return 1;
+        if (t < 0.5) {
+            return Math.pow(2, 20 * t - 10) / 2;
+        } else {
+            return (2 - Math.pow(2, -20 * t + 10)) / 2;
+        }
+    }
+
+    /**
+     * v5.5/v7.0 Phase 3: Update motion trails progress
      */
     updateMotionTrails() {
         const now = Date.now();
-        const trailDuration = 2000;  // 2 seconds to match animation
+        const trailDuration = 4000;  // v7.0 Phase 3: 4 seconds to match new animation (was 2000ms)
 
         this.movementTrails = this.movementTrails.filter(trail => {
             const elapsed = now - trail.startTime;
