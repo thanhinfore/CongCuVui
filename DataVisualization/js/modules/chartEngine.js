@@ -970,6 +970,10 @@ export class ChartEngine {
                             if (!bar || bar.width === undefined || bar.height === undefined ||
                                 !isFinite(bar.x) || !isFinite(bar.y)) return;
 
+                            // v8.0 Phase 3 CRITICAL: Skip gradient creation if width/height too small
+                            // createRadialGradient needs positive, finite values
+                            if (bar.width <= 0 || bar.height <= 0) return;
+
                             // v5.0: Glass highlight on top edge
                             const highlightGradient = ctx.createLinearGradient(
                                 bar.x, bar.y,
