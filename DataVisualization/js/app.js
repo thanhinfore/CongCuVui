@@ -601,7 +601,7 @@ class TimeSeriesRacingApp {
                 if (!this.isPlaying) return;
 
                 const elapsed = performance.now() - this.startTime;
-                const periodDuration = window.app.config.periodLength || 2000;
+                const periodDuration = (window.app && window.app.getConfig().periodLength) || 2000;
                 const newPeriod = Math.floor(elapsed / periodDuration);
                 const progress = (elapsed % periodDuration) / periodDuration;
 
