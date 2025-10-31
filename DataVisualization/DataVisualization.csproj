@@ -81,8 +81,19 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="examples\sample.csv" />
+    <Content Include="CHANGELOG.md" />
+    <Content Include="CHANGELOG_v3.0.md" />
+    <Content Include="CHANGELOG_v4.0.md" />
+    <Content Include="CHANGELOG_v4.5.md" />
     <None Include="packages.config" />
     <Content Include="README.md" />
+    <Content Include="UPGRADE_SUMMARY_v2.0.md" />
+    <Content Include="V3_INTEGRATION_COMPLETE.md" />
+    <Content Include="V3_UPGRADE_SUMMARY.md" />
+    <Content Include="V4.5_SUMMARY.md" />
+    <Content Include="V4_UPGRADE_SUMMARY.md" />
+    <Content Include="V5.0_GRAPHICS_REVOLUTION.md" />
+    <Content Include="V5.5_VISUAL_TRACKING_REVOLUTION.md" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
