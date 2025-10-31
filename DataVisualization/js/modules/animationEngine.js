@@ -27,6 +27,10 @@ export class AnimationEngine {
         }
 
         this.data = data;
+
+        // v7.0 Phase 3 FIXED: Force GSAP to run at 60 FPS for ultra-smooth updates
+        gsap.ticker.fps(60);
+
         this.timeline = gsap.timeline({
             paused: true,
             onUpdate: () => this.handleUpdate(),
@@ -36,13 +40,19 @@ export class AnimationEngine {
         const periodDuration = this.config.periodLength / 1000; // Convert to seconds
         const stepsPerPeriod = Math.ceil(this.config.fps * periodDuration);
 
-        // Create animation for each period (v4.0: Smoother easing)
+        // v7.0 Phase 3 FIXED: Use expo easing for ultra-smooth motion (matches chartEngine)
+        // Create animation for each period
         data.periods.forEach((period, index) => {
             this.timeline.to(this, {
                 duration: periodDuration,
-                ease: 'power2.inOut',  // v4.0: Smooth easing instead of linear
+                ease: 'expo.inOut',  // v7.0 Phase 3: Exponential easing for smoothest motion
                 onStart: () => {
                     this.currentPeriodIndex = index;
+
+                    // v7.0 Phase 3 FIXED: Update chart ONCE at start of period
+                    // Chart.js will smoothly animate to new state over periodDuration
+                    // This eliminates 60fps re-sort jumps
+                    this.chartEngine.updateChart(index, 1);  // progress=1 means show end state of this period
                 },
                 onUpdate: () => {
                     // Calculate progress within current period (0-1)
@@ -58,10 +68,8 @@ export class AnimationEngine {
                         }
                     }
 
-                    // Update chart with interpolated values
-                    this.chartEngine.updateChart(this.currentPeriodIndex, periodProgress);
-
-                    // Callback for UI updates (timeline bar, period display)
+                    // v7.0 Phase 3 FIXED: Don't update chart every frame - let Chart.js animate smoothly
+                    // Only update UI elements (timeline bar, period display)
                     if (this.onProgressCallback) {
                         this.onProgressCallback({
                             periodIndex: this.currentPeriodIndex,
