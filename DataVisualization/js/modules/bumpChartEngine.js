@@ -27,6 +27,15 @@ export class BumpChartEngine {
      * Merge user config with defaults
      */
     mergeConfig(config) {
+        const palettes = {
+            vibrant: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'],
+            professional: ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E', '#BC4B51', '#5E7CE2', '#8B7E74'],
+            neon: ['#FF006E', '#FFBE0B', '#8338EC', '#3A86FF', '#FB5607', '#06FFA5', '#FF00FF', '#00FFFF'],
+            pastel: ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFDFBA', '#E0BBE4', '#FFDFD3', '#C9E4CA']
+        };
+        const palette = config.palette || 'vibrant';
+        const colors = palettes[palette] || palettes.vibrant;
+
         return {
             title: config.title || 'Rank Evolution',
             subtitle: config.subtitle || '',
@@ -36,7 +45,7 @@ export class BumpChartEngine {
             padding: config.padding || { top: 120, right: 150, bottom: 100, left: 150 },
             lineWidth: 4,
             dotRadius: 8,
-            colors: this.getColorPalette(config.palette || 'vibrant'),
+            colors: colors,
             showLabels: config.showValueLabels !== false,
             enableShadows: config.enableShadows !== false,
             ...config
@@ -344,19 +353,6 @@ export class BumpChartEngine {
         ctx.lineTo(x, chartTop + chartHeight);
         ctx.stroke();
         ctx.setLineDash([]);
-    }
-
-    /**
-     * Get color palette
-     */
-    getColorPalette(paletteName) {
-        const palettes = {
-            vibrant: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'],
-            professional: ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E', '#BC4B51', '#5E7CE2', '#8B7E74'],
-            neon: ['#FF006E', '#FFBE0B', '#8338EC', '#3A86FF', '#FB5607', '#06FFA5', '#FF00FF', '#00FFFF'],
-            pastel: ['#FFB3BA', '#BAFFC9', '#BAE1FF', '#FFFFBA', '#FFDFBA', '#E0BBE4', '#FFDFD3', '#C9E4CA']
-        };
-        return palettes[paletteName] || palettes.vibrant;
     }
 
     /**
