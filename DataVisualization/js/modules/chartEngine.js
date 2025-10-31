@@ -1,7 +1,7 @@
 // ========================================
-// Chart Engine Module - ULTIMATE DATA STORYTELLING v7.0 Phase 3
-// SMOOTH MOTION MASTER: Ultra-smooth 60 FPS, exponential easing, extended durations for cinematic flow
-// Professional Cinematography: Intelligent pauses, leader crowns, overtake effects, vibrant colors
+// Chart Engine Module - ULTIMATE DATA STORYTELLING v8.0
+// PROFESSIONAL VISUALIZATION MASTER: Perfect alignment, smooth color transitions, momentum indicators
+// Phase 3 FINAL: Buttery-smooth motion, Zero position jumps, Exponential easing
 // ========================================
 
 export class ChartEngine {
@@ -51,6 +51,11 @@ export class ChartEngine {
         this.leaderTransitions = []; // Leader change history
         this.isPaused = false; // Intelligent pause state
         this.pauseTimer = null; // Pause timer
+
+        // v8.0: Professional visualization enhancements
+        this.rankVelocities = new Map(); // Track velocity of rank changes
+        this.previousPeriodRanks = new Map(); // Ranks from previous period for velocity calculation
+        this.barColors = new Map(); // Track bar colors for smooth transitions
     }
 
     /**
@@ -686,7 +691,7 @@ export class ChartEngine {
                     }
                 },
                 {
-                    // v6.0: Rank Number Badges
+                    // v8.0: Enhanced Rank Number Badges with Perfect Alignment
                     id: 'rankBadges',
                     afterDatasetsDraw: (chart) => {
                         const ctx = chart.ctx;
@@ -703,43 +708,79 @@ export class ChartEngine {
 
                             const rank = index + 1;  // 1-indexed
 
-                            // Badge position (left side of bar)
-                            const badgeX = chartArea.left - 100;
-                            const badgeY = bar.y + bar.height / 2;
-                            const badgeRadius = 22;  // Circle radius
+                            // v8.0: Perfect alignment with Y-axis labels
+                            // Y-axis labels are centered on the bar, so we align badge there too
+                            const badgeX = chartArea.left - 65;  // Closer to axis (was -100)
+                            const badgeY = bar.y + bar.height / 2;  // Center of bar (same as Y-axis label)
+                            const badgeRadius = 24;  // Slightly larger for better visibility
 
-                            // Badge colors based on rank
-                            let badgeColor, textColor;
+                            // v8.0: Enhanced badge colors with gradients
+                            let badgeGradient, textColor, glowColor;
                             if (rank === 1) {
-                                badgeColor = '#FFD700';  // Gold
+                                // Gold gradient for #1
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFF4D6');  // Light gold
+                                badgeGradient.addColorStop(0.5, '#FFD700');  // Gold
+                                badgeGradient.addColorStop(1, '#DAA520');  // Dark gold
                                 textColor = '#000000';
+                                glowColor = 'rgba(255, 215, 0, 0.5)';
                             } else if (rank === 2) {
-                                badgeColor = '#C0C0C0';  // Silver
+                                // Silver gradient for #2
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#F5F5F5');  // Light silver
+                                badgeGradient.addColorStop(0.5, '#C0C0C0');  // Silver
+                                badgeGradient.addColorStop(1, '#A8A8A8');  // Dark silver
                                 textColor = '#000000';
+                                glowColor = 'rgba(192, 192, 192, 0.5)';
                             } else if (rank === 3) {
-                                badgeColor = '#CD7F32';  // Bronze
+                                // Bronze gradient for #3
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#E8B899');  // Light bronze
+                                badgeGradient.addColorStop(0.5, '#CD7F32');  // Bronze
+                                badgeGradient.addColorStop(1, '#A0522D');  // Dark bronze
                                 textColor = '#FFFFFF';
+                                glowColor = 'rgba(205, 127, 50, 0.5)';
                             } else {
-                                badgeColor = '#667eea';  // Purple
+                                // Modern gradient for others
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#8B9CF8');  // Light purple
+                                badgeGradient.addColorStop(0.5, '#667eea');  // Purple
+                                badgeGradient.addColorStop(1, '#4C63D2');  // Dark purple
                                 textColor = '#FFFFFF';
+                                glowColor = 'rgba(102, 126, 234, 0.4)';
                             }
 
-                            // Draw circle background
-                            ctx.fillStyle = badgeColor;
-                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                            ctx.shadowBlur = 10;
-                            ctx.shadowOffsetY = 3;
+                            // v8.0: Enhanced circle with outer glow
+                            ctx.shadowColor = glowColor;
+                            ctx.shadowBlur = 15;
+                            ctx.shadowOffsetY = 0;
+
+                            ctx.fillStyle = badgeGradient;
                             ctx.beginPath();
                             ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
                             ctx.fill();
 
-                            // Draw rank number
+                            // v8.0: Subtle inner border for depth
                             ctx.shadowBlur = 0;
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(badgeX, badgeY, badgeRadius - 1, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // v8.0: Enhanced rank number with better font
                             ctx.fillStyle = textColor;
-                            ctx.font = 'bold 20px Inter, sans-serif';
+                            ctx.font = 'bold 18px "Inter", -apple-system, sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
+
+                            // Add subtle text shadow for readability
+                            ctx.shadowColor = rank <= 3 ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.5)';
+                            ctx.shadowBlur = 2;
+                            ctx.shadowOffsetY = 1;
+
                             ctx.fillText(`#${rank}`, badgeX, badgeY);
+                            ctx.shadowBlur = 0;
 
                             // v7.0: Leader Crown Effect
                             if (rank === 1 && this.config.enableLeaderCrown) {
@@ -764,6 +805,78 @@ export class ChartEngine {
                                 ctx.lineWidth = 5;
                                 ctx.strokeRect(bar.x - 5, bar.y - 5, bar.width + 10, bar.height + 10);
                             }
+                        });
+
+                        ctx.restore();
+                    }
+                },
+                {
+                    // v8.0: Momentum Indicators - Velocity visualization
+                    id: 'momentumIndicators',
+                    afterDatasetsDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        const chartArea = chart.chartArea;
+
+                        ctx.save();
+
+                        // Draw momentum for each entity
+                        chart.data.labels.forEach((entity, index) => {
+                            const bar = meta.data[index];
+                            if (!bar || !bar.width || !bar.height || isNaN(bar.x) || isNaN(bar.y)) return;
+
+                            const velocity = this.rankVelocities.get(entity) || 0;
+                            if (Math.abs(velocity) < 0.5) return;  // Only show significant momentum
+
+                            // Position at right edge of bar
+                            const arrowX = bar.x + bar.width + 10;
+                            const arrowY = bar.y + bar.height / 2;
+
+                            // Arrow size based on velocity
+                            const arrowLength = Math.min(Math.abs(velocity) * 8, 40);
+                            const arrowWidth = 6;
+
+                            // Color based on direction and magnitude
+                            const isRising = velocity < 0;  // Negative velocity = rising in ranks
+                            let color, alpha;
+                            if (isRising) {
+                                // Rising - Green gradient
+                                alpha = Math.min(Math.abs(velocity) / 5, 0.9);
+                                color = `rgba(46, 213, 115, ${alpha})`;
+                            } else {
+                                // Falling - Red gradient
+                                alpha = Math.min(Math.abs(velocity) / 5, 0.9);
+                                color = `rgba(255, 71, 87, ${alpha})`;
+                            }
+
+                            // Draw arrow
+                            ctx.fillStyle = color;
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 2;
+
+                            ctx.beginPath();
+                            if (isRising) {
+                                // Upward arrow
+                                ctx.moveTo(arrowX, arrowY);
+                                ctx.lineTo(arrowX, arrowY - arrowLength);
+                                ctx.lineTo(arrowX - arrowWidth, arrowY - arrowLength + arrowWidth);
+                                ctx.moveTo(arrowX, arrowY - arrowLength);
+                                ctx.lineTo(arrowX + arrowWidth, arrowY - arrowLength + arrowWidth);
+                            } else {
+                                // Downward arrow
+                                ctx.moveTo(arrowX, arrowY);
+                                ctx.lineTo(arrowX, arrowY + arrowLength);
+                                ctx.lineTo(arrowX - arrowWidth, arrowY + arrowLength - arrowWidth);
+                                ctx.moveTo(arrowX, arrowY + arrowLength);
+                                ctx.lineTo(arrowX + arrowWidth, arrowY + arrowLength - arrowWidth);
+                            }
+                            ctx.stroke();
+
+                            // Add subtle glow
+                            ctx.shadowColor = color;
+                            ctx.shadowBlur = 10;
+                            ctx.stroke();
+                            ctx.shadowBlur = 0;
                         });
 
                         ctx.restore();
@@ -1013,6 +1126,29 @@ export class ChartEngine {
         const currentRanks = new Map();
         topN.forEach((pair, rank) => {
             currentRanks.set(pair.entity, rank);
+        });
+
+        // v8.0: Calculate rank velocities for momentum indicators
+        topN.forEach((pair) => {
+            const entity = pair.entity;
+            const currentRank = currentRanks.get(entity);
+            const previousRank = this.previousPeriodRanks.get(entity);
+
+            if (previousRank !== undefined) {
+                // Velocity = change in rank per period
+                // Negative = rising (getting lower rank number)
+                // Positive = falling (getting higher rank number)
+                const velocity = currentRank - previousRank;
+                this.rankVelocities.set(entity, velocity);
+            } else {
+                this.rankVelocities.set(entity, 0);
+            }
+        });
+
+        // Store current ranks for next period's velocity calculation
+        this.previousPeriodRanks.clear();
+        currentRanks.forEach((rank, entity) => {
+            this.previousPeriodRanks.set(entity, rank);
         });
 
         // v7.0: Detect leader changes for intelligent pause
