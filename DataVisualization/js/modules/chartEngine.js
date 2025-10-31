@@ -338,7 +338,8 @@ export class ChartEngine {
                         meta.data.forEach((bar) => {
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             ctx.save();
                             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
@@ -385,7 +386,8 @@ export class ChartEngine {
                             const bar = meta.data[barIndex];
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             // Pulsing flash (0 → 1 → 0 over 300ms)
                             const progress = elapsed / 300;
@@ -437,7 +439,8 @@ export class ChartEngine {
                             const bar = meta.data[barIndex];
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             // Pulsing flash with color based on type
                             const progress = elapsed / duration;
@@ -620,7 +623,8 @@ export class ChartEngine {
                             const bar = meta.data[barIndex];
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             // Pulsing glow effect
                             const time = Date.now() / 1000;
@@ -711,7 +715,8 @@ export class ChartEngine {
                             const bar = meta.data[index];
                             // v8.0 Phase 2 FIXED: Less strict validation to show during animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             const rank = index + 1;  // 1-indexed
 
@@ -908,7 +913,8 @@ export class ChartEngine {
                             const bar = meta.data[barIndex];
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             // Label position (above bar)
                             const labelX = bar.x + bar.width / 2;
@@ -968,7 +974,8 @@ export class ChartEngine {
                         meta.data.forEach((bar, index) => {
                             // v8.0 Phase 2 FIXED: Less strict validation for animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
-                                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                                !isFinite(bar.x) || !isFinite(bar.y) ||
+                                !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             // v8.0 Phase 3 CRITICAL: Skip gradient creation if width/height too small
                             // createRadialGradient needs positive, finite values
@@ -1452,7 +1459,8 @@ export class ChartEngine {
         meta.data.forEach((bar, index) => {
             // v8.0 Phase 2 FIXED: Less strict validation for animation
             if (!bar || bar.width === undefined || bar.height === undefined ||
-                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                !isFinite(bar.x) || !isFinite(bar.y) ||
+                !isFinite(bar.width) || !isFinite(bar.height)) return;
             if (!this.currentTopN || !this.currentTopN[index]) return;
 
             const value = this.currentTopN[index].value;
@@ -1490,7 +1498,8 @@ export class ChartEngine {
         meta.data.forEach((bar, index) => {
             // v8.0 Phase 2 FIXED: Less strict validation for animation
             if (!bar || bar.width === undefined || bar.height === undefined ||
-                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                !isFinite(bar.x) || !isFinite(bar.y) ||
+                !isFinite(bar.width) || !isFinite(bar.height)) return;
             if (!this.currentTopN || !this.currentTopN[index]) return;
 
             const entity = this.currentTopN[index].entity;
@@ -1548,7 +1557,8 @@ export class ChartEngine {
         meta.data.forEach((bar, index) => {
             // v8.0 Phase 2 FIXED: Less strict validation for animation
             if (!bar || bar.width === undefined || bar.height === undefined ||
-                !isFinite(bar.x) || !isFinite(bar.y)) return;
+                !isFinite(bar.x) || !isFinite(bar.y) ||
+                !isFinite(bar.width) || !isFinite(bar.height)) return;
             if (!this.currentTopN || !this.currentTopN[index]) return;
 
             const entity = this.currentTopN[index].entity;
