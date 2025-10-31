@@ -25,9 +25,9 @@ export class AudioEngine {
             // Create Audio Context
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            // Create audio element
+            // Create audio element (v9.0: Auto-loop enabled)
             this.audioElement = new Audio();
-            this.audioElement.loop = false;
+            this.audioElement.loop = true;  // v9.0: Auto-loop music when finished
             this.audioElement.volume = this.volume;
 
             // Create analyser for visualization

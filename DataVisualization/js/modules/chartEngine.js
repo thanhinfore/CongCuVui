@@ -1,7 +1,7 @@
 // ========================================
-// Chart Engine Module - ULTIMATE DATA STORYTELLING v8.0
-// PROFESSIONAL VISUALIZATION MASTER: Perfect alignment, smooth color transitions, momentum indicators
-// Phase 3 FINAL: Buttery-smooth motion, Zero position jumps, Exponential easing
+// Chart Engine Module - GRAPHICS EXCELLENCE v9.0
+// ENHANCED VISUALIZATION: Perfect rank alignment, auto-loop music, improved gradients & particle effects
+// v9.0 FEATURES: Enhanced shadows, dynamic particles, perfect rank/name alignment, improved color transitions
 // ========================================
 
 export class ChartEngine {
@@ -121,7 +121,7 @@ export class ChartEngine {
         this.ctx.textRendering = 'optimizeLegibility';
         this.ctx.fontKerning = 'normal';
 
-        console.log(`🎨 v7.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Ultimate Data Storytelling`);
+        console.log(`🎨 v9.0 Canvas initialized: ${this.canvas.width}x${this.canvas.height} (${dpr}x DPI) - Graphics Excellence`);
 
         // Initialize rank tracking
         this.initializeRankTracking();
@@ -173,17 +173,17 @@ export class ChartEngine {
                     data: [],
                     backgroundColor: this.config.barStyle === 'gradient' ?
                         colors.map(c => this.createGradient(c)) : colors,
-                    borderColor: colors.map(c => this.darkenColor(c, 0.4)),  // v5.0: Deeper border
-                    borderWidth: 1.5,            // v5.0: Ultra-thin for glass effect
-                    borderRadius: 20,            // v5.0: Maximum roundness for premium feel
+                    borderColor: colors.map(c => this.darkenColor(c, 0.5)),  // v9.0: Deeper border for contrast
+                    borderWidth: 2,              // v9.0: Enhanced border width
+                    borderRadius: 22,            // v9.0: Increased roundness for premium feel
                     borderSkipped: false,
                     barPercentage: 0.90,         // v5.0: Larger bars for impact
                     categoryPercentage: 0.94,    // v5.0: Optimized spacing
-                    // v5.0: Multi-layer shadow for depth
+                    // v9.0: Enhanced multi-layer shadow for depth
                     shadowOffsetX: 0,
-                    shadowOffsetY: 6,
-                    shadowBlur: 20,
-                    shadowColor: 'rgba(0, 0, 0, 0.25)',
+                    shadowOffsetY: 8,            // v9.0: Stronger shadow offset
+                    shadowBlur: 25,              // v9.0: Increased blur for softer shadow
+                    shadowColor: 'rgba(0, 0, 0, 0.3)',  // v9.0: Slightly darker shadow
                     // v5.0: Smooth edges
                     tension: 0.4
                 }]
@@ -701,7 +701,7 @@ export class ChartEngine {
                     }
                 },
                 {
-                    // v8.0: Enhanced Rank Number Badges with Perfect Alignment
+                    // v9.0: Enhanced Rank Number Badges with Perfect Alignment
                     id: 'rankBadges',
                     afterDatasetsDraw: (chart) => {
                         const ctx = chart.ctx;
@@ -713,58 +713,62 @@ export class ChartEngine {
                         // Draw rank badge for each bar
                         chart.data.labels.forEach((entity, index) => {
                             const bar = meta.data[index];
-                            // v8.0 Phase 2 FIXED: Less strict validation to show during animation
+                            // v9.0: Enhanced validation to show during animation
                             if (!bar || bar.width === undefined || bar.height === undefined ||
                                 !isFinite(bar.x) || !isFinite(bar.y) ||
                                 !isFinite(bar.width) || !isFinite(bar.height)) return;
 
                             const rank = index + 1;  // 1-indexed
 
-                            // v8.0: Perfect alignment with Y-axis labels
-                            // Y-axis labels are centered on the bar, so we align badge there too
-                            const badgeX = chartArea.left - 65;  // Closer to axis (was -100)
-                            const badgeY = bar.y + bar.height / 2;  // Center of bar (same as Y-axis label)
-                            const badgeRadius = 24;  // Slightly larger for better visibility
+                            // v9.0: Perfect alignment with Y-axis labels (same vertical position)
+                            // Y-axis labels are centered on the bar, badge must match EXACTLY
+                            const badgeX = chartArea.left - 70;  // Optimized spacing from axis
+                            const badgeY = bar.y + bar.height / 2;  // EXACT center of bar = same line as entity name
+                            const badgeRadius = 26;  // v9.0: Slightly larger for better visibility
 
-                            // v8.0: Enhanced badge colors with gradients
+                            // v9.0: Enhanced badge colors with improved gradients
                             let badgeGradient, textColor, glowColor;
                             if (rank === 1) {
-                                // Gold gradient for #1
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#FFF4D6');  // Light gold
-                                badgeGradient.addColorStop(0.5, '#FFD700');  // Gold
-                                badgeGradient.addColorStop(1, '#DAA520');  // Dark gold
+                                // v9.0: Enhanced Gold gradient for #1
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFFACD');  // Bright gold center
+                                badgeGradient.addColorStop(0.3, '#FFD700');  // Gold
+                                badgeGradient.addColorStop(0.7, '#FFA500');  // Orange gold
+                                badgeGradient.addColorStop(1, '#B8860B');  // Dark golden
                                 textColor = '#000000';
-                                glowColor = 'rgba(255, 215, 0, 0.5)';
+                                glowColor = 'rgba(255, 215, 0, 0.7)';
                             } else if (rank === 2) {
-                                // Silver gradient for #2
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#F5F5F5');  // Light silver
-                                badgeGradient.addColorStop(0.5, '#C0C0C0');  // Silver
-                                badgeGradient.addColorStop(1, '#A8A8A8');  // Dark silver
+                                // v9.0: Enhanced Silver gradient for #2
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFFFFF');  // Bright silver center
+                                badgeGradient.addColorStop(0.3, '#E0E0E0');  // Light silver
+                                badgeGradient.addColorStop(0.7, '#C0C0C0');  // Silver
+                                badgeGradient.addColorStop(1, '#909090');  // Dark silver
                                 textColor = '#000000';
-                                glowColor = 'rgba(192, 192, 192, 0.5)';
+                                glowColor = 'rgba(192, 192, 192, 0.7)';
                             } else if (rank === 3) {
-                                // Bronze gradient for #3
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#E8B899');  // Light bronze
-                                badgeGradient.addColorStop(0.5, '#CD7F32');  // Bronze
-                                badgeGradient.addColorStop(1, '#A0522D');  // Dark bronze
+                                // v9.0: Enhanced Bronze gradient for #3
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#F4C2A0');  // Light bronze
+                                badgeGradient.addColorStop(0.3, '#E39866');  // Bronze
+                                badgeGradient.addColorStop(0.7, '#CD7F32');  // Deep bronze
+                                badgeGradient.addColorStop(1, '#8B4513');  // Dark bronze
                                 textColor = '#FFFFFF';
-                                glowColor = 'rgba(205, 127, 50, 0.5)';
+                                glowColor = 'rgba(205, 127, 50, 0.7)';
                             } else {
-                                // Modern gradient for others
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 5, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#8B9CF8');  // Light purple
-                                badgeGradient.addColorStop(0.5, '#667eea');  // Purple
-                                badgeGradient.addColorStop(1, '#4C63D2');  // Dark purple
+                                // v9.0: Enhanced modern gradient for others
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#A8B5FF');  // Light blue-purple
+                                badgeGradient.addColorStop(0.3, '#7B8FFF');  // Purple-blue
+                                badgeGradient.addColorStop(0.7, '#667eea');  // Purple
+                                badgeGradient.addColorStop(1, '#3F51D2');  // Deep purple
                                 textColor = '#FFFFFF';
-                                glowColor = 'rgba(102, 126, 234, 0.4)';
+                                glowColor = 'rgba(102, 126, 234, 0.6)';
                             }
 
-                            // v8.0: Enhanced circle with outer glow
+                            // v9.0: Enhanced circle with stronger outer glow
                             ctx.shadowColor = glowColor;
-                            ctx.shadowBlur = 15;
+                            ctx.shadowBlur = 20;  // Increased from 15
                             ctx.shadowOffsetY = 0;
 
                             ctx.fillStyle = badgeGradient;
@@ -772,23 +776,32 @@ export class ChartEngine {
                             ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
                             ctx.fill();
 
-                            // v8.0: Subtle inner border for depth
+                            // v9.0: Enhanced inner border with outer ring for depth
                             ctx.shadowBlur = 0;
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+
+                            // Outer ring for premium 3D effect
+                            ctx.strokeStyle = rank <= 3 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
+                            ctx.lineWidth = 2.5;
+                            ctx.beginPath();
+                            ctx.arc(badgeX, badgeY, badgeRadius + 1, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // Inner highlight for glass effect
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             ctx.arc(badgeX, badgeY, badgeRadius - 1, 0, Math.PI * 2);
                             ctx.stroke();
 
-                            // v8.0: Enhanced rank number with better font
+                            // v9.0: Enhanced rank number with better font and styling
                             ctx.fillStyle = textColor;
-                            ctx.font = 'bold 18px "Inter", -apple-system, sans-serif';
+                            ctx.font = 'bold 19px "Inter", -apple-system, sans-serif';  // Slightly larger
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
 
-                            // Add subtle text shadow for readability
-                            ctx.shadowColor = rank <= 3 ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.5)';
-                            ctx.shadowBlur = 2;
+                            // Enhanced text shadow for better readability
+                            ctx.shadowColor = rank <= 3 ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.6)';
+                            ctx.shadowBlur = 3;
                             ctx.shadowOffsetY = 1;
 
                             ctx.fillText(`#${rank}`, badgeX, badgeY);
@@ -1979,40 +1992,49 @@ export class ChartEngine {
     }
 
     /**
-     * Create particle effect for rank changes (NEW v3.0)
+     * Create particle effect for rank changes (v9.0 Enhanced)
      */
     createParticles(x, y, color, count = 10) {
         if (!this.config.enableParticles) return;
 
         for (let i = 0; i < count; i++) {
+            // v9.0: Enhanced particle physics with rotation and variety
+            const angle = (Math.random() * Math.PI * 2);
+            const speed = 2 + Math.random() * 4;
             this.particles.push({
                 x,
                 y,
-                vx: (Math.random() - 0.5) * 4,
-                vy: (Math.random() - 0.5) * 4 - 2,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1,  // Slight upward bias
                 life: 1.0,
-                decay: 0.02 + Math.random() * 0.02,
-                size: 2 + Math.random() * 3,
-                color
+                decay: 0.015 + Math.random() * 0.02,  // v9.0: Slower decay for visibility
+                size: 3 + Math.random() * 4,  // v9.0: Larger particles
+                color,
+                rotation: Math.random() * Math.PI * 2,  // v9.0: Initial rotation
+                rotationSpeed: (Math.random() - 0.5) * 0.2,  // v9.0: Rotation animation
+                alpha: 0.8 + Math.random() * 0.2  // v9.0: Varying opacity
             });
         }
     }
 
     /**
-     * Update particle positions (NEW v3.0)
+     * Update particle positions (v9.0 Enhanced)
      */
     updateParticles() {
         this.particles = this.particles.filter(p => {
+            // v9.0: Enhanced physics
             p.x += p.vx;
             p.y += p.vy;
-            p.vy += 0.2; // Gravity
+            p.vy += 0.15;  // v9.0: Gentler gravity
+            p.vx *= 0.98;  // v9.0: Air resistance
+            p.rotation += p.rotationSpeed;  // v9.0: Rotation animation
             p.life -= p.decay;
             return p.life > 0;
         });
     }
 
     /**
-     * Draw particles (NEW v3.0)
+     * Draw particles (v9.0 Enhanced)
      */
     drawParticles(chart) {
         if (!this.config.enableParticles || this.particles.length === 0) return;
@@ -2021,13 +2043,39 @@ export class ChartEngine {
         ctx.save();
 
         this.particles.forEach(p => {
-            ctx.globalAlpha = p.life;
+            // v9.0: Enhanced rendering with glow and rotation
+            ctx.globalAlpha = p.life * p.alpha;
+
+            // Add glow effect
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 8;
+
             ctx.fillStyle = p.color;
+
+            // v9.0: Draw rotating star-like particles
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+
+            // Draw multiple layers for depth
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const x = Math.cos(angle) * p.size;
+                const y = Math.sin(angle) * p.size;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
             ctx.fill();
+
+            ctx.restore();
         });
 
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
         ctx.restore();
 
