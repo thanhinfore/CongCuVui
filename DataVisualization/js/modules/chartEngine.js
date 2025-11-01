@@ -89,8 +89,8 @@ export class ChartEngine {
             enableOvertakeFlash: config.enableOvertakeFlash !== false,  // Flash on overtakes
             intelligentPause: config.intelligentPause !== false,  // Pause on dramatic moments
             pauseDuration: config.pauseDuration || 1500,  // 1.5s pause on leader changes
-            // v15.0 FINAL: OPTIMIZED left padding (160px) for rank badges + labels WITHOUT overlap!
-            padding: config.padding || { top: 100, right: 120, bottom: 120, left: 160 },
+            // v15.0 PERFECT FIX: Normal left padding - rank badges now ON bar ends!
+            padding: config.padding || { top: 100, right: 120, bottom: 120, left: 100 },
             fontSizes: config.fontSizes || null,
             ...config
         };
@@ -268,15 +268,12 @@ export class ChartEngine {
                         },
                         ticks: {
                             font: {
-                                size: 22,  // v15.0: Optimized size for readability
+                                size: 24,  // v15.0: Readable entity names
                                 weight: '700',
                                 family: "'Inter', -apple-system, sans-serif"
                             },
                             color: '#222',
-                            padding: 20,  // v15.0: Balanced spacing from bars
-                            autoSkip: false,  // v15.0: Show all labels
-                            maxRotation: 0,   // v15.0: Keep labels horizontal
-                            minRotation: 0
+                            padding: 15  // v15.0: Clean spacing
                         }
                     }
                 },
@@ -726,13 +723,14 @@ export class ChartEngine {
 
                             const rank = index + 1;  // 1-indexed
 
-                            // ✨ v15.0 FINAL FIX: PERFECT ALIGNMENT + NO OVERLAP!
-                            // With 160px left padding, badges positioned optimally
-                            // Layout: [Badge -80px] ←gap→ [Label] ←20px→ [Bar]
+                            // ✨ v15.0 ULTIMATE FIX: Rank badges ON BAR ENDS!
+                            // BRILLIANT SOLUTION: Place badges at the END of bars (right side)
+                            // No more overlap with entity name labels!
+                            // Layout: [Label] [███████████ Bar ███] [#Badge]
 
-                            const badgeX = chartArea.left - 80;   // ✨ Optimal: left edge + 80px into padding
-                            const badgeY = bar.y + (bar.height / 2);  // ✨ PERFECT vertical center of bar
-                            const badgeRadius = 26;  // v15.0: Balanced size for 160px padding
+                            const badgeX = bar.x + bar.width + 35;  // ✨ At bar end + 35px offset
+                            const badgeY = bar.y + (bar.height / 2);  // ✨ Perfect vertical center of bar
+                            const badgeRadius = 22;  // v15.0: Compact size for bar-end placement
 
                             // v15.0: ULTRA PREMIUM badge colors with enhanced gradients
                             let badgeGradient, textColor, glowColor, ringColor;
@@ -819,9 +817,9 @@ export class ChartEngine {
                             ctx.arc(badgeX, badgeY - 3, badgeRadius - 5, 0, Math.PI * 1.2);
                             ctx.stroke();
 
-                            // v15.0: PREMIUM rank number - Enhanced typography
+                            // v15.0: COMPACT rank number for bar-end badges
                             ctx.fillStyle = textColor;
-                            ctx.font = 'bold 20px "Inter", "Segoe UI", -apple-system, sans-serif';
+                            ctx.font = 'bold 18px "Inter", "Segoe UI", -apple-system, sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
 
