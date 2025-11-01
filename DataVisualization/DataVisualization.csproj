@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="background.wav" />
+    <Content Include="clink.wav" />
     <Content Include="css\main.css" />
     <Content Include="index.html" />
     <Content Include="js\app.js" />
