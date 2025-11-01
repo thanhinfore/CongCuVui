@@ -78,10 +78,7 @@ export class BubbleChartRaceEngine {
         if (!this.data || periodIndex >= this.data.periods.length) return;
 
         const ctx = this.ctx;
-        const currentPeriod = this.data.periods[periodIndex];
-        const nextPeriod = periodIndex < this.data.periods.length - 1
-            ? this.data.periods[periodIndex + 1]
-            : currentPeriod;
+        const periodName = this.data.periods[periodIndex];
 
         // Clear canvas with gradient background
         if (this.config.animatedBackground) {
@@ -92,8 +89,8 @@ export class BubbleChartRaceEngine {
         }
 
         // Get top N entities
-        const currentData = this.getTopNData(currentPeriod);
-        const nextData = this.getTopNData(nextPeriod);
+        const currentData = this.getTopNData(periodIndex);
+        const nextData = this.getTopNData(Math.min(periodIndex + 1, this.data.periods.length - 1));
 
         // Interpolate values
         const interpolatedData = this.interpolateData(currentData, nextData, progress);
@@ -116,7 +113,7 @@ export class BubbleChartRaceEngine {
         this.drawBubbles(interpolatedData, maxValue);
 
         // Draw title and period
-        this.drawTitleAndPeriod(currentPeriod.name);
+        this.drawTitleAndPeriod(periodName);
 
         // Draw legend
         this.drawLegend(interpolatedData, maxValue);
@@ -135,9 +132,12 @@ export class BubbleChartRaceEngine {
         ctx.fillRect(0, 0, this.config.width, this.config.height);
     }
 
-    getTopNData(period) {
-        const entries = Object.entries(period.values)
-            .map(([entity, value]) => ({ entity, value: parseFloat(value) || 0 }))
+    getTopNData(periodIndex) {
+        const periodValues = this.data.values[periodIndex];
+        const entries = this.data.entities.map((entity, idx) => ({
+            entity,
+            value: parseFloat(periodValues[idx]) || 0
+        }))
             .sort((a, b) => b.value - a.value)
             .slice(0, this.config.topN);
         return entries;
