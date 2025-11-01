@@ -1,7 +1,8 @@
 // ========================================
-// Main Application - v10.0 Multi-Visualization Edition
+// Main Application - v11.0 Multi-Visualization Edition
 // Orchestrates all modules and handles UI interactions
-// Supports 4 visualization modes: Bar Race, Bump Chart, Stream Graph, Heat Map
+// Supports 8 visualization modes: Bar Race, Bump Chart, Stream Graph, Heat Map,
+// Radial Bar, Bubble Race, Area Race, Treemap Race
 // ========================================
 
 import { DataHandler } from './modules/dataHandler.js';
@@ -9,6 +10,10 @@ import { ChartEngine } from './modules/chartEngine.js';
 import { BumpChartEngine } from './modules/bumpChartEngine.js';
 import { StreamGraphEngine } from './modules/streamGraphEngine.js';
 import { HeatMapEngine } from './modules/heatMapEngine.js';
+import { RadialBarChartEngine } from './modules/radialBarChartEngine.js';
+import { BubbleChartRaceEngine } from './modules/bubbleChartRaceEngine.js';
+import { AreaChartRaceEngine } from './modules/areaChartRaceEngine.js';
+import { TreemapRaceEngine } from './modules/treemapRaceEngine.js';
 import { AnimationEngine } from './modules/animationEngine.js';
 import { AudioEngine } from './modules/audioEngine.js';
 import { VIDEO_RATIOS, PLATFORM_PRESETS, calculateFontSizes, getPresetConfig } from './modules/videoRatios.js';
@@ -434,6 +439,30 @@ class TimeSeriesRacingApp {
                 desc: 'Matrix view showing all data at once. Excellent for pattern detection and comprehensive overview.',
                 useCase: 'Pattern analysis, dashboards, reports',
                 info: 'Comprehensive matrix view - ideal for static analysis'
+            },
+            'radial-bar': {
+                title: 'Radial Bar Chart:',
+                desc: 'Stunning circular visualization with bars radiating from center. Eye-catching and unique perspective.',
+                useCase: 'Premium presentations, artistic visualizations, modern dashboards',
+                info: 'Circular racing bars - mesmerizing and premium look'
+            },
+            'bubble-race': {
+                title: 'Bubble Chart Race:',
+                desc: 'Multi-dimensional animated bubbles with dynamic sizing and positioning. Engaging and playful.',
+                useCase: 'Multi-metric analysis, portfolio visualization, market share tracking',
+                info: 'Animated bubbles - perfect for multi-dimensional data'
+            },
+            'area-race': {
+                title: 'Area Chart Race:',
+                desc: 'Smooth stacked area chart showing composition changes over time. Elegant and informative.',
+                useCase: 'Market share evolution, composition tracking, cumulative trends',
+                info: 'Stacked areas - ideal for composition analysis'
+            },
+            'treemap-race': {
+                title: 'Treemap Race:',
+                desc: 'Animated rectangular tiles showing proportions. Modern and space-efficient visualization.',
+                useCase: 'Market capitalization, disk usage, hierarchical data',
+                info: 'Animated rectangles - efficient space utilization'
             }
         };
 
@@ -507,6 +536,22 @@ class TimeSeriesRacingApp {
             case 'heat-map':
                 console.log('🔥 Initializing Heat Map Engine...');
                 this.chartEngine = new HeatMapEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'radial-bar':
+                console.log('🎯 Initializing Radial Bar Chart Engine...');
+                this.chartEngine = new RadialBarChartEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'bubble-race':
+                console.log('🫧 Initializing Bubble Chart Race Engine...');
+                this.chartEngine = new BubbleChartRaceEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'area-race':
+                console.log('📊 Initializing Area Chart Race Engine...');
+                this.chartEngine = new AreaChartRaceEngine('chartCanvas', config, this.audioEngine);
+                break;
+            case 'treemap-race':
+                console.log('🗺️ Initializing Treemap Race Engine...');
+                this.chartEngine = new TreemapRaceEngine('chartCanvas', config, this.audioEngine);
                 break;
             case 'bar-race':
             default:
