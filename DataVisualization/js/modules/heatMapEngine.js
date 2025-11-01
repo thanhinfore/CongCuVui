@@ -1,7 +1,7 @@
 // ========================================
-// Heat Map Engine Module - v10.0
-// COMPREHENSIVE OVERVIEW: Matrix visualization showing all data at once
-// Perfect for pattern detection and analytical insights
+// Heat Map Engine Module - v11.0 Graphics Excellence
+// COMPREHENSIVE OVERVIEW: 3D cell effects with enhanced gradients
+// Premium matrix visualization with depth and shadows
 // ========================================
 
 export class HeatMapEngine {
@@ -180,16 +180,33 @@ export class HeatMapEngine {
                 const y = startY + rowIdx * cellHeight;
 
                 // Get color based on rank (lower rank = better = hotter color)
-                const color = this.getRankColor(rank, this.config.topN);
+                const baseColor = this.getRankColor(rank, this.config.topN);
 
-                // Draw cell
-                ctx.fillStyle = color;
+                // v11.0: Draw cell with 3D gradient effect
+                const cellGradient = ctx.createLinearGradient(
+                    x + cellPadding, y + cellPadding,
+                    x + cellPadding, y + cellHeight - cellPadding
+                );
+                cellGradient.addColorStop(0, this.lightenColor(baseColor, 0.2));
+                cellGradient.addColorStop(1, baseColor);
+
+                // v11.0: Shadow for depth
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+
+                ctx.fillStyle = cellGradient;
                 ctx.fillRect(
                     x + cellPadding,
                     y + cellPadding,
                     cellWidth - cellPadding * 2,
                     cellHeight - cellPadding * 2
                 );
+
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
 
                 // Draw value/rank text if cell is large enough
                 if (this.config.showValues && cellWidth > 50 && cellHeight > 30) {
@@ -382,6 +399,17 @@ export class HeatMapEngine {
             ctx.textAlign = 'right';
             ctx.fillText(`Current: ${currentPeriod}`, width - 50, 70);
         }
+    }
+
+    /**
+     * Helper: Lighten color (v11.0)
+     */
+    lightenColor(color, amount) {
+        const num = parseInt(color.replace('rgb(', '').replace(')', '').split(',').map(s => parseInt(s.trim())).reduce((acc, v, i) => acc + (v << (16 - i * 8)), 0));
+        const r = Math.min(255, ((num >> 16) & 0xFF) + Math.round(255 * amount));
+        const g = Math.min(255, ((num >> 8) & 0xFF) + Math.round(255 * amount));
+        const b = Math.min(255, (num & 0xFF) + Math.round(255 * amount));
+        return `rgb(${r}, ${g}, ${b})`;
     }
 
     /**

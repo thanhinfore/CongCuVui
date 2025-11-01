@@ -1,7 +1,7 @@
 // ========================================
-// Stream Graph Engine Module - v10.0
-// FLOW VISUALIZATION: Beautiful stacked area chart with organic feel
-// Perfect for composition analysis and viral video content
+// Stream Graph Engine Module - v11.0 Graphics Excellence
+// FLOW VISUALIZATION: Enhanced gradients, smooth curves, and depth effects
+// Premium graphics with multi-layer shadows and beautiful color blending
 // ========================================
 
 export class StreamGraphEngine {
@@ -164,14 +164,29 @@ export class StreamGraphEngine {
     }
 
     /**
-     * Draw background
+     * Draw background with enhanced gradient (v11.0)
      */
     drawBackground() {
         const ctx = this.ctx;
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.config.height);
-        gradient.addColorStop(0, '#f8f9fa');
-        gradient.addColorStop(1, '#e9ecef');
+
+        // v11.0: Multi-layer gradient background
+        const gradient = ctx.createLinearGradient(0, 0, this.config.width, this.config.height);
+        gradient.addColorStop(0, '#f0f4f8');
+        gradient.addColorStop(0.5, '#e6ecf2');
+        gradient.addColorStop(1, '#dce4ec');
+
         ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.config.width, this.config.height);
+
+        // v11.0: Radial highlight
+        const highlight = ctx.createRadialGradient(
+            this.config.width / 2, this.config.height / 2, 0,
+            this.config.width / 2, this.config.height / 2, this.config.height * 0.8
+        );
+        highlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.fillStyle = highlight;
         ctx.fillRect(0, 0, this.config.width, this.config.height);
     }
 
