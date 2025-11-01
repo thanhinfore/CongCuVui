@@ -1,12 +1,13 @@
 // ========================================
-// Main Application - v14.1 Ultimate Smooth Edition
-// ✨ Persistent Bubble Tracking - NO sudden appearance/disappearance!
-// 🎱 Billiard Table Physics - Mass-based collisions & boundary bounce
-// 📊 Smooth Size/Mass Transitions - Dynamic weight updates during animation
-// 🎨 Gorgeous UI/UX with Perfect Mobile & Desktop Support
+// Main Application - v15.0 Ultimate Premium Edition
+// 🌟 Perfect Responsive Design - Never overflows!
+// 🎨 Premium Visual Quality - Glass morphism & premium colors
+// 🏗️ Scalable Architecture - SOLID principles & design patterns
+// ✨ Enhanced User Experience - Smooth animations everywhere
+// 📱 Mobile-First - Perfect on ALL devices
 // Orchestrates all modules and handles UI interactions
 // Supports 8 visualization modes: Bar Race, Bump Chart, Stream Graph, Heat Map,
-// Radial Bar, Bubble Race (v3.1 BILLIARD!), Area Race, Treemap Race
+// Radial Bar, Bubble Race (v3.1), Area Race, Treemap Race
 // ========================================
 
 import { DataHandler } from './modules/dataHandler.js';
@@ -40,7 +41,7 @@ class TimeSeriesRacingApp {
         this.attachEventListeners();
         this.tryLoadDefaultAudio();
 
-        console.log('✨ TimeSeriesRacing Web Edition v14.1 Ultimate Smooth Edition initialized - Billiard Table Physics with Dynamic Mass Updates! 🎱');
+        console.log('✨ TimeSeriesRacing Web Edition v15.0 Ultimate Premium Edition initialized - Perfect Responsive Design with Premium Visual Quality! 🎨');
     }
 
     /**

@@ -45,10 +45,12 @@ export const NumberFormatter = {
 };
 
 /**
- * Color palette definitions
+ * Color palette definitions - v15.0 Premium Edition
  * Used in ALL 8 engines (100% duplication eliminated)
+ * Enhanced with ultra-premium color schemes
  */
 export const ColorPalettes = {
+    // Classic palettes
     vibrant: [
         '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
         '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788',
@@ -75,6 +77,68 @@ export const ColorPalettes = {
     candy: [
         '#FF69B4', '#FFB6C1', '#FFC0CB', '#FF1493', '#C71585',
         '#DB7093', '#FFE4E1', '#FFF0F5', '#FFDAB9', '#FFE4B5'
+    ],
+
+    // ✨ v15.0: NEW PREMIUM PALETTES ✨
+
+    // Aurora - Northern lights inspired
+    aurora: [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe',
+        '#43e97b', '#38f9d7', '#fa709a', '#fee140', '#30cfd0'
+    ],
+
+    // Cyberpunk - Futuristic neon
+    cyberpunk: [
+        '#ff006e', '#8338ec', '#3a86ff', '#fb5607', '#ffbe0b',
+        '#06ffa5', '#ff006e', '#8338ec', '#3a86ff', '#fb5607'
+    ],
+
+    // Royal - Elegant and sophisticated
+    royal: [
+        '#667eea', '#764ba2', '#8b5cf6', '#6366f1', '#4f46e5',
+        '#7c3aed', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'
+    ],
+
+    // Fire - Hot and energetic
+    fire: [
+        '#ff0844', '#ffb199', '#ff6b6b', '#ee5a6f', '#f06292',
+        '#ff7675', '#ff6348', '#ff4757', '#e84118', '#c23616'
+    ],
+
+    // Ice - Cool and calm
+    ice: [
+        '#667eea', '#a8e6cf', '#3dc1d3', '#00d2d3', '#00adb5',
+        '#38ada9', '#079992', '#006d77', '#005f73', '#0a9396'
+    ],
+
+    // Tropical - Vibrant and warm
+    tropical: [
+        '#f8b500', '#f69d3c', '#feca57', '#ff9ff3', '#ff6b6b',
+        '#ee5a6f', '#48dbfb', '#0abde3', '#10ac84', '#00d2d3'
+    ],
+
+    // Pastel - Soft and gentle
+    pastel: [
+        '#a29bfe', '#fd79a8', '#fdcb6e', '#6c5ce7', '#fab1a0',
+        '#ff7675', '#74b9ff', '#55efc4', '#81ecec', '#dfe6e9'
+    ],
+
+    // Deep Space - Dark and mysterious
+    deepspace: [
+        '#4a148c', '#6a1b9a', '#7b1fa2', '#8e24aa', '#9c27b0',
+        '#ab47bc', '#ba68c8', '#ce93d8', '#e1bee7', '#f3e5f5'
+    ],
+
+    // Emerald - Rich greens
+    emerald: [
+        '#10b981', '#059669', '#047857', '#065f46', '#064e3b',
+        '#34d399', '#6ee7b7', '#a7f3d0', '#d1fae5', '#ecfdf5'
+    ],
+
+    // Crimson - Deep reds
+    crimson: [
+        '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#ef4444',
+        '#f87171', '#fca5a5', '#fecaca', '#fee2e2', '#fef2f2'
     ]
 };
 
