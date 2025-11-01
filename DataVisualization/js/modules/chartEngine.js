@@ -60,6 +60,11 @@ export class ChartEngine {
         this.barColors = new Map(); // Track bar colors for smooth transitions
         this.firstAppearance = new Map(); // Track when each entity first appears (for stable sort)
         this.currentPeriodIndex = 0; // Track current period for appearance detection
+
+        // v15.1: Rank change sound effect
+        this.clinkSound = new Audio('clink.wav');
+        this.clinkSound.volume = 0.3; // Set volume to 30% to not overpower background music
+        this.clinkSound.preload = 'auto'; // Preload for instant playback
     }
 
     /**
@@ -1276,6 +1281,19 @@ export class ChartEngine {
             // If rank changed, mark as moving
             if (oldRank !== undefined && oldRank !== newRank) {
                 const rankChange = Math.abs(newRank - oldRank);
+
+                // v15.1: Play clink sound for rank change
+                try {
+                    // Clone the audio to allow overlapping plays
+                    const sound = this.clinkSound.cloneNode();
+                    sound.volume = 0.3;
+                    sound.play().catch(err => {
+                        // Silently catch play errors (e.g., user interaction required)
+                        console.debug('Clink sound play prevented:', err.message);
+                    });
+                } catch (err) {
+                    console.debug('Clink sound error:', err.message);
+                }
 
                 // v7.0: Detect overtakes (crossing another bar)
                 if (this.config.enableOvertakeFlash && rankChange > 0) {
