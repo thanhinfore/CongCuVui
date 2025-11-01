@@ -11,9 +11,9 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1>📊 TimeSeriesRacing - Graphics Excellence Edition v11.0</h1>
-                <p>STUNNING VISUALS: Premium graphics with gradients, smooth curves, 3D effects & enhanced shadows!</p>
-                <div class="version-badge">🎨 v11.0: GRAPHICS EXCELLENCE ✨ | Gradient Lines | Smooth Bezier Curves | 3D Cell Effects | Enhanced Shadows | Radial Highlights | Premium Dots | Beautiful Labels | 4 Chart Types | Auto-Loop Music 🔄 | 60 FPS Ultra-Smooth</div>
+                <h1>📊 TimeSeriesRacing - Excellence Edition v12.0</h1>
+                <p>Premium UI/UX with modern design system, collapsible sections & professional aesthetics!</p>
+                <div class="version-badge">✨ v12.0: EXCELLENCE EDITION 🎨 | Modern UI/UX | Glass Morphism | Collapsible Sections | 8 Chart Types | Premium Graphics | 60 FPS Ultra-Smooth</div>
             </div>
         </header>
 
@@ -21,281 +21,323 @@
         <div class="main-content">
             <!-- Left Panel: Configuration -->
             <aside class="config-panel">
-                <h2>⚙️ Configuration</h2>
-
-                <!-- File Upload -->
-                <div class="section">
-                    <h3>📁 Data Source</h3>
-                    <div class="upload-box">
-                        <input type="file" id="fileInput" accept=".csv" style="display: none;">
-                        <label for="fileInput" class="upload-label">
-                            <span class="upload-icon">📤</span>
-                            <span class="upload-text">Click to upload CSV</span>
-                            <small>or drag & drop here</small>
-                        </label>
-                    </div>
-                    <button id="loadSampleBtn" class="btn btn-secondary">Load Sample Data</button>
+                <div class="config-panel-header">
+                    <h2>⚙️ Configuration</h2>
                 </div>
-
-                <!-- Audio Settings (NEW v3.0) -->
-                <div class="section">
-                    <h3>🎵 Audio Settings</h3>
-
-                    <div class="upload-box" style="margin-bottom: 10px;">
-                        <input type="file" id="audioInput" accept=".mp3,.wav,.ogg" style="display: none;">
-                        <label for="audioInput" class="upload-label" style="padding: 15px;">
-                            <span class="upload-icon" style="font-size: 2rem;">🎵</span>
-                            <span class="upload-text" style="font-size: 0.9rem;">Upload Background Music</span>
-                            <small>MP3, WAV, OGG (Optional)</small>
-                        </label>
+                <div class="config-panel-body">
+                    <!-- File Upload -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>📁 Data Source</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="upload-box">
+                                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                                <label for="fileInput" class="upload-label">
+                                    <span class="upload-icon">📤</span>
+                                    <span class="upload-text">Click to upload CSV</span>
+                                    <small>or drag & drop here</small>
+                                </label>
+                            </div>
+                            <button id="loadSampleBtn" class="btn btn-secondary">Load Sample Data</button>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="volumeSlider">Volume: <span id="volumeValue">50</span>%</label>
-                        <input type="range" id="volumeSlider" min="0" max="100" value="50" class="form-control-range">
+                    <!-- Audio Settings (NEW v3.0) -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>🎵 Audio Settings</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="upload-box" style="margin-bottom: 10px;">
+                                <input type="file" id="audioInput" accept=".mp3,.wav,.ogg" style="display: none;">
+                                <label for="audioInput" class="upload-label" style="padding: 15px;">
+                                    <span class="upload-icon" style="font-size: 2rem;">🎵</span>
+                                    <span class="upload-text" style="font-size: 0.9rem;">Upload Background Music</span>
+                                    <small>MP3, WAV, OGG (Optional)</small>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="volumeSlider">Volume: <span id="volumeValue">50</span>%</label>
+                                <input type="range" id="volumeSlider" min="0" max="100" value="50" class="form-control-range">
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="showAudioVisualizerCheck" checked>
+                                    <span>🎼 Audio Visualizer (128 bars)</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="audioReactiveCheck" checked>
+                                    <span>🔊 Audio-Reactive Effects</span>
+                                </label>
+                            </div>
+
+                            <div id="audioStatus" class="audio-status">
+                                <small>ℹ️ No audio loaded. Will use background.wav if present.</small>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showAudioVisualizerCheck" checked>
-                            <span>🎼 Audio Visualizer (128 bars)</span>
-                        </label>
+                    <!-- Video Ratio & Platform (NEW v3.0) -->
+                    <div class="section collapsed">
+                        <div class="section-header">
+                            <h3>📱 Video Format</h3>
+                            <div class="section-toggle">+</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label for="platformPresetSelect">Platform Preset:</label>
+                                <select id="platformPresetSelect" class="form-control">
+                                    <option value="">Custom (Manual)</option>
+                                    <option value="youtube" selected>📺 YouTube (1920x1080)</option>
+                                    <option value="tiktok">📱 TikTok/Shorts (1080x1920)</option>
+                                    <option value="instagram">📷 Instagram Feed (1080x1080)</option>
+                                    <option value="instagram_story">📲 Instagram Story (1080x1920)</option>
+                                    <option value="presentation">📊 Presentation (1920x1080)</option>
+                                </select>
+                                <small>One-click platform optimization</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="videoRatioSelect">Video Ratio:</label>
+                                <select id="videoRatioSelect" class="form-control">
+                                    <optgroup label="YouTube">
+                                        <option value="youtube_hd" selected>16:9 HD (1920x1080)</option>
+                                        <option value="youtube_4k">16:9 4K (3840x2160)</option>
+                                    </optgroup>
+                                    <optgroup label="TikTok / Shorts">
+                                        <option value="tiktok">9:16 (1080x1920)</option>
+                                        <option value="tiktok_hd">9:16 HD (1440x2560)</option>
+                                    </optgroup>
+                                    <optgroup label="Instagram">
+                                        <option value="instagram_square">1:1 Square (1080x1080)</option>
+                                        <option value="instagram_portrait">4:5 Portrait (1080x1350)</option>
+                                        <option value="instagram_story">9:16 Story (1080x1920)</option>
+                                    </optgroup>
+                                    <optgroup label="Facebook">
+                                        <option value="facebook_landscape">16:9 (1280x720)</option>
+                                        <option value="facebook_square">1:1 (1080x1080)</option>
+                                    </optgroup>
+                                    <optgroup label="Other Platforms">
+                                        <option value="twitter_landscape">Twitter 16:9 (1280x720)</option>
+                                        <option value="linkedin_landscape">LinkedIn 16:9 (1280x720)</option>
+                                        <option value="linkedin_square">LinkedIn 1:1 (1080x1080)</option>
+                                    </optgroup>
+                                    <optgroup label="Special">
+                                        <option value="cinema_21_9">Cinema 21:9 (2560x1080)</option>
+                                        <option value="presentation_4_3">Presentation 4:3 (1024x768)</option>
+                                        <option value="presentation_16_9">Presentation 16:9 (1920x1080)</option>
+                                    </optgroup>
+                                </select>
+                                <small id="ratioInfo">YouTube HD - Standard desktop viewing</small>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="audioReactiveCheck" checked>
-                            <span>🔊 Audio-Reactive Effects</span>
-                        </label>
+                    <!-- Visualization Mode (NEW v10.0) -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>🎨 Visualization Mode (v12.0 - 8 Chart Types!)</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label for="visualizationModeSelect">Chart Type:</label>
+                                <select id="visualizationModeSelect" class="form-control">
+                                    <option value="bar-race" selected>🏆 Bar Chart Race (Animated Bars)</option>
+                                    <option value="bump-chart">📈 Bump Chart (Rank Tracking)</option>
+                                    <option value="stream-graph">🌊 Stream Graph (Flow Visualization)</option>
+                                    <option value="heat-map">🔥 Heat Map (Matrix Overview)</option>
+                                    <option value="radial-bar">🎯 Radial Bar Chart (Circular Racing)</option>
+                                    <option value="bubble-race">🫧 Bubble Chart Race (Multi-Dimensional)</option>
+                                    <option value="area-race">📊 Area Chart Race (Stacked Areas)</option>
+                                    <option value="treemap-race">🗺️ Treemap Race (Animated Tiles)</option>
+                                </select>
+                                <small id="modeInfo">Engaging animated bars - perfect for video content</small>
+                            </div>
+
+                            <div class="mode-description" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; font-size: 0.9rem;">
+                                <strong id="modeTitle">Bar Chart Race:</strong>
+                                <p id="modeDesc" style="margin: 5px 0;">Best for viral videos and social media. Shows dramatic ranking changes with smooth animations.</p>
+                                <p id="modeUseCase" style="margin: 5px 0; color: #666;"><strong>Use for:</strong> Video content, presentations, storytelling</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="audioStatus" class="audio-status">
-                        <small>ℹ️ No audio loaded. Will use background.wav if present.</small>
-                    </div>
-                </div>
+                    <!-- Chart Settings -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>📈 Chart Settings</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group">
+                                <label for="titleInput">Title:</label>
+                                <input type="text" id="titleInput" value="Programming Languages Popularity" class="form-control">
+                            </div>
 
-                <!-- Video Ratio & Platform (NEW v3.0) -->
-                <div class="section">
-                    <h3>📱 Video Format</h3>
+                            <div class="form-group">
+                                <label for="subtitleInput">Subtitle (optional):</label>
+                                <input type="text" id="subtitleInput" value="1990 - 2020" class="form-control" placeholder="Leave empty for no subtitle">
+                            </div>
 
-                    <div class="form-group">
-                        <label for="platformPresetSelect">Platform Preset:</label>
-                        <select id="platformPresetSelect" class="form-control">
-                            <option value="">Custom (Manual)</option>
-                            <option value="youtube" selected>📺 YouTube (1920x1080)</option>
-                            <option value="tiktok">📱 TikTok/Shorts (1080x1920)</option>
-                            <option value="instagram">📷 Instagram Feed (1080x1080)</option>
-                            <option value="instagram_story">📲 Instagram Story (1080x1920)</option>
-                            <option value="presentation">📊 Presentation (1920x1080)</option>
-                        </select>
-                        <small>One-click platform optimization</small>
-                    </div>
+                            <div class="form-group">
+                                <label for="topNInput">Top N items:</label>
+                                <input type="number" id="topNInput" value="8" min="5" max="20" class="form-control">
+                            </div>
 
-                    <div class="form-group">
-                        <label for="videoRatioSelect">Video Ratio:</label>
-                        <select id="videoRatioSelect" class="form-control">
-                            <optgroup label="YouTube">
-                                <option value="youtube_hd" selected>16:9 HD (1920x1080)</option>
-                                <option value="youtube_4k">16:9 4K (3840x2160)</option>
-                            </optgroup>
-                            <optgroup label="TikTok / Shorts">
-                                <option value="tiktok">9:16 (1080x1920)</option>
-                                <option value="tiktok_hd">9:16 HD (1440x2560)</option>
-                            </optgroup>
-                            <optgroup label="Instagram">
-                                <option value="instagram_square">1:1 Square (1080x1080)</option>
-                                <option value="instagram_portrait">4:5 Portrait (1080x1350)</option>
-                                <option value="instagram_story">9:16 Story (1080x1920)</option>
-                            </optgroup>
-                            <optgroup label="Facebook">
-                                <option value="facebook_landscape">16:9 (1280x720)</option>
-                                <option value="facebook_square">1:1 (1080x1080)</option>
-                            </optgroup>
-                            <optgroup label="Other Platforms">
-                                <option value="twitter_landscape">Twitter 16:9 (1280x720)</option>
-                                <option value="linkedin_landscape">LinkedIn 16:9 (1280x720)</option>
-                                <option value="linkedin_square">LinkedIn 1:1 (1080x1080)</option>
-                            </optgroup>
-                            <optgroup label="Special">
-                                <option value="cinema_21_9">Cinema 21:9 (2560x1080)</option>
-                                <option value="presentation_4_3">Presentation 4:3 (1024x768)</option>
-                                <option value="presentation_16_9">Presentation 16:9 (1920x1080)</option>
-                            </optgroup>
-                        </select>
-                        <small id="ratioInfo">YouTube HD - Standard desktop viewing</small>
-                    </div>
-                </div>
+                            <div class="form-group">
+                                <label for="fpsInput">Frame Rate:</label>
+                                <select id="fpsInput" class="form-control">
+                                    <option value="30">30 fps (Standard)</option>
+                                    <option value="60" selected>60 fps (Ultra-Smooth) ⚡</option>
+                                </select>
+                            </div>
 
-                <!-- Visualization Mode (NEW v10.0) -->
-                <div class="section">
-                    <h3>🎨 Visualization Mode (v11.0 - 8 Chart Types!)</h3>
+                            <div class="form-group">
+                                <label for="periodLengthInput">Animation Speed (ms):</label>
+                                <input type="number" id="periodLengthInput" value="4000" step="100" min="500" max="10000" class="form-control">
+                                <small>v7.0 Phase 3: Ultra-smooth 4-6s durations with exponential easing (NO jerky motion!)</small>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="visualizationModeSelect">Chart Type:</label>
-                        <select id="visualizationModeSelect" class="form-control">
-                            <option value="bar-race" selected>🏆 Bar Chart Race (Animated Bars)</option>
-                            <option value="bump-chart">📈 Bump Chart (Rank Tracking)</option>
-                            <option value="stream-graph">🌊 Stream Graph (Flow Visualization)</option>
-                            <option value="heat-map">🔥 Heat Map (Matrix Overview)</option>
-                            <option value="radial-bar">🎯 Radial Bar Chart (Circular Racing)</option>
-                            <option value="bubble-race">🫧 Bubble Chart Race (Multi-Dimensional)</option>
-                            <option value="area-race">📊 Area Chart Race (Stacked Areas)</option>
-                            <option value="treemap-race">🗺️ Treemap Race (Animated Tiles)</option>
-                        </select>
-                        <small id="modeInfo">Engaging animated bars - perfect for video content</small>
+                            <div class="form-group">
+                                <label for="paletteSelect">Color Palette:</label>
+                                <select id="paletteSelect" class="form-control">
+                                    <option value="vibrant" selected>Vibrant</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="neon">Neon</option>
+                                    <option value="gold">Gold</option>
+                                    <option value="ocean">Ocean</option>
+                                    <option value="sunset">Sunset</option>
+                                    <option value="pastel">Pastel</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="barStyleSelect">Bar Style:</label>
+                                <select id="barStyleSelect" class="form-control">
+                                    <option value="gradient" selected>Gradient (Premium)</option>
+                                    <option value="solid">Solid Color</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mode-description" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; font-size: 0.9rem;">
-                        <strong id="modeTitle">Bar Chart Race:</strong>
-                        <p id="modeDesc" style="margin: 5px 0;">Best for viral videos and social media. Shows dramatic ranking changes with smooth animations.</p>
-                        <p id="modeUseCase" style="margin: 5px 0; color: #666;"><strong>Use for:</strong> Video content, presentations, storytelling</p>
-                    </div>
-                </div>
+                    <!-- Visual Effects -->
+                    <div class="section collapsed">
+                        <div class="section-header">
+                            <h3>✨ Visual Effects</h3>
+                            <div class="section-toggle">+</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="showStatsPanelCheck" checked>
+                                    <span>📊 Stats Panel (Total, Leader, Gap, Avg)</span>
+                                </label>
+                            </div>
 
-                <!-- Chart Settings -->
-                <div class="section">
-                    <h3>📈 Chart Settings</h3>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="showValueLabelsCheck" checked>
+                                    <span>🏷️ Value Labels on Bars</span>
+                                </label>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="titleInput">Title:</label>
-                        <input type="text" id="titleInput" value="Programming Languages Popularity" class="form-control">
-                    </div>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="showRankIndicatorsCheck" checked>
+                                    <span>↕️ Rank Change Indicators</span>
+                                </label>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="subtitleInput">Subtitle (optional):</label>
-                        <input type="text" id="subtitleInput" value="1990 - 2020" class="form-control" placeholder="Leave empty for no subtitle">
-                    </div>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="showGrowthRateCheck" checked>
+                                    <span>📈 Growth Rate (%)</span>
+                                </label>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="topNInput">Top N items:</label>
-                        <input type="number" id="topNInput" value="8" min="5" max="20" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="fpsInput">Frame Rate:</label>
-                        <select id="fpsInput" class="form-control">
-                            <option value="30">30 fps (Standard)</option>
-                            <option value="60" selected>60 fps (Ultra-Smooth) ⚡</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="periodLengthInput">Animation Speed (ms):</label>
-                        <input type="number" id="periodLengthInput" value="4000" step="100" min="500" max="10000" class="form-control">
-                        <small>v7.0 Phase 3: Ultra-smooth 4-6s durations with exponential easing (NO jerky motion!)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="paletteSelect">Color Palette:</label>
-                        <select id="paletteSelect" class="form-control">
-                            <option value="vibrant" selected>Vibrant</option>
-                            <option value="professional">Professional</option>
-                            <option value="neon">Neon</option>
-                            <option value="gold">Gold</option>
-                            <option value="ocean">Ocean</option>
-                            <option value="sunset">Sunset</option>
-                            <option value="pastel">Pastel</option>
-                        </select>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableShadowsCheck" checked>
+                                    <span>🌓 Shadows & Effects</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="barStyleSelect">Bar Style:</label>
-                        <select id="barStyleSelect" class="form-control">
-                            <option value="gradient" selected>Gradient (Premium)</option>
-                            <option value="solid">Solid Color</option>
-                        </select>
-                    </div>
-                </div>
+                    <!-- Advanced Effects (NEW v3.0) -->
+                    <div class="section collapsed">
+                        <div class="section-header">
+                            <h3>✨✨ Advanced Effects</h3>
+                            <div class="section-toggle">+</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableParticlesCheck" checked>
+                                    <span>💥 Particle Effects (Physics-based)</span>
+                                </label>
+                            </div>
 
-                <!-- Visual Effects -->
-                <div class="section">
-                    <h3>✨ Visual Effects (v2.0)</h3>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="animatedBackgroundCheck" checked>
+                                    <span>🌈 Animated Background Gradient</span>
+                                </label>
+                            </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showStatsPanelCheck" checked>
-                            <span>📊 Stats Panel (Total, Leader, Gap, Avg)</span>
-                        </label>
-                    </div>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableBloomCheck" checked>
+                                    <span>✨ Bloom & Glow Effects</span>
+                                </label>
+                            </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showValueLabelsCheck" checked>
-                            <span>🏷️ Value Labels on Bars</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showRankIndicatorsCheck" checked>
-                            <span>↕️ Rank Change Indicators</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showGrowthRateCheck" checked>
-                            <span>📈 Growth Rate (%)</span>
-                        </label>
+                            <div class="form-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="smoothTransitionsCheck" checked>
+                                    <span>🎬 Smooth Transitions (Elastic)</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="enableShadowsCheck" checked>
-                            <span>🌓 Shadows & Effects</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Advanced Effects (NEW v3.0) -->
-                <div class="section">
-                    <h3>✨✨ Advanced Effects (v3.0)</h3>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="enableParticlesCheck" checked>
-                            <span>💥 Particle Effects (Physics-based)</span>
-                        </label>
+                    <!-- Controls -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>🎬 Controls</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div class="button-group">
+                                <button id="playBtn" class="btn btn-primary" disabled>▶️ Play</button>
+                                <button id="pauseBtn" class="btn btn-secondary" disabled>⏸️ Pause</button>
+                                <button id="resetBtn" class="btn btn-secondary" disabled>⏮️ Reset</button>
+                            </div>
+                            <button id="exportBtn" class="btn btn-success" disabled>💾 Export Video (WebM)</button>
+                        </div>
                     </div>
 
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="animatedBackgroundCheck" checked>
-                            <span>🌈 Animated Background Gradient</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="enableBloomCheck" checked>
-                            <span>✨ Bloom & Glow Effects</span>
-                        </label>
-                    </div>
-
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="smoothTransitionsCheck" checked>
-                            <span>🎬 Smooth Transitions (Elastic)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Controls -->
-                <div class="section">
-                    <h3>🎬 Controls</h3>
-                    <div class="button-group">
-                        <button id="playBtn" class="btn btn-primary" disabled>▶️ Play</button>
-                        <button id="pauseBtn" class="btn btn-secondary" disabled>⏸️ Pause</button>
-                        <button id="resetBtn" class="btn btn-secondary" disabled>⏮️ Reset</button>
-                    </div>
-                    <button id="exportBtn" class="btn btn-success" disabled>💾 Export Video (WebM)</button>
-                </div>
-
-                <!-- Info -->
-                <div class="section info-box">
-                    <h3>ℹ️ Info</h3>
-                    <div id="infoPanel">
-                        <p>Upload a CSV file to get started!</p>
+                    <!-- Info -->
+                    <div class="section info-box">
+                        <div class="section-header">
+                            <h3>ℹ️ Info</h3>
+                            <div class="section-toggle">−</div>
+                        </div>
+                        <div class="section-body">
+                            <div id="infoPanel">
+                                <p>Upload a CSV file to get started!</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
