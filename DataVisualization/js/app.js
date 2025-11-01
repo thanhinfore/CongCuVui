@@ -1,5 +1,5 @@
 // ========================================
-// Main Application - v11.0 Multi-Visualization Edition
+// Main Application - v12.0 Excellence Edition
 // Orchestrates all modules and handles UI interactions
 // Supports 8 visualization modes: Bar Race, Bump Chart, Stream Graph, Heat Map,
 // Radial Bar, Bubble Race, Area Race, Treemap Race
@@ -16,6 +16,7 @@ import { AreaChartRaceEngine } from './modules/areaChartRaceEngine.js';
 import { TreemapRaceEngine } from './modules/treemapRaceEngine.js';
 import { AnimationEngine } from './modules/animationEngine.js';
 import { AudioEngine } from './modules/audioEngine.js';
+import { UIController } from './modules/uiController.js';
 import { VIDEO_RATIOS, PLATFORM_PRESETS, calculateFontSizes, getPresetConfig } from './modules/videoRatios.js';
 
 class TimeSeriesRacingApp {
@@ -24,6 +25,7 @@ class TimeSeriesRacingApp {
         this.chartEngine = null;
         this.animationEngine = null;
         this.audioEngine = null;
+        this.uiController = null;
         this.videoRecorder = null;
         this.isRecording = false;
         this.currentRatioConfig = VIDEO_RATIOS.youtube_hd; // Default
@@ -34,7 +36,7 @@ class TimeSeriesRacingApp {
         this.attachEventListeners();
         this.tryLoadDefaultAudio();
 
-        console.log('✅ TimeSeriesRacing Web Edition v10.0 initialized - Multi-Visualization Mode');
+        console.log('✅ TimeSeriesRacing Web Edition v12.0 Excellence Edition initialized - 8 Chart Types with Modern UI');
     }
 
     /**
@@ -111,6 +113,9 @@ class TimeSeriesRacingApp {
             timelineProgress: document.getElementById('timelineProgress'),
             currentPeriod: document.getElementById('currentPeriod')
         };
+
+        // Initialize UI Controller for collapsible sections (v12.0)
+        this.uiController = new UIController();
     }
 
     /**
