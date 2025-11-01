@@ -15,6 +15,10 @@ export class AudioEngine {
         this.volume = 0.5; // Default 50%
         this.frequencyData = null;
         this.timeDomainData = null;
+
+        // v3.1: Sound effects support
+        this.soundEffects = new Map(); // Cache for loaded sound effects
+        this.sfxGainNode = null; // Separate gain node for sound effects
     }
 
     /**
@@ -38,6 +42,11 @@ export class AudioEngine {
             // Create gain node for volume control
             this.gainNode = this.audioContext.createGain();
             this.gainNode.gain.value = this.volume;
+
+            // v3.1: Create separate gain node for sound effects
+            this.sfxGainNode = this.audioContext.createGain();
+            this.sfxGainNode.gain.value = 0.3; // Default 30% for sound effects
+            this.sfxGainNode.connect(this.audioContext.destination);
 
             // Setup frequency data arrays
             this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
@@ -334,6 +343,95 @@ export class AudioEngine {
      */
     getAudioElement() {
         return this.audioElement;
+    }
+
+    /**
+     * Load a sound effect (v3.1)
+     * @param {string} name - Sound effect name
+     * @param {string} url - URL to sound file
+     * @returns {Promise<boolean>} Success status
+     */
+    async loadSoundEffect(name, url) {
+        if (!this.audioContext) {
+            await this.initialize();
+        }
+
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+            this.soundEffects.set(name, audioBuffer);
+            console.log(`✅ Sound effect loaded: ${name}`);
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to load sound effect ${name}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Play a sound effect (v3.1)
+     * @param {string} name - Sound effect name
+     * @param {number} volume - Volume (0.0-1.0), defaults to sfxGainNode volume
+     * @returns {Promise<boolean>} Success status
+     */
+    async playSoundEffect(name, volume = null) {
+        if (!this.audioContext || !this.sfxGainNode) {
+            console.warn('Audio engine not initialized');
+            return false;
+        }
+
+        const buffer = this.soundEffects.get(name);
+        if (!buffer) {
+            console.warn(`Sound effect not loaded: ${name}`);
+            return false;
+        }
+
+        try {
+            // Resume audio context if suspended
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+
+            // Create source node
+            const source = this.audioContext.createBufferSource();
+            source.buffer = buffer;
+
+            // Optional: Create individual gain node for this play
+            if (volume !== null) {
+                const gainNode = this.audioContext.createGain();
+                gainNode.gain.value = volume;
+                source.connect(gainNode);
+                gainNode.connect(this.sfxGainNode);
+            } else {
+                source.connect(this.sfxGainNode);
+            }
+
+            source.start(0);
+            return true;
+        } catch (error) {
+            console.error(`Failed to play sound effect ${name}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Set sound effects volume (v3.1)
+     * @param {number} volume - Volume (0.0-1.0)
+     */
+    setSoundEffectVolume(volume) {
+        if (this.sfxGainNode) {
+            this.sfxGainNode.gain.value = Math.max(0, Math.min(1, volume));
+        }
+    }
+
+    /**
+     * Get audio context for external use (v3.1)
+     * @returns {AudioContext} Audio context
+     */
+    getAudioContext() {
+        return this.audioContext;
     }
 
     /**
