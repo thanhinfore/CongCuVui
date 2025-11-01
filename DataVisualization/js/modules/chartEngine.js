@@ -1,7 +1,9 @@
 // ========================================
-// Chart Engine Module - GRAPHICS EXCELLENCE v9.0
-// ENHANCED VISUALIZATION: Perfect rank alignment, auto-loop music, improved gradients & particle effects
-// v9.0 FEATURES: Enhanced shadows, dynamic particles, perfect rank/name alignment, improved color transitions
+// Chart Engine Module - v15.0 PREMIUM VISUALIZATION
+// 🎨 ULTIMATE BAR CHART RACE - Premium Quality
+// ✨ Perfect rank badge positioning - NO overlap!
+// 🏆 Enhanced visual effects with glass morphism
+// 📊 Smooth animations and transitions
 // ========================================
 
 export class ChartEngine {
@@ -173,17 +175,17 @@ export class ChartEngine {
                     data: [],
                     backgroundColor: this.config.barStyle === 'gradient' ?
                         colors.map(c => this.createGradient(c)) : colors,
-                    borderColor: colors.map(c => this.darkenColor(c, 0.5)),  // v9.0: Deeper border for contrast
-                    borderWidth: 2,              // v9.0: Enhanced border width
-                    borderRadius: 22,            // v9.0: Increased roundness for premium feel
+                    borderColor: colors.map(c => this.darkenColor(c, 0.6)),  // v15.0: Deeper border for premium definition
+                    borderWidth: 2.5,            // v15.0: Enhanced border width for clarity
+                    borderRadius: 24,            // v15.0: Increased roundness for ultra-premium feel
                     borderSkipped: false,
                     barPercentage: 0.90,         // v5.0: Larger bars for impact
                     categoryPercentage: 0.94,    // v5.0: Optimized spacing
-                    // v9.0: Enhanced multi-layer shadow for depth
+                    // v15.0: Premium multi-layer shadow for cinematic depth
                     shadowOffsetX: 0,
-                    shadowOffsetY: 8,            // v9.0: Stronger shadow offset
-                    shadowBlur: 25,              // v9.0: Increased blur for softer shadow
-                    shadowColor: 'rgba(0, 0, 0, 0.3)',  // v9.0: Slightly darker shadow
+                    shadowOffsetY: 10,           // v15.0: Stronger shadow offset for elevation
+                    shadowBlur: 30,              // v15.0: Increased blur for softer, more premium shadow
+                    shadowColor: 'rgba(0, 0, 0, 0.35)',  // v15.0: Enhanced shadow darkness
                     // v5.0: Smooth edges
                     tension: 0.4
                 }]
@@ -720,90 +722,112 @@ export class ChartEngine {
 
                             const rank = index + 1;  // 1-indexed
 
-                            // v9.0: Perfect alignment with Y-axis labels (same vertical position)
-                            // Y-axis labels are centered on the bar, badge must match EXACTLY
-                            const badgeX = chartArea.left - 70;  // Optimized spacing from axis
-                            const badgeY = bar.y + bar.height / 2;  // EXACT center of bar = same line as entity name
-                            const badgeRadius = 26;  // v9.0: Slightly larger for better visibility
+                            // ✨ v15.0: PREMIUM RANK BADGE POSITIONING - NO OVERLAP!
+                            // SOLUTION: Move badges FAR LEFT to avoid entity name collision
+                            // Previous: badgeX = chartArea.left - 70 (TOO CLOSE!)
+                            // New: More spacing for perfect separation
 
-                            // v9.0: Enhanced badge colors with improved gradients
-                            let badgeGradient, textColor, glowColor;
+                            const badgeX = chartArea.left - 95;  // ✨ Increased spacing from -70 to -95
+                            const badgeY = bar.y + bar.height / 2;  // EXACT center of bar
+                            const badgeRadius = 28;  // v15.0: Slightly larger for premium look
+
+                            // v15.0: ULTRA PREMIUM badge colors with enhanced gradients
+                            let badgeGradient, textColor, glowColor, ringColor;
                             if (rank === 1) {
-                                // v9.0: Enhanced Gold gradient for #1
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#FFFACD');  // Bright gold center
-                                badgeGradient.addColorStop(0.3, '#FFD700');  // Gold
-                                badgeGradient.addColorStop(0.7, '#FFA500');  // Orange gold
-                                badgeGradient.addColorStop(1, '#B8860B');  // Dark golden
+                                // v15.0: Championship Gold - 4-stop gradient
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 7, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFFEF0');  // Brilliant white-gold center
+                                badgeGradient.addColorStop(0.2, '#FFE680');  // Light gold
+                                badgeGradient.addColorStop(0.6, '#FFD700');  // Pure gold
+                                badgeGradient.addColorStop(0.85, '#FFA500');  // Orange gold
+                                badgeGradient.addColorStop(1, '#CC8400');  // Deep gold shadow
                                 textColor = '#000000';
-                                glowColor = 'rgba(255, 215, 0, 0.7)';
+                                glowColor = 'rgba(255, 215, 0, 0.9)';
+                                ringColor = 'rgba(255, 255, 255, 0.8)';
                             } else if (rank === 2) {
-                                // v9.0: Enhanced Silver gradient for #2
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#FFFFFF');  // Bright silver center
-                                badgeGradient.addColorStop(0.3, '#E0E0E0');  // Light silver
-                                badgeGradient.addColorStop(0.7, '#C0C0C0');  // Silver
-                                badgeGradient.addColorStop(1, '#909090');  // Dark silver
+                                // v15.0: Premium Silver - Chrome effect
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 7, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFFFFF');  // Brilliant white center
+                                badgeGradient.addColorStop(0.2, '#F0F0F0');  // Light silver
+                                badgeGradient.addColorStop(0.6, '#D3D3D3');  // Silver
+                                badgeGradient.addColorStop(0.85, '#B8B8B8');  // Medium silver
+                                badgeGradient.addColorStop(1, '#909090');  // Dark silver shadow
                                 textColor = '#000000';
-                                glowColor = 'rgba(192, 192, 192, 0.7)';
+                                glowColor = 'rgba(211, 211, 211, 0.9)';
+                                ringColor = 'rgba(255, 255, 255, 0.7)';
                             } else if (rank === 3) {
-                                // v9.0: Enhanced Bronze gradient for #3
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#F4C2A0');  // Light bronze
-                                badgeGradient.addColorStop(0.3, '#E39866');  // Bronze
-                                badgeGradient.addColorStop(0.7, '#CD7F32');  // Deep bronze
-                                badgeGradient.addColorStop(1, '#8B4513');  // Dark bronze
+                                // v15.0: Luxury Bronze - Warm metallic
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 7, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#FFE4C4');  // Light bronze highlight
+                                badgeGradient.addColorStop(0.2, '#F4B183');  // Soft bronze
+                                badgeGradient.addColorStop(0.6, '#CD7F32');  // Classic bronze
+                                badgeGradient.addColorStop(0.85, '#B8733E');  // Deep bronze
+                                badgeGradient.addColorStop(1, '#8B4513');  // Bronze shadow
                                 textColor = '#FFFFFF';
-                                glowColor = 'rgba(205, 127, 50, 0.7)';
+                                glowColor = 'rgba(205, 127, 50, 0.9)';
+                                ringColor = 'rgba(255, 255, 255, 0.6)';
                             } else {
-                                // v9.0: Enhanced modern gradient for others
-                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 6, 0, badgeX, badgeY, badgeRadius);
-                                badgeGradient.addColorStop(0, '#A8B5FF');  // Light blue-purple
-                                badgeGradient.addColorStop(0.3, '#7B8FFF');  // Purple-blue
-                                badgeGradient.addColorStop(0.7, '#667eea');  // Purple
-                                badgeGradient.addColorStop(1, '#3F51D2');  // Deep purple
+                                // v15.0: Modern Gradient - Purple-blue premium
+                                badgeGradient = ctx.createRadialGradient(badgeX, badgeY - 7, 0, badgeX, badgeY, badgeRadius);
+                                badgeGradient.addColorStop(0, '#E8ECFF');  // Light purple-white
+                                badgeGradient.addColorStop(0.2, '#B8C5FF');  // Light purple
+                                badgeGradient.addColorStop(0.6, '#8B9FFF');  // Medium purple
+                                badgeGradient.addColorStop(0.85, '#667eea');  // Deep purple
+                                badgeGradient.addColorStop(1, '#4F5BD5');  // Dark purple shadow
                                 textColor = '#FFFFFF';
-                                glowColor = 'rgba(102, 126, 234, 0.6)';
+                                glowColor = 'rgba(102, 126, 234, 0.8)';
+                                ringColor = 'rgba(255, 255, 255, 0.5)';
                             }
 
-                            // v9.0: Enhanced circle with stronger outer glow
+                            // v15.0: ULTRA PREMIUM shadow with multi-layer glow
                             ctx.shadowColor = glowColor;
-                            ctx.shadowBlur = 20;  // Increased from 15
+                            ctx.shadowBlur = 25;  // Increased glow
                             ctx.shadowOffsetY = 0;
 
+                            // Badge circle
                             ctx.fillStyle = badgeGradient;
                             ctx.beginPath();
                             ctx.arc(badgeX, badgeY, badgeRadius, 0, Math.PI * 2);
                             ctx.fill();
 
-                            // v9.0: Enhanced inner border with outer ring for depth
+                            // v15.0: PREMIUM 3D EFFECT - Triple ring system
                             ctx.shadowBlur = 0;
 
-                            // Outer ring for premium 3D effect
-                            ctx.strokeStyle = rank <= 3 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
-                            ctx.lineWidth = 2.5;
+                            // Outer glow ring
+                            ctx.strokeStyle = glowColor;
+                            ctx.lineWidth = 3;
+                            ctx.globalAlpha = 0.5;
                             ctx.beginPath();
-                            ctx.arc(badgeX, badgeY, badgeRadius + 1, 0, Math.PI * 2);
+                            ctx.arc(badgeX, badgeY, badgeRadius + 3, 0, Math.PI * 2);
                             ctx.stroke();
 
-                            // Inner highlight for glass effect
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                            // Main ring (glass effect)
+                            ctx.globalAlpha = 1;
+                            ctx.strokeStyle = ringColor;
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(badgeX, badgeY, badgeRadius + 0.5, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // Inner highlight ring (shimmer)
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
                             ctx.lineWidth = 2;
                             ctx.beginPath();
-                            ctx.arc(badgeX, badgeY, badgeRadius - 1, 0, Math.PI * 2);
+                            ctx.arc(badgeX, badgeY - 3, badgeRadius - 5, 0, Math.PI * 1.2);
                             ctx.stroke();
 
-                            // v9.0: Enhanced rank number with better font and styling
+                            // v15.0: PREMIUM rank number - Enhanced typography
                             ctx.fillStyle = textColor;
-                            ctx.font = 'bold 19px "Inter", -apple-system, sans-serif';  // Slightly larger
+                            ctx.font = 'bold 20px "Inter", "Segoe UI", -apple-system, sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
 
-                            // Enhanced text shadow for better readability
-                            ctx.shadowColor = rank <= 3 ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.6)';
-                            ctx.shadowBlur = 3;
+                            // Multi-layer text shadow for depth
+                            ctx.shadowColor = rank <= 3 ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.7)';
+                            ctx.shadowBlur = 4;
                             ctx.shadowOffsetY = 1;
 
+                            // Draw rank number with # symbol
                             ctx.fillText(`#${rank}`, badgeX, badgeY);
                             ctx.shadowBlur = 0;
 
@@ -1069,19 +1093,22 @@ export class ChartEngine {
     }
 
     /**
-     * Create advanced gradient for bar (v5.0 Ultra Premium - 7-stop mesh-like gradient)
+     * Create advanced gradient for bar (v15.0 PREMIUM - 9-stop cinematic gradient)
+     * ✨ Ultra-smooth color transitions with glass-like depth and shimmer
      */
     createGradient(color) {
         const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, 0);
 
-        // v5.0: Ultra-smooth 7-stop gradient for glass-like depth
-        gradient.addColorStop(0, this.lightenColor(color, 0.6));      // Bright highlight
-        gradient.addColorStop(0.15, this.lightenColor(color, 0.45));  // Soft transition
-        gradient.addColorStop(0.35, this.lightenColor(color, 0.25));  // Light area
+        // v15.0: Premium 9-stop gradient for cinematic glass effect
+        gradient.addColorStop(0, this.lightenColor(color, 0.75));     // ✨ Brilliant edge highlight
+        gradient.addColorStop(0.08, this.lightenColor(color, 0.6));   // Soft glow
+        gradient.addColorStop(0.2, this.lightenColor(color, 0.4));    // Light reflection
+        gradient.addColorStop(0.35, this.lightenColor(color, 0.2));   // Shimmer zone
         gradient.addColorStop(0.5, color);                             // Core color
-        gradient.addColorStop(0.65, this.darkenColor(color, 0.15));   // Start shadow
-        gradient.addColorStop(0.85, this.darkenColor(color, 0.3));    // Deep shadow
-        gradient.addColorStop(1, this.darkenColor(color, 0.4));       // Edge shadow
+        gradient.addColorStop(0.65, this.darkenColor(color, 0.12));   // Subtle shadow start
+        gradient.addColorStop(0.8, this.darkenColor(color, 0.28));    // Mid shadow
+        gradient.addColorStop(0.92, this.darkenColor(color, 0.42));   // Deep shadow
+        gradient.addColorStop(1, this.darkenColor(color, 0.5));       // 💎 Edge depth
 
         return gradient;
     }
@@ -1458,16 +1485,18 @@ export class ChartEngine {
     }
 
     /**
-     * Draw value labels on bars
+     * Draw value labels on bars (v15.0 PREMIUM TYPOGRAPHY)
+     * ✨ Enhanced with rounded corners, shadows, and premium styling
      */
     drawValueLabels(chart) {
         const ctx = chart.ctx;
         const meta = chart.getDatasetMeta(0);
 
         ctx.save();
-        ctx.font = 'bold 24px Inter, sans-serif';
+
+        // v15.0: Enhanced typography (24px → 26px, increased weight)
+        ctx.font = '900 26px Inter, sans-serif';  // Ultra-black weight
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#1a1a1a';
 
         meta.data.forEach((bar, index) => {
             // v8.0 Phase 2 FIXED: Less strict validation for animation
@@ -1479,15 +1508,42 @@ export class ChartEngine {
             const value = this.currentTopN[index].value;
             const formattedValue = this.formatNumber(value);
 
-            const x = bar.x + 15;
+            // v15.0: Better positioning with more padding
+            const x = bar.x + 20;  // Increased from 15
             const y = bar.y;
 
-            // Draw white background for better readability
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             const textWidth = ctx.measureText(formattedValue).width;
-            ctx.fillRect(x - 5, y - 15, textWidth + 10, 30);
+            const padding = 12;  // Increased padding
+            const boxWidth = textWidth + padding * 2;
+            const boxHeight = 36;  // Taller box
+            const boxX = x - padding;
+            const boxY = y - boxHeight / 2;
+            const cornerRadius = 8;  // v15.0: Rounded corners
 
-            // Draw text
+            // v15.0: Premium background with shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3;
+
+            // Draw rounded rectangle background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, cornerRadius);
+            ctx.fill();
+
+            // v15.0: Subtle border for definition
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // v15.0: Premium text with subtle shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1;
             ctx.fillStyle = '#1a1a1a';
             ctx.fillText(formattedValue, x, y);
         });
