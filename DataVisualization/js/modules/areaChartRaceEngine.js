@@ -305,23 +305,63 @@ export class AreaChartRaceEngine {
 
             ctx.closePath();
 
-            // Fill with gradient
-            const gradient = ctx.createLinearGradient(area.x, 0, area.x + area.width, 0);
-            gradient.addColorStop(0, this.adjustColorOpacity(color, 0.6));
-            gradient.addColorStop(1, this.adjustColorOpacity(color, 0.8));
+            // PREMIUM: Multi-layer gradient with depth
+            const gradient = ctx.createLinearGradient(area.x, area.y, area.x + area.width, area.y + area.height);
+            gradient.addColorStop(0, this.adjustColorOpacity(color, 0.75));
+            gradient.addColorStop(0.3, this.adjustColorOpacity(color, 0.65));
+            gradient.addColorStop(0.7, this.adjustColorOpacity(color, 0.55));
+            gradient.addColorStop(1, this.adjustColorOpacity(color, 0.45));
             ctx.fillStyle = gradient;
             ctx.fill();
 
-            // Draw stroke
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
+            // Add top highlight gradient
+            const highlightGradient = ctx.createLinearGradient(
+                area.x, area.y,
+                area.x, area.y + area.height * 0.3
+            );
+            highlightGradient.addColorStop(0, this.adjustColorOpacity(this.adjustColorBrightness(color, 1.5), 0.3));
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = highlightGradient;
+            ctx.fill();
+
+            // Draw enhanced stroke with shadow
+            if (this.config.enableShadows) {
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 2;
+                ctx.strokeStyle = this.adjustColorBrightness(color, 0.8);
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Main stroke
+            ctx.strokeStyle = this.adjustColorBrightness(color, 1.2);
+            ctx.lineWidth = 2.5;
             ctx.stroke();
 
-            // Add glow effect
+            // PREMIUM: Enhanced glow with multiple layers
             if (this.config.enableGlow) {
+                // Outer glow
+                ctx.save();
+                ctx.globalAlpha = 0.4;
                 ctx.shadowColor = color;
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 20;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
                 ctx.stroke();
+                ctx.restore();
+
+                // Inner highlight
+                ctx.save();
+                ctx.globalAlpha = 0.6;
+                ctx.shadowColor = this.adjustColorBrightness(color, 1.5);
+                ctx.shadowBlur = 10;
+                ctx.strokeStyle = this.adjustColorBrightness(color, 1.3);
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
             }
 
             ctx.restore();
@@ -526,6 +566,15 @@ export class AreaChartRaceEngine {
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    adjustColorBrightness(color, factor) {
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+
+        return `rgb(${Math.min(255, Math.floor(r * factor))}, ${Math.min(255, Math.floor(g * factor))}, ${Math.min(255, Math.floor(b * factor))})`;
     }
 
     formatNumber(num) {

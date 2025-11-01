@@ -291,45 +291,121 @@ export class BubbleChartRaceEngine {
                 ctx.restore();
             }
 
-            // Draw main bubble with gradient
+            // PREMIUM: Ultra-realistic 3D bubble with multiple layers
             ctx.save();
-            const gradient = ctx.createRadialGradient(
-                pos.x - radius * 0.3,
-                pos.y - radius * 0.3,
-                0,
-                pos.x,
-                pos.y,
-                radius
-            );
 
             if (this.config.enable3DEffect) {
-                gradient.addColorStop(0, this.adjustColorBrightness(color, 1.5));
-                gradient.addColorStop(0.3, color);
-                gradient.addColorStop(1, this.adjustColorBrightness(color, 0.6));
+                // Main sphere gradient
+                const gradient = ctx.createRadialGradient(
+                    pos.x - radius * 0.4,
+                    pos.y - radius * 0.4,
+                    0,
+                    pos.x,
+                    pos.y,
+                    radius
+                );
+                gradient.addColorStop(0, this.adjustColorBrightness(color, 2.2));
+                gradient.addColorStop(0.1, this.adjustColorBrightness(color, 1.8));
+                gradient.addColorStop(0.25, this.adjustColorBrightness(color, 1.3));
+                gradient.addColorStop(0.5, color);
+                gradient.addColorStop(0.75, this.adjustColorBrightness(color, 0.7));
+                gradient.addColorStop(0.95, this.adjustColorBrightness(color, 0.4));
+                gradient.addColorStop(1, this.adjustColorBrightness(color, 0.3));
+
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Specular highlight (shiny spot)
+                const highlight = ctx.createRadialGradient(
+                    pos.x - radius * 0.35,
+                    pos.y - radius * 0.35,
+                    0,
+                    pos.x - radius * 0.35,
+                    pos.y - radius * 0.35,
+                    radius * 0.4
+                );
+                highlight.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                highlight.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+                highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = highlight;
+                ctx.fill();
+
+                // Ambient occlusion (bottom shadow)
+                const shadow = ctx.createRadialGradient(
+                    pos.x + radius * 0.2,
+                    pos.y + radius * 0.3,
+                    0,
+                    pos.x + radius * 0.2,
+                    pos.y + radius * 0.3,
+                    radius * 0.6
+                );
+                shadow.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+                shadow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = shadow;
+                ctx.fill();
+
+                // Glass rim effect
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius - 2, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
             } else {
+                // Simple gradient for non-3D mode
+                const gradient = ctx.createRadialGradient(
+                    pos.x - radius * 0.3,
+                    pos.y - radius * 0.3,
+                    0,
+                    pos.x,
+                    pos.y,
+                    radius
+                );
                 gradient.addColorStop(0, color);
                 gradient.addColorStop(1, this.adjustColorBrightness(color, 0.8));
+
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
             }
+            ctx.restore();
 
+            // PREMIUM: Multi-ring pulsing effect
+            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.06 + 1;
+
+            // Outer pulse ring
+            ctx.save();
+            ctx.globalAlpha = 0.15;
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = gradient;
-            ctx.fill();
-
-            // Draw rim
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
+            ctx.arc(pos.x, pos.y, radius * pulse * 1.1, 0, Math.PI * 2);
+            const outerPulse = ctx.createRadialGradient(
+                pos.x, pos.y, radius * pulse * 0.9,
+                pos.x, pos.y, radius * pulse * 1.1
+            );
+            outerPulse.addColorStop(0, color);
+            outerPulse.addColorStop(1, this.adjustColorBrightness(color, 0.5));
+            ctx.strokeStyle = outerPulse;
+            ctx.lineWidth = 4;
             ctx.stroke();
             ctx.restore();
 
-            // Add pulsing effect
-            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.05 + 1;
+            // Inner pulse ring
             ctx.save();
-            ctx.globalAlpha = 0.2;
+            ctx.globalAlpha = 0.3;
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, radius * pulse, 0, Math.PI * 2);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = this.adjustColorBrightness(color, 1.3);
+            ctx.lineWidth = 2;
             ctx.stroke();
             ctx.restore();
 

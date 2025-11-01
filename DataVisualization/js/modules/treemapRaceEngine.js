@@ -310,34 +310,102 @@ export class TreemapRaceEngine {
                 ctx.restore();
             }
 
-            // Draw main rectangle with gradient
+            // PREMIUM: Enhanced 3D rectangle with depth and lighting
             ctx.save();
             if (this.config.enable3DEffect) {
+                // Main gradient - diagonal lighting
                 const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-                gradient.addColorStop(0, this.adjustColorBrightness(color, 1.3));
+                gradient.addColorStop(0, this.adjustColorBrightness(color, 1.5));
+                gradient.addColorStop(0.2, this.adjustColorBrightness(color, 1.2));
                 gradient.addColorStop(0.5, color);
-                gradient.addColorStop(1, this.adjustColorBrightness(color, 0.7));
+                gradient.addColorStop(0.8, this.adjustColorBrightness(color, 0.8));
+                gradient.addColorStop(1, this.adjustColorBrightness(color, 0.6));
                 this.drawRoundedRect(x, y, width, height, this.config.borderRadius, gradient);
+
+                // Top-left highlight (simulated light source)
+                const highlightGradient = ctx.createRadialGradient(
+                    x + width * 0.3, y + height * 0.3, 0,
+                    x + width * 0.3, y + height * 0.3, Math.max(width, height) * 0.6
+                );
+                highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+                highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+                highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                ctx.save();
+                this.drawRoundedRect(x, y, width, height, this.config.borderRadius, highlightGradient);
+                ctx.restore();
+
+                // Bottom-right shadow (depth effect)
+                const depthShadow = ctx.createLinearGradient(
+                    x + width * 0.5, y + height * 0.5,
+                    x + width, y + height
+                );
+                depthShadow.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                depthShadow.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+
+                ctx.save();
+                this.drawRoundedRect(x, y, width, height, this.config.borderRadius, depthShadow);
+                ctx.restore();
             } else {
                 this.drawRoundedRect(x, y, width, height, this.config.borderRadius, color);
             }
             ctx.restore();
 
-            // Draw border
+            // PREMIUM: Multi-layer border
             ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            // Outer glow border
+            ctx.strokeStyle = this.adjustColorBrightness(color, 1.5);
+            ctx.lineWidth = this.config.borderWidth + 1;
+            ctx.globalAlpha = 0.3;
+            this.strokeRoundedRect(x - 1, y - 1, width + 2, height + 2, this.config.borderRadius + 1);
+
+            // Main border
+            ctx.globalAlpha = 0.6;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.lineWidth = this.config.borderWidth;
             this.strokeRoundedRect(x, y, width, height, this.config.borderRadius);
+
+            // Inner border
+            ctx.globalAlpha = 0.4;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            this.strokeRoundedRect(x + 2, y + 2, width - 4, height - 4, this.config.borderRadius - 1);
             ctx.restore();
 
-            // Add pulse effect for growing rectangles
+            // PREMIUM: Multi-ring pulse effect for growing rectangles
             const prevValue = this.previousValues.get(rect.entity) || 0;
             if (rect.value > prevValue) {
+                const pulseIntensity = Math.sin(this.pulsePhase * 2);
+
+                // Outer pulse ring
                 ctx.save();
-                ctx.globalAlpha = 0.3 * Math.sin(this.pulsePhase * 2);
+                ctx.globalAlpha = 0.2 + pulseIntensity * 0.15;
+                const outerGlow = ctx.createLinearGradient(x, y, x + width, y + height);
+                outerGlow.addColorStop(0, this.adjustColorBrightness(color, 1.8));
+                outerGlow.addColorStop(1, '#ffffff');
+                ctx.strokeStyle = outerGlow;
+                ctx.lineWidth = 5;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+                this.strokeRoundedRect(x - 3, y - 3, width + 6, height + 6, this.config.borderRadius + 3);
+                ctx.restore();
+
+                // Middle pulse ring
+                ctx.save();
+                ctx.globalAlpha = 0.3 + pulseIntensity * 0.2;
                 ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
                 this.strokeRoundedRect(x - 2, y - 2, width + 4, height + 4, this.config.borderRadius + 2);
+                ctx.restore();
+
+                // Inner highlight
+                ctx.save();
+                ctx.globalAlpha = 0.4 + pulseIntensity * 0.3;
+                ctx.strokeStyle = this.adjustColorBrightness(color, 2.0);
+                ctx.lineWidth = 2;
+                this.strokeRoundedRect(x - 1, y - 1, width + 2, height + 2, this.config.borderRadius + 1);
                 ctx.restore();
             }
             this.previousValues.set(rect.entity, rect.value);
