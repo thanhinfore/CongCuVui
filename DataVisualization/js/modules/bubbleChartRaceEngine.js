@@ -1,7 +1,7 @@
 // ========================================
-// Bubble Chart Race Engine - REALISTIC PHYSICS v2.0
-// Animated bubble chart with REAL physics simulation
-// Elastic collisions, mass-based dynamics, smooth movement
+// Bubble Chart Race Engine - BILLIARD TABLE PHYSICS v2.0
+// Ultra-smooth physics simulation like a real billiard table
+// Sub-stepping, minimal friction, perfect elastic collisions
 // ========================================
 
 export class BubbleChartRaceEngine {
@@ -26,13 +26,21 @@ export class BubbleChartRaceEngine {
         this.trails = new Map();
         this.pulsePhase = 0;
 
-        // Physics constants
-        this.FRICTION = 0.98; // Air resistance
-        this.DAMPING = 0.95; // Velocity damping
-        this.COLLISION_RESTITUTION = 0.85; // Bounciness (0-1)
-        this.MAX_VELOCITY = 15; // Maximum speed limit
-        this.ATTRACTION_STRENGTH = 0.008; // Center attraction
-        this.BOUNDARY_FORCE = 0.15; // Wall push force
+        // BILLIARD TABLE PHYSICS CONSTANTS - Ultra smooth!
+        this.FRICTION = 0.9985;              // Like polished billiard table (very low friction)
+        this.DAMPING = 0.999;                // Almost no damping
+        this.COLLISION_RESTITUTION = 0.95;   // Very elastic (billiard balls don't lose much energy)
+        this.BOUNDARY_RESTITUTION = 0.85;    // Wall bounces are slightly less elastic
+        this.MAX_VELOCITY = 30;              // Allow fast movement
+        this.ATTRACTION_STRENGTH = 0.003;    // Minimal center pull
+        this.BOUNDARY_FORCE = 0.2;           // Soft wall push
+
+        // SUB-STEPPING for smooth physics
+        this.PHYSICS_SUBSTEPS = 6;           // 6 physics steps per frame for smoothness
+        this.FIXED_TIMESTEP = 1 / 60 / this.PHYSICS_SUBSTEPS;  // Fixed timestep
+
+        // Collision iteration settings
+        this.COLLISION_ITERATIONS = 3;       // Multiple passes for stable collisions
     }
 
     mergeConfig(config) {
@@ -52,7 +60,7 @@ export class BubbleChartRaceEngine {
             animatedBackground: config.animatedBackground !== false,
             minBubbleSize: config.minBubbleSize || 20,
             maxBubbleSize: config.maxBubbleSize || 120,
-            bubbleSpacing: config.bubbleSpacing || 1.3,
+            bubbleSpacing: config.bubbleSpacing || 1.2,
             padding: config.padding || { top: 120, right: 100, bottom: 120, left: 100 },
             fontSizes: config.fontSizes || null,
             ...config
@@ -78,11 +86,13 @@ export class BubbleChartRaceEngine {
             height: this.config.height - this.config.padding.top - this.config.padding.bottom
         };
 
-        console.log('🎱 Bubble Chart Race v2.0 - Realistic Physics Engine initialized:', {
+        console.log('🎱 Bubble Chart Race v2.0 - BILLIARD TABLE PHYSICS initialized:', {
             periods: data.periods.length,
             entities: data.entities.length,
             chartArea: this.chartArea,
-            physicsEnabled: true
+            substeps: this.PHYSICS_SUBSTEPS,
+            friction: this.FRICTION,
+            restitution: this.COLLISION_RESTITUTION
         });
     }
 
@@ -111,10 +121,10 @@ export class BubbleChartRaceEngine {
         const maxValue = Math.max(...interpolatedData.map(d => d.value), 1);
 
         // Update pulse phase
-        this.pulsePhase += 0.05;
+        this.pulsePhase += 0.03;
 
-        // Update bubble physics (REALISTIC PHYSICS ENGINE)
-        this.updatePhysics(interpolatedData, maxValue);
+        // Update bubble physics with SUB-STEPPING (BILLIARD TABLE PHYSICS)
+        this.updatePhysicsWithSubsteps(interpolatedData, maxValue);
 
         // Draw trails
         if (this.config.showTrails) {
@@ -175,27 +185,26 @@ export class BubbleChartRaceEngine {
 
     /**
      * ========================================
-     * REALISTIC PHYSICS ENGINE v2.0
-     * Mass-based elastic collisions
-     * Momentum conservation
-     * Smooth damping and friction
+     * BILLIARD TABLE PHYSICS ENGINE v2.0
+     * SUB-STEPPING for ultra-smooth simulation
+     * Multiple physics steps per frame
+     * Fixed timestep for stability
      * ========================================
      */
-    updatePhysics(data, maxValue) {
+    updatePhysicsWithSubsteps(data, maxValue) {
         // Step 1: Update radii and masses for all bubbles
         data.forEach((item) => {
             const radius = this.calculateBubbleRadius(item.value, maxValue);
             this.bubbleRadii.set(item.entity, radius);
 
-            // Mass proportional to volume (radius^2 for 2D visualization)
-            const mass = radius * radius * 0.01; // Scale factor for better physics
+            // Mass proportional to area (like real billiard balls)
+            const mass = radius * radius * 0.01;
             this.bubbleMasses.set(item.entity, mass);
         });
 
-        // Step 2: Initialize positions and velocities for new bubbles
+        // Step 2: Initialize positions for new bubbles
         data.forEach((item, index) => {
             if (!this.bubblePositions.has(item.entity)) {
-                // Arrange in an optimized grid
                 const cols = Math.ceil(Math.sqrt(this.config.topN));
                 const row = Math.floor(index / cols);
                 const col = index % cols;
@@ -207,98 +216,83 @@ export class BubbleChartRaceEngine {
             }
         });
 
-        // Step 3: Apply forces (attraction to center, boundary forces)
+        // Step 3: SUB-STEPPING - Multiple physics updates per frame for smoothness
+        for (let substep = 0; substep < this.PHYSICS_SUBSTEPS; substep++) {
+            // Apply forces
+            this.applyForces(data);
+
+            // Resolve collisions (multiple iterations for stability)
+            for (let iter = 0; iter < this.COLLISION_ITERATIONS; iter++) {
+                this.resolveCollisions(data);
+            }
+
+            // Update positions with fixed timestep
+            this.integrateMotion(data);
+
+            // Constrain to boundaries
+            this.applyBoundaryConstraints(data);
+        }
+
+        // Update trails (only once per frame, not per substep)
+        this.updateTrails(data);
+    }
+
+    /**
+     * Apply forces to all bubbles
+     */
+    applyForces(data) {
         data.forEach((item) => {
             const pos = this.bubblePositions.get(item.entity);
             const vel = this.bubbleVelocities.get(item.entity);
             const radius = this.bubbleRadii.get(item.entity);
 
-            let fx = 0, fy = 0;
-
-            // Gentle attraction to center (keeps bubbles together)
+            // Very gentle center attraction (much weaker than before)
             const centerX = this.chartArea.x + this.chartArea.width / 2;
             const centerY = this.chartArea.y + this.chartArea.height / 2;
             const dcx = centerX - pos.x;
             const dcy = centerY - pos.y;
-            fx += dcx * this.ATTRACTION_STRENGTH;
-            fy += dcy * this.ATTRACTION_STRENGTH;
+            const dist = Math.sqrt(dcx * dcx + dcy * dcy);
 
-            // Strong boundary forces (soft walls)
+            if (dist > 0) {
+                const force = this.ATTRACTION_STRENGTH / this.PHYSICS_SUBSTEPS;
+                vel.vx += (dcx / dist) * force;
+                vel.vy += (dcy / dist) * force;
+            }
+
+            // Soft boundary forces
             const margin = radius + 5;
             const leftDist = pos.x - (this.chartArea.x + margin);
             const rightDist = (this.chartArea.x + this.chartArea.width - margin) - pos.x;
             const topDist = pos.y - (this.chartArea.y + margin);
             const bottomDist = (this.chartArea.y + this.chartArea.height - margin) - pos.y;
 
-            if (leftDist < 0) fx += -leftDist * this.BOUNDARY_FORCE;
-            if (rightDist < 0) fx -= -rightDist * this.BOUNDARY_FORCE;
-            if (topDist < 0) fy += -topDist * this.BOUNDARY_FORCE;
-            if (bottomDist < 0) fy -= -bottomDist * this.BOUNDARY_FORCE;
+            const boundaryForce = this.BOUNDARY_FORCE / this.PHYSICS_SUBSTEPS;
 
-            // Apply forces to velocity
-            vel.vx += fx;
-            vel.vy += fy;
-        });
-
-        // Step 4: Detect and resolve elastic collisions
-        const entities = Array.from(data);
-        for (let i = 0; i < entities.length; i++) {
-            for (let j = i + 1; j < entities.length; j++) {
-                this.handleCollision(entities[i], entities[j]);
-            }
-        }
-
-        // Step 5: Apply damping and update positions
-        data.forEach((item) => {
-            const pos = this.bubblePositions.get(item.entity);
-            const vel = this.bubbleVelocities.get(item.entity);
-            const radius = this.bubbleRadii.get(item.entity);
-
-            // Apply friction (air resistance)
-            vel.vx *= this.FRICTION;
-            vel.vy *= this.FRICTION;
-
-            // Apply velocity damping
-            vel.vx *= this.DAMPING;
-            vel.vy *= this.DAMPING;
-
-            // Limit maximum velocity (prevent too fast movement)
-            const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
-            if (speed > this.MAX_VELOCITY) {
-                const scale = this.MAX_VELOCITY / speed;
-                vel.vx *= scale;
-                vel.vy *= scale;
-            }
-
-            // Update position
-            pos.x += vel.vx;
-            pos.y += vel.vy;
-
-            // Hard boundary constraints (prevent escape)
-            const margin = radius;
-            pos.x = Math.max(this.chartArea.x + margin, Math.min(this.chartArea.x + this.chartArea.width - margin, pos.x));
-            pos.y = Math.max(this.chartArea.y + margin, Math.min(this.chartArea.y + this.chartArea.height - margin, pos.y));
-
-            // Store trail
-            if (this.config.showTrails) {
-                if (!this.trails.has(item.entity)) {
-                    this.trails.set(item.entity, []);
-                }
-                const trail = this.trails.get(item.entity);
-                trail.push({ x: pos.x, y: pos.y, time: Date.now() });
-
-                // Keep only recent trail points (last 1.5 seconds)
-                const now = Date.now();
-                this.trails.set(item.entity, trail.filter(p => now - p.time < 1500));
-            }
+            if (leftDist < 30) vel.vx += (30 - leftDist) * boundaryForce * 0.1;
+            if (rightDist < 30) vel.vx -= (30 - rightDist) * boundaryForce * 0.1;
+            if (topDist < 30) vel.vy += (30 - topDist) * boundaryForce * 0.1;
+            if (bottomDist < 30) vel.vy -= (30 - bottomDist) * boundaryForce * 0.1;
         });
     }
 
     /**
-     * Handle elastic collision between two bubbles
-     * Uses realistic physics: conservation of momentum and energy
+     * Resolve all collisions between bubbles
      */
-    handleCollision(item1, item2) {
+    resolveCollisions(data) {
+        const entities = Array.from(data);
+
+        for (let i = 0; i < entities.length; i++) {
+            for (let j = i + 1; j < entities.length; j++) {
+                this.handleBilliardCollision(entities[i], entities[j]);
+            }
+        }
+    }
+
+    /**
+     * Handle billiard-style elastic collision
+     * Perfect conservation of momentum and energy
+     */
+    handleBilliardCollision(item1, item2) {
         const pos1 = this.bubblePositions.get(item1.entity);
         const pos2 = this.bubblePositions.get(item2.entity);
         const vel1 = this.bubbleVelocities.get(item1.entity);
@@ -310,7 +304,7 @@ export class BubbleChartRaceEngine {
 
         if (!pos1 || !pos2 || !vel1 || !vel2) return;
 
-        // Calculate distance between centers
+        // Calculate distance
         const dx = pos2.x - pos1.x;
         const dy = pos2.y - pos1.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -318,44 +312,132 @@ export class BubbleChartRaceEngine {
         // Check for collision
         const minDistance = (radius1 + radius2) * this.config.bubbleSpacing;
 
-        if (distance < minDistance && distance > 0) {
-            // Normalize collision vector
+        if (distance < minDistance && distance > 0.1) {
+            // Collision normal (unit vector)
             const nx = dx / distance;
             const ny = dy / distance;
 
             // Relative velocity
-            const dvx = vel2.vx - vel1.vx;
-            const dvy = vel2.vy - vel1.vy;
+            const dvx = vel1.vx - vel2.vx;
+            const dvy = vel1.vy - vel2.vy;
 
-            // Relative velocity in collision normal direction
+            // Relative velocity along collision normal
             const dvn = dvx * nx + dvy * ny;
 
-            // Do not resolve if bubbles are separating
-            if (dvn > 0) return;
+            // Only resolve if approaching
+            if (dvn > 0) {
+                // Billiard collision formula (perfect elastic collision)
+                const impulse = (2.0 * dvn) / (1/mass1 + 1/mass2);
 
-            // Calculate impulse scalar (elastic collision formula)
-            const impulse = -(1 + this.COLLISION_RESTITUTION) * dvn / (1/mass1 + 1/mass2);
+                // Update velocities (momentum conservation)
+                vel1.vx -= impulse * nx / mass1;
+                vel1.vy -= impulse * ny / mass1;
+                vel2.vx += impulse * nx / mass2;
+                vel2.vy += impulse * ny / mass2;
 
-            // Apply impulse to velocities (conservation of momentum)
-            vel1.vx -= (impulse * nx) / mass1;
-            vel1.vy -= (impulse * ny) / mass1;
-            vel2.vx += (impulse * nx) / mass2;
-            vel2.vy += (impulse * ny) / mass2;
+                // Apply restitution for slight energy loss
+                vel1.vx *= this.COLLISION_RESTITUTION;
+                vel1.vy *= this.COLLISION_RESTITUTION;
+                vel2.vx *= this.COLLISION_RESTITUTION;
+                vel2.vy *= this.COLLISION_RESTITUTION;
 
-            // Separate overlapping bubbles (positional correction)
-            const overlap = minDistance - distance;
-            const separationRatio = overlap / (distance * 2);
+                // Separate overlapping bubbles smoothly
+                const overlap = minDistance - distance;
+                const separationFactor = 0.5; // Each bubble moves half the overlap
 
-            // Weighted separation based on mass (heavier bubbles move less)
-            const totalMass = mass1 + mass2;
-            const move1 = (mass2 / totalMass) * overlap * 0.5;
-            const move2 = (mass1 / totalMass) * overlap * 0.5;
+                const totalMass = mass1 + mass2;
+                const move1 = (mass2 / totalMass) * overlap * separationFactor;
+                const move2 = (mass1 / totalMass) * overlap * separationFactor;
 
-            pos1.x -= nx * move1;
-            pos1.y -= ny * move1;
-            pos2.x += nx * move2;
-            pos2.y += ny * move2;
+                pos1.x -= nx * move1;
+                pos1.y -= ny * move1;
+                pos2.x += nx * move2;
+                pos2.y += ny * move2;
+            }
         }
+    }
+
+    /**
+     * Integrate motion (update positions from velocities)
+     */
+    integrateMotion(data) {
+        data.forEach((item) => {
+            const pos = this.bubblePositions.get(item.entity);
+            const vel = this.bubbleVelocities.get(item.entity);
+
+            // Apply minimal friction (billiard table is very smooth)
+            vel.vx *= this.FRICTION;
+            vel.vy *= this.FRICTION;
+
+            // Apply minimal damping
+            vel.vx *= this.DAMPING;
+            vel.vy *= this.DAMPING;
+
+            // Limit maximum velocity (prevent unrealistic speeds)
+            const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+            if (speed > this.MAX_VELOCITY) {
+                const scale = this.MAX_VELOCITY / speed;
+                vel.vx *= scale;
+                vel.vy *= scale;
+            }
+
+            // Update position with fixed timestep
+            pos.x += vel.vx * this.FIXED_TIMESTEP * 60; // Scale to 60fps
+            pos.y += vel.vy * this.FIXED_TIMESTEP * 60;
+        });
+    }
+
+    /**
+     * Apply boundary constraints with bouncing
+     */
+    applyBoundaryConstraints(data) {
+        data.forEach((item) => {
+            const pos = this.bubblePositions.get(item.entity);
+            const vel = this.bubbleVelocities.get(item.entity);
+            const radius = this.bubbleRadii.get(item.entity);
+
+            const margin = radius;
+
+            // Bounce off boundaries
+            if (pos.x < this.chartArea.x + margin) {
+                pos.x = this.chartArea.x + margin;
+                vel.vx = Math.abs(vel.vx) * this.BOUNDARY_RESTITUTION;
+            }
+            if (pos.x > this.chartArea.x + this.chartArea.width - margin) {
+                pos.x = this.chartArea.x + this.chartArea.width - margin;
+                vel.vx = -Math.abs(vel.vx) * this.BOUNDARY_RESTITUTION;
+            }
+            if (pos.y < this.chartArea.y + margin) {
+                pos.y = this.chartArea.y + margin;
+                vel.vy = Math.abs(vel.vy) * this.BOUNDARY_RESTITUTION;
+            }
+            if (pos.y > this.chartArea.y + this.chartArea.height - margin) {
+                pos.y = this.chartArea.y + this.chartArea.height - margin;
+                vel.vy = -Math.abs(vel.vy) * this.BOUNDARY_RESTITUTION;
+            }
+        });
+    }
+
+    /**
+     * Update trails
+     */
+    updateTrails(data) {
+        if (!this.config.showTrails) return;
+
+        data.forEach((item) => {
+            const pos = this.bubblePositions.get(item.entity);
+
+            if (!this.trails.has(item.entity)) {
+                this.trails.set(item.entity, []);
+            }
+
+            const trail = this.trails.get(item.entity);
+            trail.push({ x: pos.x, y: pos.y, time: Date.now() });
+
+            // Keep trails for 2 seconds
+            const now = Date.now();
+            this.trails.set(item.entity, trail.filter(p => now - p.time < 2000));
+        });
     }
 
     drawTrails() {
@@ -367,13 +449,13 @@ export class BubbleChartRaceEngine {
 
             ctx.save();
 
-            // Draw trail as smooth curve with fading
+            // Draw smooth trail with fading
             for (let i = 1; i < trail.length; i++) {
                 const p1 = trail[i - 1];
                 const p2 = trail[i];
 
-                const age = (now - p1.time) / 1500; // 1.5 seconds fade
-                const alpha = (1 - age) * 0.3;
+                const age = (now - p1.time) / 2000;
+                const alpha = (1 - age) * 0.25;
 
                 if (alpha <= 0) continue;
 
@@ -382,11 +464,11 @@ export class BubbleChartRaceEngine {
                 ctx.lineTo(p2.x, p2.y);
 
                 const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.5})`);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.4})`);
                 gradient.addColorStop(1, `rgba(255, 255, 255, ${alpha})`);
 
                 ctx.strokeStyle = gradient;
-                ctx.lineWidth = 3 * (1 - age);
+                ctx.lineWidth = 2.5 * (1 - age);
                 ctx.lineCap = 'round';
                 ctx.stroke();
             }
@@ -399,7 +481,7 @@ export class BubbleChartRaceEngine {
         const ctx = this.ctx;
         const colors = this.getColorPalette();
 
-        // Sort by size (draw larger bubbles first for proper layering)
+        // Sort by size (draw larger bubbles first)
         const sortedData = [...data].sort((a, b) => b.value - a.value);
 
         sortedData.forEach((item, index) => {
@@ -423,7 +505,7 @@ export class BubbleChartRaceEngine {
                 ctx.restore();
             }
 
-            // PREMIUM: Ultra-realistic 3D bubble with multiple layers
+            // Ultra-realistic 3D bubble
             ctx.save();
 
             if (this.config.enable3DEffect) {
@@ -449,7 +531,7 @@ export class BubbleChartRaceEngine {
                 ctx.fillStyle = gradient;
                 ctx.fill();
 
-                // Specular highlight (shiny spot)
+                // Specular highlight
                 const highlight = ctx.createRadialGradient(
                     pos.x - radius * 0.35,
                     pos.y - radius * 0.35,
@@ -464,7 +546,7 @@ export class BubbleChartRaceEngine {
                 ctx.fillStyle = highlight;
                 ctx.fill();
 
-                // Ambient occlusion (bottom shadow)
+                // Ambient occlusion
                 const shadow = ctx.createRadialGradient(
                     pos.x + radius * 0.2,
                     pos.y + radius * 0.3,
@@ -478,7 +560,7 @@ export class BubbleChartRaceEngine {
                 ctx.fillStyle = shadow;
                 ctx.fill();
 
-                // Glass rim effect
+                // Glass rim
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.lineWidth = 3;
                 ctx.stroke();
@@ -489,7 +571,6 @@ export class BubbleChartRaceEngine {
                 ctx.lineWidth = 1;
                 ctx.stroke();
             } else {
-                // Simple gradient for non-3D mode
                 const gradient = ctx.createRadialGradient(
                     pos.x - radius * 0.3,
                     pos.y - radius * 0.3,
@@ -512,32 +593,21 @@ export class BubbleChartRaceEngine {
             }
             ctx.restore();
 
-            // PREMIUM: Multi-ring pulsing effect (smoother)
-            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.04 + 1;
+            // Subtle pulse effect
+            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.03 + 1;
 
-            // Outer pulse ring
             ctx.save();
-            ctx.globalAlpha = 0.12;
+            ctx.globalAlpha = 0.1;
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, radius * pulse * 1.08, 0, Math.PI * 2);
+            ctx.arc(pos.x, pos.y, radius * pulse * 1.05, 0, Math.PI * 2);
             const outerPulse = ctx.createRadialGradient(
-                pos.x, pos.y, radius * pulse * 0.9,
-                pos.x, pos.y, radius * pulse * 1.08
+                pos.x, pos.y, radius * pulse * 0.92,
+                pos.x, pos.y, radius * pulse * 1.05
             );
             outerPulse.addColorStop(0, color);
             outerPulse.addColorStop(1, this.adjustColorBrightness(color, 0.5));
             ctx.strokeStyle = outerPulse;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            ctx.restore();
-
-            // Inner pulse ring (subtle)
-            ctx.save();
-            ctx.globalAlpha = 0.25;
-            ctx.beginPath();
-            ctx.arc(pos.x, pos.y, radius * pulse, 0, Math.PI * 2);
-            ctx.strokeStyle = this.adjustColorBrightness(color, 1.2);
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 2.5;
             ctx.stroke();
             ctx.restore();
 
@@ -550,11 +620,9 @@ export class BubbleChartRaceEngine {
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
                 ctx.shadowBlur = 5;
 
-                // Entity name
                 ctx.font = `bold ${Math.min(radius / 3, 18)}px Inter, sans-serif`;
                 ctx.fillText(item.entity, pos.x, pos.y - 8);
 
-                // Value
                 ctx.font = `${Math.min(radius / 4, 14)}px Inter, sans-serif`;
                 ctx.fillStyle = '#dddddd';
                 ctx.fillText(this.formatNumber(item.value), pos.x, pos.y + 10);
@@ -573,7 +641,6 @@ export class BubbleChartRaceEngine {
         const size = 30;
 
         ctx.save();
-        // Badge background
         ctx.beginPath();
         ctx.arc(x, y, size / 2, 0, Math.PI * 2);
         ctx.fillStyle = rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32';
@@ -582,7 +649,6 @@ export class BubbleChartRaceEngine {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Rank number
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 16px Inter, sans-serif';
         ctx.textAlign = 'center';
@@ -600,7 +666,6 @@ export class BubbleChartRaceEngine {
     drawTitleAndPeriod(periodName) {
         const ctx = this.ctx;
 
-        // Draw title
         ctx.save();
         ctx.font = 'bold 48px Inter, sans-serif';
         ctx.fillStyle = '#ffffff';
@@ -610,7 +675,6 @@ export class BubbleChartRaceEngine {
         ctx.fillText(this.config.title, this.config.width / 2, 60);
         ctx.restore();
 
-        // Draw period
         ctx.save();
         ctx.font = 'bold 72px Inter, sans-serif';
         ctx.fillStyle = '#ffffff';
@@ -632,7 +696,6 @@ export class BubbleChartRaceEngine {
         ctx.textAlign = 'left';
         ctx.fillText('Size Scale:', x, y);
 
-        // Draw size reference circles
         const sizes = [
             { label: 'Max', value: maxValue },
             { label: 'Mid', value: maxValue / 2 },
