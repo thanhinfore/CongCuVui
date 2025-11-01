@@ -166,6 +166,13 @@ export class AreaChartRaceEngine {
                 data: JSON.parse(JSON.stringify(data))
             });
 
+            // Play clink sound for period transition
+            if (this.audioEngine) {
+                this.audioEngine.playSoundEffect('clink').catch(err => {
+                    console.debug('Clink sound play prevented:', err);
+                });
+            }
+
             // Keep only recent history
             if (this.historicalData.length > this.config.historyLength) {
                 this.historicalData.shift();

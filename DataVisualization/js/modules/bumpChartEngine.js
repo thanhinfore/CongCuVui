@@ -21,6 +21,8 @@ export class BumpChartEngine {
         this.currentPeriodIndex = 0;
         this.animationProgress = 0;
         this.hoveredEntity = null;
+        this.lastClinkTime = 0;  // Cooldown timer for clink sound
+        this.rankChangePlayed = new Set();  // Track which rank changes have played sound
     }
 
     /**
@@ -108,6 +110,37 @@ export class BumpChartEngine {
             console.error('❌ BumpChart: No data to draw!');
             return;
         }
+
+        // Detect rank changes and play clink sound
+        if (periodIndex > 0 && progress > 0.5 && this.audioEngine) {
+            const currentRanking = this.rankings[periodIndex];
+            const prevRanking = this.rankings[periodIndex - 1];
+
+            if (currentRanking && prevRanking) {
+                currentRanking.forEach(current => {
+                    const prev = prevRanking.find(p => p.entity === current.entity);
+                    if (prev && prev.rank !== current.rank) {
+                        const changeKey = `${periodIndex}-${current.entity}`;
+                        if (!this.rankChangePlayed.has(changeKey)) {
+                            const now = Date.now();
+                            if (now - this.lastClinkTime > 100) {
+                                this.audioEngine.playSoundEffect('clink').catch(err => {
+                                    console.debug('Clink sound play prevented:', err);
+                                });
+                                this.lastClinkTime = now;
+                                this.rankChangePlayed.add(changeKey);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Clear old rank change tracking when moving to new period
+        if (progress < 0.1 && periodIndex > 0) {
+            this.rankChangePlayed.clear();
+        }
+
         this.draw();
     }
 

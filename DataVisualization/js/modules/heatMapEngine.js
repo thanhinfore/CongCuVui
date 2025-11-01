@@ -20,6 +20,8 @@ export class HeatMapEngine {
         this.data = null;
         this.currentPeriodIndex = 0;
         this.animationProgress = 0;
+        this.lastClinkTime = 0;  // Cooldown timer for clink sound
+        this.rankChangePlayed = new Set();  // Track which rank changes have played sound
     }
 
     /**
@@ -101,6 +103,38 @@ export class HeatMapEngine {
             console.error('❌ HeatMap: No data to draw!');
             return;
         }
+
+        // Detect rank changes and play clink sound
+        if (periodIndex > 0 && progress > 0.5 && this.audioEngine && this.rankings) {
+            const currentRanking = this.rankings[periodIndex];
+            const prevRanking = this.rankings[periodIndex - 1];
+
+            if (currentRanking && prevRanking) {
+                this.data.entities.forEach(entity => {
+                    const currentRank = currentRanking.get(entity);
+                    const prevRank = prevRanking.get(entity);
+                    if (currentRank && prevRank && currentRank !== prevRank) {
+                        const changeKey = `${periodIndex}-${entity}`;
+                        if (!this.rankChangePlayed.has(changeKey)) {
+                            const now = Date.now();
+                            if (now - this.lastClinkTime > 100) {
+                                this.audioEngine.playSoundEffect('clink').catch(err => {
+                                    console.debug('Clink sound play prevented:', err);
+                                });
+                                this.lastClinkTime = now;
+                                this.rankChangePlayed.add(changeKey);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Clear old rank change tracking when moving to new period
+        if (progress < 0.1 && periodIndex > 0) {
+            this.rankChangePlayed.clear();
+        }
+
         this.draw();
     }
 

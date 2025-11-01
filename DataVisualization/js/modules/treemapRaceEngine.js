@@ -21,6 +21,7 @@ export class TreemapRaceEngine {
         this.previousValues = new Map();
         this.pulsePhase = 0;
         this.hoverEntity = null;
+        this.lastClinkTime = 0;  // Cooldown timer for clink sound
     }
 
     mergeConfig(config) {
@@ -407,6 +408,18 @@ export class TreemapRaceEngine {
                 ctx.lineWidth = 2;
                 this.strokeRoundedRect(x - 1, y - 1, width + 2, height + 2, this.config.borderRadius + 1);
                 ctx.restore();
+
+                // Play clink sound for significant value increase (with cooldown)
+                const valueIncrease = rect.value - prevValue;
+                if (this.audioEngine && valueIncrease > prevValue * 0.1) {
+                    const now = Date.now();
+                    if (now - this.lastClinkTime > 150) {
+                        this.audioEngine.playSoundEffect('clink').catch(err => {
+                            console.debug('Clink sound play prevented:', err);
+                        });
+                        this.lastClinkTime = now;
+                    }
+                }
             }
             this.previousValues.set(rect.entity, rect.value);
 

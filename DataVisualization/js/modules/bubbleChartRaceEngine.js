@@ -33,6 +33,7 @@ export class BubbleChartRaceEngine {
         this.allTrackedBubbles = new Set();    // All bubbles ever shown
         this.trails = new Map();
         this.pulsePhase = 0;
+        this.lastClinkTime = 0;                // Cooldown timer for clink sound
 
         // BILLIARD TABLE PHYSICS CONSTANTS - Ultra smooth!
         this.FRICTION = 0.9985;              // Like polished billiard table (very low friction)
@@ -453,6 +454,17 @@ export class BubbleChartRaceEngine {
                 vel1.vy *= this.COLLISION_RESTITUTION;
                 vel2.vx *= this.COLLISION_RESTITUTION;
                 vel2.vy *= this.COLLISION_RESTITUTION;
+
+                // Play clink sound for significant collisions (with cooldown)
+                if (this.audioEngine && impulse > 0.5) {
+                    const now = Date.now();
+                    if (now - this.lastClinkTime > 100) {
+                        this.audioEngine.playSoundEffect('clink').catch(err => {
+                            console.debug('Clink sound play prevented:', err);
+                        });
+                        this.lastClinkTime = now;
+                    }
+                }
 
                 // Separate overlapping bubbles smoothly
                 const overlap = minDistance - distance;
