@@ -89,7 +89,8 @@ export class ChartEngine {
             enableOvertakeFlash: config.enableOvertakeFlash !== false,  // Flash on overtakes
             intelligentPause: config.intelligentPause !== false,  // Pause on dramatic moments
             pauseDuration: config.pauseDuration || 1500,  // 1.5s pause on leader changes
-            padding: config.padding || { top: 100, right: 120, bottom: 120, left: 80 },  // v7.0: Less top padding (no stats)
+            // v15.0: INCREASED left padding (80→220) for rank badges + entity names WITHOUT overlap!
+            padding: config.padding || { top: 100, right: 120, bottom: 120, left: 220 },
             fontSizes: config.fontSizes || null,
             ...config
         };
@@ -267,12 +268,19 @@ export class ChartEngine {
                         },
                         ticks: {
                             font: {
-                                size: 26,
+                                size: 24,  // v15.0: Reduced 26→24 for better spacing
                                 weight: '700',
                                 family: "'Inter', -apple-system, sans-serif"
                             },
                             color: '#222',
-                            padding: 15
+                            padding: 25,  // v15.0: Increased 15→25 for more space from bars
+                            // v15.0: Limit label length to prevent overflow
+                            callback: function(value) {
+                                if (typeof value === 'string' && value.length > 20) {
+                                    return value.substring(0, 18) + '...';
+                                }
+                                return value;
+                            }
                         }
                     }
                 },
@@ -722,14 +730,16 @@ export class ChartEngine {
 
                             const rank = index + 1;  // 1-indexed
 
-                            // ✨ v15.0: PREMIUM RANK BADGE POSITIONING - NO OVERLAP!
-                            // SOLUTION: Move badges FAR LEFT to avoid entity name collision
-                            // Previous: badgeX = chartArea.left - 70 (TOO CLOSE!)
-                            // New: More spacing for perfect separation
+                            // ✨ v15.0: PERFECT RANK BADGE POSITIONING - ZERO OVERLAP!
+                            // SOLUTION: With 220px left padding, position badges optimally
+                            // Timeline:
+                            // - v14: badgeX = chartArea.left - 70 (OVERLAPPED!)
+                            // - v15.0 attempt 1: chartArea.left - 95 (STILL OVERLAPPED!)
+                            // - v15.0 FINAL: chartArea.left - 110 with 220px left padding (PERFECT!)
 
-                            const badgeX = chartArea.left - 95;  // ✨ Increased spacing from -70 to -95
+                            const badgeX = chartArea.left - 110;  // ✨ PERFECT spacing - FAR from labels!
                             const badgeY = bar.y + bar.height / 2;  // EXACT center of bar
-                            const badgeRadius = 28;  // v15.0: Slightly larger for premium look
+                            const badgeRadius = 28;  // v15.0: Premium size
 
                             // v15.0: ULTRA PREMIUM badge colors with enhanced gradients
                             let badgeGradient, textColor, glowColor, ringColor;
