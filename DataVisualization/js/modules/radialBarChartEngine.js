@@ -198,16 +198,38 @@ export class RadialBarChartEngine {
             this.drawRadialBar(angle, barWidth, this.innerRadiusValue, barRadius, color, true);
             ctx.restore();
 
-            // Draw glow effect
+            // PREMIUM: Multi-layer glow effect
             if (this.config.enableGlow) {
                 const glowValue = this.glowIntensity.get(item.entity) || 0;
                 this.glowIntensity.set(item.entity, glowValue * 0.95 + normalizedValue * 0.05);
 
+                // Layer 1: Outer glow
                 ctx.save();
-                ctx.globalAlpha = 0.3 + Math.sin(this.pulsePhase) * 0.1;
+                ctx.globalAlpha = 0.2 + Math.sin(this.pulsePhase) * 0.1;
                 ctx.shadowColor = color;
-                ctx.shadowBlur = 30 * glowValue;
+                ctx.shadowBlur = 50 * glowValue;
                 this.drawRadialBar(angle, barWidth, this.innerRadiusValue, barRadius, color);
+                ctx.restore();
+
+                // Layer 2: Inner glow
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.shadowColor = this.adjustColorBrightness(color, 1.5);
+                ctx.shadowBlur = 25 * glowValue;
+                this.drawRadialBar(angle, barWidth * 0.9, this.innerRadiusValue, barRadius, color);
+                ctx.restore();
+
+                // Layer 3: Highlight edge
+                ctx.save();
+                ctx.globalAlpha = 0.6 + Math.sin(this.pulsePhase * 2) * 0.2;
+                ctx.strokeStyle = this.adjustColorBrightness(color, 1.8);
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, barRadius,
+                    angle - barWidth / 2, angle + barWidth / 2);
+                ctx.stroke();
                 ctx.restore();
             }
 
@@ -240,18 +262,36 @@ export class RadialBarChartEngine {
         ctx.closePath();
 
         if (useGradient) {
+            // PREMIUM: Multi-stop gradient for depth
             const gradient = ctx.createRadialGradient(
                 this.centerX, this.centerY, innerRadius,
                 this.centerX, this.centerY, outerRadius
             );
-            gradient.addColorStop(0, this.adjustColorBrightness(color, 0.7));
-            gradient.addColorStop(1, color);
+            gradient.addColorStop(0, this.adjustColorBrightness(color, 0.5));
+            gradient.addColorStop(0.3, this.adjustColorBrightness(color, 0.8));
+            gradient.addColorStop(0.6, color);
+            gradient.addColorStop(0.85, this.adjustColorBrightness(color, 1.2));
+            gradient.addColorStop(1, this.adjustColorBrightness(color, 0.9));
             ctx.fillStyle = gradient;
+
+            // Add shimmer effect
+            const shimmerGradient = ctx.createRadialGradient(
+                this.centerX + Math.cos(angle) * (innerRadius + (outerRadius - innerRadius) * 0.3),
+                this.centerY + Math.sin(angle) * (innerRadius + (outerRadius - innerRadius) * 0.3),
+                0,
+                this.centerX, this.centerY, outerRadius
+            );
+            shimmerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+            shimmerGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
+            shimmerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+            ctx.fill();
+            ctx.fillStyle = shimmerGradient;
+            ctx.fill();
         } else {
             ctx.fillStyle = color;
+            ctx.fill();
         }
-
-        ctx.fill();
     }
 
     drawValueLabel(angle, radius, entity, value) {
@@ -287,44 +327,96 @@ export class RadialBarChartEngine {
     drawCenterCircle(data, periodName) {
         const ctx = this.ctx;
 
-        // Draw center circle
+        // PREMIUM: Multi-layer center circle with depth
         ctx.save();
+
+        // Outer glow ring
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, this.innerRadiusValue - 5, 0, Math.PI * 2);
+        const outerGlow = ctx.createRadialGradient(
+            this.centerX, this.centerY, this.innerRadiusValue - 20,
+            this.centerX, this.centerY, this.innerRadiusValue - 5
+        );
+        outerGlow.addColorStop(0, 'rgba(100, 150, 255, 0)');
+        outerGlow.addColorStop(1, 'rgba(100, 150, 255, 0.3)');
+        ctx.fillStyle = outerGlow;
+        ctx.fill();
+
+        // Main center circle with enhanced gradient
         ctx.beginPath();
         ctx.arc(this.centerX, this.centerY, this.innerRadiusValue - 10, 0, Math.PI * 2);
 
         const gradient = ctx.createRadialGradient(
-            this.centerX, this.centerY, 0,
+            this.centerX - this.innerRadiusValue * 0.3,
+            this.centerY - this.innerRadiusValue * 0.3,
+            0,
             this.centerX, this.centerY, this.innerRadiusValue
         );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
+        gradient.addColorStop(0, 'rgba(80, 80, 100, 0.3)');
+        gradient.addColorStop(0.4, 'rgba(40, 45, 60, 0.7)');
+        gradient.addColorStop(0.8, 'rgba(10, 14, 30, 0.9)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
         ctx.fillStyle = gradient;
         ctx.fill();
 
         if (this.config.enableShadows) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 20;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 5;
         }
+
+        // Premium border with dual ring
+        ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(this.centerX, this.centerY, this.innerRadiusValue - 15, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
         ctx.restore();
 
-        // Draw stats in center
+        // Draw stats in center with enhanced styling
         const total = data.reduce((sum, d) => sum + d.value, 0);
         const leader = data[0];
 
         ctx.save();
-        ctx.font = 'bold 24px Inter, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 10;
 
         if (leader) {
-            ctx.fillText(leader.entity, this.centerX, this.centerY - 20);
-            ctx.font = '18px Inter, sans-serif';
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillText(this.formatNumber(leader.value), this.centerX, this.centerY + 10);
+            // Leader crown icon
+            ctx.font = '32px Inter, sans-serif';
+            ctx.fillStyle = '#FFD700';
+            ctx.textAlign = 'center';
+            ctx.fillText('👑', this.centerX, this.centerY - 40);
+
+            // Leader name with gradient
+            const nameGradient = ctx.createLinearGradient(
+                this.centerX - 50, this.centerY - 10,
+                this.centerX + 50, this.centerY - 10
+            );
+            nameGradient.addColorStop(0, '#ffffff');
+            nameGradient.addColorStop(0.5, '#e0e0ff');
+            nameGradient.addColorStop(1, '#ffffff');
+
+            ctx.font = 'bold 26px Inter, sans-serif';
+            ctx.fillStyle = nameGradient;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(leader.entity, this.centerX, this.centerY - 5);
+
+            // Value with pulsing effect
+            const pulseScale = 1 + Math.sin(this.pulsePhase * 2) * 0.05;
+            ctx.save();
+            ctx.translate(this.centerX, this.centerY + 25);
+            ctx.scale(pulseScale, pulseScale);
+            ctx.font = 'bold 20px Inter, sans-serif';
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText(this.formatNumber(leader.value), 0, 0);
+            ctx.restore();
         }
         ctx.restore();
     }
