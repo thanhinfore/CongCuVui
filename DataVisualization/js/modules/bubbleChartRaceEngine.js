@@ -1,9 +1,11 @@
 // ========================================
-// Bubble Chart Race Engine - v3.0 ULTIMATE SMOOTH EDITION
+// Bubble Chart Race Engine - v3.1 ULTIMATE SMOOTH EDITION
 // ✨ Persistent Bubble Tracking - NO sudden appearance/disappearance!
-// 🎱 Billiard Table Physics - Ultra-smooth physics simulation
+// 🎱 Billiard Table Physics - Mass-based collisions & boundary bounce
 // 🎨 Smooth Fade In/Out - Beautiful opacity animations
-// ⚡ Sub-stepping - Perfect elastic collisions
+// 📊 Smooth Size/Mass Transitions - Radius lerp during value changes
+// ⚡ Sub-stepping - Perfect elastic collisions (6 steps/frame)
+// 🌟 Visual Feedback - Glow when growing/shrinking
 // ========================================
 
 export class BubbleChartRaceEngine {
@@ -24,10 +26,11 @@ export class BubbleChartRaceEngine {
         this.bubbleVelocities = new Map();
         this.bubbleMasses = new Map();
         this.bubbleRadii = new Map();
+        this.targetRadii = new Map();          // NEW v14.1: Target radius for smooth size transitions
         this.previousValues = new Map();
-        this.bubbleOpacity = new Map();        // NEW: Track opacity for fade in/out
-        this.currentTopN = new Set();          // NEW: Track which bubbles are in top N
-        this.allTrackedBubbles = new Set();    // NEW: All bubbles ever shown
+        this.bubbleOpacity = new Map();        // Track opacity for fade in/out
+        this.currentTopN = new Set();          // Track which bubbles are in top N
+        this.allTrackedBubbles = new Set();    // All bubbles ever shown
         this.trails = new Map();
         this.pulsePhase = 0;
 
@@ -50,6 +53,9 @@ export class BubbleChartRaceEngine {
         // FADE IN/OUT ANIMATION CONSTANTS
         this.FADE_IN_SPEED = 0.08;           // Speed of fade in (0.0 to 1.0)
         this.FADE_OUT_SPEED = 0.05;          // Speed of fade out (0.0 to 1.0)
+
+        // SMOOTH SIZE/MASS TRANSITION - v14.1
+        this.RADIUS_LERP_FACTOR = 0.15;      // Smooth radius interpolation (higher = faster transition)
     }
 
     mergeConfig(config) {
@@ -95,7 +101,7 @@ export class BubbleChartRaceEngine {
             height: this.config.height - this.config.padding.top - this.config.padding.bottom
         };
 
-        console.log('✨ Bubble Chart Race v3.0 - ULTIMATE SMOOTH EDITION initialized:', {
+        console.log('✨ Bubble Chart Race v3.1 - ULTIMATE SMOOTH EDITION initialized:', {
             periods: data.periods.length,
             entities: data.entities.length,
             chartArea: this.chartArea,
@@ -104,7 +110,8 @@ export class BubbleChartRaceEngine {
             restitution: this.COLLISION_RESTITUTION,
             fadeInSpeed: this.FADE_IN_SPEED,
             fadeOutSpeed: this.FADE_OUT_SPEED,
-            features: '✨ Persistent Tracking | 🎱 Billiard Physics | 🎨 Smooth Fade In/Out'
+            radiusLerp: this.RADIUS_LERP_FACTOR,
+            features: '✨ Persistent Tracking | 🎱 Billiard Physics | 🎨 Smooth Fade & Size | 📊 Dynamic Mass'
         });
     }
 
@@ -275,20 +282,36 @@ export class BubbleChartRaceEngine {
 
     /**
      * ========================================
-     * BILLIARD TABLE PHYSICS ENGINE v2.0
-     * SUB-STEPPING for ultra-smooth simulation
-     * Multiple physics steps per frame
-     * Fixed timestep for stability
+     * BILLIARD TABLE PHYSICS ENGINE v3.0
+     * ✨ SMOOTH SIZE/MASS TRANSITIONS during value changes
+     * 🎱 SUB-STEPPING for ultra-smooth simulation
+     * ⚡ Multiple physics steps per frame
+     * 🎯 Fixed timestep for stability
      * ========================================
      */
     updatePhysicsWithSubsteps(data, maxValue) {
-        // Step 1: Update radii and masses for all bubbles
+        // Step 1: SMOOTH RADIUS/MASS TRANSITIONS
+        // Calculate target radius from current value, then lerp for smooth size changes
         data.forEach((item) => {
-            const radius = this.calculateBubbleRadius(item.value, maxValue);
-            this.bubbleRadii.set(item.entity, radius);
+            const targetRadius = this.calculateBubbleRadius(item.value, maxValue);
+            this.targetRadii.set(item.entity, targetRadius);
+
+            // Get current radius (or initialize to target if new bubble)
+            let currentRadius = this.bubbleRadii.get(item.entity);
+            if (currentRadius === undefined) {
+                // New bubble: start at target radius
+                currentRadius = targetRadius;
+            } else {
+                // Existing bubble: smoothly interpolate (lerp) towards target radius
+                // This makes size changes smooth when value changes over time
+                currentRadius = currentRadius + (targetRadius - currentRadius) * this.RADIUS_LERP_FACTOR;
+            }
+
+            this.bubbleRadii.set(item.entity, currentRadius);
 
             // Mass proportional to area (like real billiard balls)
-            const mass = radius * radius * 0.01;
+            // As radius changes smoothly, mass also changes smoothly
+            const mass = currentRadius * currentRadius * 0.01;
             this.bubbleMasses.set(item.entity, mass);
         });
 
@@ -711,6 +734,37 @@ export class BubbleChartRaceEngine {
             ctx.stroke();
             ctx.restore();
 
+            // SIZE CHANGE INDICATOR - Show when bubble is growing/shrinking
+            // This visualizes the mass/weight update during transitions
+            const targetRadius = this.targetRadii.get(item.entity);
+            if (targetRadius !== undefined) {
+                const radiusDiff = Math.abs(targetRadius - radius);
+                const sizeChangeIntensity = Math.min(radiusDiff / 10, 1.0); // 0.0 to 1.0
+
+                if (sizeChangeIntensity > 0.05) {
+                    // Bubble is actively changing size - show glow
+                    const isGrowing = targetRadius > radius;
+                    const glowColor = isGrowing ? 'rgba(0, 255, 150, ' : 'rgba(255, 100, 100, ';
+
+                    ctx.save();
+                    ctx.globalAlpha = sizeChangeIntensity * 0.3;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radius * 1.15, 0, Math.PI * 2);
+                    ctx.strokeStyle = glowColor + (sizeChangeIntensity * 0.8) + ')';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+
+                    // Inner glow ring
+                    ctx.globalAlpha = sizeChangeIntensity * 0.2;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radius * 1.08, 0, Math.PI * 2);
+                    ctx.strokeStyle = glowColor + (sizeChangeIntensity * 0.6) + ')';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
             // Draw label
             if (this.config.showLabels && radius > 30) {
                 ctx.save();
@@ -875,6 +929,7 @@ export class BubbleChartRaceEngine {
         this.bubbleVelocities.clear();
         this.bubbleMasses.clear();
         this.bubbleRadii.clear();
+        this.targetRadii.clear();
         this.previousValues.clear();
         this.bubbleOpacity.clear();
         this.currentTopN.clear();
