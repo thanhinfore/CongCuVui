@@ -1,7 +1,7 @@
 // ========================================
-// Bump Chart Engine Module - v10.0
-// RANK TRACKING VISUALIZATION: Focus on ranking changes over time
-// Perfect for seeing who's winning and trajectory analysis
+// Bump Chart Engine Module - v11.0 Graphics Excellence
+// RANK TRACKING VISUALIZATION: Premium graphics with gradients & smooth curves
+// Enhanced with bezier curves, glow effects, and beautiful gradients
 // ========================================
 
 export class BumpChartEngine {
@@ -146,14 +146,30 @@ export class BumpChartEngine {
     }
 
     /**
-     * Draw background
+     * Draw background with enhanced gradient
      */
     drawBackground() {
         const ctx = this.ctx;
-        const gradient = ctx.createLinearGradient(0, 0, 0, this.config.height);
+
+        // v11.0: Enhanced multi-color gradient background
+        const gradient = ctx.createLinearGradient(0, 0, this.config.width, this.config.height);
         gradient.addColorStop(0, '#f8f9fa');
-        gradient.addColorStop(1, '#e9ecef');
+        gradient.addColorStop(0.3, '#f1f3f5');
+        gradient.addColorStop(0.6, '#e9ecef');
+        gradient.addColorStop(1, '#dee2e6');
+
         ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.config.width, this.config.height);
+
+        // v11.0: Add subtle radial highlight
+        const highlight = ctx.createRadialGradient(
+            this.config.width / 2, this.config.height / 3, 0,
+            this.config.width / 2, this.config.height / 3, this.config.height
+        );
+        highlight.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        ctx.fillStyle = highlight;
         ctx.fillRect(0, 0, this.config.width, this.config.height);
     }
 
@@ -226,7 +242,7 @@ export class BumpChartEngine {
     }
 
     /**
-     * Draw ranking lines
+     * Draw ranking lines with enhanced graphics (v11.0)
      */
     drawLines(chartLeft, chartTop, chartWidth, chartHeight) {
         const ctx = this.ctx;
@@ -243,99 +259,210 @@ export class BumpChartEngine {
 
         // Draw each entity's line
         entities.forEach((entity, idx) => {
-            const color = this.config.colors[idx % this.config.colors.length];
+            const baseColor = this.config.colors[idx % this.config.colors.length];
             const isHovered = this.hoveredEntity === entity;
 
-            // Determine line opacity
-            const baseOpacity = isHovered ? 1 : 0.7;
-            const currentOpacity = this.hoveredEntity && !isHovered ? 0.2 : baseOpacity;
+            // v11.0: Enhanced opacity and width
+            const baseOpacity = isHovered ? 1 : 0.8;
+            const currentOpacity = this.hoveredEntity && !isHovered ? 0.15 : baseOpacity;
+            const lineWidth = isHovered ? 8 : 5; // Thicker lines
 
-            ctx.strokeStyle = color;
-            ctx.lineWidth = isHovered ? 6 : this.config.lineWidth;
-            ctx.globalAlpha = currentOpacity;
-
-            // Draw line segments
-            ctx.beginPath();
-            let firstPoint = true;
-
-            for (let periodIdx = 0; periodIdx < periods.length; periodIdx++) {
-                const ranking = this.rankings[periodIdx];
-                const item = ranking.find(r => r.entity === entity);
-
-                if (item) {
-                    const x = chartLeft + (chartWidth / (periods.length - 1)) * periodIdx;
-                    const y = chartTop + ((item.rank - 1) / (topN - 1)) * chartHeight;
-
-                    // Stop at current period if animating
-                    if (periodIdx > this.currentPeriodIndex) break;
-
-                    // Interpolate if on current period
-                    if (periodIdx === this.currentPeriodIndex && this.currentPeriodIndex > 0) {
-                        const prevRanking = this.rankings[periodIdx - 1];
-                        const prevItem = prevRanking.find(r => r.entity === entity);
-
-                        if (prevItem) {
-                            const prevY = chartTop + ((prevItem.rank - 1) / (topN - 1)) * chartHeight;
-                            const interpolatedY = prevY + (y - prevY) * this.animationProgress;
-
-                            if (firstPoint) {
-                                ctx.moveTo(x, interpolatedY);
-                                firstPoint = false;
-                            } else {
-                                ctx.lineTo(x, interpolatedY);
-                            }
-                        }
-                    } else {
-                        if (firstPoint) {
-                            ctx.moveTo(x, y);
-                            firstPoint = false;
-                        } else {
-                            ctx.lineTo(x, y);
-                        }
-                    }
-                }
-            }
-
-            // Draw line
-            if (this.config.enableShadows && isHovered) {
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 15;
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            // Draw dots at each period
+            // Collect all points for this entity
+            const points = [];
             for (let periodIdx = 0; periodIdx <= this.currentPeriodIndex; periodIdx++) {
                 const ranking = this.rankings[periodIdx];
                 const item = ranking.find(r => r.entity === entity);
 
                 if (item) {
                     const x = chartLeft + (chartWidth / (periods.length - 1)) * periodIdx;
-                    const y = chartTop + ((item.rank - 1) / (topN - 1)) * chartHeight;
+                    let y = chartTop + ((item.rank - 1) / (topN - 1)) * chartHeight;
 
-                    // Draw dot
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    ctx.arc(x, y, this.config.dotRadius + 2, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = color;
-                    ctx.beginPath();
-                    ctx.arc(x, y, this.config.dotRadius, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Draw label at end
-                    if (periodIdx === this.currentPeriodIndex && this.config.showLabels) {
-                        ctx.fillStyle = '#1a1a1a';
-                        ctx.font = 'bold 16px "Inter", sans-serif';
-                        ctx.textAlign = 'left';
-                        ctx.fillText(entity, x + 15, y + 5);
+                    // Interpolate current period
+                    if (periodIdx === this.currentPeriodIndex && periodIdx > 0) {
+                        const prevRanking = this.rankings[periodIdx - 1];
+                        const prevItem = prevRanking.find(r => r.entity === entity);
+                        if (prevItem) {
+                            const prevY = chartTop + ((prevItem.rank - 1) / (topN - 1)) * chartHeight;
+                            y = prevY + (y - prevY) * this.animationProgress;
+                        }
                     }
+
+                    points.push({ x, y, periodIdx });
                 }
             }
 
+            if (points.length < 2) return;
+
+            // v11.0: Draw gradient stroke
+            const gradient = ctx.createLinearGradient(
+                points[0].x, points[0].y,
+                points[points.length - 1].x, points[points.length - 1].y
+            );
+            gradient.addColorStop(0, this.lightenColor(baseColor, 0.2));
+            gradient.addColorStop(0.5, baseColor);
+            gradient.addColorStop(1, this.darkenColor(baseColor, 0.2));
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = lineWidth;
+            ctx.globalAlpha = currentOpacity;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // v11.0: Enhanced shadow/glow
+            if (this.config.enableShadows) {
+                ctx.shadowColor = baseColor;
+                ctx.shadowBlur = isHovered ? 25 : 12;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            }
+
+            // v11.0: Draw smooth bezier curve
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const curr = points[i];
+                const next = points[i + 1];
+
+                // Calculate control points for smooth curve
+                const cpX = (curr.x + next.x) / 2;
+                const cpY = (curr.y + next.y) / 2;
+
+                ctx.quadraticCurveTo(curr.x, curr.y, cpX, cpY);
+            }
+
+            // Final point
+            const last = points[points.length - 1];
+            ctx.lineTo(last.x, last.y);
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+
+            // v11.0: Draw enhanced dots
+            points.forEach((point, i) => {
+                const dotSize = point.periodIdx === this.currentPeriodIndex ? 12 : 10;
+
+                // Outer glow
+                const glowGradient = ctx.createRadialGradient(
+                    point.x, point.y, 0,
+                    point.x, point.y, dotSize + 6
+                );
+                glowGradient.addColorStop(0, baseColor + 'CC');
+                glowGradient.addColorStop(1, baseColor + '00');
+
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, dotSize + 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // White border
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 4;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, dotSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Gradient dot
+                const dotGradient = ctx.createRadialGradient(
+                    point.x - 2, point.y - 2, 0,
+                    point.x, point.y, dotSize
+                );
+                dotGradient.addColorStop(0, this.lightenColor(baseColor, 0.3));
+                dotGradient.addColorStop(1, baseColor);
+
+                ctx.fillStyle = dotGradient;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, dotSize - 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // v11.0: Enhanced label at current position
+                if (point.periodIdx === this.currentPeriodIndex && this.config.showLabels) {
+                    // Label background
+                    ctx.font = 'bold 16px "Inter", sans-serif';
+                    const textWidth = ctx.measureText(entity).width;
+                    const padding = 8;
+
+                    // Background with gradient
+                    const labelGradient = ctx.createLinearGradient(
+                        point.x + 20, point.y - 12,
+                        point.x + 20, point.y + 12
+                    );
+                    labelGradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                    labelGradient.addColorStop(1, 'rgba(255, 255, 255, 0.85)');
+
+                    ctx.fillStyle = labelGradient;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowOffsetY = 2;
+
+                    this.roundRect(ctx,
+                        point.x + 20 - padding,
+                        point.y - 12,
+                        textWidth + padding * 2,
+                        24,
+                        6
+                    );
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // Label text with gradient
+                    const textGradient = ctx.createLinearGradient(
+                        point.x + 20, point.y - 8,
+                        point.x + 20, point.y + 8
+                    );
+                    textGradient.addColorStop(0, '#1a1a1a');
+                    textGradient.addColorStop(1, '#4a4a4a');
+
+                    ctx.fillStyle = textGradient;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(entity, point.x + 20, point.y);
+                }
+            });
+
             ctx.globalAlpha = 1;
         });
+    }
+
+    /**
+     * Helper: Round rectangle
+     */
+    roundRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+    }
+
+    /**
+     * Helper: Lighten color
+     */
+    lightenColor(color, amount) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const r = Math.min(255, (num >> 16) + Math.round(255 * amount));
+        const g = Math.min(255, ((num >> 8) & 0x00FF) + Math.round(255 * amount));
+        const b = Math.min(255, (num & 0x0000FF) + Math.round(255 * amount));
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    }
+
+    /**
+     * Helper: Darken color
+     */
+    darkenColor(color, amount) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
+        const g = Math.max(0, ((num >> 8) & 0x00FF) - Math.round(255 * amount));
+        const b = Math.max(0, (num & 0x0000FF) - Math.round(255 * amount));
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
     }
 
     /**
