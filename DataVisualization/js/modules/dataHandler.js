@@ -157,11 +157,27 @@ export class DataHandler {
         }
 
         const entityColumns = columns.filter(col => col !== timeCol);
-        const periods = data.map(row => this.normalizeTimeValue(row[timeCol])).sort();
-        const entities = entityColumns;
-        const values = data.map(row => {
-            return entityColumns.map(col => Number(row[col]) || 0);
+
+        // Create array of {period, values} objects
+        const periodData = data.map(row => ({
+            period: this.normalizeTimeValue(row[timeCol]),
+            values: entityColumns.map(col => Number(row[col]) || 0)
+        }));
+
+        // Sort by period (numeric if possible, otherwise alphabetic)
+        periodData.sort((a, b) => {
+            const aNum = parseFloat(a.period);
+            const bNum = parseFloat(b.period);
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+                return aNum - bNum;
+            }
+            return a.period.localeCompare(b.period);
         });
+
+        // Extract sorted periods and values
+        const periods = periodData.map(item => item.period);
+        const entities = entityColumns;
+        const values = periodData.map(item => item.values);
 
         return {
             periods,
