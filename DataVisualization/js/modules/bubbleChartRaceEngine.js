@@ -1,6 +1,7 @@
 // ========================================
-// Bubble Chart Race Engine - MULTI-DIMENSIONAL RACING BUBBLES v1.0
-// Animated bubble chart showing size, position, and color dynamics
+// Bubble Chart Race Engine - REALISTIC PHYSICS v2.0
+// Animated bubble chart with REAL physics simulation
+// Elastic collisions, mass-based dynamics, smooth movement
 // ========================================
 
 export class BubbleChartRaceEngine {
@@ -19,9 +20,19 @@ export class BubbleChartRaceEngine {
         this.data = null;
         this.bubblePositions = new Map();
         this.bubbleVelocities = new Map();
+        this.bubbleMasses = new Map();
+        this.bubbleRadii = new Map();
         this.previousValues = new Map();
         this.trails = new Map();
         this.pulsePhase = 0;
+
+        // Physics constants
+        this.FRICTION = 0.98; // Air resistance
+        this.DAMPING = 0.95; // Velocity damping
+        this.COLLISION_RESTITUTION = 0.85; // Bounciness (0-1)
+        this.MAX_VELOCITY = 15; // Maximum speed limit
+        this.ATTRACTION_STRENGTH = 0.008; // Center attraction
+        this.BOUNDARY_FORCE = 0.15; // Wall push force
     }
 
     mergeConfig(config) {
@@ -41,7 +52,7 @@ export class BubbleChartRaceEngine {
             animatedBackground: config.animatedBackground !== false,
             minBubbleSize: config.minBubbleSize || 20,
             maxBubbleSize: config.maxBubbleSize || 120,
-            bubbleSpacing: config.bubbleSpacing || 1.5,
+            bubbleSpacing: config.bubbleSpacing || 1.3,
             padding: config.padding || { top: 120, right: 100, bottom: 120, left: 100 },
             fontSizes: config.fontSizes || null,
             ...config
@@ -67,10 +78,11 @@ export class BubbleChartRaceEngine {
             height: this.config.height - this.config.padding.top - this.config.padding.bottom
         };
 
-        console.log('Bubble Chart Race initialized:', {
+        console.log('🎱 Bubble Chart Race v2.0 - Realistic Physics Engine initialized:', {
             periods: data.periods.length,
             entities: data.entities.length,
-            chartArea: this.chartArea
+            chartArea: this.chartArea,
+            physicsEnabled: true
         });
     }
 
@@ -101,8 +113,8 @@ export class BubbleChartRaceEngine {
         // Update pulse phase
         this.pulsePhase += 0.05;
 
-        // Calculate bubble positions using force-directed layout
-        this.updateBubblePositions(interpolatedData, maxValue);
+        // Update bubble physics (REALISTIC PHYSICS ENGINE)
+        this.updatePhysics(interpolatedData, maxValue);
 
         // Draw trails
         if (this.config.showTrails) {
@@ -161,14 +173,29 @@ export class BubbleChartRaceEngine {
         return result;
     }
 
-    updateBubblePositions(data, maxValue) {
-        // Use a simple force-directed layout algorithm
-        data.forEach((item, index) => {
+    /**
+     * ========================================
+     * REALISTIC PHYSICS ENGINE v2.0
+     * Mass-based elastic collisions
+     * Momentum conservation
+     * Smooth damping and friction
+     * ========================================
+     */
+    updatePhysics(data, maxValue) {
+        // Step 1: Update radii and masses for all bubbles
+        data.forEach((item) => {
             const radius = this.calculateBubbleRadius(item.value, maxValue);
+            this.bubbleRadii.set(item.entity, radius);
 
-            // Initialize position if not exists
+            // Mass proportional to volume (radius^2 for 2D visualization)
+            const mass = radius * radius * 0.01; // Scale factor for better physics
+            this.bubbleMasses.set(item.entity, mass);
+        });
+
+        // Step 2: Initialize positions and velocities for new bubbles
+        data.forEach((item, index) => {
             if (!this.bubblePositions.has(item.entity)) {
-                // Arrange in a grid initially
+                // Arrange in an optimized grid
                 const cols = Math.ceil(Math.sqrt(this.config.topN));
                 const row = Math.floor(index / cols);
                 const col = index % cols;
@@ -178,52 +205,79 @@ export class BubbleChartRaceEngine {
                 this.bubblePositions.set(item.entity, { x, y });
                 this.bubbleVelocities.set(item.entity, { vx: 0, vy: 0 });
             }
+        });
 
+        // Step 3: Apply forces (attraction to center, boundary forces)
+        data.forEach((item) => {
             const pos = this.bubblePositions.get(item.entity);
             const vel = this.bubbleVelocities.get(item.entity);
+            const radius = this.bubbleRadii.get(item.entity);
 
-            // Apply forces
             let fx = 0, fy = 0;
 
-            // Repulsion from other bubbles
-            data.forEach((other, otherIndex) => {
-                if (other.entity !== item.entity) {
-                    const otherPos = this.bubblePositions.get(other.entity);
-                    if (otherPos) {
-                        const dx = pos.x - otherPos.x;
-                        const dy = pos.y - otherPos.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                        const otherRadius = this.calculateBubbleRadius(other.value, maxValue);
-                        const minDist = (radius + otherRadius) * this.config.bubbleSpacing;
-
-                        if (dist < minDist) {
-                            const force = (minDist - dist) / dist * 0.5;
-                            fx += dx * force;
-                            fy += dy * force;
-                        }
-                    }
-                }
-            });
-
-            // Attraction to center
+            // Gentle attraction to center (keeps bubbles together)
             const centerX = this.chartArea.x + this.chartArea.width / 2;
             const centerY = this.chartArea.y + this.chartArea.height / 2;
-            fx += (centerX - pos.x) * 0.01;
-            fy += (centerY - pos.y) * 0.01;
+            const dcx = centerX - pos.x;
+            const dcy = centerY - pos.y;
+            fx += dcx * this.ATTRACTION_STRENGTH;
+            fy += dcy * this.ATTRACTION_STRENGTH;
 
-            // Boundary forces
-            const margin = radius + 10;
-            if (pos.x < this.chartArea.x + margin) fx += (this.chartArea.x + margin - pos.x) * 0.1;
-            if (pos.x > this.chartArea.x + this.chartArea.width - margin) fx += (this.chartArea.x + this.chartArea.width - margin - pos.x) * 0.1;
-            if (pos.y < this.chartArea.y + margin) fy += (this.chartArea.y + margin - pos.y) * 0.1;
-            if (pos.y > this.chartArea.y + this.chartArea.height - margin) fy += (this.chartArea.y + this.chartArea.height - margin - pos.y) * 0.1;
+            // Strong boundary forces (soft walls)
+            const margin = radius + 5;
+            const leftDist = pos.x - (this.chartArea.x + margin);
+            const rightDist = (this.chartArea.x + this.chartArea.width - margin) - pos.x;
+            const topDist = pos.y - (this.chartArea.y + margin);
+            const bottomDist = (this.chartArea.y + this.chartArea.height - margin) - pos.y;
 
-            // Update velocity and position
-            vel.vx = vel.vx * 0.85 + fx;
-            vel.vy = vel.vy * 0.85 + fy;
+            if (leftDist < 0) fx += -leftDist * this.BOUNDARY_FORCE;
+            if (rightDist < 0) fx -= -rightDist * this.BOUNDARY_FORCE;
+            if (topDist < 0) fy += -topDist * this.BOUNDARY_FORCE;
+            if (bottomDist < 0) fy -= -bottomDist * this.BOUNDARY_FORCE;
 
+            // Apply forces to velocity
+            vel.vx += fx;
+            vel.vy += fy;
+        });
+
+        // Step 4: Detect and resolve elastic collisions
+        const entities = Array.from(data);
+        for (let i = 0; i < entities.length; i++) {
+            for (let j = i + 1; j < entities.length; j++) {
+                this.handleCollision(entities[i], entities[j]);
+            }
+        }
+
+        // Step 5: Apply damping and update positions
+        data.forEach((item) => {
+            const pos = this.bubblePositions.get(item.entity);
+            const vel = this.bubbleVelocities.get(item.entity);
+            const radius = this.bubbleRadii.get(item.entity);
+
+            // Apply friction (air resistance)
+            vel.vx *= this.FRICTION;
+            vel.vy *= this.FRICTION;
+
+            // Apply velocity damping
+            vel.vx *= this.DAMPING;
+            vel.vy *= this.DAMPING;
+
+            // Limit maximum velocity (prevent too fast movement)
+            const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+            if (speed > this.MAX_VELOCITY) {
+                const scale = this.MAX_VELOCITY / speed;
+                vel.vx *= scale;
+                vel.vy *= scale;
+            }
+
+            // Update position
             pos.x += vel.vx;
             pos.y += vel.vy;
+
+            // Hard boundary constraints (prevent escape)
+            const margin = radius;
+            pos.x = Math.max(this.chartArea.x + margin, Math.min(this.chartArea.x + this.chartArea.width - margin, pos.x));
+            pos.y = Math.max(this.chartArea.y + margin, Math.min(this.chartArea.y + this.chartArea.height - margin, pos.y));
 
             // Store trail
             if (this.config.showTrails) {
@@ -233,11 +287,75 @@ export class BubbleChartRaceEngine {
                 const trail = this.trails.get(item.entity);
                 trail.push({ x: pos.x, y: pos.y, time: Date.now() });
 
-                // Keep only recent trail points (last 1 second)
+                // Keep only recent trail points (last 1.5 seconds)
                 const now = Date.now();
-                this.trails.set(item.entity, trail.filter(p => now - p.time < 1000));
+                this.trails.set(item.entity, trail.filter(p => now - p.time < 1500));
             }
         });
+    }
+
+    /**
+     * Handle elastic collision between two bubbles
+     * Uses realistic physics: conservation of momentum and energy
+     */
+    handleCollision(item1, item2) {
+        const pos1 = this.bubblePositions.get(item1.entity);
+        const pos2 = this.bubblePositions.get(item2.entity);
+        const vel1 = this.bubbleVelocities.get(item1.entity);
+        const vel2 = this.bubbleVelocities.get(item2.entity);
+        const radius1 = this.bubbleRadii.get(item1.entity);
+        const radius2 = this.bubbleRadii.get(item2.entity);
+        const mass1 = this.bubbleMasses.get(item1.entity);
+        const mass2 = this.bubbleMasses.get(item2.entity);
+
+        if (!pos1 || !pos2 || !vel1 || !vel2) return;
+
+        // Calculate distance between centers
+        const dx = pos2.x - pos1.x;
+        const dy = pos2.y - pos1.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Check for collision
+        const minDistance = (radius1 + radius2) * this.config.bubbleSpacing;
+
+        if (distance < minDistance && distance > 0) {
+            // Normalize collision vector
+            const nx = dx / distance;
+            const ny = dy / distance;
+
+            // Relative velocity
+            const dvx = vel2.vx - vel1.vx;
+            const dvy = vel2.vy - vel1.vy;
+
+            // Relative velocity in collision normal direction
+            const dvn = dvx * nx + dvy * ny;
+
+            // Do not resolve if bubbles are separating
+            if (dvn > 0) return;
+
+            // Calculate impulse scalar (elastic collision formula)
+            const impulse = -(1 + this.COLLISION_RESTITUTION) * dvn / (1/mass1 + 1/mass2);
+
+            // Apply impulse to velocities (conservation of momentum)
+            vel1.vx -= (impulse * nx) / mass1;
+            vel1.vy -= (impulse * ny) / mass1;
+            vel2.vx += (impulse * nx) / mass2;
+            vel2.vy += (impulse * ny) / mass2;
+
+            // Separate overlapping bubbles (positional correction)
+            const overlap = minDistance - distance;
+            const separationRatio = overlap / (distance * 2);
+
+            // Weighted separation based on mass (heavier bubbles move less)
+            const totalMass = mass1 + mass2;
+            const move1 = (mass2 / totalMass) * overlap * 0.5;
+            const move2 = (mass1 / totalMass) * overlap * 0.5;
+
+            pos1.x -= nx * move1;
+            pos1.y -= ny * move1;
+            pos2.x += nx * move2;
+            pos2.y += ny * move2;
+        }
     }
 
     drawTrails() {
@@ -248,17 +366,31 @@ export class BubbleChartRaceEngine {
             if (trail.length < 2) return;
 
             ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(trail[0].x, trail[0].y);
 
+            // Draw trail as smooth curve with fading
             for (let i = 1; i < trail.length; i++) {
-                ctx.lineTo(trail[i].x, trail[i].y);
+                const p1 = trail[i - 1];
+                const p2 = trail[i];
+
+                const age = (now - p1.time) / 1500; // 1.5 seconds fade
+                const alpha = (1 - age) * 0.3;
+
+                if (alpha <= 0) continue;
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+
+                const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.5})`);
+                gradient.addColorStop(1, `rgba(255, 255, 255, ${alpha})`);
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 3 * (1 - age);
+                ctx.lineCap = 'round';
+                ctx.stroke();
             }
 
-            const age = (now - trail[0].time) / 1000;
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 * (1 - age)})`;
-            ctx.lineWidth = 2;
-            ctx.stroke();
             ctx.restore();
         });
     }
@@ -274,7 +406,7 @@ export class BubbleChartRaceEngine {
             const pos = this.bubblePositions.get(item.entity);
             if (!pos) return;
 
-            const radius = this.calculateBubbleRadius(item.value, maxValue);
+            const radius = this.bubbleRadii.get(item.entity);
             const color = colors[data.findIndex(d => d.entity === item.entity) % colors.length];
 
             // Draw shadow
@@ -380,32 +512,32 @@ export class BubbleChartRaceEngine {
             }
             ctx.restore();
 
-            // PREMIUM: Multi-ring pulsing effect
-            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.06 + 1;
+            // PREMIUM: Multi-ring pulsing effect (smoother)
+            const pulse = Math.sin(this.pulsePhase + index * 0.5) * 0.04 + 1;
 
             // Outer pulse ring
             ctx.save();
-            ctx.globalAlpha = 0.15;
+            ctx.globalAlpha = 0.12;
             ctx.beginPath();
-            ctx.arc(pos.x, pos.y, radius * pulse * 1.1, 0, Math.PI * 2);
+            ctx.arc(pos.x, pos.y, radius * pulse * 1.08, 0, Math.PI * 2);
             const outerPulse = ctx.createRadialGradient(
                 pos.x, pos.y, radius * pulse * 0.9,
-                pos.x, pos.y, radius * pulse * 1.1
+                pos.x, pos.y, radius * pulse * 1.08
             );
             outerPulse.addColorStop(0, color);
             outerPulse.addColorStop(1, this.adjustColorBrightness(color, 0.5));
             ctx.strokeStyle = outerPulse;
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
             ctx.stroke();
             ctx.restore();
 
-            // Inner pulse ring
+            // Inner pulse ring (subtle)
             ctx.save();
-            ctx.globalAlpha = 0.3;
+            ctx.globalAlpha = 0.25;
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, radius * pulse, 0, Math.PI * 2);
-            ctx.strokeStyle = this.adjustColorBrightness(color, 1.3);
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = this.adjustColorBrightness(color, 1.2);
+            ctx.lineWidth = 1.5;
             ctx.stroke();
             ctx.restore();
 
@@ -575,6 +707,8 @@ export class BubbleChartRaceEngine {
     destroy() {
         this.bubblePositions.clear();
         this.bubbleVelocities.clear();
+        this.bubbleMasses.clear();
+        this.bubbleRadii.clear();
         this.previousValues.clear();
         this.trails.clear();
     }
