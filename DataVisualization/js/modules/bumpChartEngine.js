@@ -104,6 +104,10 @@ export class BumpChartEngine {
     updateChart(periodIndex, progress) {
         this.currentPeriodIndex = periodIndex;
         this.animationProgress = progress;
+        if (!this.data) {
+            console.error('❌ BumpChart: No data to draw!');
+            return;
+        }
         this.draw();
     }
 

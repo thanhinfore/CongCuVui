@@ -122,6 +122,10 @@ export class StreamGraphEngine {
     updateChart(periodIndex, progress) {
         this.currentPeriodIndex = periodIndex;
         this.animationProgress = progress;
+        if (!this.data) {
+            console.error('❌ StreamGraph: No data to draw!');
+            return;
+        }
         this.draw();
     }
 

@@ -97,6 +97,10 @@ export class HeatMapEngine {
     updateChart(periodIndex, progress) {
         this.currentPeriodIndex = periodIndex;
         this.animationProgress = progress;
+        if (!this.data) {
+            console.error('❌ HeatMap: No data to draw!');
+            return;
+        }
         this.draw();
     }
 
