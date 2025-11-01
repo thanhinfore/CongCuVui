@@ -47,9 +47,17 @@ class TimeSeriesRacingApp {
     /**
      * Initialize Audio Engine
      */
-    initializeAudio() {
+    async initializeAudio() {
         this.audioEngine = new AudioEngine();
-        console.log('🎵 Audio Engine initialized');
+
+        // v3.1: Load sound effects
+        try {
+            await this.audioEngine.loadSoundEffect('clink', 'clink.wav');
+            console.log('🎵 Audio Engine initialized with sound effects');
+        } catch (error) {
+            console.warn('⚠️ Could not load sound effects:', error);
+            console.log('🎵 Audio Engine initialized');
+        }
     }
 
     /**
@@ -919,16 +927,35 @@ class TimeSeriesRacingApp {
         // CRITICAL: Combine video + audio streams if audio is loaded
         if (this.audioEngine && this.audioEngine.isLoaded()) {
             try {
-                // Get audio stream from audio element
-                const audioElement = this.audioEngine.getAudioElement();
-                const audioStream = audioElement.captureStream();
-                const audioTrack = audioStream.getAudioTracks()[0];
+                // v3.1: Capture from AudioContext to include ALL audio
+                // (background music + sound effects)
+                const audioContext = this.audioEngine.getAudioContext();
+                const destination = audioContext.createMediaStreamDestination();
+
+                // Connect music gain node to capture destination
+                // Note: gainNode is already connected to audioContext.destination for playback
+                // We can connect it to multiple destinations
+                const gainNode = this.audioEngine.gainNode;
+                if (gainNode) {
+                    gainNode.connect(destination);
+                }
+
+                // Connect sound effects gain node to capture destination
+                const sfxGainNode = this.audioEngine.sfxGainNode;
+                if (sfxGainNode) {
+                    sfxGainNode.connect(destination);
+                }
+
+                const audioTrack = destination.stream.getAudioTracks()[0];
 
                 // Create combined stream with both video and audio
                 combinedStream = new MediaStream([videoTrack, audioTrack]);
                 mimeType = 'video/webm;codecs=vp9,opus'; // VP9 video + Opus audio
 
-                console.log('🎥 Recording with audio: VP9 + Opus');
+                // Store destination for cleanup later
+                this.recordingDestination = destination;
+
+                console.log('🎥 Recording with audio (music + SFX): VP9 + Opus');
             } catch (error) {
                 console.warn('⚠️ Audio stream capture failed, recording video only:', error);
                 combinedStream = canvasStream;
@@ -967,6 +994,26 @@ class TimeSeriesRacingApp {
             // Stop audio
             if (this.audioEngine && this.audioEngine.isLoaded()) {
                 this.audioEngine.stop();
+            }
+
+            // v3.1: Cleanup audio connections
+            if (this.recordingDestination) {
+                // Disconnect gain nodes from recording destination
+                if (this.audioEngine.gainNode) {
+                    try {
+                        this.audioEngine.gainNode.disconnect(this.recordingDestination);
+                    } catch (e) {
+                        // Already disconnected or never connected
+                    }
+                }
+                if (this.audioEngine.sfxGainNode) {
+                    try {
+                        this.audioEngine.sfxGainNode.disconnect(this.recordingDestination);
+                    } catch (e) {
+                        // Already disconnected or never connected
+                    }
+                }
+                this.recordingDestination = null;
             }
 
             this.elements.exportBtn.disabled = false;
