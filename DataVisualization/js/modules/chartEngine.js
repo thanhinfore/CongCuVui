@@ -1354,7 +1354,7 @@ export class ChartEngine {
                             entity: entity,
                             fromY: oldY + barHeight / 2,
                             toY: newY + barHeight / 2,
-                            x: chartArea.left - 60,
+                            x: chartArea.left + 40,  // Di chuyển vào trong chart area
                             progress: 0,
                             color: rgbColor,
                             startTime: Date.now()
