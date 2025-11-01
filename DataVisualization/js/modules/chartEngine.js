@@ -659,7 +659,7 @@ export class ChartEngine {
                             // v6.0: Enhanced directional arrow with pulsing animation
                             const direction = this.rankChangeDirection.get(entity);
                             if (direction) {
-                                const arrowX = bar.x - 60;  // v6.0: Further left for larger arrow
+                                const arrowX = chartArea.left + 20;  // Đặt mũi tên sát lề trái chart area
                                 const arrowY = bar.y + bar.height / 2;
                                 const arrowSize = 25;  // v6.0: Much larger (15 → 25)
 
