@@ -22,6 +22,7 @@ export class RadialBarChartEngine {
         this.rotationOffset = 0;
         this.pulsePhase = 0;
         this.glowIntensity = new Map();
+        this.lastClinkTime = 0;  // Cooldown timer for clink sound
     }
 
     mergeConfig(config) {
@@ -247,6 +248,18 @@ export class RadialBarChartEngine {
                 if (item.value > prevValue) {
                     if (Math.random() < 0.3) {
                         this.emitParticle(angle, barRadius, color);
+                    }
+
+                    // Play clink sound for significant value increase (with cooldown)
+                    const valueIncrease = item.value - prevValue;
+                    if (this.audioEngine && valueIncrease > prevValue * 0.1) {
+                        const now = Date.now();
+                        if (now - this.lastClinkTime > 150) {
+                            this.audioEngine.playSoundEffect('clink').catch(err => {
+                                console.debug('Clink sound play prevented:', err);
+                            });
+                            this.lastClinkTime = now;
+                        }
                     }
                 }
                 this.previousValues.set(item.entity, item.value);

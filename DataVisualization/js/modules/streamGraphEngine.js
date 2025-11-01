@@ -20,6 +20,8 @@ export class StreamGraphEngine {
         this.data = null;
         this.currentPeriodIndex = 0;
         this.animationProgress = 0;
+        this.lastClinkTime = 0;  // Cooldown timer for clink sound
+        this.lastPeriodPlayed = -1;  // Track last period that played sound
     }
 
     /**
@@ -126,6 +128,15 @@ export class StreamGraphEngine {
             console.error('❌ StreamGraph: No data to draw!');
             return;
         }
+
+        // Play clink sound for period transition
+        if (this.audioEngine && progress > 0.8 && periodIndex > 0 && periodIndex !== this.lastPeriodPlayed) {
+            this.audioEngine.playSoundEffect('clink').catch(err => {
+                console.debug('Clink sound play prevented:', err);
+            });
+            this.lastPeriodPlayed = periodIndex;
+        }
+
         this.draw();
     }
 
