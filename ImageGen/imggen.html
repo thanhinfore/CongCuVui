@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="keywords" content="image editor, text overlay, image filters, batch processing, professional design">
-    <title>Knowledge Visualizer v10.0 - SMCC</title>
+    <title>Knowledge Visualizer v10.1 Simplified - SMCC</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,7 @@
                         <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" class="logo" onclick="window.location.reload();" title="Click to reload">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <h1 class="app-title" style="color: white; margin: 0;">Knowledge Visualizer</h1>
-                            <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">🎓 Version 10.0</span>
+                            <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">✨ v10.1 Simplified</span>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -142,8 +142,8 @@
                             </div>
                         </section>
 
-                        <!-- Advanced Positioning Section (V9.0) -->
-                        <section class="panel-section active v9-positioning-section" id="advancedPositioningSection">
+                        <!-- Advanced Positioning Section (V9.0) - HIDDEN FOR SIMPLICITY -->
+                        <section class="panel-section v9-positioning-section" id="advancedPositioningSection" style="display: none;">
                             <div class="v9-positioning-header">
                                 <div class="v9-positioning-title">
                                     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
@@ -517,36 +517,24 @@
                                     </div>
                                 </div>
 
-                                <!-- Font Effects -->
+                                <!-- Font Effects - SIMPLIFIED -->
                                 <div class="style-group">
-                                    <label class="form-label">Font Effects</label>
+                                    <label class="form-label">Font Style</label>
                                     <div class="text-effects-grid">
                                         <div class="effect-control">
                                             <label for="fontWeightSelect">Weight</label>
                                             <select id="fontWeightSelect" class="select-input small">
                                                 <option value="400">Normal</option>
-                                                <option value="600">Semi Bold</option>
                                                 <option value="bold">Bold</option>
                                                 <option value="800">Extra Bold</option>
                                             </select>
                                         </div>
-                                        <div class="effect-control">
-                                            <label for="fontStyleSelect">Style</label>
-                                            <select id="fontStyleSelect" class="select-input small">
-                                                <option value="normal">Normal</option>
-                                                <option value="italic">Italic</option>
-                                            </select>
-                                        </div>
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" id="textUnderlineCheckbox" class="checkbox">
-                                            <span class="checkbox-text">Underline</span>
-                                        </label>
                                         <label class="checkbox-label">
                                             <input type="checkbox" id="textBorderCheckbox" class="checkbox">
                                             <span class="checkbox-text">Border</span>
                                         </label>
                                         <label class="checkbox-label">
-                                            <input type="checkbox" id="textShadowCheckbox" class="checkbox">
+                                            <input type="checkbox" id="textShadowCheckbox" class="checkbox" checked>
                                             <span class="checkbox-text">Shadow</span>
                                         </label>
                                     </div>
@@ -559,31 +547,25 @@
                                     </div>
 
                                     <!-- Shadow -->
-                                    <div class="effect-sub-control" id="shadowControl" style="display: none;">
+                                    <div class="effect-sub-control" id="shadowControl" style="display: block;">
                                         <label for="shadowBlur">Shadow Blur</label>
                                         <input type="range" id="shadowBlur" min="0" max="20" value="4" class="range-input">
                                         <span class="range-value" id="shadowBlurValue">4px</span>
                                     </div>
                                 </div>
 
-                                <!-- Colors -->
+                                <!-- Hidden controls for backward compatibility -->
+                                <div style="display: none;">
+                                    <select id="fontStyleSelect"><option value="normal">Normal</option></select>
+                                    <input type="checkbox" id="textUnderlineCheckbox">
+                                </div>
+
+                                <!-- Colors - SIMPLIFIED: Solid only -->
                                 <div class="style-group">
                                     <label class="form-label">Text Colors</label>
-                                    <div class="color-mode-selector">
-                                        <label class="radio-label">
-                                            <input type="radio" name="colorMode" value="solid" checked>
-                                            <span>Solid</span>
-                                        </label>
-                                        <label class="radio-label">
-                                            <input type="radio" name="colorMode" value="gradient">
-                                            <span>Gradient</span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Solid Colors -->
-                                    <div class="color-grid" id="solidColors">
+                                    <div class="color-grid">
                                         <div class="color-input-group">
-                                            <label for="colorPicker">Main</label>
+                                            <label for="colorPicker">Main Text</label>
                                             <input type="color" id="colorPicker" value="#FFFFFF" class="color-picker">
                                         </div>
                                         <div class="color-input-group">
@@ -591,25 +573,15 @@
                                             <input type="color" id="subColorPicker" value="#FFFFFF" class="color-picker">
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Gradient Colors -->
-                                    <div class="gradient-controls" id="gradientColors" style="display: none;">
-                                        <div class="color-grid">
-                                            <div class="color-input-group">
-                                                <label for="gradientColor1">Color 1</label>
-                                                <input type="color" id="gradientColor1" value="#FF6B6B" class="color-picker">
-                                            </div>
-                                            <div class="color-input-group">
-                                                <label for="gradientColor2">Color 2</label>
-                                                <input type="color" id="gradientColor2" value="#4ECDC4" class="color-picker">
-                                            </div>
-                                        </div>
-                                        <div class="range-group">
-                                            <label for="gradientAngle">Gradient Angle</label>
-                                            <input type="range" id="gradientAngle" min="0" max="360" value="45" class="range-input">
-                                            <span class="range-value" id="gradientAngleValue">45°</span>
-                                        </div>
-                                    </div>
+                                <!-- Hidden gradient controls for backward compatibility -->
+                                <div style="display: none;">
+                                    <input type="radio" name="colorMode" value="solid" checked>
+                                    <input type="radio" name="colorMode" value="gradient">
+                                    <input type="color" id="gradientColor1" value="#FF6B6B">
+                                    <input type="color" id="gradientColor2" value="#4ECDC4">
+                                    <input type="range" id="gradientAngle" min="0" max="360" value="45">
                                 </div>
 
                                 <!-- Text Alignment -->
@@ -640,30 +612,9 @@
                                     </select>
                                 </div>
 
-                                <!-- Advanced Text Controls -->
+                                <!-- Advanced Text Controls - SIMPLIFIED: Only Line Height -->
                                 <div class="style-group">
-                                    <label class="form-label">Advanced Text Controls</label>
-
-                                    <!-- Text Rotation -->
-                                    <div class="range-group">
-                                        <label for="textRotation">Rotation</label>
-                                        <input type="range" id="textRotation" min="-180" max="180" value="0" class="range-input">
-                                        <span class="range-value" id="textRotationValue">0°</span>
-                                    </div>
-
-                                    <!-- Text Opacity -->
-                                    <div class="range-group">
-                                        <label for="textOpacity">Opacity</label>
-                                        <input type="range" id="textOpacity" min="0" max="100" value="100" class="range-input">
-                                        <span class="range-value" id="textOpacityValue">100%</span>
-                                    </div>
-
-                                    <!-- Letter Spacing -->
-                                    <div class="range-group">
-                                        <label for="letterSpacing">Letter Spacing</label>
-                                        <input type="range" id="letterSpacing" min="-5" max="20" value="0" step="0.5" class="range-input">
-                                        <span class="range-value" id="letterSpacingValue">0px</span>
-                                    </div>
+                                    <label class="form-label">Text Spacing</label>
 
                                     <!-- Line Height -->
                                     <div class="range-group">
@@ -671,34 +622,17 @@
                                         <input type="range" id="lineHeight" min="0.8" max="3" value="2" step="0.1" class="range-input">
                                         <span class="range-value" id="lineHeightValue">2.0</span>
                                     </div>
+                                </div>
 
-                                    <!-- Text Transform -->
-                                    <div class="transform-control">
-                                        <label for="textTransform">Text Transform</label>
-                                        <select id="textTransform" class="select-input small">
-                                            <option value="none">None</option>
-                                            <option value="uppercase">UPPERCASE</option>
-                                            <option value="lowercase">lowercase</option>
-                                            <option value="capitalize">Capitalize</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Glow Effect -->
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="textGlowCheckbox" class="checkbox">
-                                        <span class="checkbox-text">Glow Effect</span>
-                                    </label>
-                                    <div class="effect-sub-control" id="glowControl" style="display: none;">
-                                        <div class="color-input-group">
-                                            <label for="glowColor">Glow Color</label>
-                                            <input type="color" id="glowColor" value="#FFD700" class="color-picker">
-                                        </div>
-                                        <div class="range-group">
-                                            <label for="glowIntensity">Glow Intensity</label>
-                                            <input type="range" id="glowIntensity" min="5" max="50" value="20" class="range-input">
-                                            <span class="range-value" id="glowIntensityValue">20px</span>
-                                        </div>
-                                    </div>
+                                <!-- Hidden Advanced Controls (kept for backward compatibility) -->
+                                <div style="display: none;">
+                                    <input type="range" id="textRotation" min="-180" max="180" value="0">
+                                    <input type="range" id="textOpacity" min="0" max="100" value="100">
+                                    <input type="range" id="letterSpacing" min="-5" max="20" value="0" step="0.5">
+                                    <select id="textTransform"><option value="none">None</option></select>
+                                    <input type="checkbox" id="textGlowCheckbox">
+                                    <input type="color" id="glowColor" value="#FFD700">
+                                    <input type="range" id="glowIntensity" min="5" max="50" value="20">
                                 </div>
 
                                 <!-- Background -->
@@ -722,14 +656,14 @@
                             </div>
                         </section>
 
-                        <!-- Image Filters Section -->
-                        <section class="panel-section active" id="filtersSection">
-                            <div class="section-header">
+                        <!-- Image Filters Section - SIMPLIFIED: Collapsed by default -->
+                        <section class="panel-section collapsed" id="filtersSection">
+                            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
                                 <svg class="section-icon" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-width="2" fill="none" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                                 </svg>
-                                <h2 class="section-title">Image Filters</h2>
-                                <button class="reset-button" id="resetFilters" title="Reset filters">
+                                <h2 class="section-title">Image Filters (Optional)</h2>
+                                <button class="reset-button" id="resetFilters" title="Reset filters" onclick="event.stopPropagation();">
                                     <svg viewBox="0 0 24 24" width="18" height="18">
                                         <path stroke="currentColor" stroke-width="2" fill="none" d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
                                     </svg>
@@ -737,6 +671,7 @@
                             </div>
                             <div class="section-content">
                                 <div class="style-group">
+                                    <!-- Only essential filters -->
                                     <div class="range-group">
                                         <label for="filterBrightness">Brightness</label>
                                         <input type="range" id="filterBrightness" min="0" max="200" value="100" class="range-input">
@@ -748,91 +683,47 @@
                                         <span class="range-value" id="filterContrastValue">100%</span>
                                     </div>
                                     <div class="range-group">
-                                        <label for="filterSaturation">Saturation</label>
-                                        <input type="range" id="filterSaturation" min="0" max="200" value="100" class="range-input">
-                                        <span class="range-value" id="filterSaturationValue">100%</span>
-                                    </div>
-                                    <div class="range-group">
                                         <label for="filterBlur">Blur</label>
                                         <input type="range" id="filterBlur" min="0" max="10" value="0" step="0.1" class="range-input">
                                         <span class="range-value" id="filterBlurValue">0px</span>
                                     </div>
-                                    <div class="range-group">
-                                        <label for="filterHue">Hue Rotate</label>
-                                        <input type="range" id="filterHue" min="0" max="360" value="0" class="range-input">
-                                        <span class="range-value" id="filterHueValue">0°</span>
-                                    </div>
-                                    <div class="range-group">
-                                        <label for="filterGrayscale">Grayscale</label>
-                                        <input type="range" id="filterGrayscale" min="0" max="100" value="0" class="range-input">
-                                        <span class="range-value" id="filterGrayscaleValue">0%</span>
-                                    </div>
-                                    <div class="range-group">
-                                        <label for="filterSepia">Sepia</label>
-                                        <input type="range" id="filterSepia" min="0" max="100" value="0" class="range-input">
-                                        <span class="range-value" id="filterSepiaValue">0%</span>
-                                    </div>
-                                    <div class="range-group">
-                                        <label for="filterInvert">Invert</label>
-                                        <input type="range" id="filterInvert" min="0" max="100" value="0" class="range-input">
-                                        <span class="range-value" id="filterInvertValue">0%</span>
-                                    </div>
                                 </div>
-                                <div class="preset-actions">
-                                    <button id="filterPresetVintage" class="secondary-button small">Vintage</button>
-                                    <button id="filterPresetBW" class="secondary-button small">B&W</button>
-                                    <button id="filterPresetWarm" class="secondary-button small">Warm</button>
-                                    <button id="filterPresetCool" class="secondary-button small">Cool</button>
+
+                                <!-- Hidden filters for backward compatibility -->
+                                <div style="display: none;">
+                                    <input type="range" id="filterSaturation" min="0" max="200" value="100">
+                                    <input type="range" id="filterHue" min="0" max="360" value="0">
+                                    <input type="range" id="filterGrayscale" min="0" max="100" value="0">
+                                    <input type="range" id="filterSepia" min="0" max="100" value="0">
+                                    <input type="range" id="filterInvert" min="0" max="100" value="0">
                                 </div>
                             </div>
                         </section>
 
-                        <!-- Export Options Section -->
-                        <section class="panel-section active" id="exportSection">
-                            <div class="section-header">
+                        <!-- Export & Credit Section - SIMPLIFIED & MERGED -->
+                        <section class="panel-section collapsed" id="exportSection">
+                            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
                                 <svg class="section-icon" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                                 </svg>
-                                <h2 class="section-title">Export Settings</h2>
+                                <h2 class="section-title">Advanced Options (Optional)</h2>
                             </div>
                             <div class="section-content">
+                                <!-- Author Credit -->
                                 <div class="style-group">
-                                    <label class="form-label">Export Format</label>
-                                    <select id="exportFormat" class="select-input">
-                                        <option value="png">PNG (Best Quality)</option>
-                                        <option value="jpeg">JPEG (Smaller Size)</option>
-                                        <option value="webp">WebP (Modern)</option>
-                                    </select>
+                                    <label class="form-label">Author Credit (optional)</label>
+                                    <input type="text" id="creditInput" class="text-input" placeholder="e.g., @yourname">
                                 </div>
-                                <div class="style-group" id="qualityControl">
-                                    <label class="form-label">Quality</label>
-                                    <div class="range-group">
-                                        <input type="range" id="exportQuality" min="1" max="100" value="92" class="range-input">
-                                        <span class="range-value" id="exportQualityValue">92%</span>
-                                    </div>
-                                </div>
-                                <div class="style-group">
-                                    <label class="form-label">Download Options</label>
-                                    <button id="downloadAllZip" class="secondary-button" style="width: 100%; margin-top: 8px;" disabled>
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                                        </svg>
-                                        Download All as ZIP
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
 
-                        <!-- Credit Section -->
-                        <section class="panel-section active" id="creditSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
-                                </svg>
-                                <h2 class="section-title">Author Credit</h2>
-                            </div>
-                            <div class="section-content">
-                                <input type="text" id="creditInput" class="text-input" placeholder="Enter author credit (optional)">
+                                <!-- Export format hidden, auto-selected -->
+                                <div style="display: none;">
+                                    <select id="exportFormat">
+                                        <option value="png">PNG</option>
+                                        <option value="jpeg" selected>JPEG</option>
+                                        <option value="webp">WebP</option>
+                                    </select>
+                                    <input type="range" id="exportQuality" min="1" max="100" value="92">
+                                </div>
                             </div>
                         </section>
 
@@ -954,25 +845,22 @@
             </div>
             <div class="modal-body">
                 <div class="help-section">
-                    <h3>Getting Started</h3>
+                    <h3>🚀 Quick Start (3 bước đơn giản!)</h3>
                     <ol>
-                        <li>Upload one or more images by dragging & dropping or clicking the upload area</li>
-                        <li>Enter your text in the text area with markdown support</li>
-                        <li>Use <code>:</code> to create title and subtitle (e.g., "Title:Subtitle")</li>
-                        <li>Customize the style, colors, and effects</li>
-                        <li>Click "Add Text to Images" to generate</li>
-                        <li>Download individual images or all as ZIP</li>
+                        <li><strong>Bật Knowledge Mode</strong> - Tick checkbox "Knowledge Batch Mode"</li>
+                        <li><strong>Nhập text</strong> - Mỗi dòng là 1 ảnh (hoặc dùng Template)</li>
+                        <li><strong>Upload ảnh</strong> - Chọn ảnh từ máy hoặc tạo Solid Background</li>
                     </ol>
+                    <p style="margin-top: 12px;"><strong>Click "Add Text to Images"</strong> và tải ảnh về! 🎉</p>
                 </div>
                 <div class="help-section">
-                    <h3>Pro Tips</h3>
+                    <h3>💡 Mẹo Sử Dụng</h3>
                     <ul>
-                        <li>Use presets to quickly apply professional styles</li>
-                        <li>Apply image filters for vintage, B&W, or custom looks</li>
-                        <li>Save your custom settings as presets for reuse</li>
-                        <li>Use Ctrl+V to paste images from clipboard</li>
-                        <li>Enable "Repeat text for each image" for batch processing</li>
-                        <li>Adjust export quality for smaller file sizes</li>
+                        <li>Dùng Markdown để format text: <code>**Bold**</code> <code>*Italic*</code> <code>==Highlight==</code></li>
+                        <li>Click "Insert Template" để xem ví dụ mẫu</li>
+                        <li>Dùng <code>\n</code> để xuống dòng trong cùng 1 ảnh</li>
+                        <li>Shadow mặc định bật sẵn cho text dễ đọc</li>
+                        <li>Có thể mở "Advanced Options" để thêm author credit</li>
                     </ul>
                 </div>
                 <div class="help-section">

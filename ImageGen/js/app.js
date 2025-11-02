@@ -72,12 +72,12 @@ class ImageTextApp {
             }
 
             this.initialized = true;
-            console.log('🎓 Knowledge Visualizer v10.0 initialized successfully');
+            console.log('✨ Knowledge Visualizer v10.1 Simplified initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🎓 Version 10.0! Knowledge Batch Mode - Mỗi dòng = 1 ảnh tri thức!', 'success', 6000);
+                    this.components.v6ui.showToast('✨ v10.1 Simplified! Giao diện đơn giản, dễ sử dụng hơn bao giờ hết!', 'success', 5000);
                 }
             }, 500);
 
