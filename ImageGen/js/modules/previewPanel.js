@@ -39,8 +39,18 @@ export class PreviewPanel {
 
         this.clearPreview();
 
+        // V10.0: Knowledge Mode - each line = one image
+        const knowledgeMode = document.getElementById('knowledgeModeCheckbox')?.checked || false;
         const repeatBackground = this.DOM.repeatBackgroundCheckbox?.checked || false;
-        const totalImages = repeatBackground ? textLines.length : this.state.images.length;
+
+        let totalImages;
+        if (knowledgeMode) {
+            // Knowledge Mode: one image per text line
+            totalImages = textLines.length;
+        } else {
+            // Traditional mode
+            totalImages = repeatBackground ? textLines.length : this.state.images.length;
+        }
 
         this.textConfigs = [];
 
@@ -49,13 +59,24 @@ export class PreviewPanel {
         const container = this.createPreviewContainer(totalImages);
 
         for (let i = 0; i < totalImages; i++) {
-            const imageIndex = i % this.state.images.length;
-            const textIndex = repeatBackground ? i : 0;
+            let imageIndex, textIndex, text;
+
+            if (knowledgeMode) {
+                // Knowledge Mode: cycle through images, one text per image
+                imageIndex = i % this.state.images.length;
+                textIndex = i;
+                text = textLines[i];
+            } else {
+                // Traditional mode
+                imageIndex = i % this.state.images.length;
+                textIndex = repeatBackground ? i : 0;
+                text = textLines[textIndex] || textLines[0];
+            }
 
             const config = {
                 imageIndex,
                 textIndex,
-                text: textLines[textIndex] || textLines[0],
+                text: text,
                 position: this.DOM.positionPicker?.value || 'bottom',
                 fileName: this.state.images[imageIndex].file.name
             };
