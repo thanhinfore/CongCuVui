@@ -315,9 +315,16 @@ export class SolidBackgroundGenerator {
                     file: file
                 });
 
-                // Update UI
+                // Update UI - trigger visibility and rendering
                 if (window.imageTextApp?.components?.controls) {
-                    window.imageTextApp.components.controls.updateUploadedImages();
+                    window.imageTextApp.components.controls.updateSectionsVisibility();
+                    window.imageTextApp.components.controls.showImageCount(this.state.images.length);
+                    window.imageTextApp.components.controls.updateButtonState();
+
+                    // Render preview if text is present
+                    if (window.imageTextApp.DOM?.textInput?.value?.trim()) {
+                        window.imageTextApp.components.controls.handleStyleChange();
+                    }
                 }
 
                 // Show success
