@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="keywords" content="image editor, text overlay, image filters, batch processing, professional design">
-    <title>Image Text Generator Pro v9.1 - SMCC</title>
+    <title>Knowledge Visualizer v10.0 - SMCC</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,8 +37,8 @@
                     <div class="header-left">
                         <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" class="logo" onclick="window.location.reload();" title="Click to reload">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <h1 class="app-title" style="color: white; margin: 0;">Biểu diễn Tri thức</h1>
-                            <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">✨ Version 9.1</span>
+                            <h1 class="app-title" style="color: white; margin: 0;">Knowledge Visualizer</h1>
+                            <span style="font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; display: inline-block; width: fit-content;">🎓 Version 10.0</span>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -88,6 +88,31 @@
                                 </button>
                             </div>
                             <div class="section-content">
+                                <!-- Knowledge Mode Toggle -->
+                                <div class="knowledge-mode-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                                <path d="M2 17l10 5 10-5"/>
+                                                <path d="M2 12l10 5 10-5"/>
+                                            </svg>
+                                            <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600;">🎓 Knowledge Batch Mode</h3>
+                                        </div>
+                                        <label style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" id="knowledgeModeCheckbox" style="width: 20px; height: 20px; cursor: pointer;">
+                                        </label>
+                                    </div>
+                                    <div id="knowledgeModeInfo" style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.5; display: none;">
+                                        ✨ <strong>Mỗi dòng = 1 ảnh!</strong> Nhập mỗi câu tri thức trên một dòng riêng biệt.<br>
+                                        💡 Sử dụng <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">\n</code> để xuống dòng trong cùng 1 ảnh.<br>
+                                        📊 Hệ thống sẽ tự động tạo ảnh cho từng dòng tri thức.
+                                    </div>
+                                    <div id="knowledgeStats" style="color: white; font-size: 13px; margin-top: 8px; padding: 8px 12px; background: rgba(255,255,255,0.15); border-radius: 6px; display: none;">
+                                        <strong>📋 Preview:</strong> <span id="knowledgeLineCount">0</span> dòng → <span id="knowledgeImageCount">0</span> ảnh sẽ được tạo
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <div class="markdown-editor">
                                         <div class="editor-tabs">
@@ -95,7 +120,7 @@
                                             <button class="editor-tab" data-tab="preview">👁️ Preview</button>
                                         </div>
                                         <div class="editor-content">
-                                            <textarea id="textInput" class="text-input markdown-textarea v7-emoji-support" placeholder="Enter your text with markdown support...&#10;&#10;Examples:&#10;**Bold text** *Italic text*&#10;`Code text` ~~Strikethrough~~&#10;==Highlighted text==&#10;Emoji: 🎉 ✨ 🚀 ❤️ 😊&#10;Main Title:Subtitle&#10;&#10;Use \n for line breaks" rows="8"></textarea>
+                                            <textarea id="textInput" class="text-input markdown-textarea v7-emoji-support" placeholder="🎓 Knowledge Mode: Mỗi dòng (Enter) = 1 ảnh riêng&#10;💡 Dùng \n để xuống dòng trong cùng 1 ảnh&#10;&#10;Ví dụ:&#10;**Tri thức 1:** Dòng này sẽ là ảnh 1&#10;**Tri thức 2:** Dòng này sẽ là ảnh 2\nCó thể xuống dòng với \n&#10;&#10;Markdown: **Bold** *Italic* `Code` ==Highlight== 🎉" rows="8"></textarea>
                                             <div id="markdownPreview" class="markdown-preview-panel" style="display: none;">
                                                 <div class="preview-content">Your preview will appear here...</div>
                                             </div>
@@ -111,6 +136,7 @@
                                     <div class="button-group">
                                         <button id="insertFooterText" class="helper-button primary">Add footer text</button>
                                         <button id="insertLineBreak" class="helper-button">Soft break (\n)</button>
+                                        <button id="insertKnowledgeTemplate" class="helper-button" style="display: none;">📚 Insert Template</button>
                                     </div>
                                 </div>
                             </div>
@@ -950,9 +976,20 @@
                     </ul>
                 </div>
                 <div class="help-section">
+                    <h3>🎓 Knowledge Mode (New!)</h3>
+                    <ul>
+                        <li><strong>Bật Knowledge Mode</strong> - Mỗi dòng văn bản sẽ tạo 1 ảnh riêng biệt</li>
+                        <li><strong>Enter</strong> - Tạo dòng mới = tạo ảnh mới</li>
+                        <li><strong>\n</strong> - Xuống dòng trong cùng 1 ảnh (soft break)</li>
+                        <li>Ví dụ: Nhập 10 dòng tri thức → Tạo 10 ảnh tự động!</li>
+                        <li>Nếu có ít ảnh hơn số dòng, hệ thống sẽ tự động lặp lại ảnh nền</li>
+                    </ul>
+                </div>
+                <div class="help-section">
                     <h3>Text Formatting</h3>
                     <ul>
-                        <li><strong>\n</strong> - Soft line break (within same text block)</li>
+                        <li><strong>\n</strong> - Soft line break (xuống dòng trong cùng ảnh)</li>
+                        <li><strong>Enter</strong> - Hard line break (tạo ảnh mới trong Knowledge Mode)</li>
                         <li><strong>:</strong> - Separator between main text and subtitle</li>
                         <li>Multiple lines without <code>:</code> will all be main text</li>
                     </ul>

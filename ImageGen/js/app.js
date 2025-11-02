@@ -72,12 +72,12 @@ class ImageTextApp {
             }
 
             this.initialized = true;
-            console.log('✨ Image Text App Pro v9.1 initialized successfully');
+            console.log('🎓 Knowledge Visualizer v10.0 initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('✨ Version 9.1! Giao Diện Gọn Gàng, Sửa Lỗi Mode Switching!', 'success', 6000);
+                    this.components.v6ui.showToast('🎓 Version 10.0! Knowledge Batch Mode - Mỗi dòng = 1 ảnh tri thức!', 'success', 6000);
                 }
             }, 500);
 
@@ -269,6 +269,60 @@ class ImageTextApp {
         if (this.DOM.insertLineBreak) {
             this.DOM.insertLineBreak.addEventListener('click', () => {
                 this.insertTextAtCursor('\\n');
+            });
+        }
+
+        // V10.0: Knowledge Mode handlers
+        const knowledgeModeCheckbox = document.getElementById('knowledgeModeCheckbox');
+        const knowledgeModeInfo = document.getElementById('knowledgeModeInfo');
+        const knowledgeStats = document.getElementById('knowledgeStats');
+        const insertKnowledgeTemplate = document.getElementById('insertKnowledgeTemplate');
+
+        if (knowledgeModeCheckbox) {
+            knowledgeModeCheckbox.addEventListener('change', (e) => {
+                const isEnabled = e.target.checked;
+
+                // Toggle info display
+                if (knowledgeModeInfo) {
+                    knowledgeModeInfo.style.display = isEnabled ? 'block' : 'none';
+                }
+                if (knowledgeStats) {
+                    knowledgeStats.style.display = isEnabled ? 'flex' : 'none';
+                }
+                if (insertKnowledgeTemplate) {
+                    insertKnowledgeTemplate.style.display = isEnabled ? 'inline-flex' : 'none';
+                }
+
+                // Update stats
+                this.updateKnowledgeStats();
+
+                // Re-render if images are loaded
+                if (this.state.images.length > 0) {
+                    this.components.preview?.render();
+                }
+
+                // Show toast
+                if (this.components.v6ui) {
+                    if (isEnabled) {
+                        this.components.v6ui.showToast('🎓 Knowledge Mode bật! Mỗi dòng sẽ tạo 1 ảnh riêng', 'success', 3000);
+                    } else {
+                        this.components.v6ui.showToast('Knowledge Mode tắt', 'info', 2000);
+                    }
+                }
+            });
+        }
+
+        // Update stats on text input change
+        if (this.DOM.textInput) {
+            this.DOM.textInput.addEventListener('input', utils.debounce(() => {
+                this.updateKnowledgeStats();
+            }, 300));
+        }
+
+        // Insert knowledge template button
+        if (insertKnowledgeTemplate) {
+            insertKnowledgeTemplate.addEventListener('click', () => {
+                this.insertKnowledgeTemplate();
             });
         }
 
@@ -645,6 +699,47 @@ class ImageTextApp {
 
     showError(message) {
         this.showNotification(message, 'error');
+    }
+
+    updateKnowledgeStats() {
+        const knowledgeModeCheckbox = document.getElementById('knowledgeModeCheckbox');
+        const knowledgeLineCount = document.getElementById('knowledgeLineCount');
+        const knowledgeImageCount = document.getElementById('knowledgeImageCount');
+
+        if (!knowledgeModeCheckbox?.checked) return;
+
+        const text = this.DOM.textInput?.value?.trim() || '';
+        const lines = text ? text.split('\n').filter(line => line.trim()) : [];
+        const lineCount = lines.length;
+        const imageCount = this.state.images.length > 0 ? lineCount : 0;
+
+        if (knowledgeLineCount) {
+            knowledgeLineCount.textContent = lineCount;
+        }
+        if (knowledgeImageCount) {
+            knowledgeImageCount.textContent = imageCount;
+        }
+    }
+
+    insertKnowledgeTemplate() {
+        const template = `**Tri thức 1:** Mô tả ngắn gọn về chủ đề đầu tiên
+**Tri thức 2:** Giải thích một khái niệm quan trọng\\nCó thể xuống dòng với \\n
+**Tri thức 3:** *Chia sẻ* một ==insight== hữu ích
+**Tri thức 4:** Tổng kết hoặc call-to-action 🚀`;
+
+        const textarea = this.DOM.textInput;
+        if (textarea) {
+            const currentValue = textarea.value.trim();
+            textarea.value = currentValue ? currentValue + '\n\n' + template : template;
+            textarea.focus();
+
+            // Trigger input event to update stats
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+            if (this.components.v6ui) {
+                this.components.v6ui.showToast('✨ Template đã được chèn vào!', 'success', 2000);
+            }
+        }
     }
 
     setupImageBrowserHandlers() {
