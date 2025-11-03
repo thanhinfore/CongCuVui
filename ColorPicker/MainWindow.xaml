@@ -5,8 +5,87 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ColorPicker"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Color Picker"
+        Height="200"
+        Width="300"
+        ResizeMode="CanMinimize"
+        WindowStyle="SingleBorderWindow"
+        Topmost="{Binding IsChecked, ElementName=AlwaysOnTopCheckbox}">
 
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Pick Color Button -->
+        <Button x:Name="PickColorButton"
+                Grid.Row="0"
+                Content="🎨 Pick Color"
+                Height="35"
+                FontSize="14"
+                FontWeight="Bold"
+                Margin="0,0,0,10"
+                Click="PickColorButton_Click"
+                ToolTip="Click to pick a color from screen (or press Ctrl+Alt+C)"/>
+
+        <!-- Color Preview -->
+        <Border Grid.Row="1"
+                Height="40"
+                BorderBrush="Gray"
+                BorderThickness="1"
+                Margin="0,0,0,5">
+            <Border x:Name="ColorPreview"
+                    Background="White"/>
+        </Border>
+
+        <!-- HEX Color Code -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,5">
+            <TextBlock Text="HEX:" FontWeight="Bold" Width="50" VerticalAlignment="Center"/>
+            <TextBox x:Name="HexTextBox"
+                     Width="150"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"
+                     FontFamily="Consolas"
+                     FontSize="12"/>
+            <Button x:Name="CopyHexButton"
+                    Content="Copy"
+                    Width="60"
+                    Margin="5,0,0,0"
+                    Click="CopyHexButton_Click"/>
+        </StackPanel>
+
+        <!-- RGB Color Code -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,5">
+            <TextBlock Text="RGB:" FontWeight="Bold" Width="50" VerticalAlignment="Center"/>
+            <TextBox x:Name="RgbTextBox"
+                     Width="210"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"
+                     FontFamily="Consolas"
+                     FontSize="12"/>
+        </StackPanel>
+
+        <!-- Coordinates -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Position:" FontWeight="Bold" Width="50" VerticalAlignment="Center"/>
+            <TextBox x:Name="PositionTextBox"
+                     Width="210"
+                     IsReadOnly="True"
+                     VerticalContentAlignment="Center"
+                     FontFamily="Consolas"
+                     FontSize="12"/>
+        </StackPanel>
+
+        <!-- Always On Top Checkbox -->
+        <CheckBox x:Name="AlwaysOnTopCheckbox"
+                  Grid.Row="5"
+                  Content="Always On Top"
+                  IsChecked="True"
+                  VerticalAlignment="Center"/>
     </Grid>
 </Window>
