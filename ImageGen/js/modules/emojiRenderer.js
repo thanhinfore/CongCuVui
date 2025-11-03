@@ -6,14 +6,15 @@
 export class EmojiRenderer {
     constructor() {
         this.emojiFont = null;
+        // Reordered for better Windows/cross-platform support
         this.fallbackFonts = [
-            'Apple Color Emoji',
-            'Segoe UI Emoji',
-            'Segoe UI Symbol',
-            'Noto Color Emoji',
-            'Android Emoji',
-            'EmojiOne Color',
-            'Twemoji Mozilla'
+            'Segoe UI Emoji',      // Windows 10/11 - Best support
+            'Segoe UI Symbol',     // Windows fallback
+            'Apple Color Emoji',   // macOS/iOS
+            'Noto Color Emoji',    // Android/Linux/Chrome
+            'Twemoji Mozilla',     // Firefox
+            'EmojiOne Color',      // Generic fallback
+            'Android Emoji'        // Android fallback
         ];
         this.initialize();
     }
@@ -51,15 +52,17 @@ export class EmojiRenderer {
 
     /**
      * Build complete font string with emoji support
+     * V10.1: Emoji fonts FIRST for proper emoji rendering
      */
     buildFontString(style, weight, size, baseFont) {
         // Remove quotes from base font
         const cleanFont = baseFont.replace(/['"]/g, '');
 
-        // Build font stack: base font first, then emoji fallbacks
+        // Build font stack: EMOJI FONTS FIRST, then base font
+        // This ensures emoji render properly before falling back to base font
         const fontStack = [
-            cleanFont,
-            ...this.fallbackFonts.map(f => `"${f}"`)
+            ...this.fallbackFonts.map(f => `"${f}"`),
+            cleanFont
         ].join(', ');
 
         return `${style} ${weight} ${size}px ${fontStack}`;

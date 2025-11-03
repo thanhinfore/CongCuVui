@@ -1,0 +1,91 @@
+/* =====================================================
+   V10.1 SIMPLIFIED - FIXES CSS
+   Fixes for collapsed sections and better emoji support
+   ===================================================== */
+
+/* Ensure select inputs are clickable */
+.select-input {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.select-input:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* Ensure section content has proper z-index */
+.section-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Collapsed sections styling */
+.panel-section.collapsed .section-header {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.panel-section.collapsed .section-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.panel-section.collapsed .section-content {
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+/* Add chevron indicator for collapsed sections */
+.panel-section.collapsed .section-header::after {
+    content: '▼';
+    position: absolute;
+    right: 1rem;
+    transition: transform 0.3s ease;
+    opacity: 0.5;
+}
+
+.panel-section:not(.collapsed) .section-header::after {
+    transform: rotate(180deg);
+}
+
+/* Better emoji font stack - prioritize system emoji fonts */
+body, input, textarea, select, button {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif,
+                 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+}
+
+/* Emoji rendering on canvas - ensure proper font cascade */
+canvas {
+    font-smooth: never;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Style groups should not interfere with select dropdowns */
+.style-group {
+    position: relative;
+    z-index: auto;
+}
+
+/* Ensure labels don't block select */
+.form-label {
+    pointer-events: none;
+}
+
+/* Fix any overlay issues */
+.section-header {
+    position: relative;
+    z-index: 2;
+}
+
+/* Clickable area for collapsible sections */
+.panel-section.collapsed > .section-header,
+.panel-section > .section-header[onclick] {
+    cursor: pointer;
+    user-select: none;
+}
