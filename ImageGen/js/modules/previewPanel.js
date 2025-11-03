@@ -724,13 +724,14 @@ export class PreviewPanel {
         const LINE_SPACING = advanced.lineHeight || 2.0;
         const MAIN_PADDING = 1.5;
 
-        // V9.0: Check if free positioning mode is enabled
+        // V10.1 Simplified: Always use position picker (freeMode disabled)
+        // V9.0 legacy: Check if free positioning mode is enabled (disabled in v10.1)
         let y;
         let mainCustomPos = null;
         let subCustomPos = null;
 
         if (this.textPositioning && this.textPositioning.positioning.freeMode) {
-            // Use custom positioning from v9.0
+            // Use custom positioning from v9.0 (should not reach here in v10.1)
             mainCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'main');
             subCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'subtitle');
 
@@ -741,7 +742,7 @@ export class PreviewPanel {
                 y = canvas.height - mainFontSize * (LINE_SPACING + 2);
             }
         } else {
-            // Use traditional position picker
+            // V10.1: Use simple position picker (Top/Middle/Bottom)
             switch (config.position) {
                 case 'top':
                     y = mainFontSize * MAIN_PADDING;
