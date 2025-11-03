@@ -1,0 +1,753 @@
+/* =====================================================
+   V11 CSS - Ultimate UX Experience
+   Smooth Animations, Modern Design, Glassmorphism
+   ===================================================== */
+
+/* ===== CSS Variables ===== */
+:root {
+    --v11-primary: #667eea;
+    --v11-primary-dark: #5568d3;
+    --v11-secondary: #764ba2;
+    --v11-success: #10b981;
+    --v11-warning: #f59e0b;
+    --v11-error: #ef4444;
+    --v11-info: #3b82f6;
+
+    --v11-gray-50: #f9fafb;
+    --v11-gray-100: #f3f4f6;
+    --v11-gray-200: #e5e7eb;
+    --v11-gray-300: #d1d5db;
+    --v11-gray-400: #9ca3af;
+    --v11-gray-500: #6b7280;
+    --v11-gray-600: #4b5563;
+    --v11-gray-700: #374151;
+    --v11-gray-800: #1f2937;
+    --v11-gray-900: #111827;
+
+    --v11-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --v11-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --v11-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --v11-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --v11-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    --v11-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --v11-transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --v11-transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --v11-transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== Smooth Animations ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* ===== Enhanced Buttons ===== */
+.v11-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all var(--v11-transition-base);
+    cursor: pointer;
+}
+
+.v11-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.v11-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.v11-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--v11-shadow-md);
+}
+
+.v11-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== Enhanced Cards ===== */
+.v11-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--v11-shadow);
+    transition: all var(--v11-transition-base);
+    animation: fadeIn 0.3s ease;
+}
+
+.v11-card:hover {
+    box-shadow: var(--v11-shadow-lg);
+    transform: translateY(-4px);
+}
+
+.v11-card-glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Glassmorphism Effects ===== */
+.v11-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--v11-shadow-lg);
+}
+
+.v11-glass-dark {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Enhanced Form Controls ===== */
+.v11-input {
+    border: 2px solid var(--v11-gray-300);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all var(--v11-transition-base);
+}
+
+.v11-input:focus {
+    border-color: var(--v11-primary);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.v11-input:hover:not(:focus) {
+    border-color: var(--v11-gray-400);
+}
+
+/* ===== Enhanced Select ===== */
+select.v11-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+/* ===== Enhanced Checkboxes ===== */
+.v11-checkbox {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    appearance: none;
+    border: 2px solid var(--v11-gray-300);
+    border-radius: 4px;
+    transition: all var(--v11-transition-base);
+}
+
+.v11-checkbox:checked {
+    background: linear-gradient(135deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+    border-color: var(--v11-primary);
+}
+
+.v11-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.v11-checkbox:hover {
+    border-color: var(--v11-primary);
+}
+
+/* ===== Enhanced Range Sliders ===== */
+input[type="range"].v11-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg,
+        var(--v11-primary) 0%,
+        var(--v11-primary) var(--value, 50%),
+        var(--v11-gray-200) var(--value, 50%),
+        var(--v11-gray-200) 100%
+    );
+    outline: none;
+    transition: all var(--v11-transition-base);
+}
+
+input[type="range"].v11-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--v11-primary);
+    cursor: pointer;
+    box-shadow: var(--v11-shadow);
+    transition: all var(--v11-transition-base);
+}
+
+input[type="range"].v11-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: var(--v11-shadow-md);
+}
+
+input[type="range"].v11-range::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+}
+
+input[type="range"].v11-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--v11-primary);
+    cursor: pointer;
+    box-shadow: var(--v11-shadow);
+    transition: all var(--v11-transition-base);
+}
+
+/* ===== Loading States ===== */
+.v11-loading-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--v11-gray-200) 0%,
+        var(--v11-gray-300) 50%,
+        var(--v11-gray-200) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+.v11-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--v11-gray-200);
+    border-top-color: var(--v11-primary);
+    border-radius: 50%;
+    animation: rotate 0.8s linear infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.v11-dots-spinner {
+    display: flex;
+    gap: 8px;
+}
+
+.v11-dots-spinner span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--v11-primary);
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.v11-dots-spinner span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.v11-dots-spinner span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+/* ===== Enhanced Tooltips ===== */
+.v11-tooltip {
+    position: relative;
+}
+
+.v11-tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 6px 12px;
+    background: var(--v11-gray-900);
+    color: white;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--v11-transition-base);
+    z-index: 1000;
+}
+
+.v11-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--v11-gray-900);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--v11-transition-base);
+}
+
+.v11-tooltip:hover::before,
+.v11-tooltip:hover::after {
+    opacity: 1;
+}
+
+/* ===== Enhanced Badges ===== */
+.v11-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    transition: all var(--v11-transition-base);
+}
+
+.v11-badge-primary {
+    background: linear-gradient(135deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+    color: white;
+}
+
+.v11-badge-success {
+    background: var(--v11-success);
+    color: white;
+}
+
+.v11-badge-warning {
+    background: var(--v11-warning);
+    color: white;
+}
+
+.v11-badge-error {
+    background: var(--v11-error);
+    color: white;
+}
+
+.v11-badge-info {
+    background: var(--v11-info);
+    color: white;
+}
+
+.v11-badge:hover {
+    transform: scale(1.05);
+    box-shadow: var(--v11-shadow);
+}
+
+/* ===== Enhanced Progress Bars ===== */
+.v11-progress {
+    width: 100%;
+    height: 8px;
+    background: var(--v11-gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.v11-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.v11-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+/* ===== Enhanced Modals ===== */
+.v11-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--v11-transition-fast);
+}
+
+.v11-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: var(--v11-shadow-xl);
+    animation: scaleIn var(--v11-transition-spring);
+}
+
+.v11-modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--v11-gray-200);
+    background: linear-gradient(135deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+}
+
+.v11-modal-header h3 {
+    margin: 0;
+    color: white;
+}
+
+.v11-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.v11-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--v11-gray-200);
+    background: var(--v11-gray-50);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* ===== Micro-interactions ===== */
+.v11-clickable {
+    cursor: pointer;
+    transition: all var(--v11-transition-fast);
+}
+
+.v11-clickable:hover {
+    transform: scale(1.02);
+}
+
+.v11-clickable:active {
+    transform: scale(0.98);
+}
+
+/* ===== Focus Styles ===== */
+.v11-focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3);
+}
+
+.v11-focus-ring:focus-visible {
+    outline: 2px solid var(--v11-primary);
+    outline-offset: 2px;
+}
+
+/* ===== Gradient Backgrounds ===== */
+.v11-gradient-primary {
+    background: linear-gradient(135deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+}
+
+.v11-gradient-sunset {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.v11-gradient-ocean {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.v11-gradient-forest {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* ===== Smooth Transitions for All ===== */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Enhanced Color Picker Integration ===== */
+input[type="color"].v11-color-input {
+    width: 60px;
+    height: 40px;
+    border: 2px solid var(--v11-gray-300);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--v11-transition-base);
+}
+
+input[type="color"].v11-color-input:hover {
+    border-color: var(--v11-primary);
+    transform: scale(1.05);
+    box-shadow: var(--v11-shadow);
+}
+
+/* ===== Enhanced Preset Cards ===== */
+.preset-card.v11-enhanced {
+    position: relative;
+    overflow: hidden;
+}
+
+.preset-card.v11-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--v11-primary) 0%, var(--v11-secondary) 100%);
+    opacity: 0;
+    transition: opacity var(--v11-transition-base);
+}
+
+.preset-card.v11-enhanced:hover::before {
+    opacity: 0.1;
+}
+
+.preset-card.v11-enhanced.active::before {
+    opacity: 0.2;
+}
+
+/* ===== Scroll Enhancements ===== */
+.v11-scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+.v11-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.v11-scrollbar::-webkit-scrollbar-track {
+    background: var(--v11-gray-100);
+    border-radius: 4px;
+}
+
+.v11-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--v11-gray-400);
+    border-radius: 4px;
+    transition: background var(--v11-transition-base);
+}
+
+.v11-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--v11-primary);
+}
+
+/* ===== Accessibility Enhancements ===== */
+.v11-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.v11-high-contrast {
+    filter: contrast(1.2);
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    .v11-no-print {
+        display: none !important;
+    }
+}
+
+/* ===== Dark Mode Ready ===== */
+@media (prefers-color-scheme: dark) {
+    .v11-auto-dark {
+        background: var(--v11-gray-900);
+        color: var(--v11-gray-100);
+    }
+
+    .v11-auto-dark .v11-card {
+        background: var(--v11-gray-800);
+        color: var(--v11-gray-100);
+    }
+}
+
+/* ===== Responsive Utilities ===== */
+@media (max-width: 768px) {
+    .v11-hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .v11-hide-desktop {
+        display: none !important;
+    }
+}
+
+/* ===== Performance Optimizations ===== */
+.v11-will-change {
+    will-change: transform, opacity;
+}
+
+.v11-gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* ===== Enhanced Toast Notifications ===== */
+.v11-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: var(--v11-shadow-xl);
+    animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10000;
+}
+
+.v11-toast.success {
+    border-left: 4px solid var(--v11-success);
+}
+
+.v11-toast.error {
+    border-left: 4px solid var(--v11-error);
+}
+
+.v11-toast.warning {
+    border-left: 4px solid var(--v11-warning);
+}
+
+.v11-toast.info {
+    border-left: 4px solid var(--v11-info);
+}
+
+/* ===== Global Improvements ===== */
+.v11-smooth-corners {
+    border-radius: 12px;
+}
+
+.v11-elevated {
+    box-shadow: var(--v11-shadow-lg);
+}
+
+.v11-elevated-hover:hover {
+    box-shadow: var(--v11-shadow-xl);
+    transform: translateY(-2px);
+}
