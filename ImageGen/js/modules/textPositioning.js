@@ -33,7 +33,27 @@ export class TextPositioning {
         this.setupEventListeners();
         this.setupLayerTabs();
         this.loadSavedPositioning();
-        console.log('Text Positioning initialized');
+
+        // V10.1 Simplified: Force disable freeMode since Advanced Positioning is hidden
+        this.positioning.freeMode = false;
+
+        // Clear old v9 positioning from localStorage to prevent conflicts
+        try {
+            const saved = localStorage.getItem('v9_textPositioning');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.freeMode === true) {
+                    // Reset to simple mode
+                    parsed.freeMode = false;
+                    localStorage.setItem('v9_textPositioning', JSON.stringify(parsed));
+                    console.log('V10.1: Cleared freeMode from saved positioning');
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to clear old positioning:', e);
+        }
+
+        console.log('Text Positioning initialized (v10.1 Simplified: freeMode disabled)');
     }
 
     setupLayerTabs() {
