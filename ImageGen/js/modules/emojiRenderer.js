@@ -52,17 +52,17 @@ export class EmojiRenderer {
 
     /**
      * Build complete font string with emoji support
-     * V10.1: Emoji fonts FIRST for proper emoji rendering
+     * CORRECT: Base font FIRST, emoji fonts as fallback
      */
     buildFontString(style, weight, size, baseFont) {
         // Remove quotes from base font
         const cleanFont = baseFont.replace(/['"]/g, '');
 
-        // Build font stack: EMOJI FONTS FIRST, then base font
-        // This ensures emoji render properly before falling back to base font
+        // CRITICAL FIX: Base font FIRST, then emoji fonts as fallback
+        // This ensures main font is used for normal text, emoji fonts only for emoji
         const fontStack = [
-            ...this.fallbackFonts.map(f => `"${f}"`),
-            cleanFont
+            cleanFont,
+            ...this.fallbackFonts.map(f => `"${f}"`)
         ].join(', ');
 
         return `${style} ${weight} ${size}px ${fontStack}`;
