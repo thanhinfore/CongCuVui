@@ -51,6 +51,10 @@ export class ControlPanel {
                     if (control === this.DOM.fontSelect) {
                         control.style.fontFamily = control.value;
                     }
+                    // V10.1 DEBUG: Log position changes
+                    if (control === this.DOM.positionPicker) {
+                        console.log('[ControlPanel] Position changed to:', control.value);
+                    }
                     this.handleStyleChange();
                     this.saveSettings();
                 });

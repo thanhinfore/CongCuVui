@@ -81,6 +81,11 @@ export class PreviewPanel {
                 fileName: this.state.images[imageIndex].file.name
             };
 
+            // V10.1 DEBUG: Log config position
+            if (i === 0) {
+                console.log('[PreviewPanel] render() - First image config.position:', config.position);
+            }
+
             this.textConfigs.push(config);
 
             const previewItem = this.createPreviewItem(config, i + 1);
@@ -730,8 +735,11 @@ export class PreviewPanel {
         let mainCustomPos = null;
         let subCustomPos = null;
 
-        if (this.textPositioning && this.textPositioning.positioning.freeMode) {
-            // Use custom positioning from v9.0 (should not reach here in v10.1)
+        // V10.1 CRITICAL: freeMode is ALWAYS false, so this block should NEVER execute
+        const isFreeMode = this.textPositioning?.positioning?.freeMode === true;
+        if (isFreeMode) {
+            // Use custom positioning from v9.0 (should NEVER reach here in v10.1)
+            console.warn('[V10.1] WARNING: freeMode is true! This should not happen.');
             mainCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'main');
             subCustomPos = this.textPositioning.calculatePosition(canvas.width, canvas.height, 'subtitle');
 
@@ -743,22 +751,30 @@ export class PreviewPanel {
             }
         } else {
             // V10.1: Use simple position picker (Top/Middle/Bottom)
+            // V10.1 DEBUG: Log position values
+            console.log('[renderTextCommon] config.position:', config.position, 'freeMode:', this.textPositioning?.positioning?.freeMode);
+
             switch (config.position) {
                 case 'top':
                     y = mainFontSize * MAIN_PADDING;
+                    console.log('[renderTextCommon] Using TOP position, y =', y);
                     break;
                 case 'upper-middle':
                     y = canvas.height * 0.25 - mainFontSize;
+                    console.log('[renderTextCommon] Using UPPER-MIDDLE position, y =', y);
                     break;
                 case 'middle':
                     y = canvas.height * 0.5 - mainFontSize;
+                    console.log('[renderTextCommon] Using MIDDLE position, y =', y);
                     break;
                 case 'lower-middle':
                     y = canvas.height * 0.75 - mainFontSize;
+                    console.log('[renderTextCommon] Using LOWER-MIDDLE position, y =', y);
                     break;
                 case 'bottom':
                 default:
                     y = canvas.height - mainFontSize * (LINE_SPACING + 2);
+                    console.log('[renderTextCommon] Using BOTTOM position (or default), y =', y);
                     break;
             }
         }
