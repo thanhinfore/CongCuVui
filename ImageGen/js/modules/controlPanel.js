@@ -219,15 +219,15 @@ export class ControlPanel {
         } else {
             if (this.sections.upload) this.sections.upload.classList.remove('active');
             if (this.sections.style) this.sections.style.classList.remove('active');
-            if (this.sections.credit) this.sections.credit.classList.remove('active');
+            // V10.1: Export section (merged with credit) kept collapsed by default
         }
 
         if (hasText && hasImages) {
             if (this.sections.style) this.sections.style.classList.add('active');
-            if (this.sections.credit) this.sections.credit.classList.add('active');
+            // V10.1: Export section (merged with credit) kept collapsed by default
         } else {
             if (this.sections.style) this.sections.style.classList.remove('active');
-            if (this.sections.credit) this.sections.credit.classList.remove('active');
+            // V10.1: Export section (merged with credit) kept collapsed by default
         }
 
         this.updateButtonState();

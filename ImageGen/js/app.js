@@ -152,7 +152,7 @@ class ImageTextApp {
                 upload: document.getElementById('uploadSection'),
                 presets: document.getElementById('presetsSection'),
                 style: document.getElementById('styleSection'),
-                credit: document.getElementById('creditSection')
+                export: document.getElementById('exportSection')
             }
         };
 
