@@ -389,6 +389,10 @@ export class ControlPanel {
             bgOpacity: this.DOM.bgOpacity?.value || '28',
             repeatBackground: this.DOM.repeatBackgroundCheckbox?.checked || false,
             credit: this.DOM.creditInput?.value || '',
+            imageNumbering: this.DOM.imageNumberingCheckbox?.checked || false,
+            skipFirstPage: this.DOM.skipFirstPageCheckbox?.checked || false,
+            numberPosition: this.DOM.numberPosition?.value || 'bottom-right',
+            numberSize: this.DOM.numberSize?.value || '48',
             lastSaved: new Date().toISOString()
         };
 
@@ -436,6 +440,26 @@ export class ControlPanel {
 
         if (this.DOM.positionPicker) this.DOM.positionPicker.value = settings.position || 'bottom';
         if (this.DOM.creditInput) this.DOM.creditInput.value = settings.credit || '';
+
+        // Image Numbering
+        if (this.DOM.imageNumberingCheckbox) {
+            this.DOM.imageNumberingCheckbox.checked = settings.imageNumbering || false;
+            if (this.DOM.numberingOptions) {
+                this.DOM.numberingOptions.style.display = settings.imageNumbering ? 'block' : 'none';
+            }
+        }
+        if (this.DOM.skipFirstPageCheckbox) {
+            this.DOM.skipFirstPageCheckbox.checked = settings.skipFirstPage || false;
+        }
+        if (this.DOM.numberPosition) {
+            this.DOM.numberPosition.value = settings.numberPosition || 'bottom-right';
+        }
+        if (this.DOM.numberSize) {
+            this.DOM.numberSize.value = settings.numberSize || '48';
+            if (this.DOM.numberSizeValue) {
+                this.DOM.numberSizeValue.textContent = `${this.DOM.numberSize.value}px`;
+            }
+        }
 
         if (this.DOM.mainFontSize) {
             this.DOM.mainFontSize.value = settings.mainFontSize || '48';
