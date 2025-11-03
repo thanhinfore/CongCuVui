@@ -782,8 +782,9 @@ export class PreviewPanel {
         ctx.textBaseline = 'middle';
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        // Use EmojiRenderer for proper emoji font support
-        const canvasFont = this.emojiRenderer.buildFontString('normal', '400', 16, selectedFont).split('16px ')[1];
+        // V10.1 FIX: Pass selectedFont directly to renderStyledLine
+        // buildFontString will handle emoji fonts internally
+        const canvasFont = selectedFont;
 
         const renderEffects = {
             textShadow: effects.textShadow,
@@ -886,7 +887,7 @@ export class PreviewPanel {
                 });
 
                 const bgColor = utils.hexToRGBA(
-                    this.DOM.bgColorPicker?.value || '#000000',
+                    this.DOM.bgColorPicker?.value || '#faf9f5',
                     this.DOM.bgOpacity?.value || '28'
                 );
 
