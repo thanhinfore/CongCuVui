@@ -84,10 +84,13 @@ export class TextPositioning {
         const freeModeToggle = document.getElementById('freePosMode');
         if (freeModeToggle) {
             freeModeToggle.addEventListener('change', (e) => {
-                this.positioning.freeMode = e.target.checked;
-                this.togglePositioningControls(e.target.checked);
+                // V10.1: ALWAYS force freeMode to false (Advanced Positioning is hidden)
+                this.positioning.freeMode = false;
+                e.target.checked = false;  // Force checkbox to stay unchecked
+                this.togglePositioningControls(false);
                 this.savePositioning();
                 this.triggerUpdate();
+                console.log('V10.1: freeMode toggle blocked - always false');
             });
         }
 
@@ -295,15 +298,20 @@ export class TextPositioning {
                 const parsed = JSON.parse(saved);
                 this.positioning = { ...this.positioning, ...parsed };
 
+                // V10.1 CRITICAL: Force freeMode to false after loading
+                this.positioning.freeMode = false;
+
                 // Update UI to reflect loaded values
                 const freeModeToggle = document.getElementById('freePosMode');
                 if (freeModeToggle) {
-                    freeModeToggle.checked = this.positioning.freeMode;
-                    this.togglePositioningControls(this.positioning.freeMode);
+                    freeModeToggle.checked = false;  // V10.1: Always uncheck
+                    this.togglePositioningControls(false);  // V10.1: Always disable
                 }
 
                 this.updateControlValues('main');
                 this.updateControlValues('subtitle');
+
+                console.log('V10.1: Loaded positioning with freeMode forced to false');
             }
         } catch (e) {
             console.warn('Failed to load positioning:', e);
