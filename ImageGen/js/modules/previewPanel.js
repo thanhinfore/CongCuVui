@@ -289,6 +289,7 @@ export class PreviewPanel {
         const previewScale = canvas.width / img.width;
         this.renderTextCommon(ctx, canvas, config, previewScale);
         this.renderImageNumber(ctx, canvas, config, previewScale);
+        // Note: Credit not rendered in preview, only in full export
 
         return canvas;
     }
@@ -1022,8 +1023,9 @@ export class PreviewPanel {
         const textScaleFactor = canvas.width / img.width;
 
         this.renderTextCommon(ctx, canvas, config, textScaleFactor);
-        this.renderCredit(ctx, canvas, textScaleFactor);
         this.renderImageNumber(ctx, canvas, config, textScaleFactor);
+        this.renderCredit(ctx, canvas, textScaleFactor);
+        await this.renderFooter(ctx, canvas, textScaleFactor);
 
         return canvas;
     }
@@ -1057,6 +1059,107 @@ export class PreviewPanel {
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
+    }
+
+    async renderFooter(ctx, canvas, scaleFactor) {
+        // Check if footer is enabled
+        const footerEnabled = this.DOM.footerCheckbox?.checked || false;
+        if (!footerEnabled) return;
+
+        // Get footer settings
+        const footerType = document.querySelector('input[name="footerType"]:checked')?.value || 'text';
+        const position = this.DOM.footerPosition?.value || 'bottom-center';
+
+        const basePadding = 15;
+        const padding = Math.max(basePadding, basePadding * scaleFactor);
+
+        if (footerType === 'text') {
+            // Render footer text
+            const footerText = this.DOM.footerText?.value?.trim() || '';
+            if (!footerText) return;
+
+            const baseSize = parseInt(this.DOM.footerSize?.value || '24');
+            const footerSize = Math.round(baseSize * scaleFactor);
+            const footerColor = this.DOM.footerColor?.value || '#ffffff';
+
+            const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
+            ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', footerSize, selectedFont);
+            ctx.fillStyle = footerColor;
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            ctx.lineWidth = Math.max(1, footerSize * 0.08);
+
+            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+            ctx.shadowBlur = Math.max(2, footerSize * 0.25);
+            ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
+            ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
+
+            let x, y;
+            y = canvas.height - padding;
+
+            switch (position) {
+                case 'bottom-left':
+                    ctx.textAlign = 'left';
+                    x = padding;
+                    break;
+                case 'bottom-center':
+                    ctx.textAlign = 'center';
+                    x = canvas.width / 2;
+                    break;
+                case 'bottom-right':
+                    ctx.textAlign = 'right';
+                    x = canvas.width - padding;
+                    break;
+            }
+
+            ctx.strokeText(footerText, x, y);
+            ctx.fillText(footerText, x, y);
+
+        } else if (footerType === 'logo') {
+            // Render footer logo
+            const logoSrc = this.DOM.footerLogoImg?.src;
+            if (!logoSrc || logoSrc === '') return;
+
+            try {
+                const logoImg = await this.loadImage(logoSrc);
+                const baseHeight = parseInt(this.DOM.footerLogoHeight?.value || '40');
+                const logoHeight = Math.round(baseHeight * scaleFactor);
+                const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
+
+                let x, y;
+                y = canvas.height - padding - logoHeight / 2;
+
+                switch (position) {
+                    case 'bottom-left':
+                        x = padding;
+                        break;
+                    case 'bottom-center':
+                        x = (canvas.width - logoWidth) / 2;
+                        break;
+                    case 'bottom-right':
+                        x = canvas.width - padding - logoWidth;
+                        break;
+                }
+
+                ctx.drawImage(logoImg, x, y - logoHeight / 2, logoWidth, logoHeight);
+            } catch (error) {
+                console.warn('Failed to render footer logo:', error);
+            }
+        }
+
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    }
+
+    loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
     }
 
     renderImageNumber(ctx, canvas, config, scaleFactor) {

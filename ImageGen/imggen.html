@@ -757,6 +757,78 @@
                                     </div>
                                 </div>
 
+                                <!-- Image Footer -->
+                                <div class="style-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="footerCheckbox" class="checkbox">
+                                        <span class="checkbox-text">Add footer</span>
+                                    </label>
+
+                                    <div id="footerOptions" class="footer-options" style="display: none; margin-top: 12px;">
+                                        <!-- Footer Type -->
+                                        <div class="footer-type-selector">
+                                            <label class="radio-option">
+                                                <input type="radio" name="footerType" value="text" checked>
+                                                <span>Text</span>
+                                            </label>
+                                            <label class="radio-option">
+                                                <input type="radio" name="footerType" value="logo">
+                                                <span>Logo</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- Footer Text Options -->
+                                        <div id="footerTextOptions" class="footer-content-options">
+                                            <div class="form-group">
+                                                <label class="form-label">Footer Text</label>
+                                                <input type="text" id="footerText" class="text-input" placeholder="e.g., LuyenAI.vn" value="">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">Color</label>
+                                                <div style="display: flex; gap: 8px; align-items: center;">
+                                                    <input type="color" id="footerColor" class="color-picker" value="#ffffff">
+                                                    <input type="text" id="footerColorHex" class="text-input" value="#ffffff" style="flex: 1; font-size: 13px;">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">Size</label>
+                                                <input type="range" id="footerSize" min="12" max="48" value="24" step="2" class="range-input">
+                                                <span class="range-value" id="footerSizeValue">24px</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Footer Logo Options -->
+                                        <div id="footerLogoOptions" class="footer-content-options" style="display: none;">
+                                            <div class="form-group">
+                                                <label class="form-label">Logo Image</label>
+                                                <input type="file" id="footerLogo" accept="image/*" class="file-input" style="display: block; width: 100%; font-size: 13px;">
+                                                <div id="footerLogoPreview" style="margin-top: 8px; display: none;">
+                                                    <img id="footerLogoImg" style="max-width: 100px; max-height: 50px; border-radius: 4px;">
+                                                    <button id="clearFooterLogo" class="helper-button" style="margin-top: 4px; font-size: 12px;">Clear</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">Logo Height</label>
+                                                <input type="range" id="footerLogoHeight" min="20" max="100" value="40" step="5" class="range-input">
+                                                <span class="range-value" id="footerLogoHeightValue">40px</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Footer Position -->
+                                        <div class="form-group">
+                                            <label class="form-label">Position</label>
+                                            <select id="footerPosition" class="select-input">
+                                                <option value="bottom-left">Bottom Left</option>
+                                                <option value="bottom-center" selected>Bottom Center</option>
+                                                <option value="bottom-right">Bottom Right</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Export format hidden, auto-selected -->
                                 <div style="display: none;">
                                     <select id="exportFormat">
