@@ -385,7 +385,7 @@ export class ControlPanel {
             glowColor: this.DOM.glowColor?.value || '#FFD700',
             glowIntensity: this.DOM.glowIntensity?.value || '20',
             subtitleBg: this.DOM.subtitleBgCheckbox?.checked || false,
-            bgColor: this.DOM.bgColorPicker?.value || '#000000',
+            bgColor: this.DOM.bgColorPicker?.value || '#faf9f5',
             bgOpacity: this.DOM.bgOpacity?.value || '28',
             repeatBackground: this.DOM.repeatBackgroundCheckbox?.checked || false,
             credit: this.DOM.creditInput?.value || '',
@@ -480,7 +480,7 @@ export class ControlPanel {
         }
 
         if (this.DOM.subtitleBgCheckbox) this.DOM.subtitleBgCheckbox.checked = settings.subtitleBg || false;
-        if (this.DOM.bgColorPicker) this.DOM.bgColorPicker.value = settings.bgColor || '#000000';
+        if (this.DOM.bgColorPicker) this.DOM.bgColorPicker.value = settings.bgColor || '#faf9f5';
         if (this.DOM.bgOpacity) this.DOM.bgOpacity.value = settings.bgOpacity || '28';
         if (this.DOM.repeatBackgroundCheckbox) this.DOM.repeatBackgroundCheckbox.checked = settings.repeatBackground || false;
 

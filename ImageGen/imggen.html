@@ -613,9 +613,9 @@
                                     </select>
                                 </div>
 
-                                <!-- Advanced Text Controls - SIMPLIFIED: Only Line Height -->
+                                <!-- Advanced Text Controls - SIMPLIFIED: Line Height + Rotation -->
                                 <div class="style-group">
-                                    <label class="form-label">Text Spacing</label>
+                                    <label class="form-label">Text Spacing & Rotation</label>
 
                                     <!-- Line Height -->
                                     <div class="range-group">
@@ -623,11 +623,17 @@
                                         <input type="range" id="lineHeight" min="0.8" max="3" value="2" step="0.1" class="range-input">
                                         <span class="range-value" id="lineHeightValue">2.0</span>
                                     </div>
+
+                                    <!-- Text Rotation -->
+                                    <div class="range-group">
+                                        <label for="textRotation">Text Rotation</label>
+                                        <input type="range" id="textRotation" min="-15" max="15" value="0" step="0.5" class="range-input">
+                                        <span class="range-value" id="textRotationValue">0°</span>
+                                    </div>
                                 </div>
 
                                 <!-- Hidden Advanced Controls (kept for backward compatibility) -->
                                 <div style="display: none;">
-                                    <input type="range" id="textRotation" min="-180" max="180" value="0">
                                     <input type="range" id="textOpacity" min="0" max="100" value="100">
                                     <input type="range" id="letterSpacing" min="-5" max="20" value="0" step="0.5">
                                     <select id="textTransform"><option value="none">None</option></select>
@@ -646,7 +652,7 @@
                                     <div class="bg-controls" id="bgControls" style="display: none;">
                                         <div class="color-input-group">
                                             <label for="bgColorPicker">Color</label>
-                                            <input type="color" id="bgColorPicker" value="#000000" class="color-picker">
+                                            <input type="color" id="bgColorPicker" value="#faf9f5" class="color-picker">
                                         </div>
                                         <div class="range-group">
                                             <label for="bgOpacity">Opacity</label>
