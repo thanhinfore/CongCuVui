@@ -138,6 +138,7 @@
                                         <button id="insertFooterText" class="helper-button primary">Add footer text</button>
                                         <button id="insertLineBreak" class="helper-button">Soft break (\n)</button>
                                         <button id="insertKnowledgeTemplate" class="helper-button" style="display: none;">📚 Insert Template</button>
+                                        <button id="openFindReplace" class="helper-button">🔍 Find & Replace</button>
                                     </div>
                                 </div>
                             </div>
@@ -1001,6 +1002,48 @@
                     <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
                 </div>
                 <p id="progressText" class="progress-text">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Find & Replace Modal -->
+    <div id="findReplaceModal" class="modal-overlay" style="display: none;">
+        <div class="modal-dialog find-replace-dialog">
+            <div class="modal-header">
+                <h3>🔍 Find & Replace</h3>
+                <button class="modal-close" id="closeFindReplace">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke="currentColor" stroke-width="2" fill="none" d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="findText">Find:</label>
+                    <input type="text" id="findText" class="modal-input" placeholder="Text to find..." />
+                </div>
+                <div class="form-group">
+                    <label for="replaceText">Replace with:</label>
+                    <input type="text" id="replaceText" class="modal-input" placeholder="Replacement text..." />
+                </div>
+                <div class="find-replace-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="caseSensitive" class="checkbox">
+                        <span>Case sensitive</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="wholeWord" class="checkbox">
+                        <span>Match whole word</span>
+                    </label>
+                </div>
+                <div class="find-replace-stats" id="findStats" style="display: none;">
+                    <span id="matchCount">0 matches found</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="findNext" class="secondary-button">Find Next</button>
+                <button id="replaceOne" class="secondary-button">Replace</button>
+                <button id="replaceAll" class="primary-button">Replace All</button>
             </div>
         </div>
     </div>

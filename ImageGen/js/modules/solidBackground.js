@@ -109,8 +109,8 @@ export class SolidBackgroundGenerator {
                 <div id="solidColorControls" class="v7-form-group">
                     <label class="v7-label">Background Color</label>
                     <div style="display: flex; gap: 12px; align-items: center;">
-                        <input type="color" id="solidBgColor" class="v7-color-input" value="#6366f1">
-                        <input type="text" id="solidBgColorHex" class="v7-input" value="#6366f1" style="flex: 1;">
+                        <input type="color" id="solidBgColor" class="v7-color-input" value="#faf9f5">
+                        <input type="text" id="solidBgColorHex" class="v7-input" value="#faf9f5" style="flex: 1;">
                     </div>
                 </div>
 
@@ -263,7 +263,7 @@ export class SolidBackgroundGenerator {
 
         // Draw background
         if (bgType === 'solid') {
-            const color = document.getElementById('solidBgColor')?.value || '#6366f1';
+            const color = document.getElementById('solidBgColor')?.value || '#faf9f5';
             ctx.fillStyle = color;
             ctx.fillRect(0, 0, width, height);
         } else {
