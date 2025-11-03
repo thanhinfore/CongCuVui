@@ -63,7 +63,12 @@ export class CommandPalette {
             { id: 'help', name: 'Show Help & Tips', category: 'Help', icon: 'ℹ️', action: () => this.showHelp(), keywords: ['help', 'tips', 'guide', 'tutorial'] },
             { id: 'shortcuts', name: 'Show Keyboard Shortcuts', category: 'Help', icon: '⌨️', action: () => this.showShortcuts(), keywords: ['keyboard', 'shortcuts', 'keys', 'hotkeys'] },
             { id: 'markdown-help', name: 'Markdown Guide', category: 'Help', icon: '📖', action: () => this.showMarkdownHelp(), keywords: ['markdown', 'format', 'syntax', 'guide'] },
-            { id: 'color-picker', name: 'Open Smart Color Picker', category: 'Tools', icon: '🎨', action: () => this.openColorPicker(), keywords: ['color', 'picker', 'palette', 'harmony'] }
+
+            // Tools
+            { id: 'color-picker', name: 'Open Smart Color Picker', category: 'Tools', icon: '🎨', action: () => this.openColorPicker(), keywords: ['color', 'picker', 'palette', 'harmony'] },
+            { id: 'video-export', name: 'Export as Video/GIF', category: 'Tools', icon: '🎬', action: () => this.openVideoExport(), keywords: ['video', 'gif', 'export', 'animation', 'movie'] },
+            { id: 'export-webm', name: 'Quick Export as WebM', category: 'Export', icon: '🎥', action: () => this.quickVideoExport('webm'), keywords: ['video', 'webm', 'export'] },
+            { id: 'export-gif', name: 'Quick Export as GIF', category: 'Export', icon: '🖼️', action: () => this.quickVideoExport('gif'), keywords: ['gif', 'animation', 'export'] }
         ];
     }
 
@@ -558,6 +563,26 @@ export class CommandPalette {
     openColorPicker() {
         if (window.smartColorPicker) {
             window.smartColorPicker.open(this.app.DOM.colorPicker);
+        }
+    }
+
+    openVideoExport() {
+        if (this.app.components?.videoExporter) {
+            this.app.components.videoExporter.open();
+        }
+    }
+
+    quickVideoExport(format) {
+        if (this.app.components?.videoExporter) {
+            this.app.components.videoExporter.open();
+            // Pre-select format
+            setTimeout(() => {
+                const radio = document.querySelector(`input[name="videoFormat"][value="${format}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                }
+            }, 100);
         }
     }
 
