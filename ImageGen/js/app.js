@@ -96,6 +96,14 @@ class ImageTextApp {
             imageLoader: document.getElementById('imageLoader'),
             creditInput: document.getElementById('creditInput'),
 
+            // Image Numbering
+            imageNumberingCheckbox: document.getElementById('imageNumberingCheckbox'),
+            skipFirstPageCheckbox: document.getElementById('skipFirstPageCheckbox'),
+            numberPosition: document.getElementById('numberPosition'),
+            numberSize: document.getElementById('numberSize'),
+            numberSizeValue: document.getElementById('numberSizeValue'),
+            numberingOptions: document.getElementById('numberingOptions'),
+
             // Font family & size
             fontSelect: document.getElementById('fontSelect'),
             mainFontSize: document.getElementById('mainFontSize'),
@@ -230,6 +238,45 @@ class ImageTextApp {
                 if (valueDisplay) {
                     valueDisplay.textContent = `${e.target.value}%`;
                 }
+            });
+        }
+
+        // Image Numbering
+        if (this.DOM.imageNumberingCheckbox) {
+            this.DOM.imageNumberingCheckbox.addEventListener('change', () => {
+                const isChecked = this.DOM.imageNumberingCheckbox.checked;
+                if (this.DOM.numberingOptions) {
+                    this.DOM.numberingOptions.style.display = isChecked ? 'block' : 'none';
+                }
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.skipFirstPageCheckbox) {
+            this.DOM.skipFirstPageCheckbox.addEventListener('change', () => {
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.numberPosition) {
+            this.DOM.numberPosition.addEventListener('change', () => {
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.numberSize) {
+            this.DOM.numberSize.addEventListener('input', (e) => {
+                if (this.DOM.numberSizeValue) {
+                    this.DOM.numberSizeValue.textContent = `${e.target.value}px`;
+                }
+                this.components.controls?.handleStyleChange();
+            });
+
+            this.DOM.numberSize.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
             });
         }
 

@@ -288,6 +288,7 @@ export class PreviewPanel {
 
         const previewScale = canvas.width / img.width;
         this.renderTextCommon(ctx, canvas, config, previewScale);
+        this.renderImageNumber(ctx, canvas, config, previewScale);
 
         return canvas;
     }
@@ -1022,6 +1023,7 @@ export class PreviewPanel {
 
         this.renderTextCommon(ctx, canvas, config, textScaleFactor);
         this.renderCredit(ctx, canvas, textScaleFactor);
+        this.renderImageNumber(ctx, canvas, config, textScaleFactor);
 
         return canvas;
     }
@@ -1051,6 +1053,84 @@ export class PreviewPanel {
         ctx.strokeText(credit, canvas.width - padding, canvas.height - padding);
         ctx.fillText(credit, canvas.width - padding, canvas.height - padding);
 
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    }
+
+    renderImageNumber(ctx, canvas, config, scaleFactor) {
+        // Check if numbering is enabled
+        const numberingEnabled = this.DOM.imageNumberingCheckbox?.checked || false;
+        if (!numberingEnabled) return;
+
+        // Get numbering settings
+        const skipFirst = this.DOM.skipFirstPageCheckbox?.checked || false;
+        const position = this.DOM.numberPosition?.value || 'bottom-right';
+        const baseSize = parseInt(this.DOM.numberSize?.value || '48');
+        const numberSize = Math.round(baseSize * scaleFactor);
+
+        // Calculate image number
+        // config.textIndex is the index in the textConfigs array
+        let imageNumber = (config.textIndex || 0) + 1;
+
+        // Skip first page if enabled
+        if (skipFirst && imageNumber === 1) {
+            return;
+        }
+
+        // Adjust numbering if skipping first page
+        if (skipFirst) {
+            imageNumber = imageNumber - 1;
+        }
+
+        // Setup font and style
+        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
+        ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', numberSize, selectedFont);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.lineWidth = Math.max(2, numberSize * 0.08);
+
+        // Add shadow for better visibility
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = Math.max(4, numberSize * 0.2);
+        ctx.shadowOffsetX = Math.max(2, 2 * scaleFactor);
+        ctx.shadowOffsetY = Math.max(2, 2 * scaleFactor);
+
+        // Calculate position
+        const padding = Math.max(15, numberSize * 0.6);
+        let x, y;
+
+        switch (position) {
+            case 'top-left':
+                ctx.textAlign = 'left';
+                x = padding;
+                y = padding + numberSize * 0.8;
+                break;
+            case 'top-right':
+                ctx.textAlign = 'right';
+                x = canvas.width - padding;
+                y = padding + numberSize * 0.8;
+                break;
+            case 'bottom-left':
+                ctx.textAlign = 'left';
+                x = padding;
+                y = canvas.height - padding;
+                break;
+            case 'bottom-right':
+            default:
+                ctx.textAlign = 'right';
+                x = canvas.width - padding;
+                y = canvas.height - padding;
+                break;
+        }
+
+        // Draw number with stroke and fill
+        const numberText = imageNumber.toString();
+        ctx.strokeText(numberText, x, y);
+        ctx.fillText(numberText, x, y);
+
+        // Reset shadow
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
