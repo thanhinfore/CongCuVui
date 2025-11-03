@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v9.1)
-   Clean UI, Fixed Mode Switching
+   APP.JS - Main Application Entry Point (v11.0)
+   Ultimate UX Experience
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -16,6 +16,11 @@ import { TextPositioning } from './modules/textPositioning.js';
 import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
 import { getFindReplace } from './modules/findReplace.js';
+
+// V11 New Modules
+import { SmartColorPicker } from './modules/colorPicker.js';
+import { CommandPalette } from './modules/commandPalette.js';
+import { DraftManager } from './modules/draftManager.js';
 
 class ImageTextApp {
     constructor() {
@@ -46,6 +51,11 @@ class ImageTextApp {
             this.components.v6ui = new V6UI();
             this.components.findReplace = getFindReplace();
 
+            // V11: New Components
+            this.components.colorPicker = new SmartColorPicker();
+            this.components.commandPalette = new CommandPalette(this);
+            this.components.draftManager = new DraftManager(this);
+
             // V9.1: Connect state to mode manager for proper cleanup
             this.components.modeManager.setState(this.state);
 
@@ -59,6 +69,7 @@ class ImageTextApp {
             }
 
             this.setupEventListeners();
+            this.setupV11EventListeners(); // V11 specific
             this.loadSavedState();
 
             // Setup markdown keyboard shortcuts
@@ -73,13 +84,16 @@ class ImageTextApp {
                 this.components.modeManager.restoreSavedMode();
             }
 
+            // V11: Make color picker available globally
+            window.smartColorPicker = this.components.colorPicker;
+
             this.initialized = true;
-            console.log('✨ Knowledge Visualizer v10.1 Simplified initialized successfully');
+            console.log('🚀 Knowledge Visualizer v11.0 - Ultimate UX Experience initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('✨ v10.1 Simplified! Giao diện đơn giản, dễ sử dụng hơn bao giờ hết!', 'success', 5000);
+                    this.components.v6ui.showToast('🚀 Welcome to v11! Press Ctrl+K for Command Palette', 'success', 5000);
                 }
             }, 500);
 
@@ -950,6 +964,85 @@ class ImageTextApp {
             selectAllBtn.addEventListener('click', () => {
                 this.components.imageBrowser.selectAllImages();
             });
+        }
+    }
+
+    setupV11EventListeners() {
+        // Enhanced color pickers with Smart Color Picker
+        const colorInputs = [
+            this.DOM.colorPicker,
+            this.DOM.subColorPicker,
+            this.DOM.bgColorPicker
+        ];
+
+        colorInputs.forEach(input => {
+            if (input) {
+                // Add click handler to open smart color picker
+                const wrapper = input.parentElement;
+                if (wrapper) {
+                    const btn = document.createElement('button');
+                    btn.className = 'v11-smart-picker-btn';
+                    btn.innerHTML = '🎨';
+                    btn.title = 'Open Smart Color Picker';
+                    btn.style.cssText = `
+                        position: absolute;
+                        right: 8px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: white;
+                        border: 1px solid #d1d5db;
+                        border-radius: 6px;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                        transition: all 0.2s;
+                        z-index: 10;
+                    `;
+
+                    btn.addEventListener('mouseenter', () => {
+                        btn.style.transform = 'translateY(-50%) scale(1.1)';
+                        btn.style.borderColor = '#667eea';
+                    });
+
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.transform = 'translateY(-50%) scale(1)';
+                        btn.style.borderColor = '#d1d5db';
+                    });
+
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (this.components.colorPicker) {
+                            this.components.colorPicker.open(input);
+                        }
+                    });
+
+                    // Make parent relative
+                    if (wrapper.style.position !== 'relative') {
+                        wrapper.style.position = 'relative';
+                    }
+
+                    wrapper.appendChild(btn);
+                }
+            }
+        });
+
+        // Help button to show all v11 features
+        const helpBtn = document.getElementById('helpBtn');
+        if (helpBtn) {
+            const originalHandler = helpBtn.onclick;
+            helpBtn.onclick = (e) => {
+                if (originalHandler) originalHandler(e);
+                // Show v11 features hint
+                setTimeout(() => {
+                    if (this.components.v6ui) {
+                        this.components.v6ui.showToast('💡 Tip: Press Ctrl+K for Command Palette!', 'info', 4000);
+                    }
+                }, 1000);
+            };
         }
     }
 }
