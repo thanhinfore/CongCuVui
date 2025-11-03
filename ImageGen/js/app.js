@@ -104,6 +104,24 @@ class ImageTextApp {
             numberSizeValue: document.getElementById('numberSizeValue'),
             numberingOptions: document.getElementById('numberingOptions'),
 
+            // Image Footer
+            footerCheckbox: document.getElementById('footerCheckbox'),
+            footerOptions: document.getElementById('footerOptions'),
+            footerText: document.getElementById('footerText'),
+            footerColor: document.getElementById('footerColor'),
+            footerColorHex: document.getElementById('footerColorHex'),
+            footerSize: document.getElementById('footerSize'),
+            footerSizeValue: document.getElementById('footerSizeValue'),
+            footerLogo: document.getElementById('footerLogo'),
+            footerLogoImg: document.getElementById('footerLogoImg'),
+            footerLogoPreview: document.getElementById('footerLogoPreview'),
+            clearFooterLogo: document.getElementById('clearFooterLogo'),
+            footerLogoHeight: document.getElementById('footerLogoHeight'),
+            footerLogoHeightValue: document.getElementById('footerLogoHeightValue'),
+            footerPosition: document.getElementById('footerPosition'),
+            footerTextOptions: document.getElementById('footerTextOptions'),
+            footerLogoOptions: document.getElementById('footerLogoOptions'),
+
             // Font family & size
             fontSelect: document.getElementById('fontSelect'),
             mainFontSize: document.getElementById('mainFontSize'),
@@ -276,6 +294,124 @@ class ImageTextApp {
             });
 
             this.DOM.numberSize.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        // Image Footer
+        if (this.DOM.footerCheckbox) {
+            this.DOM.footerCheckbox.addEventListener('change', () => {
+                const isChecked = this.DOM.footerCheckbox.checked;
+                if (this.DOM.footerOptions) {
+                    this.DOM.footerOptions.style.display = isChecked ? 'block' : 'none';
+                }
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        // Footer type radio buttons
+        const footerTypeRadios = document.querySelectorAll('input[name="footerType"]');
+        footerTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const isText = e.target.value === 'text';
+                if (this.DOM.footerTextOptions) {
+                    this.DOM.footerTextOptions.style.display = isText ? 'block' : 'none';
+                }
+                if (this.DOM.footerLogoOptions) {
+                    this.DOM.footerLogoOptions.style.display = isText ? 'none' : 'block';
+                }
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        });
+
+        // Footer text and color
+        if (this.DOM.footerText) {
+            this.DOM.footerText.addEventListener('input', () => {
+                this.components.controls?.handleStyleChange();
+            });
+            this.DOM.footerText.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.footerColor) {
+            this.DOM.footerColor.addEventListener('input', (e) => {
+                if (this.DOM.footerColorHex) {
+                    this.DOM.footerColorHex.value = e.target.value;
+                }
+                this.components.controls?.handleStyleChange();
+            });
+        }
+
+        if (this.DOM.footerColorHex) {
+            this.DOM.footerColorHex.addEventListener('input', (e) => {
+                if (this.DOM.footerColor && /^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                    this.DOM.footerColor.value = e.target.value;
+                    this.components.controls?.handleStyleChange();
+                }
+            });
+        }
+
+        if (this.DOM.footerSize) {
+            this.DOM.footerSize.addEventListener('input', (e) => {
+                if (this.DOM.footerSizeValue) {
+                    this.DOM.footerSizeValue.textContent = `${e.target.value}px`;
+                }
+                this.components.controls?.handleStyleChange();
+            });
+            this.DOM.footerSize.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        // Footer logo
+        if (this.DOM.footerLogo) {
+            this.DOM.footerLogo.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        if (this.DOM.footerLogoImg) {
+                            this.DOM.footerLogoImg.src = event.target.result;
+                            if (this.DOM.footerLogoPreview) {
+                                this.DOM.footerLogoPreview.style.display = 'block';
+                            }
+                            this.components.controls?.handleStyleChange();
+                            this.components.controls?.saveSettings();
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (this.DOM.clearFooterLogo) {
+            this.DOM.clearFooterLogo.addEventListener('click', () => {
+                if (this.DOM.footerLogo) this.DOM.footerLogo.value = '';
+                if (this.DOM.footerLogoImg) this.DOM.footerLogoImg.src = '';
+                if (this.DOM.footerLogoPreview) this.DOM.footerLogoPreview.style.display = 'none';
+                this.components.controls?.handleStyleChange();
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.footerLogoHeight) {
+            this.DOM.footerLogoHeight.addEventListener('input', (e) => {
+                if (this.DOM.footerLogoHeightValue) {
+                    this.DOM.footerLogoHeightValue.textContent = `${e.target.value}px`;
+                }
+                this.components.controls?.handleStyleChange();
+            });
+            this.DOM.footerLogoHeight.addEventListener('change', () => {
+                this.components.controls?.saveSettings();
+            });
+        }
+
+        if (this.DOM.footerPosition) {
+            this.DOM.footerPosition.addEventListener('change', () => {
+                this.components.controls?.handleStyleChange();
                 this.components.controls?.saveSettings();
             });
         }

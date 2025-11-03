@@ -303,3 +303,71 @@ canvas {
     font-size: 12px;
     color: #6b7280;
 }
+
+/* =====================================================
+   IMAGE FOOTER - V10.1
+   ===================================================== */
+
+.footer-options {
+    background: #f9fafb;
+    border-left: 3px solid #8b5cf6;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.footer-type-selector {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.radio-option input[type="radio"] {
+    cursor: pointer;
+}
+
+.footer-content-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-content-options .form-group {
+    margin-bottom: 0;
+}
+
+.footer-content-options .form-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #4b5563;
+}
+
+.footer-content-options .text-input,
+.footer-content-options .select-input,
+.footer-content-options .range-input {
+    font-size: 13px;
+}
+
+.footer-content-options .range-value {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.footer-content-options .color-picker {
+    width: 50px;
+    height: 32px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+}

@@ -393,6 +393,14 @@ export class ControlPanel {
             skipFirstPage: this.DOM.skipFirstPageCheckbox?.checked || false,
             numberPosition: this.DOM.numberPosition?.value || 'bottom-right',
             numberSize: this.DOM.numberSize?.value || '48',
+            footerEnabled: this.DOM.footerCheckbox?.checked || false,
+            footerType: document.querySelector('input[name="footerType"]:checked')?.value || 'text',
+            footerText: this.DOM.footerText?.value || '',
+            footerColor: this.DOM.footerColor?.value || '#ffffff',
+            footerSize: this.DOM.footerSize?.value || '24',
+            footerLogoSrc: this.DOM.footerLogoImg?.src || '',
+            footerLogoHeight: this.DOM.footerLogoHeight?.value || '40',
+            footerPosition: this.DOM.footerPosition?.value || 'bottom-center',
             lastSaved: new Date().toISOString()
         };
 
@@ -459,6 +467,60 @@ export class ControlPanel {
             if (this.DOM.numberSizeValue) {
                 this.DOM.numberSizeValue.textContent = `${this.DOM.numberSize.value}px`;
             }
+        }
+
+        // Image Footer
+        if (this.DOM.footerCheckbox) {
+            this.DOM.footerCheckbox.checked = settings.footerEnabled || false;
+            if (this.DOM.footerOptions) {
+                this.DOM.footerOptions.style.display = settings.footerEnabled ? 'block' : 'none';
+            }
+        }
+
+        // Footer type radio
+        const footerTypeRadios = document.querySelectorAll('input[name="footerType"]');
+        const footerType = settings.footerType || 'text';
+        footerTypeRadios.forEach(radio => {
+            radio.checked = radio.value === footerType;
+        });
+
+        // Toggle footer options visibility
+        if (this.DOM.footerTextOptions) {
+            this.DOM.footerTextOptions.style.display = footerType === 'text' ? 'block' : 'none';
+        }
+        if (this.DOM.footerLogoOptions) {
+            this.DOM.footerLogoOptions.style.display = footerType === 'logo' ? 'block' : 'none';
+        }
+
+        if (this.DOM.footerText) {
+            this.DOM.footerText.value = settings.footerText || '';
+        }
+        if (this.DOM.footerColor) {
+            this.DOM.footerColor.value = settings.footerColor || '#ffffff';
+            if (this.DOM.footerColorHex) {
+                this.DOM.footerColorHex.value = settings.footerColor || '#ffffff';
+            }
+        }
+        if (this.DOM.footerSize) {
+            this.DOM.footerSize.value = settings.footerSize || '24';
+            if (this.DOM.footerSizeValue) {
+                this.DOM.footerSizeValue.textContent = `${this.DOM.footerSize.value}px`;
+            }
+        }
+        if (this.DOM.footerLogoImg && settings.footerLogoSrc) {
+            this.DOM.footerLogoImg.src = settings.footerLogoSrc;
+            if (this.DOM.footerLogoPreview) {
+                this.DOM.footerLogoPreview.style.display = 'block';
+            }
+        }
+        if (this.DOM.footerLogoHeight) {
+            this.DOM.footerLogoHeight.value = settings.footerLogoHeight || '40';
+            if (this.DOM.footerLogoHeightValue) {
+                this.DOM.footerLogoHeightValue.textContent = `${this.DOM.footerLogoHeight.value}px`;
+            }
+        }
+        if (this.DOM.footerPosition) {
+            this.DOM.footerPosition.value = settings.footerPosition || 'bottom-center';
         }
 
         if (this.DOM.mainFontSize) {
