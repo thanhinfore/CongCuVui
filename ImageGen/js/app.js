@@ -15,6 +15,7 @@ import { ModeManager } from './modules/modeManager.js';
 import { TextPositioning } from './modules/textPositioning.js';
 import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
+import { getFindReplace } from './modules/findReplace.js';
 
 class ImageTextApp {
     constructor() {
@@ -43,6 +44,7 @@ class ImageTextApp {
             this.components.modeManager = new ModeManager();
             this.components.textPositioning = new TextPositioning(this.DOM, this.state);
             this.components.v6ui = new V6UI();
+            this.components.findReplace = getFindReplace();
 
             // V9.1: Connect state to mode manager for proper cleanup
             this.components.modeManager.setState(this.state);
