@@ -271,6 +271,10 @@ export class PreviewPanel {
             alpha: true
         });
 
+        // V10.1 FIX: Better image quality settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
         // Apply filters using CSS filters on a temporary canvas
         const filterString = this.getFilterString();
         if (filterString && filterString.trim() !== '') {
@@ -439,7 +443,8 @@ export class PreviewPanel {
                     // Calculate font with proper weight and style
                     const weight = segment.bold ? 'bold' : baseWeight;
                     const style = segment.italic ? 'italic' : fontStyle;
-                    ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
+                    // V10.1 FIX: Use buildFontString for consistent font rendering
+                    ctx.font = this.emojiRenderer.buildFontString(style, weight, fontSize, fontFamily);
                     const wordWidth = ctx.measureText(wordText).width;
 
                     if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
@@ -567,6 +572,10 @@ export class PreviewPanel {
         }
 
         ctx.textAlign = 'left';
+
+        // V10.1 FIX: Better text rendering quality
+        if (ctx.fontKerning) ctx.fontKerning = 'normal';
+        if (ctx.textRendering) ctx.textRendering = 'optimizeLegibility';
 
         line.segments.forEach(segment => {
             const weight = segment.bold ? 'bold' : baseWeight;
@@ -880,7 +889,8 @@ export class PreviewPanel {
                     let lineWidth = 0;
                     line.segments.forEach(segment => {
                         const weight = segment.bold ? 'bold' : effects.fontWeight;
-                        ctx.font = `${effects.fontStyle} ${weight} ${subFontSize}px ${canvasFont}`;
+                        // V10.1 FIX: Use buildFontString for consistent font rendering
+                        ctx.font = this.emojiRenderer.buildFontString(effects.fontStyle, weight, subFontSize, canvasFont);
                         lineWidth += ctx.measureText(segment.text).width;
                     });
                     maxWidth = Math.max(maxWidth, lineWidth);
@@ -992,6 +1002,10 @@ export class PreviewPanel {
             willReadFrequently: false,
             alpha: true
         });
+
+        // V10.1 FIX: Better image quality settings for export
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Apply filters for full-size export
         const filterString = this.getFilterString();
