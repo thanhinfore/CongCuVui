@@ -1,6 +1,6 @@
 /* =====================================================
-   VIDEO EXPORTER v11 - Export Images to Video
-   Features: MP4, WebM, GIF export with transitions
+   VIDEO EXPORTER v11.1 - Professional Video Export
+   Full Preview Panel Integration with All Features
    ===================================================== */
 
 export class VideoExporter {
@@ -10,6 +10,7 @@ export class VideoExporter {
         this.recorder = null;
         this.chunks = [];
         this.gifWorker = null;
+        this.cancelRequested = false;
         this.init();
     }
 
@@ -27,7 +28,7 @@ export class VideoExporter {
         panel.innerHTML = `
             <div class="video-export-panel">
                 <div class="panel-header">
-                    <h3>🎬 Video Export</h3>
+                    <h3>🎬 Professional Video Export</h3>
                     <button class="btn-close-panel" id="closeVideoExport">
                         <svg viewBox="0 0 24 24" width="20" height="20">
                             <path stroke="currentColor" stroke-width="2" fill="none" d="M18 6L6 18M6 6l12 12"/>
@@ -36,15 +37,25 @@ export class VideoExporter {
                 </div>
 
                 <div class="panel-body">
+                    <!-- Info Banner -->
+                    <div class="info-banner">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
+                        </svg>
+                        <span>Exports all images with full styling: text, filters, effects, footer & numbering</span>
+                    </div>
+
                     <div class="export-section">
-                        <h4>📹 Format</h4>
+                        <h4>📹 Format & Quality</h4>
                         <div class="format-options">
                             <label class="format-option">
                                 <input type="radio" name="videoFormat" value="webm" checked>
                                 <div class="option-card">
                                     <div class="option-icon">🎥</div>
-                                    <div class="option-name">WebM</div>
-                                    <div class="option-desc">High quality, small size</div>
+                                    <div class="option-name">WebM (VP9)</div>
+                                    <div class="option-desc">Best quality, small size</div>
+                                    <div class="option-tech">4K support • 5 Mbps</div>
                                 </div>
                             </label>
                             <label class="format-option">
@@ -53,22 +64,32 @@ export class VideoExporter {
                                     <div class="option-icon">🖼️</div>
                                     <div class="option-name">GIF</div>
                                     <div class="option-desc">Universal compatibility</div>
+                                    <div class="option-tech">Max 800px • All platforms</div>
                                 </div>
                             </label>
+                        </div>
+
+                        <div class="quality-selector" id="webmQuality">
+                            <label>Video Quality:</label>
+                            <select id="videoQuality" class="v11-select v11-input">
+                                <option value="high">High (5 Mbps) - Best quality</option>
+                                <option value="medium" selected>Medium (3 Mbps) - Balanced</option>
+                                <option value="low">Low (1 Mbps) - Small file</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="export-section">
-                        <h4>⏱️ Timing</h4>
+                        <h4>⏱️ Timing & Animation</h4>
                         <div class="setting-group">
                             <label>
                                 Duration per image:
                                 <span class="value-display" id="imageDurationValue">2.0s</span>
                             </label>
-                            <input type="range" id="imageDuration" min="0.5" max="5" step="0.1" value="2" class="v11-range">
+                            <input type="range" id="imageDuration" min="0.5" max="10" step="0.1" value="2" class="v11-range">
                             <div class="range-labels">
-                                <span>0.5s</span>
-                                <span>5s</span>
+                                <span>0.5s (Fast)</span>
+                                <span>10s (Slow)</span>
                             </div>
                         </div>
 
@@ -92,7 +113,7 @@ export class VideoExporter {
                             <input type="range" id="videoFps" min="15" max="60" step="5" value="30" class="v11-range">
                             <div class="range-labels">
                                 <span>15 fps</span>
-                                <span>60 fps</span>
+                                <span>60 fps (Smooth)</span>
                             </div>
                         </div>
                     </div>
@@ -100,37 +121,56 @@ export class VideoExporter {
                     <div class="export-section">
                         <h4>✨ Transition Effect</h4>
                         <select id="transitionEffect" class="v11-select v11-input">
-                            <option value="fade">Fade</option>
-                            <option value="slide-left">Slide Left</option>
-                            <option value="slide-right">Slide Right</option>
-                            <option value="slide-up">Slide Up</option>
-                            <option value="slide-down">Slide Down</option>
-                            <option value="zoom">Zoom</option>
-                            <option value="none">No Transition</option>
+                            <option value="fade">🌅 Fade - Smooth opacity transition</option>
+                            <option value="slide-left">⬅️ Slide Left - Dynamic movement</option>
+                            <option value="slide-right">➡️ Slide Right - Dynamic movement</option>
+                            <option value="slide-up">⬆️ Slide Up - Upward motion</option>
+                            <option value="slide-down">⬇️ Slide Down - Downward motion</option>
+                            <option value="zoom">🔍 Zoom - Scale effect</option>
+                            <option value="crossfade">✨ Crossfade - Professional blend</option>
+                            <option value="none">⚡ None - Instant cut</option>
                         </select>
                     </div>
 
                     <div class="export-section">
-                        <h4>🔄 Loop</h4>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="videoLoop" checked class="v11-checkbox">
-                            <span>Loop video (repeat infinitely)</span>
-                        </label>
+                        <h4>🎨 Rendering Options</h4>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="renderFilters" checked class="v11-checkbox">
+                                <span>Apply image filters</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="renderFooter" checked class="v11-checkbox">
+                                <span>Include footer</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="renderNumbering" checked class="v11-checkbox">
+                                <span>Include numbering</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="videoLoop" checked class="v11-checkbox">
+                                <span>Loop video</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="export-section">
-                        <h4>📊 Preview</h4>
+                        <h4>📊 Video Preview</h4>
                         <div class="video-preview-info">
                             <div class="info-item">
-                                <span class="info-label">Images:</span>
+                                <span class="info-label">Images</span>
                                 <span class="info-value" id="previewImageCount">0</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Duration:</span>
+                                <span class="info-label">Duration</span>
                                 <span class="info-value" id="previewDuration">0.0s</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">Size estimate:</span>
+                                <span class="info-label">Resolution</span>
+                                <span class="info-value" id="previewResolution">0x0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Est. Size</span>
                                 <span class="info-value" id="previewSize">~0 MB</span>
                             </div>
                         </div>
@@ -138,13 +178,16 @@ export class VideoExporter {
 
                     <div class="export-progress" id="exportProgress" style="display: none;">
                         <div class="progress-header">
-                            <span>Exporting...</span>
+                            <span id="exportProgressTitle">Exporting...</span>
                             <span id="exportProgressPercent">0%</span>
                         </div>
                         <div class="v11-progress">
                             <div class="v11-progress-bar" id="exportProgressBar" style="width: 0%"></div>
                         </div>
-                        <div class="progress-status" id="exportProgressStatus">Preparing...</div>
+                        <div class="progress-details">
+                            <div class="progress-status" id="exportProgressStatus">Preparing...</div>
+                            <div class="progress-time" id="exportProgressTime"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -154,7 +197,7 @@ export class VideoExporter {
                         <svg viewBox="0 0 24 24" width="20" height="20">
                             <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                         </svg>
-                        Export Video
+                        Export Professional Video
                     </button>
                 </div>
             </div>
@@ -178,37 +221,40 @@ export class VideoExporter {
             }
         });
 
-        // Range inputs
-        const imageDuration = document.getElementById('imageDuration');
-        const transitionDuration = document.getElementById('transitionDuration');
-        const videoFps = document.getElementById('videoFps');
+        // Range inputs with live update
+        const ranges = [
+            { id: 'imageDuration', display: 'imageDurationValue', suffix: 's' },
+            { id: 'transitionDuration', display: 'transitionDurationValue', suffix: 's' },
+            { id: 'videoFps', display: 'fpsValue', suffix: ' fps' }
+        ];
 
-        if (imageDuration) {
-            imageDuration.addEventListener('input', (e) => {
-                document.getElementById('imageDurationValue').textContent = `${e.target.value}s`;
-                this.updatePreview();
-            });
-        }
-
-        if (transitionDuration) {
-            transitionDuration.addEventListener('input', (e) => {
-                document.getElementById('transitionDurationValue').textContent = `${e.target.value}s`;
-                this.updatePreview();
-            });
-        }
-
-        if (videoFps) {
-            videoFps.addEventListener('input', (e) => {
-                document.getElementById('fpsValue').textContent = `${e.target.value} fps`;
-                this.updatePreview();
-            });
-        }
+        ranges.forEach(({ id, display, suffix }) => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', (e) => {
+                    document.getElementById(display).textContent = `${e.target.value}${suffix}`;
+                    this.updatePreview();
+                });
+            }
+        });
 
         // Format change
         document.querySelectorAll('input[name="videoFormat"]').forEach(radio => {
-            radio.addEventListener('change', () => {
+            radio.addEventListener('change', (e) => {
+                const webmQuality = document.getElementById('webmQuality');
+                if (webmQuality) {
+                    webmQuality.style.display = e.target.value === 'webm' ? 'block' : 'none';
+                }
                 this.updatePreview();
             });
+        });
+
+        // Quality, transition, checkboxes change
+        ['videoQuality', 'transitionEffect', 'renderFilters', 'renderFooter', 'renderNumbering', 'videoLoop'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', () => this.updatePreview());
+            }
         });
 
         // Export button
@@ -220,14 +266,12 @@ export class VideoExporter {
         // Cancel button
         const cancelBtn = document.getElementById('cancelVideoExport');
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.close());
-        }
-
-        // Transition effect
-        const transitionEffect = document.getElementById('transitionEffect');
-        if (transitionEffect) {
-            transitionEffect.addEventListener('change', () => {
-                this.updatePreview();
+            cancelBtn.addEventListener('click', () => {
+                if (this.isExporting) {
+                    this.cancelExport();
+                } else {
+                    this.close();
+                }
             });
         }
     }
@@ -241,6 +285,7 @@ export class VideoExporter {
         }
 
         this.panel.classList.add('active');
+        this.cancelRequested = false;
         this.updatePreview();
     }
 
@@ -255,21 +300,51 @@ export class VideoExporter {
     }
 
     updatePreview() {
-        const imageCount = this.app.state?.images?.length || 0;
+        const images = this.app.state?.images || [];
+        const imageCount = images.length;
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2);
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5);
         const format = document.querySelector('input[name="videoFormat"]:checked')?.value || 'webm';
+        const quality = document.getElementById('videoQuality')?.value || 'medium';
 
         const totalDuration = imageCount * (imageDuration + transitionDuration);
 
-        // Size estimate (very rough)
+        // Resolution
+        const firstImage = images[0];
+        let width = 0, height = 0;
+        if (firstImage && firstImage.img) {
+            width = firstImage.img.width;
+            height = firstImage.img.height;
+
+            // GIF limit
+            if (format === 'gif') {
+                const maxGifWidth = 800;
+                if (width > maxGifWidth) {
+                    height = Math.round(height * (maxGifWidth / width));
+                    width = maxGifWidth;
+                }
+            }
+        }
+
+        // Size estimate
         const fps = parseInt(document.getElementById('videoFps')?.value || 30);
         const totalFrames = totalDuration * fps;
-        const bytesPerFrame = format === 'gif' ? 1024 * 50 : 1024 * 10; // GIF larger than video
+        let bytesPerFrame;
+
+        if (format === 'gif') {
+            bytesPerFrame = 1024 * 50; // GIF larger
+        } else {
+            // WebM bitrate
+            const bitrates = { high: 5000000, medium: 3000000, low: 1000000 };
+            const bitrate = bitrates[quality] || 3000000;
+            bytesPerFrame = bitrate / 8 / fps; // bytes per frame
+        }
+
         const estimatedSize = (totalFrames * bytesPerFrame) / (1024 * 1024);
 
         document.getElementById('previewImageCount').textContent = imageCount;
         document.getElementById('previewDuration').textContent = `${totalDuration.toFixed(1)}s`;
+        document.getElementById('previewResolution').textContent = `${width}×${height}`;
         document.getElementById('previewSize').textContent = `~${estimatedSize.toFixed(1)} MB`;
     }
 
@@ -283,7 +358,9 @@ export class VideoExporter {
         }
 
         this.isExporting = true;
+        this.cancelRequested = false;
         this.showProgress(true);
+        this.startTime = Date.now();
 
         const format = document.querySelector('input[name="videoFormat"]:checked')?.value || 'webm';
 
@@ -293,9 +370,15 @@ export class VideoExporter {
             } else {
                 await this.exportVideo(format);
             }
+
+            if (!this.cancelRequested) {
+                this.showToast('✅ Video exported successfully!', 'success');
+            }
         } catch (error) {
             console.error('Export failed:', error);
-            this.showToast('Export failed: ' + error.message, 'error');
+            if (!this.cancelRequested) {
+                this.showToast('❌ Export failed: ' + error.message, 'error');
+            }
         } finally {
             this.isExporting = false;
             this.showProgress(false);
@@ -308,10 +391,11 @@ export class VideoExporter {
             throw new Error('No images to export');
         }
 
-        const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000; // ms
-        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000; // ms
+        const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000;
+        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000;
         const fps = parseInt(document.getElementById('videoFps')?.value || 30);
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
+        const quality = document.getElementById('videoQuality')?.value || 'medium';
 
         // Get dimensions from first image
         const firstImage = images[0];
@@ -325,22 +409,23 @@ export class VideoExporter {
         canvas.height = firstImage.img.height;
         const ctx = canvas.getContext('2d');
 
-        // Render full-resolution canvases for all images
-        this.updateProgressStatus('Preparing images...');
-        const renderedCanvases = await this.renderAllImages(images, canvas.width, canvas.height);
+        // Render full-resolution canvases using PreviewPanel
+        this.updateProgressStatus('🎨 Rendering all images with full styling...');
+        const renderedCanvases = await this.renderAllImagesWithPreview(images, canvas.width, canvas.height);
+
+        if (this.cancelRequested) throw new Error('Cancelled by user');
 
         // Setup MediaRecorder
         const stream = canvas.captureStream(fps);
-        const mimeType = format === 'webm' ? 'video/webm;codecs=vp9' : 'video/mp4';
+        const mimeType = 'video/webm;codecs=vp9';
+        const finalMimeType = MediaRecorder.isTypeSupported(mimeType) ? mimeType : 'video/webm';
 
-        // Fallback if VP9 not supported
-        const finalMimeType = MediaRecorder.isTypeSupported(mimeType)
-            ? mimeType
-            : 'video/webm';
+        const bitrates = { high: 5000000, medium: 3000000, low: 1000000 };
+        const videoBitsPerSecond = bitrates[quality] || 3000000;
 
         this.recorder = new MediaRecorder(stream, {
             mimeType: finalMimeType,
-            videoBitsPerSecond: 5000000 // 5 Mbps
+            videoBitsPerSecond
         });
 
         this.chunks = [];
@@ -352,20 +437,22 @@ export class VideoExporter {
         };
 
         this.recorder.onstop = () => {
+            if (this.cancelRequested) return;
             const blob = new Blob(this.chunks, { type: finalMimeType });
-            this.downloadBlob(blob, `video-export.${format}`);
-            this.showToast('Video exported successfully!', 'success');
+            this.downloadBlob(blob, `video-export-${Date.now()}.webm`);
         };
 
         // Start recording
-        this.recorder.start();
+        this.recorder.start(100); // Collect data every 100ms
 
         const totalFrames = images.length * ((imageDuration + transitionDuration) * fps / 1000);
         let currentFrame = 0;
 
         // Render each image with transitions
         for (let i = 0; i < renderedCanvases.length; i++) {
-            this.updateProgressStatus(`Rendering image ${i + 1}/${renderedCanvases.length}...`);
+            if (this.cancelRequested) break;
+
+            this.updateProgressStatus(`🎬 Recording image ${i + 1}/${renderedCanvases.length}...`);
 
             const currentCanvas = renderedCanvases[i];
             if (!currentCanvas) continue;
@@ -374,32 +461,36 @@ export class VideoExporter {
 
             // Display current image
             const displayFrames = Math.floor(imageDuration * fps / 1000);
-            for (let f = 0; f < displayFrames; f++) {
+            for (let f = 0; f < displayFrames && !this.cancelRequested; f++) {
                 ctx.drawImage(currentCanvas, 0, 0);
                 await this.waitForNextFrame(1000 / fps);
                 currentFrame++;
                 this.updateProgressBar((currentFrame / totalFrames) * 100);
+                this.updateTimeRemaining(currentFrame, totalFrames);
             }
 
             // Transition to next image
-            if (nextCanvas && transitionDuration > 0) {
+            if (nextCanvas && transitionDuration > 0 && !this.cancelRequested) {
                 const transitionFrames = Math.floor(transitionDuration * fps / 1000);
-                for (let f = 0; f < transitionFrames; f++) {
+                for (let f = 0; f < transitionFrames && !this.cancelRequested; f++) {
                     const progress = f / transitionFrames;
                     this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
                     await this.waitForNextFrame(1000 / fps);
                     currentFrame++;
                     this.updateProgressBar((currentFrame / totalFrames) * 100);
+                    this.updateTimeRemaining(currentFrame, totalFrames);
                 }
             }
         }
 
         // Stop recording
-        this.recorder.stop();
+        if (this.recorder.state !== 'inactive') {
+            this.recorder.stop();
+        }
     }
 
     async exportGIF() {
-        this.updateProgressStatus('Loading GIF encoder...');
+        this.updateProgressStatus('📦 Loading GIF encoder...');
 
         const images = this.app.state.images;
         if (!images || images.length === 0) {
@@ -411,14 +502,17 @@ export class VideoExporter {
             await this.loadGifJS();
         }
 
-        const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000; // ms
-        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000; // ms
-        const fps = Math.min(parseInt(document.getElementById('videoFps')?.value || 30), 30); // GIF max 30fps recommended
+        if (this.cancelRequested) throw new Error('Cancelled by user');
+
+        const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000;
+        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000;
+        const fps = Math.min(parseInt(document.getElementById('videoFps')?.value || 30), 30);
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
 
         // Get dimensions from first image
         const firstImage = images[0];
-        const gifWidth = Math.min(firstImage.img.width, 800); // Limit GIF size
+        const maxGifWidth = 800;
+        const gifWidth = Math.min(firstImage.img.width, maxGifWidth);
         const gifHeight = Math.round(firstImage.img.height * (gifWidth / firstImage.img.width));
 
         const gif = new window.GIF({
@@ -435,15 +529,17 @@ export class VideoExporter {
         canvas.height = gifHeight;
         const ctx = canvas.getContext('2d');
 
-        // Render full-resolution canvases for all images
-        this.updateProgressStatus('Preparing images...');
-        const renderedCanvases = await this.renderAllImages(images, gifWidth, gifHeight);
+        // Render full-resolution canvases
+        this.updateProgressStatus('🎨 Rendering all images...');
+        const renderedCanvases = await this.renderAllImagesWithPreview(images, gifWidth, gifHeight);
 
-        const totalSteps = renderedCanvases.length * 2; // image display + transition
+        if (this.cancelRequested) throw new Error('Cancelled by user');
+
+        const totalSteps = renderedCanvases.length * 2;
         let currentStep = 0;
 
-        for (let i = 0; i < renderedCanvases.length; i++) {
-            this.updateProgressStatus(`Processing image ${i + 1}/${renderedCanvases.length}...`);
+        for (let i = 0; i < renderedCanvases.length && !this.cancelRequested; i++) {
+            this.updateProgressStatus(`🖼️ Processing GIF frame ${i + 1}/${renderedCanvases.length}...`);
 
             const currentCanvas = renderedCanvases[i];
             const nextCanvas = i < renderedCanvases.length - 1 ? renderedCanvases[i + 1] : null;
@@ -458,7 +554,7 @@ export class VideoExporter {
             // Add transition frames
             if (nextCanvas && transitionDuration > 0) {
                 const transitionFrames = Math.max(Math.floor(transitionDuration * fps / 1000), 5);
-                for (let f = 0; f < transitionFrames; f++) {
+                for (let f = 0; f < transitionFrames && !this.cancelRequested; f++) {
                     const progress = f / transitionFrames;
                     this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
                     gif.addFrame(ctx, { delay: transitionDuration / transitionFrames, copy: true });
@@ -469,17 +565,20 @@ export class VideoExporter {
             this.updateProgressBar((currentStep / totalSteps) * 100);
         }
 
-        this.updateProgressStatus('Encoding GIF...');
+        if (this.cancelRequested) throw new Error('Cancelled by user');
+
+        this.updateProgressStatus('🔄 Encoding GIF file...');
 
         gif.on('finished', (blob) => {
-            this.downloadBlob(blob, 'video-export.gif');
-            this.showToast('GIF exported successfully!', 'success');
+            if (!this.cancelRequested) {
+                this.downloadBlob(blob, `video-export-${Date.now()}.gif`);
+            }
         });
 
         gif.render();
     }
 
-    async renderAllImages(images, width, height) {
+    async renderAllImagesWithPreview(images, width, height) {
         const canvases = [];
         const preview = this.app.components?.preview;
 
@@ -487,131 +586,270 @@ export class VideoExporter {
             throw new Error('Preview component not available');
         }
 
+        const renderFilters = document.getElementById('renderFilters')?.checked ?? true;
+        const renderFooter = document.getElementById('renderFooter')?.checked ?? true;
+        const renderNumbering = document.getElementById('renderNumbering')?.checked ?? true;
+
         for (let i = 0; i < images.length; i++) {
-            this.updateProgressStatus(`Preparing image ${i + 1}/${images.length}...`);
+            if (this.cancelRequested) break;
+
+            this.updateProgressStatus(`🎨 Rendering image ${i + 1}/${images.length} with full styling...`);
+            this.updateProgressBar((i / images.length) * 100);
 
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', {
+                willReadFrequently: false,
+                alpha: true
+            });
+
+            // High quality rendering
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
             const img = images[i].img;
 
-            // Draw image
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Get text config - use textConfigs if available, otherwise use default from DOM
-            let textConfig;
-            if (preview.textConfigs && preview.textConfigs[i]) {
-                textConfig = preview.textConfigs[i];
-            } else {
-                // Build config from current DOM state
-                textConfig = this.getCurrentTextConfig(i);
+            // Apply filters
+            if (renderFilters && preview.getFilterString) {
+                const filterString = preview.getFilterString();
+                if (filterString && filterString.trim() !== '') {
+                    ctx.filter = filterString;
+                }
             }
 
-            // Render text overlay using preview's render method
-            // We need to call the text rendering part
-            await this.renderTextOnCanvas(ctx, canvas, textConfig, width, height);
+            // Draw image
+            ctx.drawImage(img, 0, 0, width, height);
+            ctx.filter = 'none';
+
+            // Scale for text rendering
+            const scale = width / img.width;
+
+            // Get text config
+            const textConfig = preview.textConfigs?.[i] || this.getDefaultTextConfig(i);
+
+            // Render text using preview panel method if available
+            if (preview.wrapStyledText && preview.markdownParser) {
+                await this.renderTextUsingPreview(ctx, canvas, textConfig, scale, preview);
+            }
+
+            // Render footer if enabled
+            if (renderFooter && this.app.DOM?.footerCheckbox?.checked) {
+                await this.renderFooter(ctx, canvas, scale);
+            }
+
+            // Render numbering if enabled
+            if (renderNumbering && this.app.DOM?.imageNumberingCheckbox?.checked) {
+                await this.renderNumbering(ctx, canvas, i, scale);
+            }
 
             canvases.push(canvas);
+
+            // Small delay to prevent blocking
+            await this.waitForNextFrame(1);
         }
 
         return canvases;
     }
 
-    getCurrentTextConfig(imageIndex) {
-        // Build text config from current DOM state
-        const app = this.app;
-        return {
-            imageIndex: imageIndex,
-            text: app.DOM?.textInput?.value || '',
-            font: app.DOM?.fontSelect?.value || 'Inter, sans-serif',
-            mainColor: app.DOM?.colorPicker?.value || '#FFFFFF',
-            subColor: app.DOM?.subColorPicker?.value || '#FFFFFF',
-            position: app.DOM?.positionPicker?.value || 'bottom',
-            mainFontSize: parseInt(app.DOM?.mainFontSize?.value || 48),
-            subFontSize: parseInt(app.DOM?.subFontSize?.value || 32),
-            fontWeight: app.DOM?.fontWeightSelect?.value || '400',
-            textBorder: app.DOM?.textBorderCheckbox?.checked || false,
-            textShadow: app.DOM?.textShadowCheckbox?.checked || false,
-            borderWidth: parseInt(app.DOM?.borderWidth?.value || 2),
-            shadowBlur: parseInt(app.DOM?.shadowBlur?.value || 4)
-        };
-    }
+    async renderTextUsingPreview(ctx, canvas, config, scale, preview) {
+        if (!config.text || !config.text.trim()) return;
 
-    async renderTextOnCanvas(ctx, canvas, config, width, height) {
-        // Simple text rendering - we'll use basic implementation
-        // In production, this should use the full preview panel rendering logic
+        const lines = config.text.split('\n');
 
-        if (!config.text || config.text.trim() === '') {
-            return;
-        }
+        // Use markdown parser from preview
+        const parsedLines = lines.map(line =>
+            preview.markdownParser ? preview.markdownParser.parse(line) : { segments: [{ text: line }] }
+        );
 
-        const lines = config.text.split('\n').filter(line => line.trim());
-        if (lines.length === 0) return;
-
-        const mainText = lines[0];
-        const subText = lines.slice(1).join('\n');
-
-        ctx.save();
-
-        // Setup text style
-        ctx.font = `${config.fontWeight} ${config.mainFontSize}px ${config.font}`;
-        ctx.fillStyle = config.mainColor;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // Calculate position
+        // Get position
+        const position = config.position || 'bottom';
         let y;
-        const centerX = width / 2;
 
-        switch (config.position) {
+        switch (position) {
             case 'top':
-                y = height * 0.15;
+                y = canvas.height * 0.15;
                 break;
             case 'middle':
-                y = height * 0.5;
+                y = canvas.height * 0.5;
                 break;
             case 'bottom':
             default:
-                y = height * 0.85;
+                y = canvas.height * 0.85;
                 break;
         }
 
-        // Draw text effects
+        const fontSize = (config.mainFontSize || 48) * scale;
+        const lineHeight = 2.0;
+
+        // Render using preview's wrapStyledText if available
+        parsedLines.forEach((line, index) => {
+            const currentY = y + (index * fontSize * lineHeight);
+
+            if (preview.wrapStyledText) {
+                try {
+                    preview.wrapStyledText(
+                        ctx,
+                        line,
+                        canvas.width / 2,
+                        currentY,
+                        canvas.width * 0.9,
+                        fontSize,
+                        {
+                            fontFamily: config.font || 'Inter, sans-serif',
+                            fontWeight: config.fontWeight || '400',
+                            fontStyle: 'normal',
+                            mainColor: index === 0 ? config.mainColor : config.subColor,
+                            letterSpacing: 0,
+                            lineHeight: lineHeight,
+                            textBorder: config.textBorder,
+                            textShadow: config.textShadow,
+                            borderWidth: config.borderWidth || 2,
+                            shadowBlur: config.shadowBlur || 4
+                        },
+                        'center',
+                        canvas
+                    );
+                } catch (e) {
+                    // Fallback to simple rendering
+                    this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
+                }
+            } else {
+                this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
+            }
+        });
+    }
+
+    renderSimpleText(ctx, line, x, y, fontSize, config) {
+        ctx.save();
+        ctx.font = `${config.fontWeight || '400'} ${fontSize}px ${config.font || 'Inter, sans-serif'}`;
+        ctx.fillStyle = config.mainColor || '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
         if (config.textShadow) {
             ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = config.shadowBlur;
+            ctx.shadowBlur = config.shadowBlur || 4;
             ctx.shadowOffsetX = 2;
             ctx.shadowOffsetY = 2;
         }
 
+        const text = line.segments ? line.segments.map(s => s.text).join('') : line;
+
         if (config.textBorder) {
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = config.borderWidth;
-            ctx.strokeText(mainText, centerX, y);
+            ctx.lineWidth = config.borderWidth || 2;
+            ctx.strokeText(text, x, y);
         }
 
-        // Draw main text
-        ctx.fillText(mainText, centerX, y);
-
-        // Draw subtitle if exists
-        if (subText) {
-            ctx.font = `${config.fontWeight} ${config.subFontSize}px ${config.font}`;
-            ctx.fillStyle = config.subColor;
-
-            const subLines = subText.split('\n');
-            subLines.forEach((line, index) => {
-                const subY = y + config.mainFontSize + 20 + (index * config.subFontSize * 1.2);
-
-                if (config.textBorder) {
-                    ctx.strokeText(line, centerX, subY);
-                }
-                ctx.fillText(line, centerX, subY);
-            });
-        }
-
+        ctx.fillText(text, x, y);
         ctx.restore();
+    }
+
+    async renderFooter(ctx, canvas, scale) {
+        const footerText = this.app.DOM?.footerText?.value;
+        const footerType = document.querySelector('input[name="footerType"]:checked')?.value;
+
+        if (footerType === 'text' && footerText) {
+            const footerSize = (parseInt(this.app.DOM?.footerSize?.value) || 24) * scale;
+            const footerColor = this.app.DOM?.footerColor?.value || '#FFFFFF';
+            const footerPosition = this.app.DOM?.footerPosition?.value || 'bottom-right';
+
+            ctx.save();
+            ctx.font = `400 ${footerSize}px Inter, sans-serif`;
+            ctx.fillStyle = footerColor;
+
+            let x, y;
+            const padding = 20 * scale;
+
+            switch (footerPosition) {
+                case 'bottom-left':
+                    ctx.textAlign = 'left';
+                    x = padding;
+                    y = canvas.height - padding;
+                    break;
+                case 'bottom-center':
+                    ctx.textAlign = 'center';
+                    x = canvas.width / 2;
+                    y = canvas.height - padding;
+                    break;
+                case 'bottom-right':
+                default:
+                    ctx.textAlign = 'right';
+                    x = canvas.width - padding;
+                    y = canvas.height - padding;
+                    break;
+            }
+
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(footerText, x, y);
+            ctx.restore();
+        }
+    }
+
+    async renderNumbering(ctx, canvas, imageIndex, scale) {
+        const skipFirst = this.app.DOM?.skipFirstPageCheckbox?.checked;
+        if (skipFirst && imageIndex === 0) return;
+
+        const numberSize = (parseInt(this.app.DOM?.numberSize?.value) || 48) * scale;
+        const numberPosition = this.app.DOM?.numberPosition?.value || 'bottom-right';
+        const number = skipFirst ? imageIndex : imageIndex + 1;
+
+        ctx.save();
+        ctx.font = `700 ${numberSize}px Inter, sans-serif`;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = numberSize * 0.1;
+
+        let x, y;
+        const padding = 30 * scale;
+
+        switch (numberPosition) {
+            case 'top-left':
+                ctx.textAlign = 'left';
+                x = padding;
+                y = padding + numberSize;
+                break;
+            case 'top-right':
+                ctx.textAlign = 'right';
+                x = canvas.width - padding;
+                y = padding + numberSize;
+                break;
+            case 'bottom-left':
+                ctx.textAlign = 'left';
+                x = padding;
+                y = canvas.height - padding;
+                break;
+            case 'bottom-right':
+            default:
+                ctx.textAlign = 'right';
+                x = canvas.width - padding;
+                y = canvas.height - padding;
+                break;
+        }
+
+        ctx.textBaseline = 'bottom';
+        ctx.strokeText(number.toString(), x, y);
+        ctx.fillText(number.toString(), x, y);
+        ctx.restore();
+    }
+
+    getDefaultTextConfig(imageIndex) {
+        return {
+            imageIndex,
+            text: this.app.DOM?.textInput?.value || '',
+            font: this.app.DOM?.fontSelect?.value || 'Inter, sans-serif',
+            mainColor: this.app.DOM?.colorPicker?.value || '#FFFFFF',
+            subColor: this.app.DOM?.subColorPicker?.value || '#FFFFFF',
+            position: this.app.DOM?.positionPicker?.value || 'bottom',
+            mainFontSize: parseInt(this.app.DOM?.mainFontSize?.value || 48),
+            subFontSize: parseInt(this.app.DOM?.subFontSize?.value || 32),
+            fontWeight: this.app.DOM?.fontWeightSelect?.value || '400',
+            textBorder: this.app.DOM?.textBorderCheckbox?.checked || false,
+            textShadow: this.app.DOM?.textShadowCheckbox?.checked || false,
+            borderWidth: parseInt(this.app.DOM?.borderWidth?.value || 2),
+            shadowBlur: parseInt(this.app.DOM?.shadowBlur?.value || 4)
+        };
     }
 
     renderTransition(ctx, canvas1, canvas2, progress, effect) {
@@ -622,6 +860,16 @@ export class VideoExporter {
                 ctx.globalAlpha = 1 - progress;
                 ctx.drawImage(canvas1, 0, 0);
                 ctx.globalAlpha = progress;
+                ctx.drawImage(canvas2, 0, 0);
+                ctx.globalAlpha = 1;
+                break;
+
+            case 'crossfade':
+                // Smoother crossfade with easing
+                const eased = this.easeInOutCubic(progress);
+                ctx.globalAlpha = 1 - eased;
+                ctx.drawImage(canvas1, 0, 0);
+                ctx.globalAlpha = eased;
                 ctx.drawImage(canvas2, 0, 0);
                 ctx.globalAlpha = 1;
                 break;
@@ -647,7 +895,7 @@ export class VideoExporter {
                 break;
 
             case 'zoom':
-                const scale1 = 1 + progress;
+                const scale1 = 1 + progress * 0.5;
                 const scale2 = progress;
 
                 ctx.save();
@@ -676,16 +924,25 @@ export class VideoExporter {
         }
     }
 
+    easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
     waitForNextFrame(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     loadGifJS() {
         return new Promise((resolve, reject) => {
+            if (window.GIF) {
+                resolve();
+                return;
+            }
+
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
             script.onload = resolve;
-            script.onerror = reject;
+            script.onerror = () => reject(new Error('Failed to load GIF encoder'));
             document.head.appendChild(script);
         });
     }
@@ -695,8 +952,10 @@ export class VideoExporter {
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     showProgress(show) {
@@ -706,9 +965,34 @@ export class VideoExporter {
         }
 
         const exportBtn = document.getElementById('startVideoExport');
+        const cancelBtn = document.getElementById('cancelVideoExport');
+
         if (exportBtn) {
             exportBtn.disabled = show;
-            exportBtn.textContent = show ? 'Exporting...' : 'Export Video';
+            if (show) {
+                exportBtn.innerHTML = `
+                    <div class="v11-dots-spinner">
+                        <span></span><span></span><span></span>
+                    </div>
+                    Exporting...
+                `;
+            } else {
+                exportBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Export Professional Video
+                `;
+            }
+        }
+
+        if (cancelBtn) {
+            cancelBtn.textContent = show ? 'Cancel Export' : 'Cancel';
+        }
+
+        if (!show) {
+            this.updateProgressBar(0);
+            this.updateProgressStatus('Ready');
         }
     }
 
@@ -716,7 +1000,7 @@ export class VideoExporter {
         const bar = document.getElementById('exportProgressBar');
         const text = document.getElementById('exportProgressPercent');
         if (bar) {
-            bar.style.width = `${percent}%`;
+            bar.style.width = `${Math.min(percent, 100)}%`;
         }
         if (text) {
             text.textContent = `${Math.round(percent)}%`;
@@ -730,12 +1014,29 @@ export class VideoExporter {
         }
     }
 
+    updateTimeRemaining(currentFrame, totalFrames) {
+        const timeEl = document.getElementById('exportProgressTime');
+        if (!timeEl || !this.startTime) return;
+
+        const elapsed = (Date.now() - this.startTime) / 1000;
+        const rate = currentFrame / elapsed;
+        const remaining = (totalFrames - currentFrame) / rate;
+
+        if (isFinite(remaining) && remaining > 0) {
+            const mins = Math.floor(remaining / 60);
+            const secs = Math.floor(remaining % 60);
+            timeEl.textContent = `Time remaining: ${mins}m ${secs}s`;
+        }
+    }
+
     cancelExport() {
+        this.cancelRequested = true;
+
         if (this.recorder && this.recorder.state !== 'inactive') {
             this.recorder.stop();
         }
-        this.isExporting = false;
-        this.showProgress(false);
+
+        this.showToast('Export cancelled', 'info');
     }
 
     showToast(message, type) {
@@ -756,7 +1057,7 @@ export class VideoExporter {
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
+                background: rgba(0, 0, 0, 0.6);
                 backdrop-filter: blur(8px);
                 z-index: 10003;
                 display: none;
@@ -774,7 +1075,7 @@ export class VideoExporter {
                 border-radius: 16px;
                 box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
                 width: 100%;
-                max-width: 600px;
+                max-width: 700px;
                 max-height: 90vh;
                 overflow: hidden;
                 display: flex;
@@ -795,6 +1096,7 @@ export class VideoExporter {
                 margin: 0;
                 font-size: 1.5rem;
                 color: white;
+                font-weight: 700;
             }
 
             .btn-close-panel {
@@ -809,6 +1111,7 @@ export class VideoExporter {
 
             .btn-close-panel:hover {
                 background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg);
             }
 
             .video-export-panel .panel-body {
@@ -817,21 +1120,41 @@ export class VideoExporter {
                 padding: 24px;
             }
 
+            .info-banner {
+                background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+                border: 1px solid #bfdbfe;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: #1e40af;
+                font-size: 0.875rem;
+                line-height: 1.5;
+            }
+
+            .info-banner svg {
+                flex-shrink: 0;
+                stroke: #3b82f6;
+            }
+
             .export-section {
                 margin-bottom: 28px;
             }
 
             .export-section h4 {
                 margin: 0 0 16px 0;
-                font-size: 1rem;
+                font-size: 1.125rem;
                 font-weight: 600;
-                color: #374151;
+                color: #1f2937;
             }
 
             .format-options {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 16px;
+                margin-bottom: 20px;
             }
 
             .format-option {
@@ -848,16 +1171,19 @@ export class VideoExporter {
                 padding: 20px;
                 text-align: center;
                 transition: all 0.2s;
+                background: white;
             }
 
             .format-option input[type="radio"]:checked + .option-card {
                 border-color: #667eea;
                 background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
                 box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+                transform: translateY(-2px);
             }
 
             .option-card:hover {
                 border-color: #667eea;
+                transform: translateY(-2px);
             }
 
             .option-icon {
@@ -866,7 +1192,7 @@ export class VideoExporter {
             }
 
             .option-name {
-                font-weight: 600;
+                font-weight: 700;
                 font-size: 1.125rem;
                 color: #1f2937;
                 margin-bottom: 6px;
@@ -875,6 +1201,24 @@ export class VideoExporter {
             .option-desc {
                 font-size: 0.875rem;
                 color: #6b7280;
+                margin-bottom: 8px;
+            }
+
+            .option-tech {
+                font-size: 0.75rem;
+                color: #9ca3af;
+                font-family: 'Courier New', monospace;
+            }
+
+            .quality-selector {
+                margin-top: 16px;
+            }
+
+            .quality-selector label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 500;
+                color: #374151;
             }
 
             .setting-group {
@@ -891,8 +1235,9 @@ export class VideoExporter {
             }
 
             .value-display {
-                font-weight: 600;
+                font-weight: 700;
                 color: #667eea;
+                font-size: 1rem;
             }
 
             .range-labels {
@@ -903,6 +1248,12 @@ export class VideoExporter {
                 margin-top: 6px;
             }
 
+            .checkbox-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 12px;
+            }
+
             .checkbox-label {
                 display: flex;
                 align-items: center;
@@ -910,40 +1261,49 @@ export class VideoExporter {
                 cursor: pointer;
                 font-weight: 500;
                 color: #374151;
+                padding: 12px;
+                border-radius: 8px;
+                transition: all 0.2s;
+            }
+
+            .checkbox-label:hover {
+                background: #f9fafb;
             }
 
             .video-preview-info {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
                 gap: 16px;
             }
 
             .info-item {
-                background: #f9fafb;
+                background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
                 padding: 16px;
-                border-radius: 8px;
+                border-radius: 12px;
                 border: 1px solid #e5e7eb;
+                text-align: center;
             }
 
             .info-label {
                 display: block;
                 font-size: 0.75rem;
                 color: #6b7280;
-                margin-bottom: 6px;
+                margin-bottom: 8px;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
+                font-weight: 600;
             }
 
             .info-value {
                 display: block;
-                font-size: 1.25rem;
-                font-weight: 600;
+                font-size: 1.5rem;
+                font-weight: 700;
                 color: #1f2937;
             }
 
             .export-progress {
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
+                background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+                border: 2px solid #e5e7eb;
                 border-radius: 12px;
                 padding: 20px;
                 margin-top: 20px;
@@ -954,15 +1314,25 @@ export class VideoExporter {
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 12px;
-                font-weight: 600;
-                color: #374151;
+                font-weight: 700;
+                color: #1f2937;
+                font-size: 1.125rem;
+            }
+
+            .progress-details {
+                margin-top: 12px;
             }
 
             .progress-status {
-                margin-top: 12px;
                 font-size: 0.875rem;
                 color: #6b7280;
-                text-align: center;
+                margin-bottom: 6px;
+            }
+
+            .progress-time {
+                font-size: 0.875rem;
+                color: #667eea;
+                font-weight: 600;
             }
 
             .video-export-panel .panel-footer {
@@ -976,32 +1346,35 @@ export class VideoExporter {
 
             .btn-cancel {
                 padding: 12px 24px;
-                border: 1px solid #d1d5db;
+                border: 2px solid #d1d5db;
                 background: white;
                 border-radius: 8px;
-                font-weight: 500;
+                font-weight: 600;
                 color: #374151;
                 cursor: pointer;
                 transition: all 0.2s;
             }
 
             .btn-cancel:hover {
-                background: #f3f4f6;
-                border-color: #9ca3af;
+                background: #fef2f2;
+                border-color: #fca5a5;
+                color: #dc2626;
             }
 
             .btn-export {
-                padding: 12px 24px;
+                padding: 12px 32px;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
                 border: none;
                 border-radius: 8px;
-                font-weight: 600;
+                font-weight: 700;
+                font-size: 1rem;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 10px;
                 transition: all 0.2s;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
             }
 
             .btn-export:hover:not(:disabled) {
@@ -1010,8 +1383,13 @@ export class VideoExporter {
             }
 
             .btn-export:disabled {
-                opacity: 0.6;
+                opacity: 0.7;
                 cursor: not-allowed;
+                transform: none;
+            }
+
+            .btn-export svg {
+                flex-shrink: 0;
             }
 
             @media (max-width: 768px) {
@@ -1020,12 +1398,15 @@ export class VideoExporter {
                     max-height: 95vh;
                 }
 
-                .format-options {
+                .format-options,
+                .checkbox-grid,
+                .video-preview-info {
                     grid-template-columns: 1fr;
                 }
 
-                .video-preview-info {
-                    grid-template-columns: 1fr;
+                .btn-export {
+                    padding: 12px 20px;
+                    font-size: 0.875rem;
                 }
             }
         `;
