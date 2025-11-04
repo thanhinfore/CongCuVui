@@ -1087,20 +1087,28 @@ export class VideoExporter {
             ctx.drawImage(img, 0, 0, width, height);
             ctx.filter = 'none';
 
-            // Get text config with FULL styling
-            const textConfig = preview.textConfigs?.[i] || this.getDefaultTextConfig(imageIndex);
+            // Get text config with FULL styling - MERGE preview config with defaults
+            const defaultConfig = this.getDefaultTextConfig(imageIndex);
+            const previewConfig = preview.textConfigs?.[i] || {};
 
-            // Override with current text content
-            textConfig.text = textContent;
-            textConfig.imageIndex = imageIndex;
-            textConfig.textIndex = textIndex;
-            textConfig.fileName = images[imageIndex].file.name;
+            // Merge: preview config overrides defaults, but defaults fill in missing fields
+            const textConfig = {
+                ...defaultConfig,
+                ...previewConfig,
+                // Always override with current content
+                text: textContent,
+                imageIndex: imageIndex,
+                textIndex: textIndex,
+                fileName: images[imageIndex].file.name
+            };
 
             console.log(`🎨 Rendering text for image ${i + 1}:`, {
                 text: textConfig.text?.substring(0, 50),
                 color: textConfig.mainColor,
                 fontSize: textConfig.mainFontSize,
-                position: textConfig.position
+                position: textConfig.position,
+                hasPreviewConfig: !!preview.textConfigs?.[i],
+                configKeys: Object.keys(previewConfig)
             });
 
             // Render text using preview panel method if available
