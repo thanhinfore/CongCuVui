@@ -1,5 +1,5 @@
 /* =====================================================
-   VIDEO EXPORTER v14.0 - IMAGE-FIRST Approach
+   VIDEO EXPORTER v14.1 - IMAGE-FIRST Approach
 
    MAJOR PARADIGM SHIFT - EXPORT IMAGES THEN ASSEMBLE:
 
@@ -55,6 +55,25 @@
    - URL.revokeObjectURL() for cleanup
    - Images loaded before encoding
    - Same MediaRecorder approach
+
+   v14.1 FIX - Text Wrapping & Markdown:
+   ====================================
+   CRITICAL BUG FIX: Text was rendering on one line, overflowing canvas!
+
+   Problem:
+   - renderTextUsingPreview() was NOT calling preview.wrapStyledText()
+   - It only split by \n, didn't wrap long lines
+   - Markdown wasn't rendering properly
+
+   Solution:
+   - Now CORRECTLY calls preview.wrapStyledText() with proper parameters:
+     wrapStyledText(ctx, text, maxWidth, fontSize, fontFamily, weight, style)
+   - Returns properly wrapped lines with markdown segments
+   - Then calls preview.renderStyledLine() for each wrapped line
+   - Text now wraps automatically like in preview
+   - Full markdown support (bold, italic, code, etc.)
+
+   Result: Video export text now EXACTLY matches preview panel! ✅
 
    Full Preview Panel Integration
    ===================================================== */
@@ -1428,13 +1447,6 @@ export class VideoExporter {
             scale
         });
 
-        const lines = config.text.split('\n');
-
-        // Use markdown parser from preview
-        const parsedLines = lines.map(line =>
-            preview.markdownParser ? preview.markdownParser.parse(line) : { segments: [{ text: line }] }
-        );
-
         // Get position - MATCH PreviewPanel position system
         const position = config.position || 'bottom';
         const mainFontSize = (config.mainFontSize || 48) * scale;
@@ -1466,48 +1478,75 @@ export class VideoExporter {
                 break;
         }
 
-        const fontSize = mainFontSize;
-        const lineHeight = LINE_SPACING;
+        // CORRECT USAGE: Call wrapStyledText to get properly wrapped lines with markdown
+        const fontFamily = config.font || 'Inter, sans-serif';
+        const fontWeight = config.fontWeight || '700';
+        const fontStyle = 'normal';
 
-        console.log(`📝 Rendering ${lines.length} lines at position ${position}, y=${y.toFixed(0)}, fontSize=${fontSize.toFixed(1)}`);
+        console.log(`📝 Calling wrapStyledText with maxWidth=${(canvas.width * 0.9).toFixed(0)}, fontSize=${mainFontSize.toFixed(1)}`);
 
-        // Render using preview's wrapStyledText if available
-        parsedLines.forEach((line, index) => {
-            const currentY = y + (index * fontSize * lineHeight);
+        let wrappedLines;
+        try {
+            wrappedLines = preview.wrapStyledText(
+                ctx,
+                config.text,  // Full text string
+                canvas.width * 0.9,  // maxWidth
+                mainFontSize,  // fontSize
+                fontFamily,  // fontFamily
+                fontWeight,  // baseWeight
+                fontStyle  // fontStyle
+            );
+            console.log(`✅ wrapStyledText returned ${wrappedLines.length} wrapped lines`);
+        } catch (e) {
+            console.error('❌ wrapStyledText failed:', e);
+            // Fallback to simple rendering
+            await this.renderSimpleTextFallback(ctx, canvas, config, scale);
+            return;
+        }
 
-            if (preview.wrapStyledText) {
-                try {
-                    preview.wrapStyledText(
-                        ctx,
-                        line,
-                        canvas.width / 2,
-                        currentY,
-                        canvas.width * 0.9,
-                        fontSize,
-                        {
-                            fontFamily: config.font || 'Inter, sans-serif',
-                            fontWeight: config.fontWeight || '700',
-                            fontStyle: 'normal',
-                            mainColor: index === 0 ? (config.mainColor || '#FFFFFF') : (config.subColor || '#FFFFFF'),
-                            letterSpacing: 0,
-                            lineHeight: lineHeight,
-                            textBorder: config.textBorder ?? true,
-                            textShadow: config.textShadow ?? true,
-                            borderWidth: config.borderWidth || 4,
-                            shadowBlur: config.shadowBlur || 8
-                        },
-                        'center',
-                        canvas
-                    );
-                    console.log(`✅ Text line ${index + 1} rendered via wrapStyledText at y=${currentY.toFixed(0)}`);
-                } catch (e) {
-                    console.error(`❌ wrapStyledText failed for line ${index + 1}:`, e.message);
-                    // Fallback to simple rendering
-                    this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
-                }
-            } else {
-                console.warn(`⚠️ wrapStyledText not available, using renderSimpleText for line ${index + 1}`);
-                this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
+        // Prepare color settings for renderStyledLine
+        const colorSettings = {
+            mode: 'solid',
+            mainColor: config.mainColor || '#FFFFFF'
+        };
+
+        // Prepare effects for renderStyledLine
+        const effects = {
+            textBorder: config.textBorder ?? true,
+            textShadow: config.textShadow ?? true,
+            borderWidth: (config.borderWidth || 4) * scale,
+            shadowBlur: (config.shadowBlur || 8) * scale
+        };
+
+        const advanced = {
+            letterSpacing: config.letterSpacing || 0,
+            lineHeight: LINE_SPACING
+        };
+
+        console.log(`📝 Rendering ${wrappedLines.length} wrapped lines starting at y=${y.toFixed(0)}`);
+
+        // CORRECT USAGE: Call renderStyledLine for each wrapped line
+        wrappedLines.forEach((line, index) => {
+            const lineY = y + (index * mainFontSize * LINE_SPACING);
+
+            try {
+                preview.renderStyledLine(
+                    ctx,
+                    line,  // Wrapped line object with segments
+                    canvas.width / 2,  // x (center)
+                    lineY,  // y
+                    mainFontSize,  // fontSize
+                    colorSettings,  // color
+                    effects,  // effects
+                    fontFamily,  // fontFamily
+                    fontWeight,  // baseWeight
+                    fontStyle,  // fontStyle
+                    advanced,  // advanced settings
+                    canvas  // canvas
+                );
+                console.log(`✅ Line ${index + 1}/${wrappedLines.length} rendered at y=${lineY.toFixed(0)}`);
+            } catch (e) {
+                console.error(`❌ renderStyledLine failed for line ${index + 1}:`, e);
             }
         });
 
