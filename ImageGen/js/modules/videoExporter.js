@@ -1,46 +1,60 @@
 /* =====================================================
-   VIDEO EXPORTER v13.0 - SIMPLIFIED Direct Encoding
+   VIDEO EXPORTER v14.0 - IMAGE-FIRST Approach
 
-   MAJOR SIMPLIFICATION - ENCODE DIRECTLY FROM IMAGES:
+   MAJOR PARADIGM SHIFT - EXPORT IMAGES THEN ASSEMBLE:
 
-   Architecture (2-Step Process):
-   1. Render Images → Pre-render all styled images (text, filters, etc)
-   2. Encode Video → Encode directly from images (NO frame generation!)
+   Architecture (3-Step Process):
+   1. Render Images → Create styled canvases (same as preview)
+   2. Export Images → Convert canvases to image blobs (NEW!)
+   3. Assemble Video → Load images and encode to video
 
-   What Changed from v12.x:
-   ❌ REMOVED: generateAllVideoFrames() - 3960 frames pre-generation
-   ✅ NEW: encodeCanvasesToVideo() - encode directly from 53 canvases
+   User's Insight:
+   "Why not render images first, then assemble to video?"
+   This is EXACTLY how professional video editors work!
 
-   Memory & Performance Benefits:
-   - Before: 53 images → 3960 frames → encode (HIGH memory!)
-   - After: 53 images → encode directly (LOW memory!)
-   - Memory savings: ~75x reduction (3960 → 53)
-   - Speed: Faster (no frame copy overhead)
-   - Simplicity: Less code, easier to maintain
+   What Changed from v13.x:
+   Before: Render → Encode directly
+   After:  Render → Export to images → Assemble video from images
+
+   Benefits:
+   ✅ Clear separation: Image rendering vs Video encoding
+   ✅ Can review/reuse exported images
+   ✅ Matches user's mental model
+   ✅ More professional workflow
+   ✅ Easier to debug (can inspect image blobs)
+   ✅ Could add "Download Images" button later
 
    How It Works:
-   1. Render 53 styled canvases (with text, filters, footer, etc)
-   2. For each canvas:
-      - Draw to display canvas once
-      - Request N frame captures (based on duration × FPS)
-      - Draw transition frames if needed
-   3. MediaRecorder captures frames directly during playback
+   Step 1: renderAllImagesWithPreview()
+     - Render all styled canvases with text, filters, etc
+     - Same logic as preview panel
+     - Result: Array of canvas elements
 
-   Key Features (UNCHANGED):
-   ✅ Manual frame capture with requestFrame()
-   ✅ Precise timing using setTimeout
-   ✅ Full transition support (fade, slide, zoom, etc.)
-   ✅ Full position system (5 positions like PreviewPanel)
-   ✅ Text, filters, footer, numbering all supported
+   Step 2: exportCanvasesToImageBlobs() [NEW!]
+     - Convert each canvas to PNG blob
+     - Create object URLs for blobs
+     - Result: Array of {blob, url, width, height}
 
-   Text Positioning (v12.1+):
-   - top, upper-middle, middle, lower-middle, bottom
+   Step 3: assembleVideoFromImages() [NEW!]
+     - Load all blobs as <img> elements
+     - Draw images to video canvas
+     - Encode with MediaRecorder
+     - Cleanup blob URLs when done
+
+   Key Features:
+   ✅ All text styling (5 positions, colors, fonts)
+   ✅ Image filters
+   ✅ Transitions (fade, slide, zoom, etc.)
+   ✅ Footer and numbering
+   ✅ Manual frame control
+   ✅ Memory efficient (blobs auto-cleaned)
 
    Technical Details:
-   - captureStream(0) for manual control
-   - requestFrame() for each frame
-   - No frame array → direct encode
-   - Same quality, less memory
+   - canvas.toBlob(callback, 'image/png', 1.0) for quality
+   - URL.createObjectURL() for blob URLs
+   - URL.revokeObjectURL() for cleanup
+   - Images loaded before encoding
+   - Same MediaRecorder approach
 
    Full Preview Panel Integration
    ===================================================== */
@@ -85,7 +99,7 @@ export class VideoExporter {
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
                             <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
                         </svg>
-                        <span>⚡ SIMPLIFIED v13.0! Direct encoding from images (75x less memory!). Professional quality with 5-position text system. Full styling: text, filters, transitions, footer & numbering</span>
+                        <span>🎬 IMAGE-FIRST v14.0! Export images like preview, then assemble to video. Professional workflow with 5-position text system. Full styling: text, filters, transitions, footer & numbering</span>
                     </div>
 
                     <div class="export-section">
@@ -478,7 +492,7 @@ export class VideoExporter {
         const fps = parseInt(document.getElementById('videoFps')?.value || 30);
         const quality = document.getElementById('videoQuality')?.value || 'medium';
 
-        console.log('🎬 SIMPLIFIED Video Export - Direct from Images');
+        console.log('🎬 IMAGE-FIRST Video Export - Like Preview');
         console.log(`📊 Settings: ${imageDuration}s/image, ${transitionDuration}s transition, ${fps} FPS`);
 
         // Get dimensions from first image
@@ -487,8 +501,8 @@ export class VideoExporter {
             throw new Error('Invalid image data');
         }
 
-        // STEP 1: Render all image canvases (with text, filters, etc)
-        this.updateProgressStatus('🎨 Step 1/2: Rendering images with text...');
+        // STEP 1: Render all styled canvases (like preview does)
+        this.updateProgressStatus('🎨 Step 1/3: Rendering images like preview...');
         this.updateProgressBar(5);
 
         const renderedCanvases = await this.renderAllImagesWithPreview(images, firstImage.img.width, firstImage.img.height);
@@ -496,14 +510,25 @@ export class VideoExporter {
         if (this.cancelRequested) throw new Error('Cancelled by user');
         if (renderedCanvases.length === 0) throw new Error('No rendered canvases');
 
-        console.log(`✅ Rendered ${renderedCanvases.length} styled image canvases`);
+        console.log(`✅ Rendered ${renderedCanvases.length} styled canvases (same as preview)`);
 
-        // STEP 2: Encode directly from canvases (NO frame generation!)
-        this.updateProgressStatus('📹 Step 2/2: Encoding video...');
+        // STEP 2: Export canvases to image blobs (NEW!)
+        this.updateProgressStatus('🖼️ Step 2/3: Exporting images to blobs...');
         this.updateProgressBar(30);
 
-        await this.encodeCanvasesToVideo(
-            renderedCanvases,
+        const imageBlobs = await this.exportCanvasesToImageBlobs(renderedCanvases);
+
+        if (this.cancelRequested) throw new Error('Cancelled by user');
+        if (imageBlobs.length === 0) throw new Error('No image blobs created');
+
+        console.log(`✅ Exported ${imageBlobs.length} image blobs`);
+
+        // STEP 3: Assemble video from image blobs
+        this.updateProgressStatus('📹 Step 3/3: Assembling video from images...');
+        this.updateProgressBar(60);
+
+        await this.assembleVideoFromImages(
+            imageBlobs,
             firstImage.img.width,
             firstImage.img.height,
             imageDuration,
@@ -513,6 +538,243 @@ export class VideoExporter {
         );
 
         console.log('✅ Video export complete!');
+    }
+
+    async exportCanvasesToImageBlobs(canvases) {
+        const blobs = [];
+        const totalCanvases = canvases.length;
+
+        console.log(`🖼️ Converting ${totalCanvases} canvases to image blobs...`);
+
+        for (let i = 0; i < totalCanvases; i++) {
+            if (this.cancelRequested) break;
+
+            const canvas = canvases[i];
+
+            // Update progress
+            if (i % 5 === 0 || i === totalCanvases - 1) {
+                this.updateProgressStatus(`🖼️ Exporting image ${i + 1}/${totalCanvases}...`);
+                this.updateProgressBar(30 + ((i / totalCanvases) * 30));
+            }
+
+            // Convert canvas to blob (PNG for quality, or JPEG for speed)
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/png', 1.0);
+            });
+
+            if (blob) {
+                // Create object URL for the blob
+                const url = URL.createObjectURL(blob);
+                blobs.push({
+                    blob: blob,
+                    url: url,
+                    width: canvas.width,
+                    height: canvas.height
+                });
+            } else {
+                console.error(`❌ Failed to create blob for canvas ${i + 1}`);
+            }
+
+            // Yield control occasionally
+            if (i % 10 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        console.log(`✅ Created ${blobs.length} image blobs, total size: ${(blobs.reduce((sum, b) => sum + b.blob.size, 0) / 1024 / 1024).toFixed(2)} MB`);
+        return blobs;
+    }
+
+    async assembleVideoFromImages(imageBlobs, width, height, imageDuration, transitionDuration, fps, quality) {
+        const totalImages = imageBlobs.length;
+        console.log(`📹 Assembling video from ${totalImages} image blobs`);
+
+        // Load all images from blobs first
+        this.updateProgressStatus('📷 Loading image blobs...');
+        const images = await Promise.all(imageBlobs.map(item => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = item.url;
+            });
+        }));
+
+        console.log(`✅ Loaded ${images.length} images from blobs`);
+
+        // Create display canvas for video encoding
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', {
+            alpha: false,
+            desynchronized: false,
+            willReadFrequently: false
+        });
+
+        // Clear to white
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        // Select codec
+        let mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm;codecs=vp9';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm';
+            }
+        }
+
+        console.log(`🎥 Codec: ${mimeType}`);
+
+        const bitrates = { high: 5000000, medium: 3000000, low: 1500000 };
+        const videoBitsPerSecond = bitrates[quality] || 3000000;
+
+        // Draw first image
+        ctx.drawImage(images[0], 0, 0, width, height);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        // Create stream - MANUAL MODE
+        const stream = canvas.captureStream(0);
+        const videoTrack = stream.getVideoTracks()[0];
+
+        console.log(`📹 Stream created from images`);
+
+        this.recorder = new MediaRecorder(stream, {
+            mimeType: mimeType,
+            videoBitsPerSecond: videoBitsPerSecond
+        });
+
+        this.chunks = [];
+
+        this.recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                this.chunks.push(e.data);
+            }
+        };
+
+        const recordingComplete = new Promise((resolve, reject) => {
+            this.recorder.onstop = () => {
+                if (this.cancelRequested) {
+                    reject(new Error('Cancelled by user'));
+                    return;
+                }
+
+                const totalSize = this.chunks.reduce((sum, chunk) => sum + chunk.size, 0);
+                console.log(`📦 Total size: ${(totalSize / 1024 / 1024).toFixed(2)} MB from ${this.chunks.length} chunks`);
+
+                const blob = new Blob(this.chunks, { type: mimeType });
+
+                if (blob.size === 0) {
+                    reject(new Error('Video blob is empty'));
+                    return;
+                }
+
+                console.log(`✅ Video blob: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+                this.downloadBlob(blob, `video-export-${Date.now()}.webm`);
+
+                // Cleanup: revoke blob URLs
+                imageBlobs.forEach(item => URL.revokeObjectURL(item.url));
+
+                resolve();
+            };
+
+            this.recorder.onerror = (e) => {
+                console.error('❌ Recorder error:', e);
+                reject(new Error('Recording failed'));
+            };
+        });
+
+        // Start recording
+        console.log('🔴 Starting recorder...');
+        this.recorder.start();
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const msPerFrame = 1000 / fps;
+        const framesPerImage = Math.round(imageDuration * fps);
+        const transitionFrames = transitionDuration > 0 ? Math.round(transitionDuration * fps) : 0;
+
+        console.log(`🎬 Assembling: ${framesPerImage} frames/image, ${transitionFrames} transition frames`);
+
+        let totalFramesCaptured = 0;
+        const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
+
+        // Encode each image
+        for (let i = 0; i < totalImages; i++) {
+            if (this.cancelRequested) break;
+
+            const currentImage = images[i];
+            const nextImage = i < totalImages - 1 ? images[i + 1] : null;
+
+            const progress = 60 + ((i / totalImages) * 35);
+            this.updateProgressBar(progress);
+            this.updateProgressStatus(`📹 Assembling image ${i + 1}/${totalImages}...`);
+
+            // Draw current image once
+            ctx.drawImage(currentImage, 0, 0, width, height);
+
+            // Capture N frames of this static image
+            for (let f = 0; f < framesPerImage; f++) {
+                if (this.cancelRequested) break;
+
+                if (videoTrack.requestFrame) {
+                    videoTrack.requestFrame();
+                }
+
+                totalFramesCaptured++;
+                await new Promise(resolve => setTimeout(resolve, msPerFrame));
+            }
+
+            // Transition to next image
+            if (nextImage && transitionFrames > 0) {
+                // Create temp canvases for transition
+                const tempCanvas1 = document.createElement('canvas');
+                tempCanvas1.width = width;
+                tempCanvas1.height = height;
+                const tempCtx1 = tempCanvas1.getContext('2d');
+                tempCtx1.drawImage(currentImage, 0, 0);
+
+                const tempCanvas2 = document.createElement('canvas');
+                tempCanvas2.width = width;
+                tempCanvas2.height = height;
+                const tempCtx2 = tempCanvas2.getContext('2d');
+                tempCtx2.drawImage(nextImage, 0, 0);
+
+                for (let t = 0; t < transitionFrames; t++) {
+                    if (this.cancelRequested) break;
+
+                    const progress = t / transitionFrames;
+                    this.renderTransition(ctx, tempCanvas1, tempCanvas2, progress, transitionEffect);
+
+                    if (videoTrack.requestFrame) {
+                        videoTrack.requestFrame();
+                    }
+
+                    totalFramesCaptured++;
+                    await new Promise(resolve => setTimeout(resolve, msPerFrame));
+                }
+            }
+        }
+
+        console.log(`✅ Captured ${totalFramesCaptured} frames total from images`);
+
+        this.updateProgressStatus('⏹️ Finalizing video...');
+        this.updateProgressBar(95);
+
+        // Hold last frame
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        this.updateProgressBar(100);
+
+        // Stop recording
+        console.log('⏹️ Stopping recorder...');
+        if (this.recorder && this.recorder.state !== 'inactive') {
+            this.recorder.stop();
+        }
+
+        // Wait for encoding to complete
+        await recordingComplete;
     }
 
     async generateAllVideoFrames(imageCanvases, width, height, imageDuration, transitionDuration, fps) {
