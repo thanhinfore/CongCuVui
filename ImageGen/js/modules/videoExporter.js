@@ -277,10 +277,21 @@ export class VideoExporter {
     }
 
     open() {
-        const imageCount = this.app.state?.images?.length || 0;
+        console.log('VideoExporter: open() called');
 
-        if (imageCount === 0) {
-            this.showToast('Please add images first before exporting video', 'warning');
+        // Check if we have background images
+        const backgroundImageCount = this.app.state?.images?.length || 0;
+        if (backgroundImageCount === 0) {
+            this.showToast('Please add background images first before exporting video', 'warning');
+            return;
+        }
+
+        // Get total images to export
+        const totalExportCount = this.getExportImageCount();
+        console.log(`VideoExporter: ${backgroundImageCount} background images, ${totalExportCount} total images to export`);
+
+        if (totalExportCount === 0) {
+            this.showToast('Please add text in Knowledge Mode or background images to export', 'warning');
             return;
         }
 
@@ -299,9 +310,37 @@ export class VideoExporter {
         this.panel.classList.remove('active');
     }
 
-    updatePreview() {
+    getExportImageCount() {
+        // Calculate total number of images to export based on mode
         const images = this.app.state?.images || [];
-        const imageCount = images.length;
+        if (images.length === 0) return 0;
+
+        const knowledgeMode = document.getElementById('knowledgeModeCheckbox')?.checked || false;
+        const textInput = this.app.DOM?.textInput;
+
+        if (knowledgeMode && textInput) {
+            // Knowledge Mode: one image per text line
+            const text = textInput.value?.trim() || '';
+            const textLines = text ? text.split('\n').filter(line => line.trim()) : [];
+            return textLines.length;
+        } else {
+            // Traditional mode: export loaded images
+            const repeatBackground = this.app.DOM?.repeatBackgroundCheckbox?.checked || false;
+            if (repeatBackground && textInput) {
+                const text = textInput.value?.trim() || '';
+                const textLines = text ? text.split('\n').filter(line => line.trim()) : [];
+                return textLines.length;
+            }
+            return images.length;
+        }
+    }
+
+    updatePreview() {
+        // Get actual number of images to export (considers Knowledge Mode)
+        const imageCount = this.getExportImageCount();
+
+        console.log('VideoExporter: updatePreview called');
+        console.log('VideoExporter: Total images to export =', imageCount);
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2);
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5);
         const format = document.querySelector('input[name="videoFormat"]:checked')?.value || 'webm';
@@ -309,8 +348,9 @@ export class VideoExporter {
 
         const totalDuration = imageCount * (imageDuration + transitionDuration);
 
-        // Resolution
-        const firstImage = images[0];
+        // Resolution - get from first background image
+        const backgroundImages = this.app.state?.images || [];
+        const firstImage = backgroundImages[0];
         let width = 0, height = 0;
         if (firstImage && firstImage.img) {
             width = firstImage.img.width;
@@ -590,11 +630,29 @@ export class VideoExporter {
         const renderFooter = document.getElementById('renderFooter')?.checked ?? true;
         const renderNumbering = document.getElementById('renderNumbering')?.checked ?? true;
 
-        for (let i = 0; i < images.length; i++) {
+        // Get text lines for Knowledge Mode
+        const textInput = this.app.DOM?.textInput;
+        const text = textInput?.value?.trim() || '';
+        const textLines = text ? text.split('\n').filter(line => line.trim()) : [];
+
+        // Determine mode and total images
+        const knowledgeMode = document.getElementById('knowledgeModeCheckbox')?.checked || false;
+        const repeatBackground = this.app.DOM?.repeatBackgroundCheckbox?.checked || false;
+
+        let totalImages;
+        if (knowledgeMode) {
+            totalImages = textLines.length;
+        } else {
+            totalImages = repeatBackground ? textLines.length : images.length;
+        }
+
+        console.log(`VideoExporter: Rendering ${totalImages} images (Knowledge Mode: ${knowledgeMode}, Repeat: ${repeatBackground})`);
+
+        for (let i = 0; i < totalImages; i++) {
             if (this.cancelRequested) break;
 
-            this.updateProgressStatus(`🎨 Rendering image ${i + 1}/${images.length} with full styling...`);
-            this.updateProgressBar((i / images.length) * 100);
+            this.updateProgressStatus(`🎨 Rendering image ${i + 1}/${totalImages} with full styling...`);
+            this.updateProgressBar((i / totalImages) * 100);
 
             const canvas = document.createElement('canvas');
             canvas.width = width;
@@ -608,7 +666,22 @@ export class VideoExporter {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            const img = images[i].img;
+            // Determine which image and text to use (same logic as preview)
+            let imageIndex, textIndex, textContent;
+
+            if (knowledgeMode) {
+                // Knowledge Mode: cycle through images, one text per image
+                imageIndex = i % images.length;
+                textIndex = i;
+                textContent = textLines[i];
+            } else {
+                // Traditional mode
+                imageIndex = i % images.length;
+                textIndex = repeatBackground ? i : 0;
+                textContent = textLines[textIndex] || textLines[0];
+            }
+
+            const img = images[imageIndex].img;
 
             // Apply filters
             if (renderFilters && preview.getFilterString) {
@@ -625,11 +698,17 @@ export class VideoExporter {
             // Scale for text rendering
             const scale = width / img.width;
 
-            // Get text config
-            const textConfig = preview.textConfigs?.[i] || this.getDefaultTextConfig(i);
+            // Get text config (use from preview if available, otherwise create)
+            const textConfig = preview.textConfigs?.[i] || {
+                imageIndex: imageIndex,
+                textIndex: textIndex,
+                text: textContent,
+                position: this.app.DOM?.positionPicker?.value || 'bottom',
+                fileName: images[imageIndex].file.name
+            };
 
             // Render text using preview panel method if available
-            if (preview.wrapStyledText && preview.markdownParser) {
+            if (preview.wrapStyledText && preview.markdownParser && textConfig.text) {
                 await this.renderTextUsingPreview(ctx, canvas, textConfig, scale, preview);
             }
 
@@ -649,6 +728,7 @@ export class VideoExporter {
             await this.waitForNextFrame(1);
         }
 
+        console.log(`VideoExporter: Successfully rendered ${canvases.length} canvases`);
         return canvases;
     }
 
