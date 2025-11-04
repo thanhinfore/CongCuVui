@@ -517,6 +517,11 @@ export class VideoExporter {
         const totalImages = imageCanvases.length;
 
         console.log(`🎞️ Generating frames: ${totalImages} images at ${fps} FPS`);
+        console.log(`🎞️ First canvas check:`, {
+            width: imageCanvases[0]?.width,
+            height: imageCanvases[0]?.height,
+            hasContext: !!imageCanvases[0]?.getContext
+        });
 
         for (let i = 0; i < totalImages; i++) {
             if (this.cancelRequested) break;
@@ -528,14 +533,21 @@ export class VideoExporter {
             const currentCanvas = imageCanvases[i];
             const nextCanvas = i < totalImages - 1 ? imageCanvases[i + 1] : null;
 
+            console.log(`🎞️ Processing image ${i + 1}: canvas ${currentCanvas.width}x${currentCanvas.height}`);
+
             // Add frames for current image duration
             const framesForImage = Math.round(imageDuration * fps);
+            console.log(`🎞️ Creating ${framesForImage} frames for image ${i + 1}`);
+
             for (let f = 0; f < framesForImage; f++) {
                 if (this.cancelRequested) break;
 
                 const frameCanvas = this.createFrameCanvas(width, height);
-                const ctx = frameCanvas.getContext('2d');
+                const ctx = frameCanvas.getContext('2d', { willReadFrequently: false });
+
+                // CRITICAL: Draw the complete styled canvas (with text!)
                 ctx.drawImage(currentCanvas, 0, 0, width, height);
+
                 frames.push(frameCanvas);
             }
 
@@ -909,18 +921,29 @@ export class VideoExporter {
             ctx.drawImage(img, 0, 0, width, height);
             ctx.filter = 'none';
 
-            // Get text config (use from preview if available, otherwise create)
-            const textConfig = preview.textConfigs?.[i] || {
-                imageIndex: imageIndex,
-                textIndex: textIndex,
-                text: textContent,
-                position: this.app.DOM?.positionPicker?.value || 'bottom',
-                fileName: images[imageIndex].file.name
-            };
+            // Get text config with FULL styling
+            const textConfig = preview.textConfigs?.[i] || this.getDefaultTextConfig(imageIndex);
+
+            // Override with current text content
+            textConfig.text = textContent;
+            textConfig.imageIndex = imageIndex;
+            textConfig.textIndex = textIndex;
+            textConfig.fileName = images[imageIndex].file.name;
+
+            console.log(`🎨 Rendering text for image ${i + 1}:`, {
+                text: textConfig.text?.substring(0, 50),
+                color: textConfig.mainColor,
+                fontSize: textConfig.mainFontSize,
+                position: textConfig.position
+            });
 
             // Render text using preview panel method if available
             if (preview.wrapStyledText && preview.markdownParser && textConfig.text) {
                 await this.renderTextUsingPreview(ctx, canvas, textConfig, scale, preview);
+            } else if (textConfig.text) {
+                // Fallback: simple text rendering
+                console.warn('⚠️ Preview methods not available, using fallback text rendering');
+                await this.renderSimpleTextFallback(ctx, canvas, textConfig, scale);
             }
 
             // Render footer if enabled
@@ -935,18 +958,39 @@ export class VideoExporter {
 
             canvases.push(canvas);
 
+            // Debug: Check if canvas has content beyond just the image
+            if (i === 0) {
+                console.log('🔍 First canvas check after rendering:', {
+                    width: canvas.width,
+                    height: canvas.height,
+                    hasText: !!textConfig.text,
+                    textSample: textConfig.text?.substring(0, 30)
+                });
+            }
+
             // Yield control every 10 images to keep UI responsive
             if (i % 10 === 0) {
                 await this.waitForNextFrame(0);
             }
         }
 
-        console.log(`VideoExporter: Successfully rendered ${canvases.length} canvases`);
+        console.log(`✅ VideoExporter: Successfully rendered ${canvases.length} canvases with text`);
         return canvases;
     }
 
     async renderTextUsingPreview(ctx, canvas, config, scale, preview) {
-        if (!config.text || !config.text.trim()) return;
+        if (!config.text || !config.text.trim()) {
+            console.warn('⚠️ renderTextUsingPreview: No text to render');
+            return;
+        }
+
+        console.log('📝 renderTextUsingPreview called:', {
+            text: config.text.substring(0, 50),
+            fontSize: config.mainFontSize,
+            color: config.mainColor,
+            position: config.position,
+            scale
+        });
 
         const lines = config.text.split('\n');
 
@@ -975,6 +1019,8 @@ export class VideoExporter {
         const fontSize = (config.mainFontSize || 48) * scale;
         const lineHeight = 2.0;
 
+        console.log(`📝 Rendering ${lines.length} lines at position ${position}, y=${y.toFixed(0)}, fontSize=${fontSize.toFixed(1)}`);
+
         // Render using preview's wrapStyledText if available
         parsedLines.forEach((line, index) => {
             const currentY = y + (index * fontSize * lineHeight);
@@ -990,26 +1036,85 @@ export class VideoExporter {
                         fontSize,
                         {
                             fontFamily: config.font || 'Inter, sans-serif',
-                            fontWeight: config.fontWeight || '400',
+                            fontWeight: config.fontWeight || '700',
                             fontStyle: 'normal',
-                            mainColor: index === 0 ? config.mainColor : config.subColor,
+                            mainColor: index === 0 ? (config.mainColor || '#FFFFFF') : (config.subColor || '#FFFFFF'),
                             letterSpacing: 0,
                             lineHeight: lineHeight,
-                            textBorder: config.textBorder,
-                            textShadow: config.textShadow,
-                            borderWidth: config.borderWidth || 2,
-                            shadowBlur: config.shadowBlur || 4
+                            textBorder: config.textBorder ?? true,
+                            textShadow: config.textShadow ?? true,
+                            borderWidth: config.borderWidth || 4,
+                            shadowBlur: config.shadowBlur || 8
                         },
                         'center',
                         canvas
                     );
+                    console.log(`✅ Text line ${index + 1} rendered via wrapStyledText`);
                 } catch (e) {
+                    console.error(`❌ wrapStyledText failed for line ${index + 1}:`, e.message);
                     // Fallback to simple rendering
                     this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
                 }
             } else {
+                console.warn(`⚠️ wrapStyledText not available, using renderSimpleText for line ${index + 1}`);
                 this.renderSimpleText(ctx, line, canvas.width / 2, currentY, fontSize, config);
             }
+        });
+
+        console.log('✅ renderTextUsingPreview complete');
+    }
+
+    async renderSimpleTextFallback(ctx, canvas, config, scale) {
+        if (!config.text || !config.text.trim()) return;
+
+        console.log('🎨 Using simple text fallback rendering');
+
+        const lines = config.text.split('\n');
+        const position = config.position || 'bottom';
+        let y;
+
+        switch (position) {
+            case 'top':
+                y = canvas.height * 0.15;
+                break;
+            case 'middle':
+                y = canvas.height * 0.5;
+                break;
+            case 'bottom':
+            default:
+                y = canvas.height * 0.85;
+                break;
+        }
+
+        const fontSize = (config.mainFontSize || 48) * scale;
+        const lineHeight = 1.5;
+
+        lines.forEach((lineText, index) => {
+            const currentY = y + (index * fontSize * lineHeight);
+
+            ctx.save();
+            ctx.font = `${config.fontWeight || '700'} ${fontSize}px ${config.font || 'Arial, sans-serif'}`;
+            ctx.fillStyle = index === 0 ? (config.mainColor || '#FFFFFF') : (config.subColor || '#FFFFFF');
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Text shadow for better visibility
+            if (config.textShadow) {
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.shadowBlur = config.shadowBlur || 8;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+            }
+
+            // Text border/stroke
+            if (config.textBorder) {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = (config.borderWidth || 4) * scale;
+                ctx.strokeText(lineText, canvas.width / 2, currentY);
+            }
+
+            ctx.fillText(lineText, canvas.width / 2, currentY);
+            ctx.restore();
         });
     }
 
@@ -1128,21 +1233,24 @@ export class VideoExporter {
     }
 
     getDefaultTextConfig(imageIndex) {
-        return {
+        const config = {
             imageIndex,
             text: this.app.DOM?.textInput?.value || '',
-            font: this.app.DOM?.fontSelect?.value || 'Inter, sans-serif',
+            font: this.app.DOM?.fontSelect?.value || 'Arial, sans-serif',
             mainColor: this.app.DOM?.colorPicker?.value || '#FFFFFF',
             subColor: this.app.DOM?.subColorPicker?.value || '#FFFFFF',
             position: this.app.DOM?.positionPicker?.value || 'bottom',
             mainFontSize: parseInt(this.app.DOM?.mainFontSize?.value || 48),
             subFontSize: parseInt(this.app.DOM?.subFontSize?.value || 32),
-            fontWeight: this.app.DOM?.fontWeightSelect?.value || '400',
-            textBorder: this.app.DOM?.textBorderCheckbox?.checked || false,
-            textShadow: this.app.DOM?.textShadowCheckbox?.checked || false,
-            borderWidth: parseInt(this.app.DOM?.borderWidth?.value || 2),
-            shadowBlur: parseInt(this.app.DOM?.shadowBlur?.value || 4)
+            fontWeight: this.app.DOM?.fontWeightSelect?.value || '700', // Bold by default
+            textBorder: this.app.DOM?.textBorderCheckbox?.checked ?? true, // Enable by default
+            textShadow: this.app.DOM?.textShadowCheckbox?.checked ?? true, // Enable by default
+            borderWidth: parseInt(this.app.DOM?.borderWidth?.value || 4),
+            shadowBlur: parseInt(this.app.DOM?.shadowBlur?.value || 8)
         };
+
+        console.log('📝 Default text config created:', config);
+        return config;
     }
 
     renderTransition(ctx, canvas1, canvas2, progress, effect) {
