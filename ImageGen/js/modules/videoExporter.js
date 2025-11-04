@@ -304,21 +304,30 @@ export class VideoExporter {
 
     async exportVideo(format = 'webm') {
         const images = this.app.state.images;
+        if (!images || images.length === 0) {
+            throw new Error('No images to export');
+        }
+
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000; // ms
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000; // ms
         const fps = parseInt(document.getElementById('videoFps')?.value || 30);
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
 
-        // Create offscreen canvas
-        const canvas = document.createElement('canvas');
-        const firstCanvas = document.querySelector('.image-canvas');
-        if (!firstCanvas) {
-            throw new Error('No canvas found');
+        // Get dimensions from first image
+        const firstImage = images[0];
+        if (!firstImage || !firstImage.img) {
+            throw new Error('Invalid image data');
         }
 
-        canvas.width = firstCanvas.width;
-        canvas.height = firstCanvas.height;
+        // Create canvas with original image dimensions
+        const canvas = document.createElement('canvas');
+        canvas.width = firstImage.img.width;
+        canvas.height = firstImage.img.height;
         const ctx = canvas.getContext('2d');
+
+        // Render full-resolution canvases for all images
+        this.updateProgressStatus('Preparing images...');
+        const renderedCanvases = await this.renderAllImages(images, canvas.width, canvas.height);
 
         // Setup MediaRecorder
         const stream = canvas.captureStream(fps);
@@ -355,13 +364,13 @@ export class VideoExporter {
         let currentFrame = 0;
 
         // Render each image with transitions
-        for (let i = 0; i < images.length; i++) {
-            this.updateProgressStatus(`Rendering image ${i + 1}/${images.length}...`);
+        for (let i = 0; i < renderedCanvases.length; i++) {
+            this.updateProgressStatus(`Rendering image ${i + 1}/${renderedCanvases.length}...`);
 
-            const currentCanvas = document.querySelectorAll('.image-canvas')[i];
+            const currentCanvas = renderedCanvases[i];
             if (!currentCanvas) continue;
 
-            const nextCanvas = i < images.length - 1 ? document.querySelectorAll('.image-canvas')[i + 1] : null;
+            const nextCanvas = i < renderedCanvases.length - 1 ? renderedCanvases[i + 1] : null;
 
             // Display current image
             const displayFrames = Math.floor(imageDuration * fps / 1000);
@@ -392,40 +401,52 @@ export class VideoExporter {
     async exportGIF() {
         this.updateProgressStatus('Loading GIF encoder...');
 
+        const images = this.app.state.images;
+        if (!images || images.length === 0) {
+            throw new Error('No images to export');
+        }
+
         // Load gif.js library dynamically
         if (!window.GIF) {
             await this.loadGifJS();
         }
 
-        const images = this.app.state.images;
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000; // ms
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000; // ms
         const fps = Math.min(parseInt(document.getElementById('videoFps')?.value || 30), 30); // GIF max 30fps recommended
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
 
+        // Get dimensions from first image
+        const firstImage = images[0];
+        const gifWidth = Math.min(firstImage.img.width, 800); // Limit GIF size
+        const gifHeight = Math.round(firstImage.img.height * (gifWidth / firstImage.img.width));
+
         const gif = new window.GIF({
             workers: 2,
             quality: 10,
-            width: document.querySelector('.image-canvas')?.width || 800,
-            height: document.querySelector('.image-canvas')?.height || 600,
+            width: gifWidth,
+            height: gifHeight,
             workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
         });
 
         // Create temp canvas for frames
         const canvas = document.createElement('canvas');
-        const firstCanvas = document.querySelector('.image-canvas');
-        canvas.width = firstCanvas.width;
-        canvas.height = firstCanvas.height;
+        canvas.width = gifWidth;
+        canvas.height = gifHeight;
         const ctx = canvas.getContext('2d');
 
-        const totalSteps = images.length * 2; // image display + transition
+        // Render full-resolution canvases for all images
+        this.updateProgressStatus('Preparing images...');
+        const renderedCanvases = await this.renderAllImages(images, gifWidth, gifHeight);
+
+        const totalSteps = renderedCanvases.length * 2; // image display + transition
         let currentStep = 0;
 
-        for (let i = 0; i < images.length; i++) {
-            this.updateProgressStatus(`Processing image ${i + 1}/${images.length}...`);
+        for (let i = 0; i < renderedCanvases.length; i++) {
+            this.updateProgressStatus(`Processing image ${i + 1}/${renderedCanvases.length}...`);
 
-            const currentCanvas = document.querySelectorAll('.image-canvas')[i];
-            const nextCanvas = i < images.length - 1 ? document.querySelectorAll('.image-canvas')[i + 1] : null;
+            const currentCanvas = renderedCanvases[i];
+            const nextCanvas = i < renderedCanvases.length - 1 ? renderedCanvases[i + 1] : null;
 
             // Add current image frame
             ctx.drawImage(currentCanvas, 0, 0);
@@ -456,6 +477,141 @@ export class VideoExporter {
         });
 
         gif.render();
+    }
+
+    async renderAllImages(images, width, height) {
+        const canvases = [];
+        const preview = this.app.components?.preview;
+
+        if (!preview) {
+            throw new Error('Preview component not available');
+        }
+
+        for (let i = 0; i < images.length; i++) {
+            this.updateProgressStatus(`Preparing image ${i + 1}/${images.length}...`);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            const img = images[i].img;
+
+            // Draw image
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Get text config - use textConfigs if available, otherwise use default from DOM
+            let textConfig;
+            if (preview.textConfigs && preview.textConfigs[i]) {
+                textConfig = preview.textConfigs[i];
+            } else {
+                // Build config from current DOM state
+                textConfig = this.getCurrentTextConfig(i);
+            }
+
+            // Render text overlay using preview's render method
+            // We need to call the text rendering part
+            await this.renderTextOnCanvas(ctx, canvas, textConfig, width, height);
+
+            canvases.push(canvas);
+        }
+
+        return canvases;
+    }
+
+    getCurrentTextConfig(imageIndex) {
+        // Build text config from current DOM state
+        const app = this.app;
+        return {
+            imageIndex: imageIndex,
+            text: app.DOM?.textInput?.value || '',
+            font: app.DOM?.fontSelect?.value || 'Inter, sans-serif',
+            mainColor: app.DOM?.colorPicker?.value || '#FFFFFF',
+            subColor: app.DOM?.subColorPicker?.value || '#FFFFFF',
+            position: app.DOM?.positionPicker?.value || 'bottom',
+            mainFontSize: parseInt(app.DOM?.mainFontSize?.value || 48),
+            subFontSize: parseInt(app.DOM?.subFontSize?.value || 32),
+            fontWeight: app.DOM?.fontWeightSelect?.value || '400',
+            textBorder: app.DOM?.textBorderCheckbox?.checked || false,
+            textShadow: app.DOM?.textShadowCheckbox?.checked || false,
+            borderWidth: parseInt(app.DOM?.borderWidth?.value || 2),
+            shadowBlur: parseInt(app.DOM?.shadowBlur?.value || 4)
+        };
+    }
+
+    async renderTextOnCanvas(ctx, canvas, config, width, height) {
+        // Simple text rendering - we'll use basic implementation
+        // In production, this should use the full preview panel rendering logic
+
+        if (!config.text || config.text.trim() === '') {
+            return;
+        }
+
+        const lines = config.text.split('\n').filter(line => line.trim());
+        if (lines.length === 0) return;
+
+        const mainText = lines[0];
+        const subText = lines.slice(1).join('\n');
+
+        ctx.save();
+
+        // Setup text style
+        ctx.font = `${config.fontWeight} ${config.mainFontSize}px ${config.font}`;
+        ctx.fillStyle = config.mainColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Calculate position
+        let y;
+        const centerX = width / 2;
+
+        switch (config.position) {
+            case 'top':
+                y = height * 0.15;
+                break;
+            case 'middle':
+                y = height * 0.5;
+                break;
+            case 'bottom':
+            default:
+                y = height * 0.85;
+                break;
+        }
+
+        // Draw text effects
+        if (config.textShadow) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = config.shadowBlur;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+        }
+
+        if (config.textBorder) {
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = config.borderWidth;
+            ctx.strokeText(mainText, centerX, y);
+        }
+
+        // Draw main text
+        ctx.fillText(mainText, centerX, y);
+
+        // Draw subtitle if exists
+        if (subText) {
+            ctx.font = `${config.fontWeight} ${config.subFontSize}px ${config.font}`;
+            ctx.fillStyle = config.subColor;
+
+            const subLines = subText.split('\n');
+            subLines.forEach((line, index) => {
+                const subY = y + config.mainFontSize + 20 + (index * config.subFontSize * 1.2);
+
+                if (config.textBorder) {
+                    ctx.strokeText(line, centerX, subY);
+                }
+                ctx.fillText(line, centerX, subY);
+            });
+        }
+
+        ctx.restore();
     }
 
     renderTransition(ctx, canvas1, canvas2, progress, effect) {
