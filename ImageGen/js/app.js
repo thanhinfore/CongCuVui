@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v11.0)
-   Ultimate UX Experience
+   APP.JS - Main Application Entry Point (v12.0)
+   AI-Powered Design Excellence
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -17,10 +17,15 @@ import { V6UI } from './v6-ui.js';
 import { utils } from './modules/utils.js';
 import { getFindReplace } from './modules/findReplace.js';
 
-// V11 New Modules
+// V11 Modules
 import { SmartColorPicker } from './modules/colorPicker.js';
 import { CommandPalette } from './modules/commandPalette.js';
 import { DraftManager } from './modules/draftManager.js';
+
+// V12 New Modules
+import { DarkMode } from './modules/darkMode.js';
+import { SocialMediaPresets } from './modules/socialMediaPresets.js';
+import { AISuggestions } from './modules/aiSuggestions.js';
 
 class ImageTextApp {
     constructor() {
@@ -51,10 +56,15 @@ class ImageTextApp {
             this.components.v6ui = new V6UI();
             this.components.findReplace = getFindReplace();
 
-            // V11: New Components
+            // V11: Components
             this.components.colorPicker = new SmartColorPicker();
             this.components.commandPalette = new CommandPalette(this);
             this.components.draftManager = new DraftManager(this);
+
+            // V12: New Components
+            this.components.darkMode = new DarkMode();
+            this.components.socialPresets = new SocialMediaPresets(this.state);
+            this.components.aiSuggestions = new AISuggestions(this.state, this.DOM);
 
             // V9.1: Connect state to mode manager for proper cleanup
             this.components.modeManager.setState(this.state);
@@ -87,13 +97,26 @@ class ImageTextApp {
             // V11: Make color picker available globally
             window.smartColorPicker = this.components.colorPicker;
 
+            // V12: Initialize new features
+            if (this.components.darkMode) {
+                this.components.darkMode.init();
+            }
+
+            if (this.components.socialPresets) {
+                this.components.socialPresets.init();
+            }
+
+            if (this.components.aiSuggestions) {
+                this.components.aiSuggestions.init();
+            }
+
             this.initialized = true;
-            console.log('🚀 Knowledge Visualizer v11.0 - Ultimate UX Experience initialized successfully');
+            console.log('🤖 Knowledge Visualizer v12.0 - AI-Powered Design Excellence initialized successfully');
 
             // Welcome toast
             setTimeout(() => {
                 if (this.components.v6ui) {
-                    this.components.v6ui.showToast('🚀 Welcome to v11! Press Ctrl+K for Command Palette', 'success', 5000);
+                    this.components.v6ui.showToast('🤖 Welcome to v12! AI-Powered Design Excellence is here! Press Ctrl+K for Command Palette, Ctrl+Shift+D for Dark Mode', 'success', 6000);
                 }
             }, 500);
 
