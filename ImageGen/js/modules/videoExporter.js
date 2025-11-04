@@ -1,5 +1,5 @@
 /* =====================================================
-   VIDEO EXPORTER v12.0 - CapCut-Style Professional Video Export
+   VIDEO EXPORTER v12.1 - CapCut-Style Professional Video Export
 
    COMPLETE REWRITE - PROFESSIONAL QUALITY LIKE CAPCUT:
 
@@ -15,6 +15,14 @@
    ✅ Full transition support (fade, slide, zoom, etc.)
    ✅ Drift compensation for perfect sync
    ✅ captureStream(0) manual mode for complete control
+   ✅ Full position system support (5 positions like PreviewPanel)
+
+   Text Positioning (v12.1 FIX):
+   - top: mainFontSize * 1.5
+   - upper-middle: canvas.height * 0.25 - mainFontSize
+   - middle: canvas.height * 0.5 - mainFontSize
+   - lower-middle: canvas.height * 0.75 - mainFontSize
+   - bottom: canvas.height - mainFontSize * (LINE_SPACING + 2)
 
    Technical Improvements:
    - MANUAL frame control vs automatic capture
@@ -22,6 +30,7 @@
    - No timing drift with compensation algorithm
    - Better memory efficiency with progressive rendering
    - Enhanced error handling and logging
+   - Position system matches PreviewPanel exactly
 
    Full Preview Panel Integration with All Features
    ===================================================== */
@@ -66,7 +75,7 @@ export class VideoExporter {
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
                             <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
                         </svg>
-                        <span>🎬 CapCut-Style v12.0! Professional quality with pre-rendered frames, manual capture control & perfect timing. Full styling: text, filters, transitions, footer & numbering</span>
+                        <span>🎬 CapCut-Style v12.1! Professional quality with 5-position text system (top, upper-middle, middle, lower-middle, bottom). Full styling: text, filters, transitions, footer & numbering</span>
                     </div>
 
                     <div class="export-section">
@@ -999,25 +1008,39 @@ export class VideoExporter {
             preview.markdownParser ? preview.markdownParser.parse(line) : { segments: [{ text: line }] }
         );
 
-        // Get position
+        // Get position - MATCH PreviewPanel position system
         const position = config.position || 'bottom';
+        const mainFontSize = (config.mainFontSize || 48) * scale;
+        const LINE_SPACING = 2.0;
+        const MAIN_PADDING = 1.5;
         let y;
 
         switch (position) {
             case 'top':
-                y = canvas.height * 0.15;
+                y = mainFontSize * MAIN_PADDING;
+                console.log(`📝 Position: TOP, y = ${y.toFixed(0)}`);
+                break;
+            case 'upper-middle':
+                y = canvas.height * 0.25 - mainFontSize;
+                console.log(`📝 Position: UPPER-MIDDLE, y = ${y.toFixed(0)}`);
                 break;
             case 'middle':
-                y = canvas.height * 0.5;
+                y = canvas.height * 0.5 - mainFontSize;
+                console.log(`📝 Position: MIDDLE, y = ${y.toFixed(0)}`);
+                break;
+            case 'lower-middle':
+                y = canvas.height * 0.75 - mainFontSize;
+                console.log(`📝 Position: LOWER-MIDDLE, y = ${y.toFixed(0)}`);
                 break;
             case 'bottom':
             default:
-                y = canvas.height * 0.85;
+                y = canvas.height - mainFontSize * (LINE_SPACING + 2);
+                console.log(`📝 Position: BOTTOM (or default), y = ${y.toFixed(0)}`);
                 break;
         }
 
-        const fontSize = (config.mainFontSize || 48) * scale;
-        const lineHeight = 2.0;
+        const fontSize = mainFontSize;
+        const lineHeight = LINE_SPACING;
 
         console.log(`📝 Rendering ${lines.length} lines at position ${position}, y=${y.toFixed(0)}, fontSize=${fontSize.toFixed(1)}`);
 
@@ -1049,7 +1072,7 @@ export class VideoExporter {
                         'center',
                         canvas
                     );
-                    console.log(`✅ Text line ${index + 1} rendered via wrapStyledText`);
+                    console.log(`✅ Text line ${index + 1} rendered via wrapStyledText at y=${currentY.toFixed(0)}`);
                 } catch (e) {
                     console.error(`❌ wrapStyledText failed for line ${index + 1}:`, e.message);
                     // Fallback to simple rendering
@@ -1071,23 +1094,33 @@ export class VideoExporter {
 
         const lines = config.text.split('\n');
         const position = config.position || 'bottom';
+        const mainFontSize = (config.mainFontSize || 48) * scale;
+        const LINE_SPACING = 2.0;
+        const MAIN_PADDING = 1.5;
         let y;
 
+        // MATCH PreviewPanel position system
         switch (position) {
             case 'top':
-                y = canvas.height * 0.15;
+                y = mainFontSize * MAIN_PADDING;
+                break;
+            case 'upper-middle':
+                y = canvas.height * 0.25 - mainFontSize;
                 break;
             case 'middle':
-                y = canvas.height * 0.5;
+                y = canvas.height * 0.5 - mainFontSize;
+                break;
+            case 'lower-middle':
+                y = canvas.height * 0.75 - mainFontSize;
                 break;
             case 'bottom':
             default:
-                y = canvas.height * 0.85;
+                y = canvas.height - mainFontSize * (LINE_SPACING + 2);
                 break;
         }
 
-        const fontSize = (config.mainFontSize || 48) * scale;
-        const lineHeight = 1.5;
+        const fontSize = mainFontSize;
+        const lineHeight = LINE_SPACING;
 
         lines.forEach((lineText, index) => {
             const currentY = y + (index * fontSize * lineHeight);
