@@ -43,7 +43,7 @@ export class VideoExporter {
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
                             <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
                         </svg>
-                        <span>Exports all images with full styling: text, filters, effects, footer & numbering</span>
+                        <span>⚡ Optimized for speed! Exports all images with full styling: text, filters, effects, footer & numbering</span>
                     </div>
 
                     <div class="export-section">
@@ -108,12 +108,12 @@ export class VideoExporter {
                         <div class="setting-group">
                             <label>
                                 Frame rate:
-                                <span class="value-display" id="fpsValue">30 fps</span>
+                                <span class="value-display" id="fpsValue">20 fps</span>
                             </label>
-                            <input type="range" id="videoFps" min="15" max="60" step="5" value="30" class="v11-range">
+                            <input type="range" id="videoFps" min="15" max="60" step="5" value="20" class="v11-range">
                             <div class="range-labels">
-                                <span>15 fps</span>
-                                <span>60 fps (Smooth)</span>
+                                <span>15 fps (Faster)</span>
+                                <span>60 fps (Smoother)</span>
                             </div>
                         </div>
                     </div>
@@ -367,7 +367,7 @@ export class VideoExporter {
         }
 
         // Size estimate
-        const fps = parseInt(document.getElementById('videoFps')?.value || 30);
+        const fps = parseInt(document.getElementById('videoFps')?.value || 20);
         const totalFrames = totalDuration * fps;
         let bytesPerFrame;
 
@@ -433,7 +433,7 @@ export class VideoExporter {
 
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000;
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000;
-        const fps = parseInt(document.getElementById('videoFps')?.value || 30);
+        const fps = parseInt(document.getElementById('videoFps')?.value || 20);
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
         const quality = document.getElementById('videoQuality')?.value || 'medium';
 
@@ -483,30 +483,29 @@ export class VideoExporter {
         };
 
         // Start recording
-        this.recorder.start(100); // Collect data every 100ms
+        this.recorder.start(500); // Collect data every 500ms (optimized)
 
-        const totalFrames = images.length * ((imageDuration + transitionDuration) * fps / 1000);
-        let currentFrame = 0;
+        const totalImages = renderedCanvases.length;
+        const frameDuration = 1000 / fps; // ms per frame
 
         // Render each image with transitions
-        for (let i = 0; i < renderedCanvases.length; i++) {
+        for (let i = 0; i < totalImages; i++) {
             if (this.cancelRequested) break;
 
-            this.updateProgressStatus(`🎬 Recording image ${i + 1}/${renderedCanvases.length}...`);
+            this.updateProgressStatus(`🎬 Recording image ${i + 1}/${totalImages}...`);
+            this.updateProgressBar(((i + 1) / totalImages) * 100);
 
             const currentCanvas = renderedCanvases[i];
             if (!currentCanvas) continue;
 
-            const nextCanvas = i < renderedCanvases.length - 1 ? renderedCanvases[i + 1] : null;
+            const nextCanvas = i < totalImages - 1 ? renderedCanvases[i + 1] : null;
 
             // Display current image
             const displayFrames = Math.floor(imageDuration * fps / 1000);
             for (let f = 0; f < displayFrames && !this.cancelRequested; f++) {
                 ctx.drawImage(currentCanvas, 0, 0);
-                await this.waitForNextFrame(1000 / fps);
-                currentFrame++;
-                this.updateProgressBar((currentFrame / totalFrames) * 100);
-                this.updateTimeRemaining(currentFrame, totalFrames);
+                // Let captureStream handle frame timing automatically - no artificial waiting!
+                await this.waitForNextFrame(frameDuration);
             }
 
             // Transition to next image
@@ -515,10 +514,8 @@ export class VideoExporter {
                 for (let f = 0; f < transitionFrames && !this.cancelRequested; f++) {
                     const progress = f / transitionFrames;
                     this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
-                    await this.waitForNextFrame(1000 / fps);
-                    currentFrame++;
-                    this.updateProgressBar((currentFrame / totalFrames) * 100);
-                    this.updateTimeRemaining(currentFrame, totalFrames);
+                    // Let captureStream handle frame timing automatically
+                    await this.waitForNextFrame(frameDuration);
                 }
             }
         }
@@ -546,7 +543,7 @@ export class VideoExporter {
 
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000;
         const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000;
-        const fps = Math.min(parseInt(document.getElementById('videoFps')?.value || 30), 30);
+        const fps = Math.min(parseInt(document.getElementById('videoFps')?.value || 20), 30); // Cap at 30 for GIF performance
         const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
 
         // Get dimensions from first image
@@ -662,9 +659,9 @@ export class VideoExporter {
                 alpha: true
             });
 
-            // High quality rendering
+            // Optimized quality rendering (medium for speed)
             ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingQuality = 'medium';
 
             // Determine which image and text to use (same logic as preview)
             let imageIndex, textIndex, textContent;
@@ -724,8 +721,10 @@ export class VideoExporter {
 
             canvases.push(canvas);
 
-            // Small delay to prevent blocking
-            await this.waitForNextFrame(1);
+            // Yield control periodically to keep UI responsive
+            if (i % 5 === 0) {
+                await this.waitForNextFrame(0);
+            }
         }
 
         console.log(`VideoExporter: Successfully rendered ${canvases.length} canvases`);
@@ -1009,6 +1008,10 @@ export class VideoExporter {
     }
 
     waitForNextFrame(ms) {
+        if (ms === 0) {
+            // Immediate yield to event loop
+            return new Promise(resolve => requestAnimationFrame(() => resolve()));
+        }
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
