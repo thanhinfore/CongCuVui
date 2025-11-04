@@ -432,10 +432,11 @@ export class VideoExporter {
         }
 
         const imageDuration = parseFloat(document.getElementById('imageDuration')?.value || 2) * 1000;
-        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0.5) * 1000;
-        const fps = parseInt(document.getElementById('videoFps')?.value || 20);
-        const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
+        const transitionDuration = parseFloat(document.getElementById('transitionDuration')?.value || 0) * 1000; // Set to 0 for speed
+        const fps = 15; // Fixed at 15 FPS for maximum speed
         const quality = document.getElementById('videoQuality')?.value || 'medium';
+
+        console.log('🎬 Starting video export with simple approach...');
 
         // Get dimensions from first image
         const firstImage = images[0];
@@ -447,33 +448,48 @@ export class VideoExporter {
         const canvas = document.createElement('canvas');
         canvas.width = firstImage.img.width;
         canvas.height = firstImage.img.height;
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
+
+        // Clear canvas to white (avoid black frames)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Render full-resolution canvases using PreviewPanel
-        this.updateProgressStatus('🎨 Rendering all images with full styling...');
+        this.updateProgressStatus('🎨 Rendering all images...');
+        this.updateProgressBar(10);
+
         const renderedCanvases = await this.renderAllImagesWithPreview(images, canvas.width, canvas.height);
 
         if (this.cancelRequested) throw new Error('Cancelled by user');
         if (renderedCanvases.length === 0) throw new Error('No rendered canvases');
 
-        // CRITICAL: Draw first frame BEFORE creating stream to avoid white screen
-        ctx.drawImage(renderedCanvases[0], 0, 0);
+        console.log(`✅ Rendered ${renderedCanvases.length} canvases`);
 
-        // Setup MediaRecorder with VP8 for better seeking support
-        const stream = canvas.captureStream(0); // 0 = manual frame capture
-        const videoTrack = stream.getVideoTracks()[0];
+        // Draw first frame to canvas
+        ctx.drawImage(renderedCanvases[0], 0, 0, canvas.width, canvas.height);
 
-        // Try VP8 first (better compatibility and seeking), fallback to VP9/default
+        // Wait a bit to ensure first frame is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        this.updateProgressStatus('📹 Setting up video recorder...');
+        this.updateProgressBar(20);
+
+        // Setup MediaRecorder with fixed FPS stream
+        const stream = canvas.captureStream(fps);
+
+        // Try different codecs for compatibility
         let mimeType = 'video/webm;codecs=vp8';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = 'video/webm;codecs=vp9';
+            mimeType = 'video/webm;codecs=h264';
             if (!MediaRecorder.isTypeSupported(mimeType)) {
                 mimeType = 'video/webm';
             }
         }
 
-        const bitrates = { high: 5000000, medium: 3000000, low: 1000000 };
-        const videoBitsPerSecond = bitrates[quality] || 3000000;
+        console.log(`🎥 Using codec: ${mimeType}`);
+
+        const bitrates = { high: 3000000, medium: 2000000, low: 1000000 };
+        const videoBitsPerSecond = bitrates[quality] || 2000000;
 
         this.recorder = new MediaRecorder(stream, {
             mimeType: mimeType,
@@ -490,99 +506,81 @@ export class VideoExporter {
 
         this.recorder.onstop = () => {
             if (this.cancelRequested) return;
+
+            console.log(`📦 Video chunks: ${this.chunks.length}, total size: ${this.chunks.reduce((sum, chunk) => sum + chunk.size, 0)} bytes`);
+
             const blob = new Blob(this.chunks, { type: mimeType });
+
+            if (blob.size === 0) {
+                console.error('❌ Video blob is empty!');
+                this.showToast('Video export failed - empty file', 'error');
+                return;
+            }
+
             this.downloadBlob(blob, `video-export-${Date.now()}.webm`);
         };
 
         // Start recording
+        console.log('🔴 Starting recorder...');
         this.recorder.start();
 
-        const totalImages = renderedCanvases.length;
-        const frameDuration = 1000 / fps; // ms per frame
-        let frameCount = 0;
+        // Wait for recorder to be ready
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Render each image with transitions
+        const totalImages = renderedCanvases.length;
+        const framesPerImage = Math.ceil((imageDuration / 1000) * fps);
+        const frameDelay = 1000 / fps; // ms per frame
+
+        console.log(`📊 Export config: ${totalImages} images, ${framesPerImage} frames/image, ${frameDelay}ms/frame`);
+
+        this.updateProgressStatus('🎬 Recording video...');
+
+        // Simple rendering loop - just draw pre-rendered canvases
         for (let i = 0; i < totalImages; i++) {
             if (this.cancelRequested) break;
-
-            this.updateProgressStatus(`🎬 Recording image ${i + 1}/${totalImages}...`);
-            this.updateProgressBar(((i + 1) / totalImages) * 100);
 
             const currentCanvas = renderedCanvases[i];
             if (!currentCanvas) continue;
 
-            const nextCanvas = i < totalImages - 1 ? renderedCanvases[i + 1] : null;
+            // Update progress
+            this.updateProgressBar(20 + ((i / totalImages) * 70));
+            this.updateProgressStatus(`🎬 Recording image ${i + 1}/${totalImages}...`);
 
-            // Display current image
-            const displayFrames = Math.floor(imageDuration * fps / 1000);
-            const frameInterval = frameDuration;
-            const startTime = performance.now();
+            // Draw current image for specified number of frames
+            for (let frame = 0; frame < framesPerImage && !this.cancelRequested; frame++) {
+                // Simply draw the pre-rendered canvas
+                ctx.drawImage(currentCanvas, 0, 0, canvas.width, canvas.height);
 
-            for (let f = 0; f < displayFrames && !this.cancelRequested; f++) {
-                ctx.drawImage(currentCanvas, 0, 0);
-
-                // Request frame capture for this draw
-                if (videoTrack && videoTrack.requestFrame) {
-                    videoTrack.requestFrame();
-                }
-
-                frameCount++;
-
-                // Precise timing with minimal overhead
-                const targetTime = startTime + (f * frameInterval);
-                const now = performance.now();
-                const wait = Math.max(0, targetTime - now);
-
-                if (wait > 0) {
-                    await new Promise(resolve => setTimeout(resolve, wait));
-                }
-            }
-
-            // Transition to next image
-            if (nextCanvas && transitionDuration > 0 && !this.cancelRequested) {
-                const transitionFrames = Math.floor(transitionDuration * fps / 1000);
-                const transitionStartTime = performance.now();
-
-                for (let f = 0; f < transitionFrames && !this.cancelRequested; f++) {
-                    const progress = f / transitionFrames;
-                    this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
-
-                    // Request frame capture
-                    if (videoTrack && videoTrack.requestFrame) {
-                        videoTrack.requestFrame();
-                    }
-
-                    frameCount++;
-
-                    // Precise timing
-                    const targetTime = transitionStartTime + (f * frameInterval);
-                    const now = performance.now();
-                    const wait = Math.max(0, targetTime - now);
-
-                    if (wait > 0) {
-                        await new Promise(resolve => setTimeout(resolve, wait));
-                    }
-                }
+                // Wait for next frame - let captureStream handle capturing
+                await new Promise(resolve => setTimeout(resolve, frameDelay));
             }
         }
 
-        // Add final frame hold for better ending
-        for (let i = 0; i < 5; i++) {
-            if (videoTrack && videoTrack.requestFrame) {
-                videoTrack.requestFrame();
-            }
-            await new Promise(resolve => setTimeout(resolve, frameDuration));
+        console.log('✅ Finished rendering all frames');
+
+        this.updateProgressStatus('⏹️ Finalizing video...');
+        this.updateProgressBar(95);
+
+        // Hold last frame for a bit
+        for (let i = 0; i < 10; i++) {
+            await new Promise(resolve => setTimeout(resolve, frameDelay));
         }
 
-        console.log(`Total frames captured: ${frameCount}`);
-
-        // Wait a bit for encoder to finish
+        // Wait for encoder to finish processing
         await new Promise(resolve => setTimeout(resolve, 500));
 
+        this.updateProgressBar(100);
+
         // Stop recording
+        console.log('⏹️ Stopping recorder...');
         if (this.recorder.state !== 'inactive') {
             this.recorder.stop();
         }
+
+        // Wait for stop to complete
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        console.log('✅ Video export complete!');
     }
 
     async exportGIF() {
@@ -704,23 +702,34 @@ export class VideoExporter {
 
         console.log(`VideoExporter: Rendering ${totalImages} images (Knowledge Mode: ${knowledgeMode}, Repeat: ${repeatBackground})`);
 
+        // Cache filter string (calculated once, not per image)
+        let filterString = '';
+        if (renderFilters && preview.getFilterString) {
+            filterString = preview.getFilterString();
+        }
+
+        // Pre-calculate scale (same for all images of same dimension)
+        const scale = width / images[0].img.width;
+
         for (let i = 0; i < totalImages; i++) {
             if (this.cancelRequested) break;
 
-            this.updateProgressStatus(`🎨 Rendering image ${i + 1}/${totalImages} with full styling...`);
-            this.updateProgressBar((i / totalImages) * 100);
+            // Update progress less frequently to reduce overhead
+            if (i % 5 === 0 || i === totalImages - 1) {
+                this.updateProgressStatus(`🎨 Rendering image ${i + 1}/${totalImages}...`);
+                this.updateProgressBar(10 + (i / totalImages) * 10); // 10-20% range
+            }
 
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d', {
                 willReadFrequently: false,
-                alpha: true
+                alpha: false // Faster without alpha
             });
 
-            // Optimized quality rendering (medium for speed)
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'medium';
+            // Fast rendering - disable smoothing for speed
+            ctx.imageSmoothingEnabled = false;
 
             // Determine which image and text to use (same logic as preview)
             let imageIndex, textIndex, textContent;
@@ -739,20 +748,14 @@ export class VideoExporter {
 
             const img = images[imageIndex].img;
 
-            // Apply filters
-            if (renderFilters && preview.getFilterString) {
-                const filterString = preview.getFilterString();
-                if (filterString && filterString.trim() !== '') {
-                    ctx.filter = filterString;
-                }
+            // Apply cached filter
+            if (filterString && filterString.trim() !== '') {
+                ctx.filter = filterString;
             }
 
             // Draw image
             ctx.drawImage(img, 0, 0, width, height);
             ctx.filter = 'none';
-
-            // Scale for text rendering
-            const scale = width / img.width;
 
             // Get text config (use from preview if available, otherwise create)
             const textConfig = preview.textConfigs?.[i] || {
@@ -780,8 +783,8 @@ export class VideoExporter {
 
             canvases.push(canvas);
 
-            // Yield control periodically to keep UI responsive
-            if (i % 5 === 0) {
+            // Yield control every 10 images to keep UI responsive
+            if (i % 10 === 0) {
                 await this.waitForNextFrame(0);
             }
         }
