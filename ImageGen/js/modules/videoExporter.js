@@ -447,25 +447,37 @@ export class VideoExporter {
         const canvas = document.createElement('canvas');
         canvas.width = firstImage.img.width;
         canvas.height = firstImage.img.height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 
         // Render full-resolution canvases using PreviewPanel
         this.updateProgressStatus('🎨 Rendering all images with full styling...');
         const renderedCanvases = await this.renderAllImagesWithPreview(images, canvas.width, canvas.height);
 
         if (this.cancelRequested) throw new Error('Cancelled by user');
+        if (renderedCanvases.length === 0) throw new Error('No rendered canvases');
 
-        // Setup MediaRecorder
-        const stream = canvas.captureStream(fps);
-        const mimeType = 'video/webm;codecs=vp9';
-        const finalMimeType = MediaRecorder.isTypeSupported(mimeType) ? mimeType : 'video/webm';
+        // CRITICAL: Draw first frame BEFORE creating stream to avoid white screen
+        ctx.drawImage(renderedCanvases[0], 0, 0);
+
+        // Setup MediaRecorder with VP8 for better seeking support
+        const stream = canvas.captureStream(0); // 0 = manual frame capture
+        const videoTrack = stream.getVideoTracks()[0];
+
+        // Try VP8 first (better compatibility and seeking), fallback to VP9/default
+        let mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm;codecs=vp9';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm';
+            }
+        }
 
         const bitrates = { high: 5000000, medium: 3000000, low: 1000000 };
         const videoBitsPerSecond = bitrates[quality] || 3000000;
 
         this.recorder = new MediaRecorder(stream, {
-            mimeType: finalMimeType,
-            videoBitsPerSecond
+            mimeType: mimeType,
+            videoBitsPerSecond: videoBitsPerSecond
         });
 
         this.chunks = [];
@@ -478,15 +490,16 @@ export class VideoExporter {
 
         this.recorder.onstop = () => {
             if (this.cancelRequested) return;
-            const blob = new Blob(this.chunks, { type: finalMimeType });
+            const blob = new Blob(this.chunks, { type: mimeType });
             this.downloadBlob(blob, `video-export-${Date.now()}.webm`);
         };
 
         // Start recording
-        this.recorder.start(500); // Collect data every 500ms (optimized)
+        this.recorder.start();
 
         const totalImages = renderedCanvases.length;
         const frameDuration = 1000 / fps; // ms per frame
+        let frameCount = 0;
 
         // Render each image with transitions
         for (let i = 0; i < totalImages; i++) {
@@ -502,23 +515,69 @@ export class VideoExporter {
 
             // Display current image
             const displayFrames = Math.floor(imageDuration * fps / 1000);
+            const frameInterval = frameDuration;
+            const startTime = performance.now();
+
             for (let f = 0; f < displayFrames && !this.cancelRequested; f++) {
                 ctx.drawImage(currentCanvas, 0, 0);
-                // Let captureStream handle frame timing automatically - no artificial waiting!
-                await this.waitForNextFrame(frameDuration);
+
+                // Request frame capture for this draw
+                if (videoTrack && videoTrack.requestFrame) {
+                    videoTrack.requestFrame();
+                }
+
+                frameCount++;
+
+                // Precise timing with minimal overhead
+                const targetTime = startTime + (f * frameInterval);
+                const now = performance.now();
+                const wait = Math.max(0, targetTime - now);
+
+                if (wait > 0) {
+                    await new Promise(resolve => setTimeout(resolve, wait));
+                }
             }
 
             // Transition to next image
             if (nextCanvas && transitionDuration > 0 && !this.cancelRequested) {
                 const transitionFrames = Math.floor(transitionDuration * fps / 1000);
+                const transitionStartTime = performance.now();
+
                 for (let f = 0; f < transitionFrames && !this.cancelRequested; f++) {
                     const progress = f / transitionFrames;
                     this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
-                    // Let captureStream handle frame timing automatically
-                    await this.waitForNextFrame(frameDuration);
+
+                    // Request frame capture
+                    if (videoTrack && videoTrack.requestFrame) {
+                        videoTrack.requestFrame();
+                    }
+
+                    frameCount++;
+
+                    // Precise timing
+                    const targetTime = transitionStartTime + (f * frameInterval);
+                    const now = performance.now();
+                    const wait = Math.max(0, targetTime - now);
+
+                    if (wait > 0) {
+                        await new Promise(resolve => setTimeout(resolve, wait));
+                    }
                 }
             }
         }
+
+        // Add final frame hold for better ending
+        for (let i = 0; i < 5; i++) {
+            if (videoTrack && videoTrack.requestFrame) {
+                videoTrack.requestFrame();
+            }
+            await new Promise(resolve => setTimeout(resolve, frameDuration));
+        }
+
+        console.log(`Total frames captured: ${frameCount}`);
+
+        // Wait a bit for encoder to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Stop recording
         if (this.recorder.state !== 'inactive') {
