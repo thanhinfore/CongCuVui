@@ -21,7 +21,6 @@ import { getFindReplace } from './modules/findReplace.js';
 import { SmartColorPicker } from './modules/colorPicker.js';
 import { CommandPalette } from './modules/commandPalette.js';
 import { DraftManager } from './modules/draftManager.js';
-import { VideoExporter } from './modules/videoExporter.js';
 
 class ImageTextApp {
     constructor() {
@@ -56,7 +55,6 @@ class ImageTextApp {
             this.components.colorPicker = new SmartColorPicker();
             this.components.commandPalette = new CommandPalette(this);
             this.components.draftManager = new DraftManager(this);
-            this.components.videoExporter = new VideoExporter(this);
 
             // V9.1: Connect state to mode manager for proper cleanup
             this.components.modeManager.setState(this.state);
@@ -1045,16 +1043,6 @@ class ImageTextApp {
                     }
                 }, 1000);
             };
-        }
-
-        // Video export button
-        const videoExportBtn = document.getElementById('videoExportBtn');
-        if (videoExportBtn) {
-            videoExportBtn.addEventListener('click', () => {
-                if (this.components.videoExporter) {
-                    this.components.videoExporter.open();
-                }
-            });
         }
     }
 }
