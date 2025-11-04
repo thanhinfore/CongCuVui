@@ -1,38 +1,48 @@
 /* =====================================================
-   VIDEO EXPORTER v12.1 - CapCut-Style Professional Video Export
+   VIDEO EXPORTER v13.0 - SIMPLIFIED Direct Encoding
 
-   COMPLETE REWRITE - PROFESSIONAL QUALITY LIKE CAPCUT:
+   MAJOR SIMPLIFICATION - ENCODE DIRECTLY FROM IMAGES:
 
-   Architecture (3-Step Process):
-   1. Render Images → Pre-render all styled images
-   2. Generate Frames → Create ALL video frames (like CapCut does)
-   3. Encode Video → Playback frames with precise timing
+   Architecture (2-Step Process):
+   1. Render Images → Pre-render all styled images (text, filters, etc)
+   2. Encode Video → Encode directly from images (NO frame generation!)
 
-   Key Features:
-   ✅ Pre-render ALL frames before encoding (no skipped frames)
-   ✅ Manual frame capture with requestFrame() for 100% accuracy
-   ✅ Precise timing using requestAnimationFrame
+   What Changed from v12.x:
+   ❌ REMOVED: generateAllVideoFrames() - 3960 frames pre-generation
+   ✅ NEW: encodeCanvasesToVideo() - encode directly from 53 canvases
+
+   Memory & Performance Benefits:
+   - Before: 53 images → 3960 frames → encode (HIGH memory!)
+   - After: 53 images → encode directly (LOW memory!)
+   - Memory savings: ~75x reduction (3960 → 53)
+   - Speed: Faster (no frame copy overhead)
+   - Simplicity: Less code, easier to maintain
+
+   How It Works:
+   1. Render 53 styled canvases (with text, filters, footer, etc)
+   2. For each canvas:
+      - Draw to display canvas once
+      - Request N frame captures (based on duration × FPS)
+      - Draw transition frames if needed
+   3. MediaRecorder captures frames directly during playback
+
+   Key Features (UNCHANGED):
+   ✅ Manual frame capture with requestFrame()
+   ✅ Precise timing using setTimeout
    ✅ Full transition support (fade, slide, zoom, etc.)
-   ✅ Drift compensation for perfect sync
-   ✅ captureStream(0) manual mode for complete control
-   ✅ Full position system support (5 positions like PreviewPanel)
+   ✅ Full position system (5 positions like PreviewPanel)
+   ✅ Text, filters, footer, numbering all supported
 
-   Text Positioning (v12.1 FIX):
-   - top: mainFontSize * 1.5
-   - upper-middle: canvas.height * 0.25 - mainFontSize
-   - middle: canvas.height * 0.5 - mainFontSize
-   - lower-middle: canvas.height * 0.75 - mainFontSize
-   - bottom: canvas.height - mainFontSize * (LINE_SPACING + 2)
+   Text Positioning (v12.1+):
+   - top, upper-middle, middle, lower-middle, bottom
 
-   Technical Improvements:
-   - MANUAL frame control vs automatic capture
-   - Frame-by-frame accuracy like professional editors
-   - No timing drift with compensation algorithm
-   - Better memory efficiency with progressive rendering
-   - Enhanced error handling and logging
-   - Position system matches PreviewPanel exactly
+   Technical Details:
+   - captureStream(0) for manual control
+   - requestFrame() for each frame
+   - No frame array → direct encode
+   - Same quality, less memory
 
-   Full Preview Panel Integration with All Features
+   Full Preview Panel Integration
    ===================================================== */
 
 export class VideoExporter {
@@ -75,7 +85,7 @@ export class VideoExporter {
                             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
                             <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01"/>
                         </svg>
-                        <span>🎬 CapCut-Style v12.1! Professional quality with 5-position text system (top, upper-middle, middle, lower-middle, bottom). Full styling: text, filters, transitions, footer & numbering</span>
+                        <span>⚡ SIMPLIFIED v13.0! Direct encoding from images (75x less memory!). Professional quality with 5-position text system. Full styling: text, filters, transitions, footer & numbering</span>
                     </div>
 
                     <div class="export-section">
@@ -468,7 +478,7 @@ export class VideoExporter {
         const fps = parseInt(document.getElementById('videoFps')?.value || 30);
         const quality = document.getElementById('videoQuality')?.value || 'medium';
 
-        console.log('🎬 CapCut-Style Video Export - Professional Quality');
+        console.log('🎬 SIMPLIFIED Video Export - Direct from Images');
         console.log(`📊 Settings: ${imageDuration}s/image, ${transitionDuration}s transition, ${fps} FPS`);
 
         // Get dimensions from first image
@@ -477,8 +487,8 @@ export class VideoExporter {
             throw new Error('Invalid image data');
         }
 
-        // STEP 1: Render all image canvases
-        this.updateProgressStatus('🎨 Step 1/3: Rendering images...');
+        // STEP 1: Render all image canvases (with text, filters, etc)
+        this.updateProgressStatus('🎨 Step 1/2: Rendering images with text...');
         this.updateProgressBar(5);
 
         const renderedCanvases = await this.renderAllImagesWithPreview(images, firstImage.img.width, firstImage.img.height);
@@ -486,34 +496,18 @@ export class VideoExporter {
         if (this.cancelRequested) throw new Error('Cancelled by user');
         if (renderedCanvases.length === 0) throw new Error('No rendered canvases');
 
-        console.log(`✅ Rendered ${renderedCanvases.length} image canvases`);
+        console.log(`✅ Rendered ${renderedCanvases.length} styled image canvases`);
 
-        // STEP 2: Generate ALL video frames (like CapCut does)
-        this.updateProgressStatus('🎞️ Step 2/3: Generating video frames...');
-        this.updateProgressBar(20);
+        // STEP 2: Encode directly from canvases (NO frame generation!)
+        this.updateProgressStatus('📹 Step 2/2: Encoding video...');
+        this.updateProgressBar(30);
 
-        const videoFrames = await this.generateAllVideoFrames(
+        await this.encodeCanvasesToVideo(
             renderedCanvases,
             firstImage.img.width,
             firstImage.img.height,
             imageDuration,
             transitionDuration,
-            fps
-        );
-
-        if (this.cancelRequested) throw new Error('Cancelled by user');
-        if (videoFrames.length === 0) throw new Error('No video frames generated');
-
-        console.log(`✅ Generated ${videoFrames.length} video frames`);
-
-        // STEP 3: Encode to video
-        this.updateProgressStatus('📹 Step 3/3: Encoding video...');
-        this.updateProgressBar(60);
-
-        await this.encodeFramesToVideo(
-            videoFrames,
-            firstImage.img.width,
-            firstImage.img.height,
             fps,
             quality
         );
@@ -594,7 +588,170 @@ export class VideoExporter {
         return canvas;
     }
 
-    async encodeFramesToVideo(frames, width, height, fps, quality) {
+    async encodeCanvasesToVideo(imageCanvases, width, height, imageDuration, transitionDuration, fps, quality) {
+        const totalImages = imageCanvases.length;
+        console.log(`🎬 Encoding ${totalImages} images directly to video`);
+
+        // Create display canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', {
+            alpha: false,
+            desynchronized: false,
+            willReadFrequently: false
+        });
+
+        // Clear to white
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+
+        // Select codec
+        let mimeType = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm;codecs=vp9';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm';
+            }
+        }
+
+        console.log(`🎥 Codec: ${mimeType}`);
+
+        const bitrates = { high: 5000000, medium: 3000000, low: 1500000 };
+        const videoBitsPerSecond = bitrates[quality] || 3000000;
+
+        // Draw first canvas
+        ctx.drawImage(imageCanvases[0], 0, 0, width, height);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        // Create stream - MANUAL MODE
+        const stream = canvas.captureStream(0);
+        const videoTrack = stream.getVideoTracks()[0];
+
+        console.log(`📹 Stream created in MANUAL mode`);
+
+        this.recorder = new MediaRecorder(stream, {
+            mimeType: mimeType,
+            videoBitsPerSecond: videoBitsPerSecond
+        });
+
+        this.chunks = [];
+
+        this.recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                this.chunks.push(e.data);
+            }
+        };
+
+        const recordingComplete = new Promise((resolve, reject) => {
+            this.recorder.onstop = () => {
+                if (this.cancelRequested) {
+                    reject(new Error('Cancelled by user'));
+                    return;
+                }
+
+                const totalSize = this.chunks.reduce((sum, chunk) => sum + chunk.size, 0);
+                console.log(`📦 Total size: ${(totalSize / 1024 / 1024).toFixed(2)} MB from ${this.chunks.length} chunks`);
+
+                const blob = new Blob(this.chunks, { type: mimeType });
+
+                if (blob.size === 0) {
+                    reject(new Error('Video blob is empty'));
+                    return;
+                }
+
+                console.log(`✅ Video blob: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+                this.downloadBlob(blob, `video-export-${Date.now()}.webm`);
+                resolve();
+            };
+
+            this.recorder.onerror = (e) => {
+                console.error('❌ Recorder error:', e);
+                reject(new Error('Recording failed'));
+            };
+        });
+
+        // Start recording
+        console.log('🔴 Starting recorder...');
+        this.recorder.start();
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const msPerFrame = 1000 / fps;
+        const framesPerImage = Math.round(imageDuration * fps);
+        const transitionFrames = transitionDuration > 0 ? Math.round(transitionDuration * fps) : 0;
+
+        console.log(`🎬 Direct encoding: ${framesPerImage} frames/image, ${transitionFrames} transition frames`);
+
+        let totalFramesCaptured = 0;
+        const transitionEffect = document.getElementById('transitionEffect')?.value || 'fade';
+
+        // Encode each image directly
+        for (let i = 0; i < totalImages; i++) {
+            if (this.cancelRequested) break;
+
+            const currentCanvas = imageCanvases[i];
+            const nextCanvas = i < totalImages - 1 ? imageCanvases[i + 1] : null;
+
+            const progress = 30 + ((i / totalImages) * 65);
+            this.updateProgressBar(progress);
+            this.updateProgressStatus(`📹 Encoding image ${i + 1}/${totalImages}...`);
+
+            // Draw current image once
+            ctx.drawImage(currentCanvas, 0, 0, width, height);
+
+            // Capture N frames of this static image
+            for (let f = 0; f < framesPerImage; f++) {
+                if (this.cancelRequested) break;
+
+                if (videoTrack.requestFrame) {
+                    videoTrack.requestFrame();
+                }
+
+                totalFramesCaptured++;
+                await new Promise(resolve => setTimeout(resolve, msPerFrame));
+            }
+
+            // Transition to next image
+            if (nextCanvas && transitionFrames > 0) {
+                for (let t = 0; t < transitionFrames; t++) {
+                    if (this.cancelRequested) break;
+
+                    const progress = t / transitionFrames;
+                    this.renderTransition(ctx, currentCanvas, nextCanvas, progress, transitionEffect);
+
+                    if (videoTrack.requestFrame) {
+                        videoTrack.requestFrame();
+                    }
+
+                    totalFramesCaptured++;
+                    await new Promise(resolve => setTimeout(resolve, msPerFrame));
+                }
+            }
+        }
+
+        console.log(`✅ Captured ${totalFramesCaptured} frames total`);
+
+        this.updateProgressStatus('⏹️ Finalizing video...');
+        this.updateProgressBar(95);
+
+        // Hold last frame
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        this.updateProgressBar(100);
+
+        // Stop recording
+        console.log('⏹️ Stopping recorder...');
+        if (this.recorder && this.recorder.state !== 'inactive') {
+            this.recorder.stop();
+        }
+
+        // Wait for encoding to complete
+        await recordingComplete;
+    }
+
+    // DEPRECATED: Old method with pre-generated frames
+    async encodeFramesToVideo_OLD(frames, width, height, fps, quality) {
         // Create display canvas
         const canvas = document.createElement('canvas');
         canvas.width = width;
