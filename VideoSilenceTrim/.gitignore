@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test_*.mp4
+test_*.avi
+test_*.mkv
+*_trimmed.*
+
+# Config files (keep example)
+config.json
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

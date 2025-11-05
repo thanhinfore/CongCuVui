@@ -1,0 +1,19 @@
+# VideoSilenceTrim - Python Dependencies
+# Chương trình yêu cầu Python 3.7 trở lên
+
+# Không có dependency Python ngoài ngoài standard library
+# Tuy nhiên, cần cài đặt FFmpeg trên hệ thống:
+#
+# Ubuntu/Debian:
+#   sudo apt-get update
+#   sudo apt-get install ffmpeg
+#
+# macOS (với Homebrew):
+#   brew install ffmpeg
+#
+# Windows:
+#   Download từ https://ffmpeg.org/download.html
+#   Hoặc dùng chocolatey: choco install ffmpeg
+#
+# Kiểm tra cài đặt:
+#   ffmpeg -version
