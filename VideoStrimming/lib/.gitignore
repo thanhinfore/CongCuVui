@@ -3,5 +3,13 @@ ffmpeg-core.js
 ffmpeg-core.wasm
 ffmpeg-core.worker.js
 
-# Keep README
+# Ignore downloaded library files
+ffmpeg-index.js
+ffmpeg-classes.js
+util-index.js
+
+# Keep wrapper files and documentation
+!*-wrapper.js
 !README.md
+!HUONG_DAN.md
+!.gitignore
