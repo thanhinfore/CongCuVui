@@ -110,7 +110,7 @@ async function ensureFFmpegLoaded() {
   // Thử load từ local trước
   setStatus('Đang tải ffmpeg.wasm từ local...');
   try {
-    const localBaseURL = './lib';
+    const localBaseURL = './lib/@ffmpeg/core';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${localBaseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${localBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -136,7 +136,7 @@ async function ensureFFmpegLoaded() {
     setStatus('Đã tải xong ffmpeg.wasm từ CDN');
   } catch (error) {
     console.error('Failed to load FFmpeg:', error);
-    throw new Error('Không thể tải ffmpeg.wasm. Vui lòng đảm bảo các file trong thư mục lib/ hoặc có kết nối internet.');
+    throw new Error('Không thể tải ffmpeg.wasm. Vui lòng đảm bảo bạn đã chạy download-ffmpeg-local.sh hoặc có kết nối internet.');
   }
 }
 
