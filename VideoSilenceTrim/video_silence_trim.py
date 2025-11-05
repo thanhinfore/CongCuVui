@@ -216,8 +216,18 @@ class VideoSilenceTrim:
             silence_intervals = self._parse_silence_segments(result.stderr)
 
             self.logger.info(f"✓ Phát hiện được {len(silence_intervals)} đoạn im lặng")
-            for i, interval in enumerate(silence_intervals, 1):
-                self.logger.info(f"  {i}. {interval}")
+
+            # Chỉ hiển thị 10 intervals đầu nếu quá nhiều
+            display_limit = 10
+            if len(silence_intervals) <= display_limit:
+                for i, interval in enumerate(silence_intervals, 1):
+                    self.logger.info(f"  {i}. {interval}")
+            else:
+                for i, interval in enumerate(silence_intervals[:5], 1):
+                    self.logger.info(f"  {i}. {interval}")
+                self.logger.info(f"  ... (ẩn {len(silence_intervals) - 10} đoạn)")
+                for i, interval in enumerate(silence_intervals[-5:], len(silence_intervals) - 4):
+                    self.logger.info(f"  {i}. {interval}")
 
             return silence_intervals
 
@@ -275,14 +285,16 @@ class VideoSilenceTrim:
         current_time = 0.0
 
         for silence in silence_intervals:
-            # Thêm segment từ current_time đến start của silence (với margin)
-            segment_end = max(0, silence.start - self.config.margin_seconds)
+            # Thêm segment từ current_time đến start của silence
+            # Margin: giữ THÊM một chút silence vào phần âm thanh (cho transition mượt)
+            segment_end = min(video_duration, silence.start + self.config.margin_seconds)
 
             if segment_end > current_time:
                 keep_segments.append(KeepSegment(current_time, segment_end))
 
-            # Di chuyển current_time đến sau đoạn silence (với margin)
-            current_time = min(video_duration, silence.end + self.config.margin_seconds)
+            # Di chuyển current_time đến trước khi silence kết thúc
+            # Giữ lại margin_seconds cuối của silence
+            current_time = max(segment_end, silence.end - self.config.margin_seconds)
 
         # Thêm segment cuối cùng nếu còn
         if current_time < video_duration:
@@ -301,9 +313,19 @@ class VideoSilenceTrim:
         self.logger.info(f"  - Độ dài gốc: {video_duration:.2f}s")
         self.logger.info(f"  - Độ dài sau trim: {total_duration:.2f}s")
         self.logger.info(f"  - Giảm: {reduction:.1f}%")
+        self.logger.info(f"  - Margin buffer: {self.config.margin_seconds}s (giữ thêm vào đầu/cuối mỗi segment)")
 
-        for i, seg in enumerate(keep_segments, 1):
-            self.logger.info(f"  {i}. {seg}")
+        # Chỉ hiển thị 10 segments đầu nếu quá nhiều
+        display_limit = 10
+        if len(keep_segments) <= display_limit:
+            for i, seg in enumerate(keep_segments, 1):
+                self.logger.info(f"  {i}. {seg}")
+        else:
+            for i, seg in enumerate(keep_segments[:5], 1):
+                self.logger.info(f"  {i}. {seg}")
+            self.logger.info(f"  ... (ẩn {len(keep_segments) - 10} segments)")
+            for i, seg in enumerate(keep_segments[-5:], len(keep_segments) - 4):
+                self.logger.info(f"  {i}. {seg}")
 
         return keep_segments
 
