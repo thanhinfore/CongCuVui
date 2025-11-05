@@ -20,9 +20,6 @@ NC='\033[0m' # No Color
 mkdir -p lib
 cd lib
 
-echo "📦 Đang tải FFmpeg Core files..."
-echo ""
-
 # Function để tải file với retry
 download_file() {
     local url=$1
@@ -51,28 +48,71 @@ download_file() {
     return 1
 }
 
+echo "📦 Đang tải @ffmpeg/ffmpeg libraries..."
+echo ""
+
+# URLs cho @ffmpeg/ffmpeg
+FFMPEG_VERSION="0.12.10"
+FFMPEG_BASE="https://unpkg.com/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm"
+FFMPEG_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm"
+
+declare -A FFMPEG_FILES=(
+    ["ffmpeg-index.js"]="@ffmpeg/ffmpeg - index.js"
+    ["ffmpeg-classes.js"]="@ffmpeg/ffmpeg - classes.js"
+)
+
+success=true
+for file in "${!FFMPEG_FILES[@]}"; do
+    desc="${FFMPEG_FILES[$file]}"
+    src_file="${file#ffmpeg-}"
+
+    if ! download_file "$FFMPEG_BASE/$src_file" "$file" "$desc"; then
+        echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
+        if ! download_file "$FFMPEG_ALT/$src_file" "$file" "$desc"; then
+            echo -e "    ${RED}Lỗi: Không thể tải $file${NC}"
+            success=false
+        fi
+    fi
+done
+
+echo ""
+echo "📦 Đang tải @ffmpeg/util libraries..."
+echo ""
+
+# URLs cho @ffmpeg/util
+UTIL_VERSION="0.12.1"
+UTIL_BASE="https://unpkg.com/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
+UTIL_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
+
+if ! download_file "$UTIL_BASE/index.js" "util-index.js" "@ffmpeg/util - index.js"; then
+    echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
+    if ! download_file "$UTIL_ALT/index.js" "util-index.js" "@ffmpeg/util - index.js"; then
+        echo -e "    ${RED}Lỗi: Không thể tải util-index.js${NC}"
+        success=false
+    fi
+fi
+
+echo ""
+echo "📦 Đang tải FFmpeg Core files..."
+echo ""
+
 # URLs cho FFmpeg core files
 CORE_VERSION="0.12.6"
-BASE_URL="https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm"
-ALT_BASE_URL="https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VERSION}/dist/esm"
+CORE_BASE="https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm"
+CORE_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VERSION}/dist/esm"
 
-# Mảng các file cần tải
-declare -A FILES=(
+declare -A CORE_FILES=(
     ["ffmpeg-core.js"]="ffmpeg-core.js"
-    ["ffmpeg-core.wasm"]="ffmpeg-core.wasm (file lớn nhất, ~32MB)"
+    ["ffmpeg-core.wasm"]="ffmpeg-core.wasm (file lớn, ~32MB)"
     ["ffmpeg-core.worker.js"]="ffmpeg-core.worker.js"
 )
 
-# Tải từng file
-success=true
-for file in "${!FILES[@]}"; do
-    desc="${FILES[$file]}"
+for file in "${!CORE_FILES[@]}"; do
+    desc="${CORE_FILES[$file]}"
 
-    # Thử URL chính
-    if ! download_file "$BASE_URL/$file" "$file" "$desc"; then
+    if ! download_file "$CORE_BASE/$file" "$file" "$desc"; then
         echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
-        # Thử URL thay thế
-        if ! download_file "$ALT_BASE_URL/$file" "$file" "$desc"; then
+        if ! download_file "$CORE_ALT/$file" "$file" "$desc"; then
             echo -e "    ${RED}Lỗi: Không thể tải $file${NC}"
             success=false
         fi
@@ -86,7 +126,7 @@ if [ "$success" = true ]; then
     echo -e "${GREEN}✓ Hoàn tất!${NC}"
     echo ""
     echo "Các file đã tải:"
-    ls -lh ffmpeg-core.* 2>/dev/null | awk '{print "  - "$9" ("$5")"}'
+    ls -lh *.js *.wasm 2>/dev/null | awk '{print "  - "$9" ("$5")"}'
     echo ""
     echo "Bây giờ bạn có thể:"
     echo "  1. Chạy local server: python3 -m http.server 8000"
@@ -96,7 +136,9 @@ else
     echo -e "${RED}✗ Có lỗi xảy ra khi tải files${NC}"
     echo ""
     echo "Vui lòng tải thủ công từ:"
-    echo "  https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm/"
+    echo "  - @ffmpeg/ffmpeg: https://unpkg.com/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm/"
+    echo "  - @ffmpeg/util: https://unpkg.com/@ffmpeg/util@${UTIL_VERSION}/dist/esm/"
+    echo "  - @ffmpeg/core: https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm/"
     echo ""
     echo "Hoặc đọc file lib/HUONG_DAN.md để biết thêm chi tiết."
     exit 1
