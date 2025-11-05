@@ -1,10 +1,5 @@
-const ffmpegLib = window.FFmpeg;
-
-if (!ffmpegLib) {
-  throw new Error('Không thể tải thư viện ffmpeg.wasm. Vui lòng kiểm tra kết nối mạng.');
-}
-
-const { createFFmpeg, fetchFile } = ffmpegLib;
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 const videoInput = document.getElementById('video-input');
 const processBtn = document.getElementById('process-btn');
@@ -14,12 +9,10 @@ const trimmedVideo = document.getElementById('trimmed-video');
 const downloadLink = document.getElementById('download-link');
 const fileLabel = document.getElementById('file-label');
 
-const ffmpeg = createFFmpeg({
-  log: true,
-  corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
-});
+const ffmpeg = new FFmpeg();
 
 let isLoaded = false;
+let isProcessing = false;
 let selectedFile;
 let videoDuration = 0;
 const logCapture = {
@@ -114,16 +107,31 @@ ffmpeg.on('log', ({ message }) => {
 async function ensureFFmpegLoaded() {
   if (isLoaded) return;
   setStatus('Đang tải ffmpeg.wasm (lần đầu tiên có thể mất vài giây)...');
-  await ffmpeg.load();
-  isLoaded = true;
+  try {
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    isLoaded = true;
+  } catch (error) {
+    console.error('Failed to load FFmpeg:', error);
+    throw new Error('Không thể tải ffmpeg.wasm. Vui lòng kiểm tra kết nối mạng và thử lại.');
+  }
 }
 
 async function runWithLogs(scope, args) {
   logCapture.scope = scope;
   logCapture.buffer = [];
   try {
-    await ffmpeg.exec(args);
+    const result = await ffmpeg.exec(args);
+    if (result !== 0) {
+      console.warn(`FFmpeg exited with code ${result}`);
+    }
     return [...logCapture.buffer];
+  } catch (error) {
+    console.error('FFmpeg execution error:', error);
+    throw error;
   } finally {
     logCapture.scope = '';
     logCapture.buffer = [];
@@ -190,12 +198,16 @@ async function trimVideo(segments) {
 }
 
 async function handleProcess() {
-  if (!selectedFile) return;
+  if (!selectedFile || isProcessing) return;
+
+  isProcessing = true;
   try {
     resetOutputs();
     await ensureFFmpegLoaded();
     setStatus('Đang tải video vào bộ nhớ...');
-    await ffmpeg.writeFile('input.mp4', await fetchFile(selectedFile));
+
+    const fileData = await fetchFile(selectedFile);
+    await ffmpeg.writeFile('input.mp4', fileData);
 
     setStatus('Đang đọc thông tin video...');
     videoDuration = await getVideoDuration();
@@ -231,6 +243,8 @@ async function handleProcess() {
   } catch (error) {
     console.error(error);
     setStatus(`Có lỗi xảy ra: ${error.message}`);
+  } finally {
+    isProcessing = false;
   }
 }
 
@@ -259,11 +273,13 @@ videoInput.addEventListener('change', (event) => {
   setStatus('Sẵn sàng xử lý. Nhấn "Bắt đầu xử lý" để loại bỏ khoảng lặng.');
 });
 
-processBtn.addEventListener('click', () => {
-  if (processBtn.disabled) return;
+processBtn.addEventListener('click', async () => {
+  if (processBtn.disabled || isProcessing) return;
   processBtn.disabled = true;
   setStatus('Đang chuẩn bị xử lý...');
-  handleProcess().finally(() => {
+  try {
+    await handleProcess();
+  } finally {
     processBtn.disabled = false;
-  });
+  }
 });
