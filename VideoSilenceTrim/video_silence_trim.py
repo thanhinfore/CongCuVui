@@ -332,16 +332,20 @@ class VideoSilenceTrim:
             # Step 1: Trim từng segment ra file riêng
             segment_files = []
             for i, seg in enumerate(keep_segments):
-                segment_file = os.path.join(temp_dir, f"segment_{i:04d}.mp4")
+                segment_file = os.path.join(temp_dir, f"segment_{i:04d}.ts")  # Dùng .ts thay vì .mp4
                 segment_files.append(segment_file)
 
-                # Trim segment này
+                # Trim segment này với re-encoding để đảm bảo chất lượng
+                # Dùng .ts format vì nó không cần header/footer như .mp4
                 cmd = [
                     'ffmpeg',
+                    '-ss', str(seg.start),  # Seek trước input (nhanh hơn)
                     '-i', video_path,
-                    '-ss', str(seg.start),
-                    '-to', str(seg.end),
-                    '-c', 'copy',  # Copy codec (nhanh, không re-encode)
+                    '-t', str(seg.duration()),  # Duration thay vì -to
+                    '-c:v', self.config.video_codec,
+                    '-preset', self.config.video_preset,
+                    '-c:a', self.config.audio_codec,
+                    '-b:a', self.config.audio_bitrate,
                     '-avoid_negative_ts', 'make_zero',
                     '-y',
                     segment_file
@@ -349,6 +353,7 @@ class VideoSilenceTrim:
 
                 if i == 0:
                     self.logger.info(f"Đang tạo {len(keep_segments)} segments tạm...")
+                    self.logger.info(f"  (Re-encoding để đảm bảo chất lượng)")
                 if (i + 1) % 10 == 0:
                     print(f"\r  Đã tạo {i + 1}/{len(keep_segments)} segments...", end='', flush=True)
 
@@ -360,7 +365,13 @@ class VideoSilenceTrim:
                 )
 
                 if result.returncode != 0:
-                    raise Exception(f"Lỗi khi tạo segment {i}: {result.stderr[-500:]}")
+                    self.logger.error(f"Lỗi segment {i} [{seg.start:.2f}s - {seg.end:.2f}s]:")
+                    # Hiển thị 10 dòng cuối của error
+                    error_lines = result.stderr.split('\n')
+                    for line in error_lines[-10:]:
+                        if line.strip():
+                            self.logger.error(f"  {line}")
+                    raise Exception(f"Failed to create segment {i}")
 
             print()  # New line
 
@@ -374,15 +385,13 @@ class VideoSilenceTrim:
 
             # Step 3: Concat tất cả segments
             self.logger.info("Đang ghép các segments...")
+            # Dùng -c copy vì các segments đã được encode đúng codec rồi
             cmd = [
                 'ffmpeg',
                 '-f', 'concat',
                 '-safe', '0',
                 '-i', concat_file,
-                '-c:v', self.config.video_codec,
-                '-preset', self.config.video_preset,
-                '-c:a', self.config.audio_codec,
-                '-b:a', self.config.audio_bitrate,
+                '-c', 'copy',  # Copy vì đã encode đúng ở step 1
                 '-y',
                 output_path
             ]
@@ -409,9 +418,21 @@ class VideoSilenceTrim:
 
             if process.returncode == 0:
                 output_size = os.path.getsize(output_path) / (1024 * 1024)  # MB
+
+                # Validate output size
+                input_size = os.path.getsize(video_path) / (1024 * 1024)
+                expected_ratio = sum(seg.duration() for seg in keep_segments) / sum((seg.end - seg.start) for seg in keep_segments) if keep_segments else 1.0
+
+                # Cảnh báo nếu output quá nhỏ (< 1% của input size * expected ratio)
+                if output_size < input_size * 0.01 * expected_ratio:
+                    self.logger.warning("⚠ Output size nghi ngờ quá nhỏ!")
+                    self.logger.warning(f"  Input: {input_size:.2f} MB")
+                    self.logger.warning(f"  Output: {output_size:.2f} MB")
+                    self.logger.warning(f"  Tỷ lệ: {(output_size/input_size)*100:.2f}%")
+
                 self.logger.info(f"✓ Trim video thành công!")
                 self.logger.info(f"  Output: {output_path}")
-                self.logger.info(f"  Kích thước: {output_size:.2f} MB")
+                self.logger.info(f"  Kích thước: {output_size:.2f} MB (input: {input_size:.2f} MB)")
             else:
                 self.logger.error("Lỗi khi concat segments!")
                 self.logger.error("FFmpeg output:")
@@ -523,9 +544,18 @@ class VideoSilenceTrim:
 
             if process.returncode == 0:
                 output_size = os.path.getsize(output_path) / (1024 * 1024)  # MB
+                input_size = os.path.getsize(video_path) / (1024 * 1024)
+
+                # Validate output size
+                if output_size < input_size * 0.01:
+                    self.logger.warning("⚠ Output size nghi ngờ quá nhỏ!")
+                    self.logger.warning(f"  Input: {input_size:.2f} MB")
+                    self.logger.warning(f"  Output: {output_size:.2f} MB")
+                    self.logger.warning(f"  Tỷ lệ: {(output_size/input_size)*100:.2f}%")
+
                 self.logger.info(f"✓ Trim video thành công!")
                 self.logger.info(f"  Output: {output_path}")
-                self.logger.info(f"  Kích thước: {output_size:.2f} MB")
+                self.logger.info(f"  Kích thước: {output_size:.2f} MB (input: {input_size:.2f} MB)")
             else:
                 self.logger.error("Lỗi khi trim video!")
                 self.logger.error("FFmpeg output:")
