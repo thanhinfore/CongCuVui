@@ -71,6 +71,7 @@
     <Content Include="script.js" />
     <Content Include="styles.css" />
     <Content Include="Web.config" />
+    <Content Include="worker.js" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
