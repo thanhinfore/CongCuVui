@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoStrimming</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="app-header">
+    <h1>VideoStrimming</h1>
+    <p>Tải lên video MP4 và tự động cắt bỏ những khoảng lặng, giữ lại 0.5 giây trước và sau mỗi đoạn có tiếng.</p>
+  </header>
+
+  <main class="app">
+    <section class="card upload-card">
+      <h2>1. Chọn video</h2>
+      <label class="file-input" for="video-input">
+        <span class="file-label" id="file-label">Chọn tệp MP4</span>
+        <input id="video-input" type="file" accept="video/mp4" />
+      </label>
+      <div class="hint">Dung lượng tối đa khuyến nghị: 200MB.</div>
+      <button id="process-btn" class="primary" disabled>Bắt đầu xử lý</button>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section class="card output-card">
+      <h2>2. Kết quả</h2>
+      <div class="video-wrapper" id="original-wrapper">
+        <h3>Video gốc</h3>
+        <video id="original-video" controls></video>
+      </div>
+      <div class="video-wrapper" id="trimmed-wrapper">
+        <h3>Video sau khi cắt</h3>
+        <video id="trimmed-video" controls></video>
+        <a id="download-link" class="download" download="trimmed.mp4">Tải về video đã cắt</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Sử dụng <code>ffmpeg.wasm</code> để phân tích và loại bỏ các đoạn im lặng.</p>
+  </footer>
+
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js"></script>
+  <script src="script.js" type="module"></script>
+</body>
+</html>
