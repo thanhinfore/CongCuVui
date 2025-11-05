@@ -307,6 +307,127 @@ class VideoSilenceTrim:
 
         return keep_segments
 
+    def trim_video_concat_demuxer(self,
+                                   video_path: str,
+                                   keep_segments: List[KeepSegment],
+                                   output_path: str):
+        """
+        Trim video sử dụng concat demuxer (cho nhiều segments)
+        Phương pháp này ổn định hơn khi có nhiều segments
+
+        Args:
+            video_path: Đường dẫn video gốc
+            keep_segments: List các segment cần giữ
+            output_path: Đường dẫn output
+        """
+        import tempfile
+        import shutil
+
+        temp_dir = None
+        try:
+            # Tạo thư mục tạm
+            temp_dir = tempfile.mkdtemp(prefix='video_trim_')
+            self.logger.info(f"Sử dụng concat demuxer (ổn định hơn cho {len(keep_segments)} segments)")
+
+            # Step 1: Trim từng segment ra file riêng
+            segment_files = []
+            for i, seg in enumerate(keep_segments):
+                segment_file = os.path.join(temp_dir, f"segment_{i:04d}.mp4")
+                segment_files.append(segment_file)
+
+                # Trim segment này
+                cmd = [
+                    'ffmpeg',
+                    '-i', video_path,
+                    '-ss', str(seg.start),
+                    '-to', str(seg.end),
+                    '-c', 'copy',  # Copy codec (nhanh, không re-encode)
+                    '-avoid_negative_ts', 'make_zero',
+                    '-y',
+                    segment_file
+                ]
+
+                if i == 0:
+                    self.logger.info(f"Đang tạo {len(keep_segments)} segments tạm...")
+                if (i + 1) % 10 == 0:
+                    print(f"\r  Đã tạo {i + 1}/{len(keep_segments)} segments...", end='', flush=True)
+
+                result = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    encoding='utf-8'
+                )
+
+                if result.returncode != 0:
+                    raise Exception(f"Lỗi khi tạo segment {i}: {result.stderr[-500:]}")
+
+            print()  # New line
+
+            # Step 2: Tạo concat list file
+            concat_file = os.path.join(temp_dir, 'concat_list.txt')
+            with open(concat_file, 'w', encoding='utf-8') as f:
+                for seg_file in segment_files:
+                    # Escape single quotes trong path
+                    escaped_path = seg_file.replace("'", "'\\''")
+                    f.write(f"file '{escaped_path}'\n")
+
+            # Step 3: Concat tất cả segments
+            self.logger.info("Đang ghép các segments...")
+            cmd = [
+                'ffmpeg',
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', concat_file,
+                '-c:v', self.config.video_codec,
+                '-preset', self.config.video_preset,
+                '-c:a', self.config.audio_codec,
+                '-b:a', self.config.audio_bitrate,
+                '-y',
+                output_path
+            ]
+
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding='utf-8',
+                universal_newlines=True
+            )
+
+            # Hiển thị progress
+            all_output = []
+            for line in process.stdout:
+                all_output.append(line)
+                if 'time=' in line:
+                    time_match = re.search(r'time=(\d+:\d+:\d+\.\d+)', line)
+                    if time_match:
+                        print(f"\r  Tiến trình: {time_match.group(1)}", end='', flush=True)
+
+            print()  # New line
+            process.wait()
+
+            if process.returncode == 0:
+                output_size = os.path.getsize(output_path) / (1024 * 1024)  # MB
+                self.logger.info(f"✓ Trim video thành công!")
+                self.logger.info(f"  Output: {output_path}")
+                self.logger.info(f"  Kích thước: {output_size:.2f} MB")
+            else:
+                self.logger.error("Lỗi khi concat segments!")
+                self.logger.error("FFmpeg output:")
+                for line in all_output[-20:]:
+                    self.logger.error(f"  {line.rstrip()}")
+                raise Exception("FFmpeg concat failed")
+
+        finally:
+            # Cleanup temp directory
+            if temp_dir and os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)
+                    self.logger.debug(f"Đã xóa thư mục tạm: {temp_dir}")
+                except Exception as e:
+                    self.logger.warning(f"Không thể xóa thư mục tạm: {e}")
+
     def trim_video(self,
                    video_path: str,
                    keep_segments: List[KeepSegment],
@@ -321,6 +442,11 @@ class VideoSilenceTrim:
         """
         if not keep_segments:
             self.logger.warning("Không có segment nào để giữ lại!")
+            return
+
+        # Nếu có quá nhiều segments (>20), dùng concat demuxer
+        if len(keep_segments) > 20:
+            self.trim_video_concat_demuxer(video_path, keep_segments, output_path)
             return
 
         self.logger.info(f"Đang trim video...")

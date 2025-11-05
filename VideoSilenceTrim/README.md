@@ -13,6 +13,7 @@ VideoSilenceTrim là phiên bản Python của project [VideoStrimming](../Video
 - 🔧 **Hỗ trợ nhiều format** - Hoạt động với tất cả các format video mà FFmpeg hỗ trợ (MP4, AVI, MKV, MOV...)
 - 💾 **Config file** - Lưu và tái sử dụng cấu hình qua file JSON
 - ⚡ **Xử lý nhanh** - Sử dụng preset encoding tối ưu và xử lý trực tiếp trên máy local
+- 🔄 **Xử lý thông minh** - Tự động chọn phương pháp tối ưu (filter_complex hoặc concat demuxer) dựa trên số lượng segments
 
 ## 📋 Yêu cầu hệ thống
 
@@ -230,6 +231,62 @@ Giữ lại các phần có action, loại bỏ downtime.
 | Batch processing | Không | Có thể scripting |
 | Privacy | 100% local (browser) | 100% local (desktop) |
 | UI | Giao diện đồ họa | Command line |
+
+## 🔧 Chi tiết kỹ thuật
+
+### Phương pháp xử lý
+
+VideoSilenceTrim tự động chọn phương pháp xử lý tối ưu dựa trên số lượng segments:
+
+#### 1. Filter Complex Method (≤20 segments)
+Sử dụng FFmpeg filter_complex để trim và concat trong một pass:
+- **Ưu điểm**: Nhanh, không cần file tạm, xử lý trong 1 lần
+- **Nhược điểm**: Giới hạn số segments (command line length, memory)
+- **Phù hợp**: Video có ít đoạn im lặng
+
+```bash
+# Ví dụ filter_complex command
+[0:v]trim=start=0:end=10,setpts=PTS-STARTPTS[v0];
+[0:a]atrim=start=0:end=10,asetpts=PTS-STARTPTS[a0];
+[v0][a0]concat=n=1:v=1:a=1[outv][outa]
+```
+
+#### 2. Concat Demuxer Method (>20 segments)
+Tự động chuyển sang concat demuxer khi có nhiều segments:
+- **Bước 1**: Trim từng segment ra file tạm (dùng `-c copy`, rất nhanh)
+- **Bước 2**: Tạo file list các segments
+- **Bước 3**: Concat tất cả bằng concat demuxer
+- **Bước 4**: Cleanup temp files
+
+**Ưu điểm**:
+- Xử lý được số lượng segments không giới hạn
+- Ổn định hơn với video dài
+- Không bị giới hạn command line length
+
+**Nhược điểm**:
+- Cần thêm disk space cho temp files
+- Chậm hơn một chút do cần 2 passes
+
+```bash
+# Ví dụ concat demuxer
+ffmpeg -f concat -safe 0 -i concat_list.txt -c:v libx264 output.mp4
+```
+
+### Khi nào sử dụng phương pháp nào?
+
+Chương trình **tự động quyết định**, nhưng bạn có thể hiểu quy tắc:
+
+| Số segments | Phương pháp | Lý do |
+|-------------|-------------|-------|
+| 1-20 | Filter Complex | Tốc độ tối ưu |
+| >20 | Concat Demuxer | Ổn định, không giới hạn |
+
+**Ví dụ từ output của bạn**:
+```
+✓ Phát hiện được 57 đoạn im lặng
+→ Tự động sử dụng Concat Demuxer
+→ Hiển thị: "Sử dụng concat demuxer (ổn định hơn cho 57 segments)"
+```
 
 ## 🛠️ Xử lý sự cố
 
