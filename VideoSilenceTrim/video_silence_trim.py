@@ -368,6 +368,12 @@ class VideoSilenceTrim:
         try:
             # Run FFmpeg với progress output
             self.logger.info("FFmpeg đang xử lý...")
+
+            # Debug: log filter complex nếu ở debug mode
+            if self.logger.level == logging.DEBUG:
+                self.logger.debug("Filter complex:")
+                self.logger.debug(filter_complex)
+
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -376,8 +382,10 @@ class VideoSilenceTrim:
                 universal_newlines=True
             )
 
-            # Hiển thị progress
+            # Capture tất cả output
+            all_output = []
             for line in process.stdout:
+                all_output.append(line)
                 if 'time=' in line:
                     # Extract time info để hiển thị progress
                     time_match = re.search(r'time=(\d+:\d+:\d+\.\d+)', line)
@@ -394,6 +402,10 @@ class VideoSilenceTrim:
                 self.logger.info(f"  Kích thước: {output_size:.2f} MB")
             else:
                 self.logger.error("Lỗi khi trim video!")
+                self.logger.error("FFmpeg output:")
+                # Hiển thị 20 dòng cuối của output để debug
+                for line in all_output[-20:]:
+                    self.logger.error(f"  {line.rstrip()}")
 
         except Exception as e:
             self.logger.error(f"Lỗi: {e}")
