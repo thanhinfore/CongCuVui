@@ -67,18 +67,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ffmpeg-core.js" />
+    <Content Include="lib\ffmpeg-core.js" />
     <Content Include="index.html" />
     <Content Include="script.js" />
     <Content Include="styles.css" />
     <Content Include="Web.config" />
-    <Content Include="worker.js" />
+    <Content Include="lib\ffmpeg-core.worker.js" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ffmpeg-core.wasm" />
+    <Content Include="lib\ffmpeg-core.wasm" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
