@@ -48,6 +48,9 @@ download_file() {
     return 1
 }
 
+# Tạo cấu trúc thư mục cho @ffmpeg packages
+mkdir -p "@ffmpeg/ffmpeg" "@ffmpeg/util" "@ffmpeg/core"
+
 echo "📦 Đang tải @ffmpeg/ffmpeg libraries..."
 echo ""
 
@@ -57,18 +60,17 @@ FFMPEG_BASE="https://unpkg.com/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm"
 FFMPEG_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@${FFMPEG_VERSION}/dist/esm"
 
 declare -A FFMPEG_FILES=(
-    ["ffmpeg-index.js"]="@ffmpeg/ffmpeg - index.js"
-    ["ffmpeg-classes.js"]="@ffmpeg/ffmpeg - classes.js"
+    ["index.js"]="@ffmpeg/ffmpeg - index.js"
+    ["classes.js"]="@ffmpeg/ffmpeg - classes.js"
 )
 
 success=true
 for file in "${!FFMPEG_FILES[@]}"; do
     desc="${FFMPEG_FILES[$file]}"
-    src_file="${file#ffmpeg-}"
 
-    if ! download_file "$FFMPEG_BASE/$src_file" "$file" "$desc"; then
+    if ! download_file "$FFMPEG_BASE/$file" "@ffmpeg/ffmpeg/$file" "$desc"; then
         echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
-        if ! download_file "$FFMPEG_ALT/$src_file" "$file" "$desc"; then
+        if ! download_file "$FFMPEG_ALT/$file" "@ffmpeg/ffmpeg/$file" "$desc"; then
             echo -e "    ${RED}Lỗi: Không thể tải $file${NC}"
             success=false
         fi
@@ -84,10 +86,10 @@ UTIL_VERSION="0.12.1"
 UTIL_BASE="https://unpkg.com/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
 UTIL_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
 
-if ! download_file "$UTIL_BASE/index.js" "util-index.js" "@ffmpeg/util - index.js"; then
+if ! download_file "$UTIL_BASE/index.js" "@ffmpeg/util/index.js" "@ffmpeg/util - index.js"; then
     echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
-    if ! download_file "$UTIL_ALT/index.js" "util-index.js" "@ffmpeg/util - index.js"; then
-        echo -e "    ${RED}Lỗi: Không thể tải util-index.js${NC}"
+    if ! download_file "$UTIL_ALT/index.js" "@ffmpeg/util/index.js" "@ffmpeg/util - index.js"; then
+        echo -e "    ${RED}Lỗi: Không thể tải @ffmpeg/util/index.js${NC}"
         success=false
     fi
 fi
@@ -110,9 +112,9 @@ declare -A CORE_FILES=(
 for file in "${!CORE_FILES[@]}"; do
     desc="${CORE_FILES[$file]}"
 
-    if ! download_file "$CORE_BASE/$file" "$file" "$desc"; then
+    if ! download_file "$CORE_BASE/$file" "@ffmpeg/core/$file" "$desc"; then
         echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
-        if ! download_file "$CORE_ALT/$file" "$file" "$desc"; then
+        if ! download_file "$CORE_ALT/$file" "@ffmpeg/core/$file" "$desc"; then
             echo -e "    ${RED}Lỗi: Không thể tải $file${NC}"
             success=false
         fi

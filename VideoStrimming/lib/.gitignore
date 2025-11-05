@@ -1,15 +1,7 @@
-# Ignore FFmpeg binary files (users should download these locally)
-ffmpeg-core.js
-ffmpeg-core.wasm
-ffmpeg-core.worker.js
+# Ignore downloaded @ffmpeg packages (users should download these locally)
+@ffmpeg/
 
-# Ignore downloaded library files
-ffmpeg-index.js
-ffmpeg-classes.js
-util-index.js
-
-# Keep wrapper files and documentation
-!*-wrapper.js
+# Keep documentation
 !README.md
 !HUONG_DAN.md
 !.gitignore
