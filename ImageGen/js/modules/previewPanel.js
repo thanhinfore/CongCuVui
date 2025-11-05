@@ -1041,7 +1041,6 @@ export class PreviewPanel {
         // Use EmojiRenderer for proper emoji font support
         ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', creditFontSize, selectedFont);
         ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-        ctx.textAlign = 'right';
         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
         ctx.lineWidth = Math.max(1, creditFontSize * 0.12);
 
@@ -1050,10 +1049,16 @@ export class PreviewPanel {
         ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
         ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
 
-        const padding = Math.max(10, creditFontSize * 0.8);
+        // V12.1: Credit text positioned at bottom center, 50px from edge
+        const basePadding = 50;
+        const padding = Math.max(basePadding, basePadding * scaleFactor);
 
-        ctx.strokeText(credit, canvas.width - padding, canvas.height - padding);
-        ctx.fillText(credit, canvas.width - padding, canvas.height - padding);
+        ctx.textAlign = 'center';
+        const x = canvas.width / 2;
+        const y = canvas.height - padding;
+
+        ctx.strokeText(credit, x, y);
+        ctx.fillText(credit, x, y);
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
