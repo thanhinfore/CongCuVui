@@ -86,13 +86,24 @@ UTIL_VERSION="0.12.1"
 UTIL_BASE="https://unpkg.com/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
 UTIL_ALT="https://cdn.jsdelivr.net/npm/@ffmpeg/util@${UTIL_VERSION}/dist/esm"
 
-if ! download_file "$UTIL_BASE/index.js" "@ffmpeg/util/index.js" "@ffmpeg/util - index.js"; then
-    echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
-    if ! download_file "$UTIL_ALT/index.js" "@ffmpeg/util/index.js" "@ffmpeg/util - index.js"; then
-        echo -e "    ${RED}Lỗi: Không thể tải @ffmpeg/util/index.js${NC}"
-        success=false
+# @ffmpeg/util có nhiều files
+declare -A UTIL_FILES=(
+    ["index.js"]="@ffmpeg/util - index.js"
+    ["errors.js"]="@ffmpeg/util - errors.js"
+    ["const.js"]="@ffmpeg/util - const.js"
+)
+
+for file in "${!UTIL_FILES[@]}"; do
+    desc="${UTIL_FILES[$file]}"
+
+    if ! download_file "$UTIL_BASE/$file" "@ffmpeg/util/$file" "$desc"; then
+        echo -e "    ${YELLOW}Thử CDN thay thế...${NC}"
+        if ! download_file "$UTIL_ALT/$file" "@ffmpeg/util/$file" "$desc"; then
+            echo -e "    ${RED}Lỗi: Không thể tải $file${NC}"
+            success=false
+        fi
     fi
-fi
+done
 
 echo ""
 echo "📦 Đang tải FFmpeg Core files..."
