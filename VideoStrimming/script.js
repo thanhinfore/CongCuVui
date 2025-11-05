@@ -6,6 +6,9 @@ if (!ffmpegLib) {
 
 const { fetchFile } = ffmpegLib;
 
+const { createFFmpeg, fetchFile } = window.FFmpeg;
+const { createFFmpeg, fetchFile } = FFmpeg;
+
 const videoInput = document.getElementById('video-input');
 const processBtn = document.getElementById('process-btn');
 const statusEl = document.getElementById('status');
@@ -15,6 +18,7 @@ const downloadLink = document.getElementById('download-link');
 const fileLabel = document.getElementById('file-label');
 
 const ffmpeg = ffmpegLib.createFFmpeg({
+const ffmpeg = createFFmpeg({
   log: true,
   corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
 });
