@@ -1,7 +1,8 @@
-# Ignore downloaded @ffmpeg packages (users should download these locally)
-@ffmpeg/
+# Ignore large binary files (users should download these locally)
+@ffmpeg/core/ffmpeg-core.wasm
 
-# Keep documentation
+# Keep all other necessary JavaScript files
+!@ffmpeg/**/*.js
 !README.md
 !HUONG_DAN.md
 !.gitignore
