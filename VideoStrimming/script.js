@@ -1,3 +1,5 @@
+
+const { createFFmpeg, fetchFile } = window.FFmpeg;
 const { createFFmpeg, fetchFile } = FFmpeg;
 
 const videoInput = document.getElementById('video-input');
