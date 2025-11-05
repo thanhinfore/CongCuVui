@@ -116,45 +116,41 @@ async function loadWithTimeout(promise, timeoutMs, errorMsg) {
 async function ensureFFmpegLoaded() {
   if (isLoaded) return;
 
-  // Chỉ thử load từ local nếu đang chạy trên localhost/local server
-  const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'http:';
-
-  if (isLocalhost) {
-    setStatus('Đang tải ffmpeg.wasm từ local...');
-    try {
-      const localBaseURL = './lib/@ffmpeg/core';
-      await loadWithTimeout(
-        (async () => {
-          const coreURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.js`, 'text/javascript');
-          const wasmURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.wasm`, 'application/wasm');
-          const workerURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.worker.js`, 'text/javascript');
-          await ffmpeg.load({ coreURL, wasmURL, workerURL });
-        })(),
-        3000,
-        'Local load timeout'
-      );
-      isLoaded = true;
-      setStatus('Đã tải xong ffmpeg.wasm từ local');
-      return;
-    } catch (localError) {
-      console.warn('Không thể load từ local, chuyển sang CDN...', localError);
-    }
+  // Luôn thử load từ local trước với timeout dài
+  setStatus('Đang tải ffmpeg.wasm từ local... (có thể mất vài giây)');
+  try {
+    const localBaseURL = './lib/@ffmpeg/core';
+    await loadWithTimeout(
+      (async () => {
+        const coreURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.js`, 'text/javascript');
+        const wasmURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.wasm`, 'application/wasm');
+        const workerURL = await toBlobURL(`${localBaseURL}/ffmpeg-core.worker.js`, 'text/javascript');
+        await ffmpeg.load({ coreURL, wasmURL, workerURL });
+      })(),
+      30000,  // 30 giây cho file wasm lớn
+      'Local load timeout - file wasm quá lớn hoặc không tồn tại'
+    );
+    isLoaded = true;
+    setStatus('✓ Đã tải xong ffmpeg.wasm từ local');
+    return;
+  } catch (localError) {
+    console.warn('Không thể load từ local, chuyển sang CDN...', localError);
+    setStatus('Đang tải ffmpeg.wasm từ CDN... (có thể mất vài giây)');
   }
 
-  // Load từ CDN
-  setStatus('Đang tải ffmpeg.wasm từ CDN...');
+  // Load từ CDN (sử dụng jsDelivr vì hỗ trợ CORS tốt hơn)
   try {
-    const cdnBaseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    const cdnBaseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
     await ffmpeg.load({
       coreURL: await toBlobURL(`${cdnBaseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${cdnBaseURL}/ffmpeg-core.wasm`, 'application/wasm'),
       workerURL: await toBlobURL(`${cdnBaseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
     });
     isLoaded = true;
-    setStatus('Đã tải xong ffmpeg.wasm từ CDN');
+    setStatus('✓ Đã tải xong ffmpeg.wasm từ CDN');
   } catch (error) {
     console.error('Failed to load FFmpeg:', error);
-    throw new Error('Không thể tải ffmpeg.wasm. Vui lòng kiểm tra kết nối internet của bạn.');
+    throw new Error('Không thể tải ffmpeg.wasm. Vui lòng kiểm tra kết nối internet hoặc chạy download-ffmpeg-local.sh để tải về local.');
   }
 }
 
