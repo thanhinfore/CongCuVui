@@ -4,10 +4,7 @@ if (!ffmpegLib) {
   throw new Error('Không thể tải thư viện ffmpeg.wasm. Vui lòng kiểm tra kết nối mạng.');
 }
 
-const { fetchFile } = ffmpegLib;
-
-const { createFFmpeg, fetchFile } = window.FFmpeg;
-const { createFFmpeg, fetchFile } = FFmpeg;
+const { createFFmpeg, fetchFile } = ffmpegLib;
 
 const videoInput = document.getElementById('video-input');
 const processBtn = document.getElementById('process-btn');
@@ -17,7 +14,6 @@ const trimmedVideo = document.getElementById('trimmed-video');
 const downloadLink = document.getElementById('download-link');
 const fileLabel = document.getElementById('file-label');
 
-const ffmpeg = ffmpegLib.createFFmpeg({
 const ffmpeg = createFFmpeg({
   log: true,
   corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
