@@ -1,55 +1,43 @@
 # FFmpeg Core Files
 
-Để sử dụng VideoStrimming với các file FFmpeg từ local, vui lòng tải các file sau về thư mục này:
+Thư mục này chứa các file FFmpeg Core cần thiết cho VideoStrimming.
 
-## Các file cần thiết:
+## 🚀 Cách Tải Nhanh
 
-1. **ffmpeg-core.js**
-2. **ffmpeg-core.wasm**
-3. **ffmpeg-core.worker.js**
+### Option 1: Sử dụng Script Tự Động (Khuyến Nghị)
 
-## Cách tải:
-
-### Option 1: Tải trực tiếp từ unpkg.com
+Từ thư mục `VideoStrimming`, chạy:
 
 ```bash
-cd VideoStrimming/lib
-
-# Tải ffmpeg-core.js
-curl -L -o ffmpeg-core.js https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js
-
-# Tải ffmpeg-core.wasm
-curl -L -o ffmpeg-core.wasm https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
-
-# Tải ffmpeg-core.worker.js
-curl -L -o ffmpeg-core.worker.js https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.worker.js
+chmod +x download-ffmpeg-local.sh
+./download-ffmpeg-local.sh
 ```
 
-### Option 2: Tải từ jsdelivr.net
+Script sẽ tự động tải tất cả các file cần thiết vào thư mục này.
 
-```bash
-cd VideoStrimming/lib
+### Option 2: Tải Thủ Công
 
-# Tải ffmpeg-core.js
-curl -L -o ffmpeg-core.js https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js
+Nếu script không hoạt động, tải các file sau về thư mục `lib/`:
 
-# Tải ffmpeg-core.wasm
-curl -L -o ffmpeg-core.wasm https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
+1. **ffmpeg-core.js** (~50-100KB)
+   - https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js
+   - Hoặc: https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js
 
-# Tải ffmpeg-core.worker.js
-curl -L -o ffmpeg-core.worker.js https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.worker.js
-```
+2. **ffmpeg-core.wasm** (~32MB)
+   - https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
+   - Hoặc: https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
 
-### Option 3: Tải thủ công
+3. **ffmpeg-core.worker.js** (~10-20KB)
+   - https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.worker.js
+   - Hoặc: https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.worker.js
 
-Truy cập các URL sau bằng trình duyệt và lưu file về:
+## 📋 Hướng Dẫn Chi Tiết
 
-- https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js
-- https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm
-- https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.worker.js
+Xem file `HUONG_DAN.md` để biết thêm chi tiết về cách cài đặt và xử lý lỗi.
 
-## Lưu ý:
+## ℹ️ Lưu Ý
 
-- Nếu không có các file này, ứng dụng sẽ tự động fallback sang tải từ CDN
-- Đảm bảo 3 file đều được đặt trong thư mục `VideoStrimming/lib/`
-- Kích thước tổng cộng khoảng 30-35MB
+- Tổng dung lượng: ~32-33MB
+- Các file này được gitignore (không commit lên repo)
+- Nếu không có các file local, app sẽ fallback sang CDN (có thể gặp lỗi CORS)
+- Chỉ cần download một lần
