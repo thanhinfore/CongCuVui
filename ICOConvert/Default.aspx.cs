@@ -63,6 +63,8 @@ namespace ICOConvert
                         cropRectangle,
                         overlaySettings.Color,
                         overlaySettings.Opacity,
+                        overlaySettings.ProtectHighlights,
+                        overlaySettings.HighlightThreshold,
                         selectedSizes);
 
                     var iconBase64 = Convert.ToBase64String(result.IconFile);
