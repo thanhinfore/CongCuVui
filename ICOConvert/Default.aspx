@@ -40,6 +40,18 @@
                         <input type="range" id="intensityRange" name="overlayIntensity" min="0" max="100" value="0" />
                         <span id="intensityLabel">0%</span>
                     </div>
+                    <div class="field-row checkbox-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="protectHighlights" name="protectHighlights" checked="checked" />
+                            Giữ nguyên vùng nền sáng
+                        </label>
+                    </div>
+                    <div class="field-row">
+                        <label for="highlightRange">Ngưỡng nền sáng</label>
+                        <input type="range" id="highlightRange" name="highlightThreshold" min="0" max="100" value="90" />
+                        <span id="highlightLabel">90%</span>
+                    </div>
+                    <p class="hint">Phủ màu mới lên phần hình chính trong khi vẫn giữ nguyên nền sáng hoặc màu trắng.</p>
                     <p class="hint">Tăng độ đậm để phủ màu mới lên ảnh sau khi crop.</p>
 
                     <h2>3. Chọn kích thước favicon</h2>

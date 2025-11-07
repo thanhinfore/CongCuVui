@@ -24,6 +24,173 @@
     let cropRect = null;
 
     function updateIntensityLabel() {
+        if (intensityLabel && intensityRange) {
+            intensityLabel.textContent = `${intensityRange.value}%`;
+        }
+    }
+
+    function updateHighlightLabel() {
+        if (highlightLabel && highlightRange) {
+            highlightLabel.textContent = `${highlightRange.value}%`;
+        }
+    }
+
+    function clamp01(value) {
+        if (value < 0) {
+            return 0;
+        }
+        if (value > 1) {
+            return 1;
+        }
+        return value;
+    }
+
+    function hexToRgb(hex) {
+        if (!hex) {
+            return null;
+        }
+        let normalized = hex.trim();
+        if (normalized[0] === '#') {
+            normalized = normalized.substring(1);
+        }
+        if (normalized.length === 3) {
+            normalized = normalized.split('').map(function (ch) { return ch + ch; }).join('');
+        }
+        if (normalized.length !== 6) {
+            return null;
+        }
+        const r = parseInt(normalized.substring(0, 2), 16);
+        const g = parseInt(normalized.substring(2, 4), 16);
+        const b = parseInt(normalized.substring(4, 6), 16);
+        if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+            return null;
+        }
+        return { r: r, g: g, b: b };
+    }
+
+    function rgbToHsl(r, g, b) {
+        const rNorm = r / 255;
+        const gNorm = g / 255;
+        const bNorm = b / 255;
+
+        const max = Math.max(rNorm, gNorm, bNorm);
+        const min = Math.min(rNorm, gNorm, bNorm);
+        const delta = max - min;
+
+        let h = 0;
+        if (delta !== 0) {
+            if (max === rNorm) {
+                h = ((gNorm - bNorm) / delta) % 6;
+            } else if (max === gNorm) {
+                h = (bNorm - rNorm) / delta + 2;
+            } else {
+                h = (rNorm - gNorm) / delta + 4;
+            }
+            h /= 6;
+            if (h < 0) {
+                h += 1;
+            }
+        }
+
+        const l = (max + min) / 2;
+        let s = 0;
+        if (delta !== 0) {
+            s = delta / (1 - Math.abs(2 * l - 1));
+        }
+
+        return { h: h, s: s, l: l };
+    }
+
+    function hueToRgb(p, q, t) {
+        if (t < 0) {
+            t += 1;
+        }
+        if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        if (t < 1 / 2) {
+            return q;
+        }
+        if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
+
+    function hslToRgb(h, s, l) {
+        let r;
+        let g;
+        let b;
+
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hueToRgb(p, q, h + 1 / 3);
+            g = hueToRgb(p, q, h);
+            b = hueToRgb(p, q, h - 1 / 3);
+        }
+
+        return {
+            r: Math.round(clamp01(r) * 255),
+            g: Math.round(clamp01(g) * 255),
+            b: Math.round(clamp01(b) * 255)
+        };
+    }
+
+    function applyTintPreview() {
+        if (!image || !canvas) {
+            return;
+        }
+
+        const overlayColor = colorPicker ? hexToRgb(colorPicker.value) : null;
+        const opacity = intensityRange ? parseInt(intensityRange.value || '0', 10) / 100 : 0;
+
+        if (!overlayColor || !opacity) {
+            return;
+        }
+
+        const shouldProtectHighlights = protectHighlightsToggle ? protectHighlightsToggle.checked : false;
+        const highlightValue = highlightRange ? parseInt(highlightRange.value || '0', 10) : 0;
+        const thresholdNormalized = clamp01(highlightValue / 100);
+        const protect = shouldProtectHighlights && highlightValue > 0;
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+        const overlayHsl = rgbToHsl(overlayColor.r, overlayColor.g, overlayColor.b);
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            const alpha = pixels[i + 3];
+            if (alpha === 0) {
+                continue;
+            }
+
+            const blue = pixels[i];
+            const green = pixels[i + 1];
+            const red = pixels[i + 2];
+            const brightness = Math.max(red, Math.max(green, blue)) / 255;
+
+            if (protect && brightness >= thresholdNormalized) {
+                continue;
+            }
+
+            const originalHsl = rgbToHsl(red, green, blue);
+            const newHue = overlayHsl.h;
+            const newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.95);
+            const newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.8);
+            const tinted = hslToRgb(newHue, newSaturation, newLuminance);
+
+            pixels[i] = tinted.b;
+            pixels[i + 1] = tinted.g;
+            pixels[i + 2] = tinted.r;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    }
         intensityLabel.textContent = `${intensityRange.value}%`;
     }
 
@@ -56,6 +223,7 @@
         }
 
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        applyTintPreview();
 
         if (cropRect) {
             const displayRect = {
@@ -226,6 +394,28 @@
     }
 
     if (intensityRange) {
+        intensityRange.addEventListener('input', function () {
+            updateIntensityLabel();
+            draw();
+        });
+        updateIntensityLabel();
+    }
+
+    if (highlightRange) {
+        highlightRange.addEventListener('input', function () {
+            updateHighlightLabel();
+            draw();
+        });
+        updateHighlightLabel();
+    }
+
+    if (colorPicker) {
+        colorPicker.addEventListener('input', draw);
+    }
+
+    if (protectHighlightsToggle) {
+        protectHighlightsToggle.addEventListener('change', draw);
+    }
         intensityRange.addEventListener('input', updateIntensityLabel);
         updateIntensityLabel();
     }
