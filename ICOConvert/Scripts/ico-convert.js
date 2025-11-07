@@ -16,6 +16,10 @@
 
     const intensityRange = document.getElementById('intensityRange');
     const intensityLabel = document.getElementById('intensityLabel');
+    const highlightRange = document.getElementById('highlightRange');
+    const highlightLabel = document.getElementById('highlightLabel');
+    const colorPicker = document.getElementById('colorPicker');
+    const protectHighlightsToggle = document.getElementById('protectHighlights');
 
     let image = null;
     let scale = 1;
@@ -169,9 +173,9 @@
                 continue;
             }
 
-            const blue = pixels[i];
+            const red = pixels[i];
             const green = pixels[i + 1];
-            const red = pixels[i + 2];
+            const blue = pixels[i + 2];
             const brightness = Math.max(red, Math.max(green, blue)) / 255;
 
             if (protect && brightness >= thresholdNormalized) {
@@ -184,14 +188,12 @@
             const newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.8);
             const tinted = hslToRgb(newHue, newSaturation, newLuminance);
 
-            pixels[i] = tinted.b;
+            pixels[i] = tinted.r;
             pixels[i + 1] = tinted.g;
-            pixels[i + 2] = tinted.r;
+            pixels[i + 2] = tinted.b;
         }
 
         ctx.putImageData(imageData, 0, 0);
-    }
-        intensityLabel.textContent = `${intensityRange.value}%`;
     }
 
     function resetHiddenFields() {
@@ -415,8 +417,5 @@
 
     if (protectHighlightsToggle) {
         protectHighlightsToggle.addEventListener('change', draw);
-    }
-        intensityRange.addEventListener('input', updateIntensityLabel);
-        updateIntensityLabel();
     }
 })();

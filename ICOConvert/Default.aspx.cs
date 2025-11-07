@@ -177,7 +177,6 @@ namespace ICOConvert
                 Opacity = opacity,
                 ProtectHighlights = protectHighlights,
                 HighlightThreshold = highlightThreshold
-                Opacity = opacity
             };
         }
 
