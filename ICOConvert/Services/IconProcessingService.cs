@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace ICOConvert.Services
 {
@@ -15,8 +14,6 @@ namespace ICOConvert.Services
             Rectangle requestedCrop,
             Color? overlayColor,
             float overlayOpacity,
-            bool protectHighlights,
-            byte highlightThreshold,
             IReadOnlyCollection<int> iconSizes)
         {
             if (imageStream == null)
@@ -46,7 +43,7 @@ namespace ICOConvert.Services
             {
                 var cropArea = NormalizeCropRectangle(originalBitmap.Size, requestedCrop);
                 using (var croppedBitmap = originalBitmap.Clone(cropArea, PixelFormat.Format32bppArgb))
-                using (var tintedBitmap = ApplyOverlay(croppedBitmap, overlayColor, overlayOpacity, protectHighlights, highlightThreshold))
+                using (var tintedBitmap = ApplyOverlay(croppedBitmap, overlayColor, overlayOpacity))
                 {
                     var resizedBitmaps = new List<Bitmap>();
                     try
@@ -118,12 +115,7 @@ namespace ICOConvert.Services
             return new Rectangle(x, y, width, height);
         }
 
-        private static Bitmap ApplyOverlay(
-            Bitmap source,
-            Color? overlayColor,
-            float overlayOpacity,
-            bool protectHighlights,
-            byte highlightThreshold)
+        private static Bitmap ApplyOverlay(Bitmap source, Color? overlayColor, float overlayOpacity)
         {
             if (overlayColor == null || overlayOpacity <= 0)
             {
@@ -131,192 +123,23 @@ namespace ICOConvert.Services
             }
 
             var opacity = Math.Max(0f, Math.Min(1f, overlayOpacity));
+            var alpha = (int)Math.Round(255 * opacity);
+
             var result = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
-
-            var overlay = overlayColor.Value;
-            RgbToHsl(overlay, out var overlayHue, out var overlaySaturation, out var overlayLuminance);
-
-            var shouldProtectHighlights = protectHighlights && highlightThreshold > 0;
-            var thresholdNormalized = Math.Max(0d, Math.Min(1d, highlightThreshold / 255d));
-
-            var rect = new Rectangle(0, 0, source.Width, source.Height);
-            var sourceData = source.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-            var resultData = result.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-            try
+            using (var graphics = Graphics.FromImage(result))
             {
-                var stride = Math.Abs(sourceData.Stride);
-                var bufferLength = stride * source.Height;
-                var sourceBuffer = new byte[bufferLength];
-                var resultBuffer = new byte[bufferLength];
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                graphics.DrawImage(source, 0, 0, source.Width, source.Height);
 
-                Marshal.Copy(sourceData.Scan0, sourceBuffer, 0, bufferLength);
-
-                for (var index = 0; index < bufferLength; index += 4)
+                using (var brush = new SolidBrush(Color.FromArgb(alpha, overlayColor.Value)))
                 {
-                    var blue = sourceBuffer[index];
-                    var green = sourceBuffer[index + 1];
-                    var red = sourceBuffer[index + 2];
-                    var alpha = sourceBuffer[index + 3];
-
-                    if (alpha == 0)
-                    {
-                        resultBuffer[index] = blue;
-                        resultBuffer[index + 1] = green;
-                        resultBuffer[index + 2] = red;
-                        resultBuffer[index + 3] = alpha;
-                        continue;
-                    }
-
-                    var brightness = Math.Max(red, Math.Max(green, blue)) / 255d;
-                    if (shouldProtectHighlights && brightness >= thresholdNormalized)
-                    {
-                        resultBuffer[index] = blue;
-                        resultBuffer[index + 1] = green;
-                        resultBuffer[index + 2] = red;
-                        resultBuffer[index + 3] = alpha;
-                        continue;
-                    }
-
-                    RgbToHsl(red, green, blue, out var hue, out var saturation, out var luminance);
-
-                    var newHue = overlayHue;
-                    var newSaturation = Clamp01(saturation + (overlaySaturation - saturation) * opacity * 0.95d);
-                    var newLuminance = Clamp01(luminance + (overlayLuminance - luminance) * opacity * 0.8d);
-
-                    var tinted = HslToColor(newHue, newSaturation, newLuminance);
-
-                    resultBuffer[index] = tinted.B;
-                    resultBuffer[index + 1] = tinted.G;
-                    resultBuffer[index + 2] = tinted.R;
-                    resultBuffer[index + 3] = alpha;
+                    graphics.FillRectangle(brush, new Rectangle(Point.Empty, source.Size));
                 }
-
-                Marshal.Copy(resultBuffer, 0, resultData.Scan0, bufferLength);
-            }
-            finally
-            {
-                source.UnlockBits(sourceData);
-                result.UnlockBits(resultData);
             }
 
             return result;
-        }
-
-        private static void RgbToHsl(Color color, out double h, out double s, out double l)
-        {
-            RgbToHsl(color.R, color.G, color.B, out h, out s, out l);
-        }
-
-        private static void RgbToHsl(byte r, byte g, byte b, out double h, out double s, out double l)
-        {
-            var rNorm = r / 255d;
-            var gNorm = g / 255d;
-            var bNorm = b / 255d;
-
-            var max = Math.Max(rNorm, Math.Max(gNorm, bNorm));
-            var min = Math.Min(rNorm, Math.Min(gNorm, bNorm));
-            var delta = max - min;
-
-            h = 0d;
-            if (delta > 0d)
-            {
-                if (max.Equals(rNorm))
-                {
-                    h = ((gNorm - bNorm) / delta) % 6d;
-                }
-                else if (max.Equals(gNorm))
-                {
-                    h = ((bNorm - rNorm) / delta) + 2d;
-                }
-                else
-                {
-                    h = ((rNorm - gNorm) / delta) + 4d;
-                }
-
-                h /= 6d;
-                if (h < 0d)
-                {
-                    h += 1d;
-                }
-            }
-
-            l = (max + min) / 2d;
-
-            if (delta.Equals(0d))
-            {
-                s = 0d;
-            }
-            else
-            {
-                s = delta / (1d - Math.Abs(2d * l - 1d));
-            }
-        }
-
-        private static Color HslToColor(double h, double s, double l)
-        {
-            if (s <= 0d)
-            {
-                var value = (byte)Math.Round(Clamp01(l) * 255d);
-                return Color.FromArgb(value, value, value);
-            }
-
-            var q = l < 0.5d ? l * (1d + s) : (l + s) - (l * s);
-            var p = 2d * l - q;
-
-            var r = HueToRgb(p, q, h + 1d / 3d);
-            var g = HueToRgb(p, q, h);
-            var b = HueToRgb(p, q, h - 1d / 3d);
-
-            return Color.FromArgb(
-                (byte)Math.Round(r * 255d),
-                (byte)Math.Round(g * 255d),
-                (byte)Math.Round(b * 255d));
-        }
-
-        private static double HueToRgb(double p, double q, double t)
-        {
-            if (t < 0d)
-            {
-                t += 1d;
-            }
-
-            if (t > 1d)
-            {
-                t -= 1d;
-            }
-
-            if (t < 1d / 6d)
-            {
-                return p + (q - p) * 6d * t;
-            }
-
-            if (t < 1d / 2d)
-            {
-                return q;
-            }
-
-            if (t < 2d / 3d)
-            {
-                return p + (q - p) * (2d / 3d - t) * 6d;
-            }
-
-            return p;
-        }
-
-        private static double Clamp01(double value)
-        {
-            if (value < 0d)
-            {
-                return 0d;
-            }
-
-            if (value > 1d)
-            {
-                return 1d;
-            }
-
-            return value;
         }
 
         private static Bitmap ResizeBitmap(Bitmap source, int size)

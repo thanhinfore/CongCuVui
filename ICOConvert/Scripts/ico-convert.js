@@ -16,10 +16,6 @@
 
     const intensityRange = document.getElementById('intensityRange');
     const intensityLabel = document.getElementById('intensityLabel');
-    const colorPicker = document.getElementById('colorPicker');
-    const highlightRange = document.getElementById('highlightRange');
-    const highlightLabel = document.getElementById('highlightLabel');
-    const protectHighlightsToggle = document.getElementById('protectHighlights');
 
     let image = null;
     let scale = 1;
@@ -195,6 +191,7 @@
 
         ctx.putImageData(imageData, 0, 0);
     }
+        intensityLabel.textContent = `${intensityRange.value}%`;
     }
 
     function resetHiddenFields() {
@@ -418,5 +415,8 @@
 
     if (protectHighlightsToggle) {
         protectHighlightsToggle.addEventListener('change', draw);
+    }
+        intensityRange.addEventListener('input', updateIntensityLabel);
+        updateIntensityLabel();
     }
 })();

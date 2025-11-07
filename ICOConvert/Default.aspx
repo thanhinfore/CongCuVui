@@ -52,6 +52,7 @@
                         <span id="highlightLabel">90%</span>
                     </div>
                     <p class="hint">Phủ màu mới lên phần hình chính trong khi vẫn giữ nguyên nền sáng hoặc màu trắng.</p>
+                    <p class="hint">Tăng độ đậm để phủ màu mới lên ảnh sau khi crop.</p>
 
                     <h2>3. Chọn kích thước favicon</h2>
                     <asp:CheckBoxList ID="SizeOptions" runat="server" RepeatColumns="2" CssClass="size-options">
