@@ -183,9 +183,27 @@
             }
 
             const originalHsl = rgbToHsl(red, green, blue);
-            const newHue = overlayHsl.h;
-            const newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.95);
-            const newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.8);
+            let newHue, newSaturation, newLuminance;
+
+            // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
+            if (originalHsl.l < 0.2) {
+                // Pixel rất tối: thay thế hoàn toàn màu sắc
+                newHue = overlayHsl.h;
+                newSaturation = overlayHsl.s * opacity;
+                // Giữ độ sáng gốc nhưng có thể tăng thêm một chút
+                newLuminance = clamp01(originalHsl.l + overlayHsl.l * opacity * 0.5);
+            } else if (originalHsl.l < 0.5) {
+                // Pixel tối-trung bình: blend mạnh
+                newHue = overlayHsl.h;
+                newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity);
+                newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.7);
+            } else {
+                // Pixel sáng: blend nhẹ
+                newHue = overlayHsl.h;
+                newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.6);
+                newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.4);
+            }
+
             const tinted = hslToRgb(newHue, newSaturation, newLuminance);
 
             pixels[i] = tinted.r;
