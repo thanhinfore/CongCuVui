@@ -148,6 +148,14 @@ namespace ICOConvert
             intensityValue = Math.Max(0, Math.Min(100, intensityValue));
             var opacity = intensityValue / 100f;
 
+            var highlightValue = ReadFormInt("highlightThreshold");
+            highlightValue = Math.Max(0, Math.Min(100, highlightValue));
+            var highlightThreshold = (byte)Math.Round(highlightValue / 100f * 255);
+
+            var protectHighlightsRaw = Request.Form["protectHighlights"];
+            var protectHighlights = string.Equals(protectHighlightsRaw, "on", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(protectHighlightsRaw, "true", StringComparison.OrdinalIgnoreCase);
+
             Color? color = null;
             var colorValue = Request.Form["overlayColor"];
 
@@ -166,6 +174,9 @@ namespace ICOConvert
             return new OverlaySettings
             {
                 Color = color,
+                Opacity = opacity,
+                ProtectHighlights = protectHighlights,
+                HighlightThreshold = highlightThreshold
                 Opacity = opacity
             };
         }
@@ -191,6 +202,8 @@ namespace ICOConvert
         {
             public Color? Color { get; set; }
             public float Opacity { get; set; }
+            public bool ProtectHighlights { get; set; }
+            public byte HighlightThreshold { get; set; }
         }
 
         private class PreviewItem
