@@ -131,7 +131,6 @@ class ImageTextApp {
             // Text inputs
             textInput: document.getElementById('textInput'),
             imageLoader: document.getElementById('imageLoader'),
-            creditInput: document.getElementById('creditInput'),
 
             // Image Numbering
             imageNumberingCheckbox: document.getElementById('imageNumberingCheckbox'),
@@ -710,7 +709,6 @@ class ImageTextApp {
             bgColor: this.DOM.bgColorPicker?.value || '#000000',
             bgOpacity: this.DOM.bgOpacity?.value || '28',
             repeatBackground: this.DOM.repeatBackgroundCheckbox?.checked || false,
-            credit: this.DOM.creditInput?.value || '',
             lastSaved: new Date().toISOString()
         };
 
@@ -737,7 +735,6 @@ class ImageTextApp {
             if (this.DOM.colorPicker) this.DOM.colorPicker.value = state.mainColor || '#FFFFFF';
             if (this.DOM.subColorPicker) this.DOM.subColorPicker.value = state.subColor || '#FFFFFF';
             if (this.DOM.positionPicker) this.DOM.positionPicker.value = state.position || 'bottom';
-            if (this.DOM.creditInput) this.DOM.creditInput.value = state.credit || '';
 
             if (this.DOM.mainFontSize) {
                 this.DOM.mainFontSize.value = state.mainFontSize || '48';
