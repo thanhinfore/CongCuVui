@@ -11,58 +11,67 @@
         <div class="container">
             <header>
                 <h1>ICOConvert</h1>
-                <p>Chuyển đổi ảnh của bạn thành tệp <strong>favicon.ico</strong> nhiều kích thước với khả năng crop và phủ màu đơn giản.</p>
+                <p>Chuyển đổi ảnh thành <strong>favicon.ico</strong> với crop, phủ màu và xoay sắc độ.</p>
             </header>
 
             <section class="section">
                 <label for="ImageUpload">1. Chọn ảnh nguồn</label>
-                <asp:FileUpload ID="ImageUpload" runat="server" CssClass="file-upload" />
-                <p class="hint">Hỗ trợ PNG, JPG, GIF với kích thước lên tới 4MB.</p>
+                <asp:FileUpload ID="ImageUpload" runat="server" CssClass="file-upload" accept="image/png,image/jpeg,image/jpg,image/gif" />
+                <p class="hint">📁 Hỗ trợ PNG, JPG, GIF (tối đa 4MB)</p>
             </section>
 
             <section class="section preview-wrapper">
                 <div class="preview-left">
                     <h2>Xem trước &amp; vùng crop</h2>
-                    <canvas id="previewCanvas" width="480" height="320"></canvas>
+                    <canvas id="previewCanvas" width="480" height="320" title="Kéo chuột để chọn vùng crop"></canvas>
                     <div class="preview-actions">
-                        <button type="button" id="resetCropButton" class="secondary-btn">Đặt lại vùng crop</button>
-                        <span id="cropInfo">Vùng crop: toàn bộ ảnh</span>
+                        <button type="button" id="resetCropButton" class="secondary-btn" title="Đặt lại vùng crop về toàn bộ ảnh">↺ Đặt lại crop</button>
+                        <span id="cropInfo" style="font-size: 13px; color: #64748b;">Vùng crop: toàn bộ ảnh</span>
                     </div>
+                    <p class="hint">🖱️ Kéo chuột trên ảnh để chọn vùng crop</p>
                 </div>
                 <div class="preview-right">
                     <h2>2. Tùy chỉnh màu</h2>
-                    <div class="field-row">
-                        <label for="colorPicker">Màu phủ</label>
-                        <input type="color" id="colorPicker" name="overlayColor" value="#ffffff" />
-                    </div>
-                    <div class="field-row">
-                        <label for="intensityRange">Độ đậm</label>
-                        <input type="range" id="intensityRange" name="overlayIntensity" min="0" max="100" value="0" />
-                        <span id="intensityLabel">0%</span>
-                    </div>
-                    <div class="field-row checkbox-row">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="protectHighlights" name="protectHighlights" checked="checked" />
-                            Giữ nguyên vùng nền sáng
-                        </label>
-                    </div>
-                    <div class="field-row">
-                        <label for="highlightRange">Ngưỡng nền sáng</label>
-                        <input type="range" id="highlightRange" name="highlightThreshold" min="0" max="100" value="90" />
-                        <span id="highlightLabel">90%</span>
-                    </div>
-                    <p class="hint">Phủ màu mới lên phần hình chính trong khi vẫn giữ nguyên nền sáng hoặc màu trắng.</p>
-                    <p class="hint">Tăng độ đậm để phủ màu mới lên ảnh sau khi crop.</p>
 
-                    <h2 style="margin-top: 20px;">Điều chỉnh sắc độ</h2>
-                    <div class="field-row">
-                        <label for="hueShiftRange">Xoay sắc độ</label>
-                        <input type="range" id="hueShiftRange" name="hueShift" min="-180" max="180" value="0" />
-                        <span id="hueShiftLabel">0°</span>
+                    <div class="control-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Phủ màu</h3>
+                            <button type="button" id="resetColorButton" class="reset-btn" title="Đặt lại phủ màu">↺</button>
+                        </div>
+                        <div class="field-row">
+                            <label for="colorPicker">Chọn màu</label>
+                            <input type="color" id="colorPicker" name="overlayColor" value="#ffffff" />
+                        </div>
+                        <div class="field-row">
+                            <label for="intensityRange">Độ đậm <span id="intensityLabel" class="value-label">0%</span></label>
+                            <input type="range" id="intensityRange" name="overlayIntensity" min="0" max="100" value="0" />
+                        </div>
+                        <div class="field-row checkbox-row">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="protectHighlights" name="protectHighlights" checked="checked" />
+                                Bảo vệ vùng sáng
+                            </label>
+                        </div>
+                        <div class="field-row">
+                            <label for="highlightRange">Ngưỡng sáng <span id="highlightLabel" class="value-label">90%</span></label>
+                            <input type="range" id="highlightRange" name="highlightThreshold" min="0" max="100" value="90" />
+                        </div>
+                        <p class="hint">💡 Chuyển màu đen → màu mới, giữ nguyên nền trắng</p>
                     </div>
-                    <p class="hint">Xoay sắc độ màu của các pixel không trắng (-180° đến +180°).</p>
 
-                    <h2>3. Chọn kích thước favicon</h2>
+                    <div class="control-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Xoay sắc độ</h3>
+                            <button type="button" id="resetHueButton" class="reset-btn" title="Đặt lại sắc độ">↺</button>
+                        </div>
+                        <div class="field-row">
+                            <label for="hueShiftRange">Góc xoay <span id="hueShiftLabel" class="value-label">0°</span></label>
+                            <input type="range" id="hueShiftRange" name="hueShift" min="-180" max="180" value="0" />
+                        </div>
+                        <p class="hint">💡 Thay đổi màu sắc của ảnh có màu</p>
+                    </div>
+
+                    <h2 style="margin-top: 24px;">3. Kích thước favicon</h2>
                     <asp:CheckBoxList ID="SizeOptions" runat="server" RepeatColumns="2" CssClass="size-options">
                         <asp:ListItem Text="16 x 16" Value="16" Selected="True"></asp:ListItem>
                         <asp:ListItem Text="32 x 32" Value="32" Selected="True"></asp:ListItem>
