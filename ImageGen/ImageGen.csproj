@@ -74,6 +74,7 @@
     <Content Include="css\markdown.css" />
     <Content Include="css\mobile.css" />
     <Content Include="css\preview.css" />
+    <Content Include="favicon.ico" />
     <Content Include="images\sample1.png" />
     <Content Include="images\sample5.png" />
     <Content Include="images\sample4.png" />
