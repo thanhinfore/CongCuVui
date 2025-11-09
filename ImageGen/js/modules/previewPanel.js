@@ -232,7 +232,7 @@ export class PreviewPanel {
         });
     }
 
-    loadPreviewItem(container) {
+    async loadPreviewItem(container) {
         const config = JSON.parse(container.dataset.config);
         const number = parseInt(container.dataset.number);
         const configIndex = number - 1;
@@ -245,7 +245,7 @@ export class PreviewPanel {
         });
         container.appendChild(label);
 
-        const canvas = this.createPreviewCanvas(this.textConfigs[configIndex]);
+        const canvas = await this.createPreviewCanvas(this.textConfigs[configIndex]);
         container.appendChild(canvas);
 
         const controls = this.createImageControls(this.textConfigs[configIndex], canvas);
@@ -253,7 +253,7 @@ export class PreviewPanel {
         container.appendChild(controls);
     }
 
-    createPreviewCanvas(config) {
+    async createPreviewCanvas(config) {
         const { img } = this.state.images[config.imageIndex];
 
         const maxWidth = 200;
@@ -289,7 +289,9 @@ export class PreviewPanel {
         const previewScale = canvas.width / img.width;
         this.renderTextCommon(ctx, canvas, config, previewScale);
         this.renderImageNumber(ctx, canvas, config, previewScale);
-        // Note: Credit not rendered in preview, only in full export
+
+        // Render footer in preview (wait for it to complete)
+        await this.renderFooter(ctx, canvas, previewScale);
 
         return canvas;
     }
@@ -1031,39 +1033,9 @@ export class PreviewPanel {
     }
 
     renderCredit(ctx, canvas, scaleFactor) {
-        const credit = this.DOM.creditInput?.value?.trim() || '';
-        if (!credit) return;
-
-        // Use subtitle font size instead of fixed 28px
-        const baseSubFontSize = this.getSubFontSize();
-        const creditFontSize = Math.round(baseSubFontSize * scaleFactor);
-
-        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        // Use EmojiRenderer for proper emoji font support
-        ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', creditFontSize, selectedFont);
-        ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-        ctx.textAlign = 'center';  // Changed from 'right' to 'center'
-        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-        ctx.lineWidth = Math.max(1, creditFontSize * 0.12);
-
-        ctx.shadowColor = 'rgba(0,0,0,0.6)';
-        ctx.shadowBlur = Math.max(2, creditFontSize * 0.3);
-        ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
-        ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
-
-        // Position: center horizontally, 50px from bottom
-        const x = canvas.width / 2;  // Center
-        const baseBottomMargin = 50;
-        const bottomMargin = Math.round(baseBottomMargin * scaleFactor);
-        const y = canvas.height - bottomMargin;
-
-        ctx.strokeText(credit, x, y);
-        ctx.fillText(credit, x, y);
-
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
+        // Author Credit feature has been removed - use Footer instead
+        // This function is kept for backward compatibility but does nothing
+        return;
     }
 
     async renderFooter(ctx, canvas, scaleFactor) {
@@ -1075,11 +1047,12 @@ export class PreviewPanel {
         const footerType = document.querySelector('input[name="footerType"]:checked')?.value || 'text';
         const position = this.DOM.footerPosition?.value || 'bottom-center';
 
-        const basePadding = 15;
-        const padding = Math.max(basePadding, basePadding * scaleFactor);
+        // Fixed 50px from bottom
+        const baseBottomMargin = 50;
+        const bottomMargin = Math.round(baseBottomMargin * scaleFactor);
 
         if (footerType === 'text') {
-            // Render footer text
+            // Render footer text - PLAIN TEXT, NO STYLES
             const footerText = this.DOM.footerText?.value?.trim() || '';
             if (!footerText) return;
 
@@ -1088,23 +1061,19 @@ export class PreviewPanel {
             const footerColor = this.DOM.footerColor?.value || '#ffffff';
 
             const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-            ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', footerSize, selectedFont);
+            // Plain text: normal weight, no bold
+            ctx.font = this.emojiRenderer.buildFontString('normal', 'normal', footerSize, selectedFont);
             ctx.fillStyle = footerColor;
-            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-            ctx.lineWidth = Math.max(1, footerSize * 0.08);
 
-            ctx.shadowColor = 'rgba(0,0,0,0.6)';
-            ctx.shadowBlur = Math.max(2, footerSize * 0.25);
-            ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
-            ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
+            // NO stroke, NO shadow - completely plain
 
             let x, y;
-            y = canvas.height - padding;
+            y = canvas.height - bottomMargin;
 
             switch (position) {
                 case 'bottom-left':
                     ctx.textAlign = 'left';
-                    x = padding;
+                    x = bottomMargin; // Use same margin as bottom
                     break;
                 case 'bottom-center':
                     ctx.textAlign = 'center';
@@ -1112,11 +1081,11 @@ export class PreviewPanel {
                     break;
                 case 'bottom-right':
                     ctx.textAlign = 'right';
-                    x = canvas.width - padding;
+                    x = canvas.width - bottomMargin;
                     break;
             }
 
-            ctx.strokeText(footerText, x, y);
+            // Only fillText, no strokeText
             ctx.fillText(footerText, x, y);
 
         } else if (footerType === 'logo') {
@@ -1131,17 +1100,17 @@ export class PreviewPanel {
                 const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
 
                 let x, y;
-                y = canvas.height - padding - logoHeight / 2;
+                y = canvas.height - bottomMargin;
 
                 switch (position) {
                     case 'bottom-left':
-                        x = padding;
+                        x = bottomMargin;
                         break;
                     case 'bottom-center':
                         x = (canvas.width - logoWidth) / 2;
                         break;
                     case 'bottom-right':
-                        x = canvas.width - padding - logoWidth;
+                        x = canvas.width - bottomMargin - logoWidth;
                         break;
                 }
 
@@ -1150,12 +1119,6 @@ export class PreviewPanel {
                 console.warn('Failed to render footer logo:', error);
             }
         }
-
-        // Reset shadow
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
     }
 
     loadImage(src) {
@@ -1192,57 +1155,50 @@ export class PreviewPanel {
             imageNumber = imageNumber - 1;
         }
 
-        // Setup font and style
-        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
-        ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', numberSize, selectedFont);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
-        ctx.lineWidth = Math.max(2, numberSize * 0.08);
+        const numberText = imageNumber.toString();
 
-        // Add shadow for better visibility
-        ctx.shadowColor = 'rgba(0,0,0,0.7)';
-        ctx.shadowBlur = Math.max(4, numberSize * 0.2);
-        ctx.shadowOffsetX = Math.max(2, 2 * scaleFactor);
-        ctx.shadowOffsetY = Math.max(2, 2 * scaleFactor);
+        // Calculate circle size based on number size
+        const circleRadius = numberSize * 0.8;
+        const padding = Math.max(20, circleRadius * 1.2);
 
-        // Calculate position
-        const padding = Math.max(15, numberSize * 0.6);
-        let x, y;
+        // Calculate position (center of circle)
+        let centerX, centerY;
 
         switch (position) {
             case 'top-left':
-                ctx.textAlign = 'left';
-                x = padding;
-                y = padding + numberSize * 0.8;
+                centerX = padding;
+                centerY = padding;
                 break;
             case 'top-right':
-                ctx.textAlign = 'right';
-                x = canvas.width - padding;
-                y = padding + numberSize * 0.8;
+                centerX = canvas.width - padding;
+                centerY = padding;
                 break;
             case 'bottom-left':
-                ctx.textAlign = 'left';
-                x = padding;
-                y = canvas.height - padding;
+                centerX = padding;
+                centerY = canvas.height - padding;
                 break;
             case 'bottom-right':
             default:
-                ctx.textAlign = 'right';
-                x = canvas.width - padding;
-                y = canvas.height - padding;
+                centerX = canvas.width - padding;
+                centerY = canvas.height - padding;
                 break;
         }
 
-        // Draw number with stroke and fill
-        const numberText = imageNumber.toString();
-        ctx.strokeText(numberText, x, y);
-        ctx.fillText(numberText, x, y);
+        // Draw black circle - FLAT, NO SHADOW, NO BORDER
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Reset shadow
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
+        // Draw white number text - FLAT, NO SHADOW, NO BORDER
+        const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
+        ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', numberSize, selectedFont);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Only fillText, no strokeText, no shadow
+        ctx.fillText(numberText, centerX, centerY);
     }
 
     async getFormatPreference() {
