@@ -31,7 +31,10 @@
 
     function updateIntensityLabel() {
         if (intensityLabel && intensityRange) {
-            intensityLabel.textContent = `${intensityRange.value}%`;
+            const value = intensityRange.value;
+            intensityLabel.textContent = `${value}%`;
+            // Visual feedback khi có giá trị
+            intensityLabel.style.color = value > 0 ? '#2563eb' : '#94a3b8';
         }
     }
 
@@ -43,7 +46,10 @@
 
     function updateHueShiftLabel() {
         if (hueShiftLabel && hueShiftRange) {
-            hueShiftLabel.textContent = `${hueShiftRange.value}°`;
+            const value = hueShiftRange.value;
+            hueShiftLabel.textContent = `${value}°`;
+            // Visual feedback khi có giá trị khác 0
+            hueShiftLabel.style.color = value != 0 ? '#2563eb' : '#94a3b8';
         }
     }
 
@@ -267,6 +273,12 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (!image) {
+            // Hiển thị hướng dẫn khi chưa có ảnh
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '16px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Chọn ảnh để bắt đầu', canvas.width / 2, canvas.height / 2);
             return;
         }
 
@@ -344,7 +356,24 @@
         if (!file) {
             image = null;
             resetHiddenFields();
+            disableColorControls();
             draw();
+            return;
+        }
+
+        // Kiểm tra kích thước file (4MB max)
+        const maxSize = 4 * 1024 * 1024; // 4MB
+        if (file.size > maxSize) {
+            alert('⚠️ File quá lớn! Vui lòng chọn ảnh nhỏ hơn 4MB.');
+            evt.target.value = '';
+            return;
+        }
+
+        // Kiểm tra loại file
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('⚠️ Định dạng không hỗ trợ! Vui lòng chọn file PNG, JPG hoặc GIF.');
+            evt.target.value = '';
             return;
         }
 
@@ -354,10 +383,48 @@
             image.onload = function () {
                 fitCanvasToImage();
                 setFullCrop();
+                enableColorControls();
+            };
+            image.onerror = function () {
+                alert('⚠️ Không thể tải ảnh! Vui lòng thử file khác.');
+                evt.target.value = '';
+                image = null;
+                disableColorControls();
+                draw();
             };
             image.src = loadEvt.target.result;
         };
         reader.readAsDataURL(file);
+    }
+
+    function enableColorControls() {
+        if (intensityRange) intensityRange.disabled = false;
+        if (highlightRange) highlightRange.disabled = false;
+        if (colorPicker) colorPicker.disabled = false;
+        if (protectHighlightsToggle) protectHighlightsToggle.disabled = false;
+        if (hueShiftRange) hueShiftRange.disabled = false;
+        if (resetButton) resetButton.disabled = false;
+
+        // Enable reset buttons
+        const resetColorBtn = document.getElementById('resetColorButton');
+        const resetHueBtn = document.getElementById('resetHueButton');
+        if (resetColorBtn) resetColorBtn.disabled = false;
+        if (resetHueBtn) resetHueBtn.disabled = false;
+    }
+
+    function disableColorControls() {
+        if (intensityRange) intensityRange.disabled = true;
+        if (highlightRange) highlightRange.disabled = true;
+        if (colorPicker) colorPicker.disabled = true;
+        if (protectHighlightsToggle) protectHighlightsToggle.disabled = true;
+        if (hueShiftRange) hueShiftRange.disabled = true;
+        if (resetButton) resetButton.disabled = true;
+
+        // Disable reset buttons
+        const resetColorBtn = document.getElementById('resetColorButton');
+        const resetHueBtn = document.getElementById('resetHueButton');
+        if (resetColorBtn) resetColorBtn.disabled = true;
+        if (resetHueBtn) resetHueBtn.disabled = true;
     }
 
     function getMousePosition(evt) {
@@ -472,4 +539,35 @@
     if (protectHighlightsToggle) {
         protectHighlightsToggle.addEventListener('change', draw);
     }
+
+    // Reset color overlay button
+    const resetColorBtn = document.getElementById('resetColorButton');
+    if (resetColorBtn) {
+        resetColorBtn.addEventListener('click', function () {
+            if (intensityRange) {
+                intensityRange.value = '0';
+                updateIntensityLabel();
+            }
+            if (colorPicker) {
+                colorPicker.value = '#ffffff';
+            }
+            draw();
+        });
+    }
+
+    // Reset hue shift button
+    const resetHueBtn = document.getElementById('resetHueButton');
+    if (resetHueBtn) {
+        resetHueBtn.addEventListener('click', function () {
+            if (hueShiftRange) {
+                hueShiftRange.value = '0';
+                updateHueShiftLabel();
+            }
+            draw();
+        });
+    }
+
+    // Khởi tạo trạng thái ban đầu - disable controls cho đến khi có ảnh
+    disableColorControls();
+    draw(); // Vẽ placeholder text
 })();

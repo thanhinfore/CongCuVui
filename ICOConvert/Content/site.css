@@ -215,6 +215,111 @@ label {
     border: 1px solid #cbd5f5;
 }
 
+/* Control sections */
+.control-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.reset-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.reset-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+    transform: rotate(-90deg);
+}
+
+.reset-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.value-label {
+    float: right;
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 13px;
+}
+
+/* Disabled state for controls */
+input[type="range"]:disabled,
+input[type="color"]:disabled,
+input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.preview-right input[type="color"]:disabled {
+    filter: grayscale(1);
+}
+
+/* Better hints */
+.hint {
+    font-size: 13px;
+    color: #64748b;
+    margin: 8px 0 0;
+    line-height: 1.4;
+}
+
+/* Canvas improvements */
+#previewCanvas {
+    cursor: crosshair;
+}
+
+#previewCanvas:not(:hover) {
+    cursor: default;
+}
+
+/* Better button states */
+.primary-btn:disabled,
+.secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Section spacing */
+.preview-right h2 {
+    margin: 0 0 16px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.preview-right h2:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
 @media (max-width: 768px) {
     .container {
         margin: 0;
@@ -224,5 +329,11 @@ label {
 
     .preview-wrapper {
         flex-direction: column;
+    }
+
+    .value-label {
+        float: none;
+        display: inline;
+        margin-left: 8px;
     }
 }
