@@ -1034,14 +1034,15 @@ export class PreviewPanel {
         const credit = this.DOM.creditInput?.value?.trim() || '';
         if (!credit) return;
 
-        const baseCreditSize = 28;
-        const creditFontSize = Math.round(baseCreditSize * scaleFactor);
+        // Use subtitle font size instead of fixed 28px
+        const baseSubFontSize = this.getSubFontSize();
+        const creditFontSize = Math.round(baseSubFontSize * scaleFactor);
 
         const selectedFont = this.DOM.fontSelect?.value || 'Inter, sans-serif';
         // Use EmojiRenderer for proper emoji font support
         ctx.font = this.emojiRenderer.buildFontString('normal', 'bold', creditFontSize, selectedFont);
         ctx.fillStyle = this.DOM.subColorPicker?.value || '#FFFFFF';
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'center';  // Changed from 'right' to 'center'
         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
         ctx.lineWidth = Math.max(1, creditFontSize * 0.12);
 
@@ -1050,10 +1051,14 @@ export class PreviewPanel {
         ctx.shadowOffsetX = Math.max(1, 2 * scaleFactor);
         ctx.shadowOffsetY = Math.max(1, 2 * scaleFactor);
 
-        const padding = Math.max(10, creditFontSize * 0.8);
+        // Position: center horizontally, 50px from bottom
+        const x = canvas.width / 2;  // Center
+        const baseBottomMargin = 50;
+        const bottomMargin = Math.round(baseBottomMargin * scaleFactor);
+        const y = canvas.height - bottomMargin;
 
-        ctx.strokeText(credit, canvas.width - padding, canvas.height - padding);
-        ctx.fillText(credit, canvas.width - padding, canvas.height - padding);
+        ctx.strokeText(credit, x, y);
+        ctx.fillText(credit, x, y);
 
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
