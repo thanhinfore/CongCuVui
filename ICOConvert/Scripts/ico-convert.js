@@ -24,6 +24,7 @@
     const hueShiftLabel = document.getElementById('hueShiftLabel');
 
     let image = null;
+    let croppedImage = null; // Ảnh sau khi crop
     let scale = 1;
     let isDragging = false;
     let dragStart = { x: 0, y: 0 };
@@ -160,8 +161,39 @@
         };
     }
 
+    function applyCropToImage() {
+        if (!image || !cropRect) {
+            croppedImage = null;
+            return;
+        }
+
+        // Tạo canvas tạm để crop
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cropRect.width;
+        tempCanvas.height = cropRect.height;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Crop ảnh gốc
+        tempCtx.drawImage(
+            image,
+            cropRect.x, cropRect.y, cropRect.width, cropRect.height,
+            0, 0, cropRect.width, cropRect.height
+        );
+
+        // Lưu ảnh đã crop
+        const croppedDataUrl = tempCanvas.toDataURL();
+        croppedImage = new Image();
+        croppedImage.onload = function() {
+            // Redraw sau khi crop image load xong
+            draw();
+        };
+        croppedImage.src = croppedDataUrl;
+    }
+
     function applyTintPreview() {
-        if (!image || !canvas) {
+        // Sử dụng ảnh đã crop nếu có, không thì dùng ảnh gốc
+        const sourceImage = croppedImage || image;
+        if (!sourceImage || !canvas) {
             return;
         }
 
@@ -177,12 +209,11 @@
         const shouldProtectHighlights = protectHighlightsToggle ? protectHighlightsToggle.checked : false;
         const highlightValue = highlightRange ? parseInt(highlightRange.value || '0', 10) : 0;
         const thresholdNormalized = clamp01(highlightValue / 100);
-        const protect = shouldProtectHighlights && highlightValue > 0;
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const pixels = imageData.data;
         const overlayHsl = overlayColor ? rgbToHsl(overlayColor.r, overlayColor.g, overlayColor.b) : null;
-        const hueShiftNormalized = hueShift / 360; // Chuyển từ độ sang [0, 1]
+        const hueShiftNormalized = hueShift / 360;
 
         for (let i = 0; i < pixels.length; i += 4) {
             const alpha = pixels[i + 3];
@@ -193,23 +224,43 @@
             const red = pixels[i];
             const green = pixels[i + 1];
             const blue = pixels[i + 2];
-            const brightness = Math.max(red, Math.max(green, blue)) / 255;
-
-            if (protect && brightness >= thresholdNormalized) {
-                continue;
-            }
 
             const originalHsl = rgbToHsl(red, green, blue);
+
+            // Pixel trắng: không đổi (L > 0.95 và S < 0.05)
+            const isWhite = originalHsl.l > 0.95 && originalHsl.s < 0.05;
+            if (isWhite) {
+                continue; // Bỏ qua pixel trắng
+            }
+
+            // Kiểm tra brightness cho bảo vệ vùng sáng
+            if (shouldProtectHighlights) {
+                const brightness = Math.max(red, Math.max(green, blue)) / 255;
+                if (brightness >= thresholdNormalized) {
+                    continue;
+                }
+            }
+
+            const isGrayscale = originalHsl.s < 0.05; // Pixel xám/đen
             let newHue, newSaturation, newLuminance;
 
             // Áp dụng hue shift nếu có
             if (hueShift !== 0) {
-                newHue = originalHsl.h + hueShiftNormalized;
-                // Normalize hue về khoảng [0, 1]
-                if (newHue < 0) newHue += 1;
-                if (newHue > 1) newHue -= 1;
-                newSaturation = originalHsl.s;
-                newLuminance = originalHsl.l;
+                if (isGrayscale) {
+                    // Pixel xám/đen: thêm saturation để tạo màu
+                    newHue = hueShiftNormalized;
+                    if (newHue < 0) newHue += 1;
+                    // Saturation cao hơn cho pixel tối
+                    newSaturation = originalHsl.l < 0.3 ? 0.9 : Math.min(0.8, originalHsl.l * 1.5);
+                    newLuminance = Math.max(originalHsl.l, 0.15); // Tối thiểu 15% để thấy màu
+                } else {
+                    // Pixel có màu: xoay hue
+                    newHue = originalHsl.h + hueShiftNormalized;
+                    if (newHue < 0) newHue += 1;
+                    if (newHue > 1) newHue -= 1;
+                    newSaturation = originalHsl.s;
+                    newLuminance = originalHsl.l;
+                }
             } else {
                 newHue = originalHsl.h;
                 newSaturation = originalHsl.s;
@@ -218,23 +269,23 @@
 
             // Áp dụng overlay color nếu có
             if (overlayHsl && opacity > 0) {
-                // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
-                if (originalHsl.l < 0.2) {
-                    // Pixel rất tối: thay thế hoàn toàn màu sắc
+                if (isGrayscale || originalHsl.l < 0.3) {
+                    // Pixel xám/đen: thay thế hoàn toàn
                     newHue = overlayHsl.h;
                     newSaturation = overlayHsl.s * opacity;
-                    // Giữ độ sáng gốc nhưng có thể tăng thêm một chút
-                    newLuminance = clamp01(originalHsl.l + overlayHsl.l * opacity * 0.5);
-                } else if (originalHsl.l < 0.5) {
-                    // Pixel tối-trung bình: blend mạnh
+                    // Đảm bảo đủ sáng để thấy màu
+                    const minLuminance = originalHsl.l < 0.1 ? 0.2 : 0.15;
+                    newLuminance = clamp01(Math.max(originalHsl.l, minLuminance) * (1 + opacity * 0.5));
+                } else if (originalHsl.l < 0.6) {
+                    // Pixel tối-trung bình
                     newHue = overlayHsl.h;
-                    newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity);
+                    newSaturation = clamp01(originalHsl.s * (1 - opacity) + overlayHsl.s * opacity);
                     newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.7);
                 } else {
                     // Pixel sáng: blend nhẹ
                     newHue = overlayHsl.h;
-                    newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.6);
-                    newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.4);
+                    newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.5);
+                    newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.3);
                 }
             }
 
@@ -282,10 +333,26 @@
             return;
         }
 
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        // Nếu có ảnh đã crop, hiển thị ảnh đã crop, không thì hiển thị ảnh gốc
+        const sourceImage = croppedImage || image;
+
+        // Tính scale mới cho ảnh đã crop
+        let drawWidth = canvas.width;
+        let drawHeight = canvas.height;
+
+        if (croppedImage) {
+            const scaleX = canvas.width / croppedImage.width;
+            const scaleY = canvas.height / croppedImage.height;
+            const drawScale = Math.min(scaleX, scaleY, 1);
+            drawWidth = croppedImage.width * drawScale;
+            drawHeight = croppedImage.height * drawScale;
+        }
+
+        ctx.drawImage(sourceImage, 0, 0, drawWidth, drawHeight);
         applyTintPreview();
 
-        if (cropRect) {
+        // Chỉ hiển thị crop rect khi chưa apply crop
+        if (!croppedImage && cropRect) {
             const displayRect = {
                 x: cropRect.x / scale,
                 y: cropRect.y / scale,
@@ -334,6 +401,9 @@
         hiddenFields.y.value = '0';
         hiddenFields.width.value = String(image.width);
         hiddenFields.height.value = String(image.height);
+
+        // Apply crop ngay
+        applyCropToImage();
         updateCropInfo();
         draw();
     }
@@ -487,6 +557,8 @@
             cropRect.width = Math.min(cropRect.width, image.width - cropRect.x);
             cropRect.height = Math.min(cropRect.height, image.height - cropRect.y);
             updateHiddenFieldsFromCrop();
+            // Apply crop khi kết thúc drag
+            applyCropToImage();
             draw();
         }
     }
@@ -497,6 +569,8 @@
 
     if (resetButton) {
         resetButton.addEventListener('click', function () {
+            // Reset về ảnh gốc
+            croppedImage = null;
             setFullCrop();
         });
     }
