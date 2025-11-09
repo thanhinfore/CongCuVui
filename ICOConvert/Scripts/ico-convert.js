@@ -20,6 +20,8 @@
     const highlightLabel = document.getElementById('highlightLabel');
     const colorPicker = document.getElementById('colorPicker');
     const protectHighlightsToggle = document.getElementById('protectHighlights');
+    const hueShiftRange = document.getElementById('hueShiftRange');
+    const hueShiftLabel = document.getElementById('hueShiftLabel');
 
     let image = null;
     let scale = 1;
@@ -36,6 +38,12 @@
     function updateHighlightLabel() {
         if (highlightLabel && highlightRange) {
             highlightLabel.textContent = `${highlightRange.value}%`;
+        }
+    }
+
+    function updateHueShiftLabel() {
+        if (hueShiftLabel && hueShiftRange) {
+            hueShiftLabel.textContent = `${hueShiftRange.value}°`;
         }
     }
 
@@ -153,8 +161,10 @@
 
         const overlayColor = colorPicker ? hexToRgb(colorPicker.value) : null;
         const opacity = intensityRange ? parseInt(intensityRange.value || '0', 10) / 100 : 0;
+        const hueShift = hueShiftRange ? parseInt(hueShiftRange.value || '0', 10) : 0;
 
-        if (!overlayColor || !opacity) {
+        // Nếu không có overlay color và không có hue shift thì không làm gì
+        if ((!overlayColor || !opacity) && hueShift === 0) {
             return;
         }
 
@@ -165,7 +175,8 @@
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const pixels = imageData.data;
-        const overlayHsl = rgbToHsl(overlayColor.r, overlayColor.g, overlayColor.b);
+        const overlayHsl = overlayColor ? rgbToHsl(overlayColor.r, overlayColor.g, overlayColor.b) : null;
+        const hueShiftNormalized = hueShift / 360; // Chuyển từ độ sang [0, 1]
 
         for (let i = 0; i < pixels.length; i += 4) {
             const alpha = pixels[i + 3];
@@ -185,23 +196,40 @@
             const originalHsl = rgbToHsl(red, green, blue);
             let newHue, newSaturation, newLuminance;
 
-            // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
-            if (originalHsl.l < 0.2) {
-                // Pixel rất tối: thay thế hoàn toàn màu sắc
-                newHue = overlayHsl.h;
-                newSaturation = overlayHsl.s * opacity;
-                // Giữ độ sáng gốc nhưng có thể tăng thêm một chút
-                newLuminance = clamp01(originalHsl.l + overlayHsl.l * opacity * 0.5);
-            } else if (originalHsl.l < 0.5) {
-                // Pixel tối-trung bình: blend mạnh
-                newHue = overlayHsl.h;
-                newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity);
-                newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.7);
+            // Áp dụng hue shift nếu có
+            if (hueShift !== 0) {
+                newHue = originalHsl.h + hueShiftNormalized;
+                // Normalize hue về khoảng [0, 1]
+                if (newHue < 0) newHue += 1;
+                if (newHue > 1) newHue -= 1;
+                newSaturation = originalHsl.s;
+                newLuminance = originalHsl.l;
             } else {
-                // Pixel sáng: blend nhẹ
-                newHue = overlayHsl.h;
-                newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.6);
-                newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.4);
+                newHue = originalHsl.h;
+                newSaturation = originalHsl.s;
+                newLuminance = originalHsl.l;
+            }
+
+            // Áp dụng overlay color nếu có
+            if (overlayHsl && opacity > 0) {
+                // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
+                if (originalHsl.l < 0.2) {
+                    // Pixel rất tối: thay thế hoàn toàn màu sắc
+                    newHue = overlayHsl.h;
+                    newSaturation = overlayHsl.s * opacity;
+                    // Giữ độ sáng gốc nhưng có thể tăng thêm một chút
+                    newLuminance = clamp01(originalHsl.l + overlayHsl.l * opacity * 0.5);
+                } else if (originalHsl.l < 0.5) {
+                    // Pixel tối-trung bình: blend mạnh
+                    newHue = overlayHsl.h;
+                    newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity);
+                    newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.7);
+                } else {
+                    // Pixel sáng: blend nhẹ
+                    newHue = overlayHsl.h;
+                    newSaturation = clamp01(originalHsl.s + (overlayHsl.s - originalHsl.s) * opacity * 0.6);
+                    newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.4);
+                }
             }
 
             const tinted = hslToRgb(newHue, newSaturation, newLuminance);
@@ -427,6 +455,14 @@
             draw();
         });
         updateHighlightLabel();
+    }
+
+    if (hueShiftRange) {
+        hueShiftRange.addEventListener('input', function () {
+            updateHueShiftLabel();
+            draw();
+        });
+        updateHueShiftLabel();
     }
 
     if (colorPicker) {
