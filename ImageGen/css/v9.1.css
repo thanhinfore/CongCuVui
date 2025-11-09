@@ -14,12 +14,12 @@
 
 /* Hide credit section - not essential for most users */
 .v91-clean #creditSection {
-    display: none !important;
+   
 }
 
 /* Hide export section - download button is enough */
 .v91-clean #exportSection {
-    display: none !important;
+    
 }
 
 /* Make preset section completely collapsible */
