@@ -65,6 +65,7 @@ namespace ICOConvert
                         overlaySettings.Opacity,
                         overlaySettings.ProtectHighlights,
                         overlaySettings.HighlightThreshold,
+                        overlaySettings.HueShift,
                         selectedSizes);
 
                     var iconBase64 = Convert.ToBase64String(result.IconFile);
@@ -158,6 +159,9 @@ namespace ICOConvert
             var protectHighlights = string.Equals(protectHighlightsRaw, "on", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(protectHighlightsRaw, "true", StringComparison.OrdinalIgnoreCase);
 
+            var hueShift = ReadFormInt("hueShift");
+            hueShift = Math.Max(-180, Math.Min(180, hueShift));
+
             Color? color = null;
             var colorValue = Request.Form["overlayColor"];
 
@@ -178,7 +182,8 @@ namespace ICOConvert
                 Color = color,
                 Opacity = opacity,
                 ProtectHighlights = protectHighlights,
-                HighlightThreshold = highlightThreshold
+                HighlightThreshold = highlightThreshold,
+                HueShift = hueShift
             };
         }
 
@@ -205,6 +210,7 @@ namespace ICOConvert
             public float Opacity { get; set; }
             public bool ProtectHighlights { get; set; }
             public byte HighlightThreshold { get; set; }
+            public int HueShift { get; set; }
         }
 
         private class PreviewItem

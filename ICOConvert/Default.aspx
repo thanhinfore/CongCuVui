@@ -54,6 +54,14 @@
                     <p class="hint">Phủ màu mới lên phần hình chính trong khi vẫn giữ nguyên nền sáng hoặc màu trắng.</p>
                     <p class="hint">Tăng độ đậm để phủ màu mới lên ảnh sau khi crop.</p>
 
+                    <h2 style="margin-top: 20px;">Điều chỉnh sắc độ</h2>
+                    <div class="field-row">
+                        <label for="hueShiftRange">Xoay sắc độ</label>
+                        <input type="range" id="hueShiftRange" name="hueShift" min="-180" max="180" value="0" />
+                        <span id="hueShiftLabel">0°</span>
+                    </div>
+                    <p class="hint">Xoay sắc độ màu của các pixel không trắng (-180° đến +180°).</p>
+
                     <h2>3. Chọn kích thước favicon</h2>
                     <asp:CheckBoxList ID="SizeOptions" runat="server" RepeatColumns="2" CssClass="size-options">
                         <asp:ListItem Text="16 x 16" Value="16" Selected="True"></asp:ListItem>

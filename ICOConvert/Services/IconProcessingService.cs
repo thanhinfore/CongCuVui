@@ -16,6 +16,7 @@ namespace ICOConvert.Services
             float overlayOpacity,
             bool protectHighlights,
             byte highlightThreshold,
+            int hueShift,
             IReadOnlyCollection<int> iconSizes)
         {
             if (imageStream == null)
@@ -45,7 +46,7 @@ namespace ICOConvert.Services
             {
                 var cropArea = NormalizeCropRectangle(originalBitmap.Size, requestedCrop);
                 using (var croppedBitmap = originalBitmap.Clone(cropArea, PixelFormat.Format32bppArgb))
-                using (var tintedBitmap = ApplyOverlay(croppedBitmap, overlayColor, overlayOpacity, protectHighlights, highlightThreshold))
+                using (var tintedBitmap = ApplyOverlay(croppedBitmap, overlayColor, overlayOpacity, protectHighlights, highlightThreshold, hueShift))
                 {
                     var resizedBitmaps = new List<Bitmap>();
                     try
@@ -117,9 +118,10 @@ namespace ICOConvert.Services
             return new Rectangle(x, y, width, height);
         }
 
-        private static Bitmap ApplyOverlay(Bitmap source, Color? overlayColor, float overlayOpacity, bool protectHighlights, byte highlightThreshold)
+        private static Bitmap ApplyOverlay(Bitmap source, Color? overlayColor, float overlayOpacity, bool protectHighlights, byte highlightThreshold, int hueShift)
         {
-            if (overlayColor == null || overlayOpacity <= 0)
+            // Nếu không có overlay color và không có hue shift thì trả về bản sao
+            if ((overlayColor == null || overlayOpacity <= 0) && hueShift == 0)
             {
                 return (Bitmap)source.Clone();
             }
@@ -138,8 +140,9 @@ namespace ICOConvert.Services
                     byte* srcPtr = (byte*)sourceData.Scan0;
                     int pixelCount = source.Width * source.Height;
 
-                    var overlayHsl = RgbToHsl(overlayColor.Value);
+                    var overlayHsl = overlayColor.HasValue ? RgbToHsl(overlayColor.Value) : (HslColor?)null;
                     float thresholdNormalized = highlightThreshold / 255f;
+                    float hueShiftNormalized = hueShift / 360f; // Chuyển từ độ sang [0, 1]
 
                     for (int i = 0; i < pixelCount; i++)
                     {
@@ -174,27 +177,48 @@ namespace ICOConvert.Services
                         var originalHsl = RgbToHsl(Color.FromArgb(r, g, b));
                         float newH, newS, newL;
 
-                        // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
-                        if (originalHsl.L < 0.2f)
+                        // Áp dụng hue shift nếu có
+                        if (hueShift != 0)
                         {
-                            // Pixel rất tối: thay thế hoàn toàn màu sắc
-                            newH = overlayHsl.H;
-                            newS = overlayHsl.S * opacity;
-                            newL = Clamp01(originalHsl.L + overlayHsl.L * opacity * 0.5f);
-                        }
-                        else if (originalHsl.L < 0.5f)
-                        {
-                            // Pixel tối-trung bình: blend mạnh
-                            newH = overlayHsl.H;
-                            newS = Clamp01(originalHsl.S + (overlayHsl.S - originalHsl.S) * opacity);
-                            newL = Clamp01(originalHsl.L + (overlayHsl.L - originalHsl.L) * opacity * 0.7f);
+                            newH = originalHsl.H + hueShiftNormalized;
+                            // Normalize hue về khoảng [0, 1]
+                            if (newH < 0f) newH += 1f;
+                            if (newH > 1f) newH -= 1f;
+                            newS = originalHsl.S;
+                            newL = originalHsl.L;
                         }
                         else
                         {
-                            // Pixel sáng: blend nhẹ
-                            newH = overlayHsl.H;
-                            newS = Clamp01(originalHsl.S + (overlayHsl.S - originalHsl.S) * opacity * 0.6f);
-                            newL = Clamp01(originalHsl.L + (overlayHsl.L - originalHsl.L) * opacity * 0.4f);
+                            newH = originalHsl.H;
+                            newS = originalHsl.S;
+                            newL = originalHsl.L;
+                        }
+
+                        // Áp dụng overlay color nếu có
+                        if (overlayHsl.HasValue && opacity > 0)
+                        {
+                            // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
+                            if (originalHsl.L < 0.2f)
+                            {
+                                // Pixel rất tối: thay thế hoàn toàn màu sắc
+                                newH = overlayHsl.Value.H;
+                                newS = overlayHsl.Value.S * opacity;
+                                newL = Clamp01(originalHsl.L + overlayHsl.Value.L * opacity * 0.5f);
+                            }
+                            else if (originalHsl.L < 0.5f)
+                            {
+                                // Pixel tối-trung bình: blend mạnh
+                                newH = overlayHsl.Value.H;
+                                newS = Clamp01(originalHsl.S + (overlayHsl.Value.S - originalHsl.S) * opacity);
+                                newL = Clamp01(originalHsl.L + (overlayHsl.Value.L - originalHsl.L) * opacity * 0.7f);
+                            }
+                            else
+                            {
+                                // Pixel sáng: blend nhẹ
+                                newH = overlayHsl.Value.H;
+                                newS = Clamp01(originalHsl.S + (overlayHsl.Value.S - originalHsl.S) * opacity * 0.6f);
+                                newL = Clamp01(originalHsl.L + (overlayHsl.Value.L - originalHsl.L) * opacity * 0.4f);
+                            }
                         }
 
                         var tinted = HslToRgb(newH, newS, newL);
