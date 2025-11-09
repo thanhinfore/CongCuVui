@@ -202,14 +202,31 @@
             const originalHsl = rgbToHsl(red, green, blue);
             let newHue, newSaturation, newLuminance;
 
+            // Kiểm tra nếu là pixel xám (không có màu)
+            const isGrayscale = originalHsl.s < 0.05; // Saturation gần 0
+
             // Áp dụng hue shift nếu có
             if (hueShift !== 0) {
-                newHue = originalHsl.h + hueShiftNormalized;
-                // Normalize hue về khoảng [0, 1]
-                if (newHue < 0) newHue += 1;
-                if (newHue > 1) newHue -= 1;
-                newSaturation = originalHsl.s;
-                newLuminance = originalHsl.l;
+                if (isGrayscale && originalHsl.l > 0.05) {
+                    // Pixel xám: thêm saturation để tạo màu
+                    newHue = hueShiftNormalized;
+                    if (newHue < 0) newHue += 1;
+                    // Thêm saturation dựa vào độ sáng
+                    newSaturation = Math.min(0.8, originalHsl.l * 1.5);
+                    newLuminance = originalHsl.l;
+                } else if (!isGrayscale) {
+                    // Pixel có màu: xoay hue bình thường
+                    newHue = originalHsl.h + hueShiftNormalized;
+                    if (newHue < 0) newHue += 1;
+                    if (newHue > 1) newHue -= 1;
+                    newSaturation = originalHsl.s;
+                    newLuminance = originalHsl.l;
+                } else {
+                    // Pixel đen hoàn toàn: giữ nguyên
+                    newHue = originalHsl.h;
+                    newSaturation = originalHsl.s;
+                    newLuminance = originalHsl.l;
+                }
             } else {
                 newHue = originalHsl.h;
                 newSaturation = originalHsl.s;
@@ -219,12 +236,17 @@
             // Áp dụng overlay color nếu có
             if (overlayHsl && opacity > 0) {
                 // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
-                if (originalHsl.l < 0.2) {
-                    // Pixel rất tối: thay thế hoàn toàn màu sắc
+                if (originalHsl.l < 0.15) {
+                    // Pixel rất tối/đen: thay thế hoàn toàn màu sắc
                     newHue = overlayHsl.h;
                     newSaturation = overlayHsl.s * opacity;
-                    // Giữ độ sáng gốc nhưng có thể tăng thêm một chút
-                    newLuminance = clamp01(originalHsl.l + overlayHsl.l * opacity * 0.5);
+                    // Tăng độ sáng để màu hiển thị rõ hơn
+                    newLuminance = clamp01(Math.max(originalHsl.l * 2, 0.2) * opacity + originalHsl.l * (1 - opacity));
+                } else if (originalHsl.l < 0.3) {
+                    // Pixel tối: blend mạnh
+                    newHue = overlayHsl.h;
+                    newSaturation = clamp01((isGrayscale ? overlayHsl.s : originalHsl.s) * (1 - opacity * 0.5) + overlayHsl.s * opacity);
+                    newLuminance = clamp01(originalHsl.l + (overlayHsl.l - originalHsl.l) * opacity * 0.8);
                 } else if (originalHsl.l < 0.5) {
                     // Pixel tối-trung bình: blend mạnh
                     newHue = overlayHsl.h;

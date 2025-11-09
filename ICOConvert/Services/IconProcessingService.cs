@@ -177,15 +177,37 @@ namespace ICOConvert.Services
                         var originalHsl = RgbToHsl(Color.FromArgb(r, g, b));
                         float newH, newS, newL;
 
+                        // Kiểm tra nếu là pixel xám (không có màu)
+                        bool isGrayscale = originalHsl.S < 0.05f; // Saturation gần 0
+
                         // Áp dụng hue shift nếu có
                         if (hueShift != 0)
                         {
-                            newH = originalHsl.H + hueShiftNormalized;
-                            // Normalize hue về khoảng [0, 1]
-                            if (newH < 0f) newH += 1f;
-                            if (newH > 1f) newH -= 1f;
-                            newS = originalHsl.S;
-                            newL = originalHsl.L;
+                            if (isGrayscale && originalHsl.L > 0.05f)
+                            {
+                                // Pixel xám: thêm saturation để tạo màu
+                                newH = hueShiftNormalized;
+                                if (newH < 0f) newH += 1f;
+                                // Thêm saturation dựa vào độ sáng
+                                newS = Math.Min(0.8f, originalHsl.L * 1.5f);
+                                newL = originalHsl.L;
+                            }
+                            else if (!isGrayscale)
+                            {
+                                // Pixel có màu: xoay hue bình thường
+                                newH = originalHsl.H + hueShiftNormalized;
+                                if (newH < 0f) newH += 1f;
+                                if (newH > 1f) newH -= 1f;
+                                newS = originalHsl.S;
+                                newL = originalHsl.L;
+                            }
+                            else
+                            {
+                                // Pixel đen hoàn toàn: giữ nguyên
+                                newH = originalHsl.H;
+                                newS = originalHsl.S;
+                                newL = originalHsl.L;
+                            }
                         }
                         else
                         {
@@ -198,12 +220,20 @@ namespace ICOConvert.Services
                         if (overlayHsl.HasValue && opacity > 0)
                         {
                             // Xử lý đặc biệt cho pixel tối (đen/xám đen) để chuyển màu hiệu quả
-                            if (originalHsl.L < 0.2f)
+                            if (originalHsl.L < 0.15f)
                             {
-                                // Pixel rất tối: thay thế hoàn toàn màu sắc
+                                // Pixel rất tối/đen: thay thế hoàn toàn màu sắc
                                 newH = overlayHsl.Value.H;
                                 newS = overlayHsl.Value.S * opacity;
-                                newL = Clamp01(originalHsl.L + overlayHsl.Value.L * opacity * 0.5f);
+                                // Tăng độ sáng để màu hiển thị rõ hơn
+                                newL = Clamp01(Math.Max(originalHsl.L * 2f, 0.2f) * opacity + originalHsl.L * (1f - opacity));
+                            }
+                            else if (originalHsl.L < 0.3f)
+                            {
+                                // Pixel tối: blend mạnh
+                                newH = overlayHsl.Value.H;
+                                newS = Clamp01((isGrayscale ? overlayHsl.Value.S : originalHsl.S) * (1f - opacity * 0.5f) + overlayHsl.Value.S * opacity);
+                                newL = Clamp01(originalHsl.L + (overlayHsl.Value.L - originalHsl.L) * opacity * 0.8f);
                             }
                             else if (originalHsl.L < 0.5f)
                             {
