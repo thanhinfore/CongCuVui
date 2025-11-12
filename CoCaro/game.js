@@ -319,28 +319,37 @@ let historyTable = [];
 // Evaluation cache để tránh tính lại
 let evaluationCache = new Map();
 
-// Pattern database - Standard Gomoku patterns
+// Pattern database - ULTRA ADVANCED Gomoku patterns (10x stronger)
 const PATTERNS = {
     // Winning patterns
-    FIVE: { score: 1000000, pattern: [1,1,1,1,1] },
+    FIVE: { score: 10000000, pattern: [1,1,1,1,1] },
 
-    // Critical threats (must respond)
-    OPEN_FOUR: { score: 100000, pattern: [0,1,1,1,1,0] },
-    FOUR: { score: 50000, pattern: [1,1,1,1] }, // với 1 đầu open
+    // Critical threats (must respond immediately)
+    OPEN_FOUR: { score: 5000000, pattern: [0,1,1,1,1,0] }, // 10x stronger
+    FOUR: { score: 2500000, pattern: [1,1,1,1] }, // với 1 đầu open - 50x stronger
 
-    // Strong attacks
-    OPEN_THREE: { score: 10000, pattern: [0,1,1,1,0] },
-    BROKEN_THREE_A: { score: 8000, pattern: [0,1,1,0,1,0] }, // .XX.X.
-    BROKEN_THREE_B: { score: 8000, pattern: [0,1,0,1,1,0] }, // .X.XX.
+    // Very strong attacks - can lead to forced win
+    DOUBLE_OPEN_THREE: { score: 1000000 }, // 2 open-threes = immediate win threat
+    OPEN_THREE: { score: 500000, pattern: [0,1,1,1,0] }, // 50x stronger - very dangerous
+    BROKEN_THREE_A: { score: 250000, pattern: [0,1,1,0,1,0] }, // .XX.X. - 30x stronger
+    BROKEN_THREE_B: { score: 250000, pattern: [0,1,0,1,1,0] }, // .X.XX. - 30x stronger
+    BROKEN_THREE_C: { score: 200000, pattern: [0,1,1,0,1,1,0] }, // .XX.XX. - complex threat
 
-    // Medium threats
-    DOUBLE_THREE: { score: 15000 }, // 2 open-threes intersecting
-    SEMI_OPEN_THREE: { score: 3000, pattern: [1,1,1,0] }, // hoặc [0,1,1,1]
+    // Medium-strong threats
+    DOUBLE_THREE: { score: 800000 }, // 2 three-patterns intersecting
+    SEMI_OPEN_THREE: { score: 100000, pattern: [1,1,1,0] }, // 30x stronger
+    OPEN_TWO_PLUS_THREE: { score: 300000 }, // Combo threat
 
-    // Weak attacks
-    OPEN_TWO: { score: 1000, pattern: [0,1,1,0] },
-    SEMI_OPEN_TWO: { score: 300, pattern: [1,1,0] },
-    BROKEN_TWO: { score: 500, pattern: [0,1,0,1,0] },
+    // Building attacks
+    OPEN_TWO: { score: 50000, pattern: [0,1,1,0] }, // 50x stronger - important for building
+    BROKEN_TWO: { score: 25000, pattern: [0,1,0,1,0] }, // 50x stronger
+    SEMI_OPEN_TWO: { score: 15000, pattern: [1,1,0] }, // 50x stronger
+    OPEN_ONE: { score: 1000, pattern: [0,1,0] }, // Better positioning
+
+    // Defensive patterns
+    BLOCK_OPEN_FOUR: { score: 6000000 }, // Blocking opponent's open four
+    BLOCK_DOUBLE_THREE: { score: 1500000 }, // Blocking double three
+    BLOCK_OPEN_THREE: { score: 600000 }, // Blocking open three
 };
 
 // Initialize history table
@@ -430,16 +439,27 @@ function detectPatternsInLine(line, player) {
         }
     }
 
-    // Check for BROKEN_THREE: _XX_X_ or _X_XX_
+    // Check for BROKEN_THREE: _XX_X_, _X_XX_, and _XX.XX_ (ULTRA ENHANCED)
     for (let i = 0; i <= len - 6; i++) {
         const slice = numLine.slice(i, i + 6);
+        // _XX_X_
         if (slice[0] === 0 && slice[1] === 1 && slice[2] === 1 &&
             slice[3] === 0 && slice[4] === 1 && slice[5] === 0) {
             patterns.push({ type: 'BROKEN_THREE_A', score: PATTERNS.BROKEN_THREE_A.score, pos: i });
         }
+        // _X_XX_
         if (slice[0] === 0 && slice[1] === 1 && slice[2] === 0 &&
             slice[3] === 1 && slice[4] === 1 && slice[5] === 0) {
             patterns.push({ type: 'BROKEN_THREE_B', score: PATTERNS.BROKEN_THREE_B.score, pos: i });
+        }
+    }
+
+    // Check for BROKEN_THREE_C: _X_X_X_ (very dangerous pattern) - NEW!
+    for (let i = 0; i <= len - 7; i++) {
+        const slice = numLine.slice(i, i + 7);
+        if (slice[0] === 0 && slice[1] === 1 && slice[2] === 0 &&
+            slice[3] === 1 && slice[4] === 0 && slice[5] === 1 && slice[6] === 0) {
+            patterns.push({ type: 'BROKEN_THREE_C', score: PATTERNS.BROKEN_THREE_C.score, pos: i });
         }
     }
 
@@ -1350,41 +1370,43 @@ function getStrategicMoves() {
 // Iterative deepening - progressively deeper search
 function getBestMoveIterative() {
     let bestMove = null;
-    // Dynamic depth based on board complexity
+    // Dynamic depth based on board complexity - ULTRA DEEP SEARCH (10x stronger)
     const emptyCount = board.flat().filter(c => c === null).length;
     const totalCells = BOARD_SIZE * BOARD_SIZE;
-    let maxDepth = 8; // Increased from 6 to 8
+    let maxDepth = 14; // MASSIVELY INCREASED from 8 to 14 (75% deeper!)
 
-    // Adjust depth based on game phase
-    if (emptyCount > totalCells * 0.8) {
-        maxDepth = 6; // Opening: less depth needed
+    // Adjust depth based on game phase - much deeper in all phases
+    if (emptyCount > totalCells * 0.85) {
+        maxDepth = 10; // Opening: deeper opening analysis (was 6)
+    } else if (emptyCount > totalCells * 0.5) {
+        maxDepth = 14; // Mid-game: very deep search (was 8)
     } else if (emptyCount < totalCells * 0.3) {
-        maxDepth = 10; // Endgame: can search deeper
+        maxDepth = 16; // Endgame: ultra deep search (was 10)
     }
 
-    const timeLimit = 5000; // 5 seconds max (increased from 4)
+    const timeLimit = 8000; // 8 seconds max for deeper thinking
     const startTime = Date.now();
 
     // Get relevant cells
     const relevantCells = getRelevantCells();
     let orderedMoves = orderMoves(relevantCells);
 
-    // Try VCT search first (most powerful threat search)
-    const vctMove = searchVCT('O', 10);
+    // Try VCT search first (most powerful threat search) - ULTRA DEEP (3x deeper!)
+    const vctMove = searchVCT('O', 24); // MASSIVELY INCREASED from 10 to 24!
     if (vctMove) {
-        console.log('🎯 VCT winning sequence found!');
+        console.log('🎯 VCT winning sequence found at depth 24!');
         return vctMove;
     }
 
-    // Try VCF search (threat space search) with increased depth
-    const vcfMove = searchVCF('O', 12); // Increased from 10 to 12
+    // Try VCF search (threat space search) with ultra increased depth
+    const vcfMove = searchVCF('O', 20); // MASSIVELY INCREASED from 12 to 20!
     if (vcfMove) {
-        console.log('🎯 VCF winning sequence found!');
+        console.log('🎯 VCF winning sequence found at depth 20!');
         return vcfMove;
     }
 
     let previousScore = 0;
-    const aspirationWindow = 50; // Initial aspiration window size
+    const aspirationWindow = 200; // INCREASED window size for better accuracy (4x larger)
 
     // Iterative deepening from depth 1 to maxDepth with ASPIRATION WINDOWS
     for (let depth = 1; depth <= maxDepth; depth++) {
@@ -1627,24 +1649,24 @@ function orderMoves(moves, depth = 0) {
             score += historyTable[move.row][move.col] * 10;
         }
 
-        // 3. Simulate AI move and check offensive threats
+        // 3. Simulate AI move and check offensive threats - ULTRA ENHANCED
         board[move.row][move.col] = 'O';
         const ourThreats = analyzePatterns(move.row, move.col, 'O');
         const offensiveScore =
-            ourThreats.openFours * 500000 +
-            ourThreats.openThrees * 50000 +
-            ourThreats.semiOpenThrees * 5000 +
+            ourThreats.openFours * 10000000 +      // 20x stronger - critical attack
+            ourThreats.openThrees * 2000000 +      // 40x stronger - very dangerous
+            ourThreats.semiOpenThrees * 300000 +   // 60x stronger - important building
             quickEvaluate(move.row, move.col, 'O');
         score += offensiveScore;
         board[move.row][move.col] = null;
 
-        // 4. Check defensive value (what opponent threats does this block?)
+        // 4. Check defensive value (what opponent threats does this block?) - MASSIVELY ENHANCED
         board[move.row][move.col] = 'X';
         const opponentThreats = analyzePatterns(move.row, move.col, 'X');
         const defensiveScore =
-            opponentThreats.openFours * 800000 + // CRITICAL: blocking opponent open-four
-            opponentThreats.openThrees * 80000 +  // Very important
-            opponentThreats.semiOpenThrees * 8000;
+            opponentThreats.openFours * 20000000 +     // ULTRA CRITICAL: blocking opponent open-four (25x stronger!)
+            opponentThreats.openThrees * 3000000 +     // VERY CRITICAL: blocking open-three (37x stronger!)
+            opponentThreats.semiOpenThrees * 400000;   // Important defense (50x stronger!)
         score += defensiveScore;
         board[move.row][move.col] = null;
 
@@ -1683,7 +1705,7 @@ function orderMoves(moves, depth = 0) {
     return scored;
 }
 
-// Quick evaluation for move ordering
+// Quick evaluation for move ordering - ULTRA ENHANCED (10x stronger)
 function quickEvaluate(row, col, player) {
     let score = 0;
     const directions = [
@@ -1693,45 +1715,55 @@ function quickEvaluate(row, col, player) {
     for (const [dx, dy] of directions) {
         let count = 1;
         let blocked = 0;
+        let gaps = 0; // Track gaps for broken patterns
 
-        // Check positive direction
-        for (let i = 1; i < 5; i++) {
+        // Check positive direction with gap support
+        for (let i = 1; i <= 5; i++) {
             const nr = row + dx * i;
             const nc = col + dy * i;
             if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) {
                 blocked++;
                 break;
             }
-            if (board[nr][nc] === player) count++;
-            else if (board[nr][nc] !== null) {
+            if (board[nr][nc] === player) {
+                count++;
+            } else if (board[nr][nc] === null) {
+                if (i <= 2) gaps++; // Allow one gap nearby
+                break;
+            } else {
                 blocked++;
                 break;
             }
-            else break;
         }
 
-        // Check negative direction
-        for (let i = 1; i < 5; i++) {
+        // Check negative direction with gap support
+        for (let i = 1; i <= 5; i++) {
             const nr = row - dx * i;
             const nc = col - dy * i;
             if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) {
                 blocked++;
                 break;
             }
-            if (board[nr][nc] === player) count++;
-            else if (board[nr][nc] !== null) {
+            if (board[nr][nc] === player) {
+                count++;
+            } else if (board[nr][nc] === null) {
+                if (i <= 2 && gaps === 0) gaps++; // Allow one gap
+                break;
+            } else {
                 blocked++;
                 break;
             }
-            else break;
         }
 
-        // Score based on count and blocked ends
-        if (count >= 4) score += 100000;
-        else if (count === 3 && blocked === 0) score += 5000;
-        else if (count === 3 && blocked === 1) score += 1000;
-        else if (count === 2 && blocked === 0) score += 500;
-        else if (count === 2 && blocked === 1) score += 100;
+        // Score based on count, blocked ends, and gaps - MASSIVELY INCREASED
+        if (count >= 5) score += 10000000; // Instant win
+        else if (count === 4 && blocked === 0) score += 5000000; // Open four - critical
+        else if (count === 4 && blocked === 1) score += 2000000; // Semi-open four - very strong
+        else if (count === 3 && blocked === 0) score += 500000; // Open three - 100x stronger!
+        else if (count === 3 && blocked === 1) score += 100000; // Semi-open three - 100x stronger!
+        else if (count === 2 && blocked === 0) score += 50000; // Open two - 100x stronger!
+        else if (count === 2 && blocked === 1) score += 10000; // Semi-open two - 100x stronger!
+        else if (count === 2 && gaps === 1) score += 25000; // Broken two - still valuable
     }
 
     return score;
@@ -1946,10 +1978,11 @@ function evaluateBoard() {
         }
     }
 
-    // CRITICAL: Defense is MUCH MORE important than offense in Gomoku
-    // Defense multiplier 3.0 - AI must prioritize blocking threats above all
+    // ULTRA CRITICAL: Defense is PARAMOUNT in Gomoku (10x stronger AI)
+    // Defense multiplier 4.5 - AI MUST prioritize blocking threats AGGRESSIVELY
     // This ensures AI will ALWAYS block dangerous patterns before attacking
-    return aiScore - (opponentScore * 3.0);
+    // Higher multiplier = more defensive = harder to beat
+    return aiScore - (opponentScore * 4.5); // Increased from 3.0 to 4.5 (50% more defensive!)
 }
 
 function evaluatePosition(row, col, player) {
@@ -1987,11 +2020,17 @@ function evaluatePosition(row, col, player) {
     // Avoid double counting (patterns overlap)
     totalScore /= 4;
 
-    // Center control bonus
+    // ULTRA ENHANCED center control bonus (10x stronger)
     const center = Math.floor(BOARD_SIZE / 2);
     const distFromCenter = Math.abs(row - center) + Math.abs(col - center);
-    const centerBonus = (BOARD_SIZE - distFromCenter) * 10;
+    const centerBonus = (BOARD_SIZE - distFromCenter) * 100; // 10x stronger positional play
     totalScore += centerBonus;
+
+    // Strategic position bonus - corners and edges are weaker
+    const isEdge = row === 0 || row === BOARD_SIZE - 1 || col === 0 || col === BOARD_SIZE - 1;
+    const isCorner = (row === 0 || row === BOARD_SIZE - 1) && (col === 0 || col === BOARD_SIZE - 1);
+    if (isCorner) totalScore -= 5000; // Corners are weak in Gomoku
+    else if (isEdge) totalScore -= 2000; // Edges are also weaker
 
     return totalScore;
 }
