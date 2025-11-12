@@ -80,7 +80,7 @@
     <Content Include="images\sample4.png" />
     <Content Include="images\sample2.png" />
     <Content Include="images\sample3.png" />
-    <Content Include="imggen.html" />
+    <Content Include="index.html" />
     <Content Include="js\app.js" />
     <Content Include="js\modules\controlPanel.js" />
     <Content Include="js\modules\mobileHandler.js" />
