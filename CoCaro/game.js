@@ -423,18 +423,22 @@ function makeMove(row, col, skipHistory = false) {
 
     // AI move
     if (gameActive && gameMode === 'pvc' && currentPlayer === 'O') {
-        const config = AI_CONFIGS[aiDifficulty];
         aiThinking = true;
         showAIThinking();
 
+        // Calculate AI move first to determine if it's forced
+        const aiMove = getAIMove();
+
+        // Then calculate dynamic think time based on the situation
+        const thinkTime = calculateThinkTime();
+
         setTimeout(() => {
-            const aiMove = getAIMove();
             if (aiMove) {
                 makeMove(aiMove.row, aiMove.col);
             }
             aiThinking = false;
             hideAIThinking();
-        }, config.thinkTime);
+        }, thinkTime);
     }
 }
 
@@ -744,8 +748,14 @@ function evaluateBoard() {
 // AI MOVE GENERATION - MULTI-LEVEL
 // ================================
 
+// Track if current move is forced (for think time optimization)
+// Forced moves: winning moves, blocking immediate threats, blocking 4-in-a-row
+// These should be executed quickly without long think time
+let isForcedMove = false;
+
 function getAIMove() {
     const config = AI_CONFIGS[aiDifficulty];
+    isForcedMove = false; // Reset
 
     // Initialize if needed
     if (zobristTable.length === 0) {
@@ -754,21 +764,33 @@ function getAIMove() {
     }
 
     // Priority-based decision making
-    // 1. Check for immediate win
+    // 1. Check for immediate win - FORCED MOVE
     let move = scanForWinningMove('O');
-    if (move) return move;
+    if (move) {
+        isForcedMove = true;
+        return move;
+    }
 
-    // 2. Block opponent's immediate win
+    // 2. Block opponent's immediate win - FORCED MOVE
     move = scanForWinningMove('X');
-    if (move) return move;
+    if (move) {
+        isForcedMove = true;
+        return move;
+    }
 
-    // 3. Block opponent's 4-in-a-row
+    // 3. Block opponent's 4-in-a-row - FORCED MOVE
     move = scanForFourInRow('X');
-    if (move) return move;
+    if (move) {
+        isForcedMove = true;
+        return move;
+    }
 
-    // 4. Create own 4-in-a-row
+    // 4. Create own 4-in-a-row - FORCED MOVE
     move = scanForFourInRow('O');
-    if (move) return move;
+    if (move) {
+        isForcedMove = true;
+        return move;
+    }
 
     // 5. Block opponent's open three
     move = scanForOpenThree('X');
@@ -805,6 +827,55 @@ function getAIMove() {
     }
 
     return move;
+}
+
+// Calculate dynamic think time based on game situation
+function calculateThinkTime() {
+    const config = AI_CONFIGS[aiDifficulty];
+
+    // If forced move (win/block critical threat), respond immediately
+    if (isForcedMove) {
+        return 100; // Very fast response for forced moves
+    }
+
+    // Count number of moves made
+    const moveCount = moveHistory.length;
+
+    // First move - instant (always center)
+    if (moveCount === 0) {
+        return 150;
+    }
+
+    // Early game (first 5 moves) - think faster
+    if (moveCount < 5) {
+        return Math.min(config.thinkTime * 0.3, 300);
+    }
+
+    // Early-mid game (5-10 moves) - moderate speed
+    if (moveCount < 10) {
+        return Math.min(config.thinkTime * 0.5, 500);
+    }
+
+    // Check if board is mostly empty (simple position)
+    const emptyCount = board.flat().filter(cell => cell === null).length;
+    const totalCells = BOARD_SIZE * BOARD_SIZE;
+    const emptyRatio = emptyCount / totalCells;
+
+    // If board is >80% empty, think faster
+    if (emptyRatio > 0.8) {
+        return Math.min(config.thinkTime * 0.4, 400);
+    }
+
+    // For Easy and Medium difficulties, always think faster
+    if (aiDifficulty === 'easy') {
+        return Math.min(config.thinkTime * 0.5, 350);
+    }
+    if (aiDifficulty === 'medium') {
+        return Math.min(config.thinkTime * 0.7, 600);
+    }
+
+    // Complex end game - use full think time only for Hard and Grand Master
+    return config.thinkTime;
 }
 
 function scanForWinningMove(player) {
