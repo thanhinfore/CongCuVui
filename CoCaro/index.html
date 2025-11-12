@@ -230,31 +230,5 @@
     </div>
 
     <script src="game.js"></script>
-
-    <!-- Dynamic script to show/hide AI settings -->
-    <script>
-        // Show/hide AI settings based on game mode
-        const gameModeSelect = document.getElementById('gameMode');
-        const aiDifficultyContainer = document.getElementById('aiDifficultyContainer');
-        const aiPersonalityContainer = document.getElementById('aiPersonalityContainer');
-        const analysisModeToggle = document.getElementById('analysisMode');
-        const analysisPanel = document.getElementById('analysisPanel');
-
-        if (gameModeSelect) {
-            gameModeSelect.addEventListener('change', (e) => {
-                const isPvC = e.target.value === 'pvc';
-                if (aiDifficultyContainer) aiDifficultyContainer.style.display = isPvC ? 'flex' : 'none';
-                if (aiPersonalityContainer) aiPersonalityContainer.style.display = isPvC ? 'flex' : 'none';
-            });
-        }
-
-        if (analysisModeToggle) {
-            analysisModeToggle.addEventListener('change', (e) => {
-                if (analysisPanel) {
-                    analysisPanel.classList.toggle('collapsed', !e.target.checked);
-                }
-            });
-        }
-    </script>
 </body>
 </html>
