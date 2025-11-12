@@ -162,13 +162,13 @@ const AI_CACHE = {
     cacheMisses: 0
 };
 
-// V5.0: Smart search control
+// V5.0: Smart search control (FIXED for better intelligence)
 const SEARCH_CONTROL = {
-    maxEmptyCellsForVCT: 50,    // Only run VCT if board has < 50 empty cells
-    maxEmptyCellsForVCF: 70,    // Only run VCF if board has < 70 empty cells
-    earlyGameMoveLimit: 10,     // Use opening book for first 10 moves
+    maxEmptyCellsForVCT: 150,   // Run VCT if board has < 150 empty cells (67% full)
+    maxEmptyCellsForVCF: 175,   // Run VCF if board has < 175 empty cells (78% full)
+    earlyGameMoveLimit: 6,      // Use opening book for first 6 moves only (more conservative)
     minThreatsForVCT: 1,        // Minimum threats needed to trigger VCT
-    adaptiveDepthReduction: true // Reduce depth for simple positions
+    useSmartOpeningBook: true   // Use intelligent opening book with tactical evaluation
 };
 
 // ================================
@@ -829,7 +829,7 @@ function countEmptyCells() {
     return count;
 }
 
-// Get opening book move for early game (instant response!)
+// V5.0 FIXED: Smart opening book with tactical evaluation
 function getOpeningBookMove() {
     const moveCount = moveHistory.length;
 
@@ -851,23 +851,30 @@ function getOpeningBookMove() {
         }
     }
 
-    // For moves 2-10, use simple heuristic: play near existing stones
-    if (moveCount >= 2 && moveCount < 10) {
-        // Find best position near existing stones
+    // FIXED: For moves 2-6, use SMART heuristic with evaluation
+    if (moveCount >= 2 && moveCount < SEARCH_CONTROL.earlyGameMoveLimit) {
+        // Find candidates near existing stones
         const candidates = [];
         const center = Math.floor(BOARD_SIZE / 2);
 
-        for (let row = Math.max(0, center - 3); row <= Math.min(BOARD_SIZE - 1, center + 3); row++) {
-            for (let col = Math.max(0, center - 3); col <= Math.min(BOARD_SIZE - 1, center + 3); col++) {
+        for (let row = Math.max(0, center - 4); row <= Math.min(BOARD_SIZE - 1, center + 4); row++) {
+            for (let col = Math.max(0, center - 4); col <= Math.min(BOARD_SIZE - 1, center + 4); col++) {
                 if (board[row][col] === null && hasAdjacentStone(row, col, 2)) {
-                    candidates.push({ row, col });
+                    // CRITICAL FIX: Evaluate tactical value, not random!
+                    const aiScore = evaluatePosition(row, col, 'O');
+                    const playerScore = evaluatePosition(row, col, 'X');
+                    const score = aiScore - (playerScore * 2.0); // Favor defense
+                    candidates.push({ row, col, score });
                 }
             }
         }
 
         if (candidates.length > 0) {
-            // Return random candidate from central area (adds variety)
-            return candidates[Math.floor(Math.random() * candidates.length)];
+            // FIXED: Choose best candidate, not random!
+            candidates.sort((a, b) => b.score - a.score);
+            // Return top candidate (or one of top 3 for variety)
+            const topCandidates = candidates.slice(0, Math.min(3, candidates.length));
+            return topCandidates[0]; // Best move
         }
     }
 
@@ -921,9 +928,6 @@ function getAIMove() {
         initHistoryTable();
     }
 
-    // ============================================
-    // V5.0: OPENING BOOK - INSTANT REFLEXES
-    // ============================================
     const moveCount = moveHistory.length;
 
     // ULTRA-FAST: First move - always center, no calculation needed!
@@ -933,18 +937,10 @@ function getAIMove() {
         return { row: center, col: center };
     }
 
-    // V5.0: Use opening book for early game (moves 1-10)
-    if (moveCount < SEARCH_CONTROL.earlyGameMoveLimit) {
-        const bookMove = getOpeningBookMove();
-        if (bookMove) {
-            isForcedMove = true; // Fast response for book moves
-            return bookMove;
-        }
-    }
-
     // ============================================
-    // TACTICAL CHECKS - FORCED MOVES
+    // CRITICAL FIX: TACTICAL CHECKS FIRST!
     // ============================================
+    // MUST check threats BEFORE using opening book!
 
     // 1. Check for immediate win - FORCED MOVE
     let move = scanForWinningMove('O');
@@ -974,9 +970,25 @@ function getAIMove() {
         return move;
     }
 
-    // 5. Block opponent's open three
+    // 5. Block opponent's open three - HIGH PRIORITY
     move = scanForOpenThree('X');
-    if (move) return move;
+    if (move) {
+        isForcedMove = true; // Treat as forced - this is critical!
+        return move;
+    }
+
+    // ============================================
+    // V5.0 FIXED: OPENING BOOK - ONLY IF NO THREATS!
+    // ============================================
+    // Only use opening book if position is safe (no immediate threats detected)
+    if (moveCount < SEARCH_CONTROL.earlyGameMoveLimit) {
+        const bookMove = getOpeningBookMove();
+        if (bookMove) {
+            // Opening book move found and no threats - fast response
+            isForcedMove = true;
+            return bookMove;
+        }
+    }
 
     // 6. Create own open three
     move = scanForOpenThree('O');
