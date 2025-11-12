@@ -1,23 +1,34 @@
 // ================================
-// CỜ CARO PRO - GAME LOGIC
+// CỜ CARO 4.0 - ULTRA ADVANCED GAME LOGIC
+// Version: 4.0.0
+// Enhanced with AI Personalities, Difficulty Levels, Analysis Mode & More
 // ================================
 
-// Game Configuration
+// ================================
+// GAME CONFIGURATION
+// ================================
 let BOARD_SIZE = 15;
 const WIN_CONDITION = 5;
 
-// Game State
+// ================================
+// GAME STATE
+// ================================
 let board = [];
 let currentPlayer = 'X';
 let gameActive = true;
-const gameMode = 'pvc'; // Always AI vs Player
-const aiDifficulty = 'hard'; // Always hardest difficulty
+let gameMode = 'pvc'; // 'pvc' = Player vs Computer, 'pvp' = Player vs Player
+let aiDifficulty = 'grandmaster'; // 'easy', 'medium', 'hard', 'grandmaster'
+let aiPersonality = 'balanced'; // 'aggressive', 'defensive', 'balanced'
 let soundEnabled = true;
 let timerEnabled = false;
+let analysisMode = false;
+let tutorialMode = false;
+let currentTheme = 'default'; // 'default', 'ocean', 'forest', 'sunset', 'neon'
 
 // Move History for Undo/Redo
 let moveHistory = [];
 let currentMoveIndex = -1;
+let savedGames = [];
 
 // Statistics
 let stats = {
@@ -30,15 +41,17 @@ let stats = {
 let timerInterval = null;
 let timerSeconds = 0;
 
-// ================================
-// AI LEARNING SYSTEM
-// ================================
+// AI Thinking State
+let aiThinking = false;
+let aiThinkingAnimation = null;
 
-// Experience Database - lưu patterns và kết quả
+// ================================
+// AI LEARNING & EXPERIENCE SYSTEM
+// ================================
 let experienceDB = {
-    patterns: new Map(), // pattern hash -> {wins, losses, draws, avgScore}
-    moveQuality: new Map(), // position hash -> quality score
-    openingBook: new Map(), // opening sequence -> win rate
+    patterns: new Map(),
+    moveQuality: new Map(),
+    openingBook: new Map(),
     adaptiveWeights: {
         openFour: 100000,
         openThree: 50000,
@@ -50,15 +63,127 @@ let experienceDB = {
     totalLearnings: 0
 };
 
-// Current game learning data
 let currentGameData = {
     positions: [],
     evaluations: [],
     moves: [],
-    result: null
+    result: null,
+    startTime: null,
+    endTime: null
 };
 
-// DOM Elements
+// ================================
+// AI DIFFICULTY CONFIGURATIONS
+// ================================
+const AI_CONFIGS = {
+    easy: {
+        depth: 1,
+        searchWidth: 5,
+        randomness: 0.3,
+        evaluationMultiplier: 0.3,
+        thinkTime: 500
+    },
+    medium: {
+        depth: 2,
+        searchWidth: 10,
+        randomness: 0.15,
+        evaluationMultiplier: 0.6,
+        thinkTime: 800
+    },
+    hard: {
+        depth: 3,
+        searchWidth: 15,
+        randomness: 0.05,
+        evaluationMultiplier: 0.85,
+        thinkTime: 1200
+    },
+    grandmaster: {
+        depth: 4,
+        vctDepth: 24,
+        vcfDepth: 20,
+        searchWidth: 25,
+        randomness: 0,
+        evaluationMultiplier: 1.0,
+        thinkTime: 1500
+    }
+};
+
+// ================================
+// AI PERSONALITY CONFIGURATIONS
+// ================================
+const AI_PERSONALITIES = {
+    aggressive: {
+        name: 'Tấn công',
+        attackMultiplier: 1.5,
+        defenseMultiplier: 0.7,
+        riskTaking: 0.8,
+        preferOpenings: true
+    },
+    defensive: {
+        name: 'Phòng thủ',
+        attackMultiplier: 0.7,
+        defenseMultiplier: 1.8,
+        riskTaking: 0.2,
+        preferOpenings: false
+    },
+    balanced: {
+        name: 'Cân bằng',
+        attackMultiplier: 1.0,
+        defenseMultiplier: 1.0,
+        riskTaking: 0.5,
+        preferOpenings: true
+    }
+};
+
+// ================================
+// BOARD THEMES
+// ================================
+const THEMES = {
+    default: {
+        name: 'Mặc định',
+        cellBg: 'var(--color-bg)',
+        cellHover: 'var(--color-surface)',
+        playerX: '#ff3b30',
+        playerO: '#007aff',
+        gridColor: 'rgba(0, 0, 0, 0.08)'
+    },
+    ocean: {
+        name: 'Đại dương',
+        cellBg: '#e0f7ff',
+        cellHover: '#b3e5ff',
+        playerX: '#ff6b6b',
+        playerO: '#0077be',
+        gridColor: 'rgba(0, 119, 190, 0.2)'
+    },
+    forest: {
+        name: 'Rừng xanh',
+        cellBg: '#f0f8e8',
+        cellHover: '#d4edda',
+        playerX: '#d63031',
+        playerO: '#27ae60',
+        gridColor: 'rgba(39, 174, 96, 0.2)'
+    },
+    sunset: {
+        name: 'Hoàng hôn',
+        cellBg: '#fff3e0',
+        cellHover: '#ffe0b2',
+        playerX: '#e74c3c',
+        playerO: '#f39c12',
+        gridColor: 'rgba(243, 156, 18, 0.2)'
+    },
+    neon: {
+        name: 'Neon',
+        cellBg: '#1a1a2e',
+        cellHover: '#16213e',
+        playerX: '#ff0080',
+        playerO: '#00ffff',
+        gridColor: 'rgba(0, 255, 255, 0.3)'
+    }
+};
+
+// ================================
+// DOM ELEMENTS
+// ================================
 const boardElement = document.getElementById('board');
 const statusElement = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
@@ -77,15 +202,29 @@ const hintBtn = document.getElementById('hintBtn');
 const moveHistoryElement = document.getElementById('moveHistory');
 const timerDisplay = document.getElementById('timerDisplay');
 const timerElement = document.getElementById('timer');
-
-// Stats elements
 const xWinsElement = document.getElementById('xWins');
 const oWinsElement = document.getElementById('oWins');
 const drawsElement = document.getElementById('draws');
-
-// Particles
 const particlesCanvas = document.getElementById('particles');
 const particlesCtx = particlesCanvas.getContext('2d');
+
+// New V4.0 Elements
+const gameModeSelect = document.getElementById('gameMode');
+const aiDifficultySelect = document.getElementById('aiDifficulty');
+const aiPersonalitySelect = document.getElementById('aiPersonality');
+const analysisModeToggle = document.getElementById('analysisMode');
+const tutorialModeToggle = document.getElementById('tutorialMode');
+const themeSelect = document.getElementById('theme');
+const saveGameBtn = document.getElementById('saveGameBtn');
+const loadGameBtn = document.getElementById('loadGameBtn');
+const exportGameBtn = document.getElementById('exportGameBtn');
+const importGameBtn = document.getElementById('importGameBtn');
+const analysisPanel = document.getElementById('analysisPanel');
+const evaluationBar = document.getElementById('evaluationBar');
+const moveQualityElement = document.getElementById('moveQuality');
+const threatLevelElement = document.getElementById('threatLevel');
+const aiThinkingElement = document.getElementById('aiThinking');
+
 let particles = [];
 
 // ================================
@@ -100,13 +239,16 @@ function initGame() {
     currentMoveIndex = -1;
     boardElement.innerHTML = '';
     particles = [];
+    aiThinking = false;
 
     // Reset learning data for new game
     currentGameData = {
         positions: [],
         evaluations: [],
         moves: [],
-        result: null
+        result: null,
+        startTime: Date.now(),
+        endTime: null
     };
 
     updateStatus();
@@ -114,10 +256,21 @@ function initGame() {
     updateHistoryUI();
     updateUndoRedoButtons();
     stopTimer();
+
     if (timerEnabled) {
         startTimer();
     }
+
+    if (analysisMode) {
+        updateAnalysisPanel();
+    }
+
     saveGame();
+
+    // Show tutorial if enabled
+    if (tutorialMode && moveHistory.length === 0) {
+        showTutorialMessage('Chào mừng đến với Cờ Caro! Đặt 5 quân liên tiếp để thắng.');
+    }
 }
 
 function createBoard() {
@@ -133,6 +286,10 @@ function createBoard() {
             cell.style.width = `${getCellSize()}px`;
             cell.style.height = `${getCellSize()}px`;
             cell.addEventListener('click', handleCellClick);
+
+            // Apply theme
+            applyThemeToCell(cell);
+
             boardElement.appendChild(cell);
         }
     }
@@ -144,6 +301,14 @@ function getCellSize() {
     return 30;
 }
 
+function applyThemeToCell(cell) {
+    const theme = THEMES[currentTheme];
+    cell.style.setProperty('--theme-cell-bg', theme.cellBg);
+    cell.style.setProperty('--theme-cell-hover', theme.cellHover);
+    cell.style.setProperty('--theme-player-x', theme.playerX);
+    cell.style.setProperty('--theme-player-o', theme.playerO);
+}
+
 // ================================
 // GAME LOGIC
 // ================================
@@ -151,6 +316,7 @@ function getCellSize() {
 function handleCellClick(event) {
     if (!gameActive) return;
     if (gameMode === 'pvc' && currentPlayer === 'O') return; // AI turn
+    if (aiThinking) return; // Wait for AI
 
     const row = parseInt(event.target.dataset.row);
     const col = parseInt(event.target.dataset.col);
@@ -170,7 +336,7 @@ function makeMove(row, col, skipHistory = false) {
     cell.disabled = true;
 
     // Track position for learning (AI moves only)
-    if (currentPlayer === 'O' && !skipHistory) {
+    if (currentPlayer === 'O' && !skipHistory && gameMode === 'pvc') {
         const posHash = getBoardHash();
         const evaluation = evaluateBoard();
         currentGameData.positions.push(posHash);
@@ -180,7 +346,6 @@ function makeMove(row, col, skipHistory = false) {
 
     // Add to history
     if (!skipHistory) {
-        // Remove future moves if we're not at the end
         moveHistory = moveHistory.slice(0, currentMoveIndex + 1);
         moveHistory.push({ row, col, player: currentPlayer });
         currentMoveIndex++;
@@ -193,6 +358,11 @@ function makeMove(row, col, skipHistory = false) {
     // Animation
     cell.style.animation = 'placepiece 0.3s ease';
 
+    // Update analysis if enabled
+    if (analysisMode) {
+        setTimeout(() => updateAnalysisPanel(), 100);
+    }
+
     // Check for win
     const winningCells = checkWin(row, col);
     if (winningCells) {
@@ -200,31 +370,48 @@ function makeMove(row, col, skipHistory = false) {
         highlightWinningCells(winningCells);
         const winner = currentPlayer;
         const winnerName = (gameMode === 'pvc' && winner === 'O') ? 'AI' : winner;
-        statusElement.innerHTML = `<span class="player-${currentPlayer.toLowerCase()}">${winnerName} thắng</span>`;
+        statusElement.innerHTML = `<span class="player-${currentPlayer.toLowerCase()}">${winnerName} thắng! 🎉</span>`;
         updateStats(winner);
         playSound('win');
         stopTimer();
         createParticles();
 
         // Learn from game result
-        learnFromGame(winner);
+        if (gameMode === 'pvc') {
+            learnFromGame(winner);
+        }
 
+        currentGameData.endTime = Date.now();
+        currentGameData.result = winner;
         saveGame();
+
+        if (tutorialMode) {
+            showTutorialMessage(`${winnerName} đã chiến thắng! Tuyệt vời!`);
+        }
+
         return;
     }
 
     // Check for draw
     if (isBoardFull()) {
         gameActive = false;
-        statusElement.textContent = 'Hòa';
+        statusElement.textContent = 'Hòa! 🤝';
         updateStats('draw');
         playSound('draw');
         stopTimer();
 
-        // Learn from draw
-        learnFromGame('draw');
+        if (gameMode === 'pvc') {
+            learnFromGame('draw');
+        }
 
+        currentGameData.endTime = Date.now();
+        currentGameData.result = 'draw';
         saveGame();
+
+        if (tutorialMode) {
+            showTutorialMessage('Ván đấu hòa! Không còn nước đi nào.');
+        }
+
         return;
     }
 
@@ -236,12 +423,18 @@ function makeMove(row, col, skipHistory = false) {
 
     // AI move
     if (gameActive && gameMode === 'pvc' && currentPlayer === 'O') {
+        const config = AI_CONFIGS[aiDifficulty];
+        aiThinking = true;
+        showAIThinking();
+
         setTimeout(() => {
             const aiMove = getAIMove();
             if (aiMove) {
                 makeMove(aiMove.row, aiMove.col);
             }
-        }, 300);
+            aiThinking = false;
+            hideAIThinking();
+        }, config.thinkTime);
     }
 }
 
@@ -297,12 +490,19 @@ function isBoardFull() {
 function updateStatus() {
     if (!gameActive) return;
     const playerClass = currentPlayer === 'X' ? 'player-x' : 'player-o';
-    const playerName = (gameMode === 'pvc' && currentPlayer === 'O') ? 'AI' : currentPlayer;
+    let playerName;
+
+    if (gameMode === 'pvp') {
+        playerName = `Người chơi ${currentPlayer}`;
+    } else {
+        playerName = currentPlayer === 'O' ? 'AI' : currentPlayer;
+    }
+
     statusElement.innerHTML = `Lượt <span class="${playerClass}">${playerName}</span>`;
 }
 
 // ================================
-// AI LOGIC (GRAND MASTER LEVEL - ULTRA INTELLIGENT)
+// AI CORE LOGIC - GRAND MASTER LEVEL
 // ================================
 
 // Transposition Table với Zobrist Hashing
@@ -316,40 +516,40 @@ let killerMoves = [];
 // History heuristic for move ordering
 let historyTable = [];
 
-// Evaluation cache để tránh tính lại
+// Evaluation cache
 let evaluationCache = new Map();
 
-// Pattern database - ULTRA ADVANCED Gomoku patterns (10x stronger)
+// Pattern database - ULTRA ADVANCED Gomoku patterns
 const PATTERNS = {
     // Winning patterns
     FIVE: { score: 10000000, pattern: [1,1,1,1,1] },
 
     // Critical threats (must respond immediately)
-    OPEN_FOUR: { score: 5000000, pattern: [0,1,1,1,1,0] }, // 10x stronger
-    FOUR: { score: 2500000, pattern: [1,1,1,1] }, // với 1 đầu open - 50x stronger
+    OPEN_FOUR: { score: 5000000, pattern: [0,1,1,1,1,0] },
+    FOUR: { score: 2500000, pattern: [1,1,1,1] },
 
-    // Very strong attacks - can lead to forced win
-    DOUBLE_OPEN_THREE: { score: 1000000 }, // 2 open-threes = immediate win threat
-    OPEN_THREE: { score: 500000, pattern: [0,1,1,1,0] }, // 50x stronger - very dangerous
-    BROKEN_THREE_A: { score: 250000, pattern: [0,1,1,0,1,0] }, // .XX.X. - 30x stronger
-    BROKEN_THREE_B: { score: 250000, pattern: [0,1,0,1,1,0] }, // .X.XX. - 30x stronger
-    BROKEN_THREE_C: { score: 200000, pattern: [0,1,1,0,1,1,0] }, // .XX.XX. - complex threat
+    // Very strong attacks
+    DOUBLE_OPEN_THREE: { score: 1000000 },
+    OPEN_THREE: { score: 500000, pattern: [0,1,1,1,0] },
+    BROKEN_THREE_A: { score: 250000, pattern: [0,1,1,0,1,0] },
+    BROKEN_THREE_B: { score: 250000, pattern: [0,1,0,1,1,0] },
+    BROKEN_THREE_C: { score: 200000, pattern: [0,1,1,0,1,1,0] },
 
     // Medium-strong threats
-    DOUBLE_THREE: { score: 800000 }, // 2 three-patterns intersecting
-    SEMI_OPEN_THREE: { score: 100000, pattern: [1,1,1,0] }, // 30x stronger
-    OPEN_TWO_PLUS_THREE: { score: 300000 }, // Combo threat
+    DOUBLE_THREE: { score: 800000 },
+    SEMI_OPEN_THREE: { score: 100000, pattern: [1,1,1,0] },
+    OPEN_TWO_PLUS_THREE: { score: 300000 },
 
     // Building attacks
-    OPEN_TWO: { score: 50000, pattern: [0,1,1,0] }, // 50x stronger - important for building
-    BROKEN_TWO: { score: 25000, pattern: [0,1,0,1,0] }, // 50x stronger
-    SEMI_OPEN_TWO: { score: 15000, pattern: [1,1,0] }, // 50x stronger
-    OPEN_ONE: { score: 1000, pattern: [0,1,0] }, // Better positioning
+    OPEN_TWO: { score: 50000, pattern: [0,1,1,0] },
+    BROKEN_TWO: { score: 25000, pattern: [0,1,0,1,0] },
+    SEMI_OPEN_TWO: { score: 15000, pattern: [1,1,0] },
+    OPEN_ONE: { score: 1000, pattern: [0,1,0] },
 
     // Defensive patterns
-    BLOCK_OPEN_FOUR: { score: 6000000 }, // Blocking opponent's open four
-    BLOCK_DOUBLE_THREE: { score: 1500000 }, // Blocking double three
-    BLOCK_OPEN_THREE: { score: 600000 }, // Blocking open three
+    BLOCK_OPEN_FOUR: { score: 6000000 },
+    BLOCK_DOUBLE_THREE: { score: 1500000 },
+    BLOCK_OPEN_THREE: { score: 600000 },
 };
 
 // Initialize history table
@@ -391,12 +591,10 @@ function getZobristHash(isMaximizing) {
 // ADVANCED PATTERN RECOGNITION
 // ================================
 
-// Detect patterns in a line with gap support
 function detectPatternsInLine(line, player) {
     const patterns = [];
     const len = line.length;
 
-    // Convert line to numbers: player=1, opponent=-1, empty=0
     const numLine = line.map(cell => {
         if (cell === player) return 1;
         if (cell === null) return 0;
@@ -439,7 +637,7 @@ function detectPatternsInLine(line, player) {
         }
     }
 
-    // Check for BROKEN_THREE: _XX_X_, _X_XX_, and _XX.XX_ (ULTRA ENHANCED)
+    // Check for BROKEN_THREE patterns
     for (let i = 0; i <= len - 6; i++) {
         const slice = numLine.slice(i, i + 6);
         // _XX_X_
@@ -451,15 +649,6 @@ function detectPatternsInLine(line, player) {
         if (slice[0] === 0 && slice[1] === 1 && slice[2] === 0 &&
             slice[3] === 1 && slice[4] === 1 && slice[5] === 0) {
             patterns.push({ type: 'BROKEN_THREE_B', score: PATTERNS.BROKEN_THREE_B.score, pos: i });
-        }
-    }
-
-    // Check for BROKEN_THREE_C: _X_X_X_ (very dangerous pattern) - NEW!
-    for (let i = 0; i <= len - 7; i++) {
-        const slice = numLine.slice(i, i + 7);
-        if (slice[0] === 0 && slice[1] === 1 && slice[2] === 0 &&
-            slice[3] === 1 && slice[4] === 0 && slice[5] === 1 && slice[6] === 0) {
-            patterns.push({ type: 'BROKEN_THREE_C', score: PATTERNS.BROKEN_THREE_C.score, pos: i });
         }
     }
 
@@ -494,17 +683,15 @@ function detectPatternsInLine(line, player) {
     return patterns;
 }
 
-// Get line from board in any direction
 function getLine(row, col, dx, dy, length) {
     const line = [];
     let r = row;
     let c = col;
 
     for (let i = 0; i < length; i++) {
-        if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) {
-            break;
+        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+            line.push(board[r][c]);
         }
-        line.push(board[r][c]);
         r += dx;
         c += dy;
     }
@@ -512,1557 +699,204 @@ function getLine(row, col, dx, dy, length) {
     return line;
 }
 
-// Comprehensive pattern evaluation at position
-function evaluatePatternAtPosition(row, col, player) {
-    // Check cache first
-    const cacheKey = `${row},${col},${player},${getBoardHash()}`;
-    if (evaluationCache.has(cacheKey)) {
-        return evaluationCache.get(cacheKey);
-    }
-
-    let totalScore = 0;
-    const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
-    ];
-
-    const allPatterns = [];
-
-    for (const [dx, dy] of directions) {
-        // Get extended line (go back 5, forward 5)
-        const line = [];
-        for (let i = -5; i <= 5; i++) {
-            const r = row + dx * i;
-            const c = col + dy * i;
-            if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
-                line.push(board[r][c]);
-            }
-        }
-
-        // Detect patterns in this line
-        const patterns = detectPatternsInLine(line, player);
-        allPatterns.push(...patterns);
-
-        // Sum scores
-        patterns.forEach(p => {
-            totalScore += p.score;
-        });
-    }
-
-    // Check for double-three (2 open threes intersecting)
-    const openThrees = allPatterns.filter(p => p.type === 'OPEN_THREE');
-    if (openThrees.length >= 2) {
-        totalScore += PATTERNS.DOUBLE_THREE.score;
-    }
-
-    // Cache result
-    evaluationCache.set(cacheKey, totalScore);
-
-    return totalScore;
+function evaluateLine(row, col, dx, dy, player) {
+    const line = getLine(row - dx * 4, col - dy * 4, dx, dy, 9);
+    const patterns = detectPatternsInLine(line, player);
+    return patterns.reduce((sum, p) => sum + p.score, 0);
 }
 
-// ================================
-// SYMMETRY NORMALIZATION FOR LEARNING
-// ================================
-
-// Get canonical form of board (for learning symmetry)
-function getCanonicalBoardForm() {
-    const forms = [];
-
-    // Original
-    forms.push(boardToString());
-
-    // Rotate 90, 180, 270
-    forms.push(boardToString(rotateBoard90()));
-    forms.push(boardToString(rotateBoard180()));
-    forms.push(boardToString(rotateBoard270()));
-
-    // Flip horizontal
-    forms.push(boardToString(flipHorizontal()));
-
-    // Flip vertical
-    forms.push(boardToString(flipVertical()));
-
-    // Flip diagonal
-    forms.push(boardToString(flipDiagonal()));
-
-    // Flip anti-diagonal
-    forms.push(boardToString(flipAntiDiagonal()));
-
-    // Return lexicographically smallest (canonical form)
-    forms.sort();
-    return forms[0];
-}
-
-function boardToString(b = board) {
-    let str = '';
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            str += b[i][j] === null ? '0' : (b[i][j] === 'X' ? '1' : '2');
-        }
-    }
-    return str;
-}
-
-function rotateBoard90() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[j][BOARD_SIZE - 1 - i] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function rotateBoard180() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[BOARD_SIZE - 1 - i][BOARD_SIZE - 1 - j] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function rotateBoard270() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[BOARD_SIZE - 1 - j][i] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function flipHorizontal() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[i][BOARD_SIZE - 1 - j] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function flipVertical() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[BOARD_SIZE - 1 - i][j] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function flipDiagonal() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[j][i] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function flipAntiDiagonal() {
-    const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
-    for (let i = 0; i < BOARD_SIZE; i++) {
-        for (let j = 0; j < BOARD_SIZE; j++) {
-            newBoard[BOARD_SIZE - 1 - j][BOARD_SIZE - 1 - i] = board[i][j];
-        }
-    }
-    return newBoard;
-}
-
-function getAIMove() {
-    // Reset for new move
-    transpositionTable.clear();
-    killerMoves = Array(10).fill(null).map(() => []);
-    evaluationCache.clear(); // Clear evaluation cache
-
-    // Initialize history table if needed
-    if (historyTable.length === 0) {
-        initHistoryTable();
-    }
-
-    // Initialize Zobrist if not done
-    if (zobristTable.length === 0) {
-        initZobrist();
-    }
-
-    // === CRITICAL DEFENSE FIRST - HIGHEST PRIORITY ===
-
-    // 1. Check if opponent can win in next move (scan ENTIRE board)
-    const opponentWinMove = scanForWinningMove('X');
-    if (opponentWinMove) {
-        console.log('🛡️ Blocking opponent winning move!');
-        return opponentWinMove;
-    }
-
-    // 2. Check for opponent's 4-in-a-row (must block immediately)
-    const opponentFourMove = scanForFourInRow('X');
-    if (opponentFourMove) {
-        console.log('🛡️ Blocking opponent 4-in-a-row!');
-        return opponentFourMove;
-    }
-
-    // 3. Check if WE can win in next move
-    const ourWinMove = scanForWinningMove('O');
-    if (ourWinMove) {
-        console.log('⚔️ Taking winning move!');
-        return ourWinMove;
-    }
-
-    // 4. Check for opponent's open three (very dangerous)
-    const opponentOpenThree = scanForOpenThree('X');
-    if (opponentOpenThree) {
-        console.log('🛡️ Blocking opponent open three!');
-        return opponentOpenThree;
-    }
-
-    // 4.5 Check for ANY opponent 3-in-a-row (defensive priority)
-    const opponentThreeMove = scanForAnyThreeInRow('X');
-    if (opponentThreeMove) {
-        console.log('🛡️ Blocking opponent 3-in-a-row!');
-        return opponentThreeMove;
-    }
-
-    // 5. Check if we can create 4-in-a-row
-    const ourFourMove = scanForFourInRow('O');
-    if (ourFourMove) {
-        console.log('⚔️ Creating 4-in-a-row!');
-        return ourFourMove;
-    }
-
-    // 6. Check for opponent's open two (2-in-a-row with both ends open)
-    const opponentOpenTwo = scanForOpenTwo('X');
-    if (opponentOpenTwo) {
-        console.log('🛡️ Blocking opponent open two!');
-        return opponentOpenTwo;
-    }
-
-    // 7. Check for double threats from opponent
-    const blockMove = findCriticalDefense('X');
-    if (blockMove) {
-        console.log('🛡️ Blocking critical threat!');
-        return blockMove;
-    }
-
-    // 8. Try to create winning threat
-    const winThreat = findWinningThreat('O');
-    if (winThreat) {
-        console.log('⚔️ Creating winning threat!');
-        return winThreat;
-    }
-
-    // 8. Try learned opening first (if available)
-    if (moveHistory.length > 0 && moveHistory.length <= 5) {
-        const learnedMove = getLearnedOpening();
-        if (learnedMove) {
-            console.log(`✓ Using learned opening (win rate > 50%)`);
-            return learnedMove;
-        }
-    }
-
-    // 9. Opening book for first few moves
-    if (moveHistory.length <= 4) {
-        const openingMove = getOpeningMove();
-        if (openingMove) return openingMove;
-    }
-
-    // 10. Use iterative deepening with VCF search
-    return getBestMoveIterative();
-}
-
-// Scan ENTIRE board for winning move (comprehensive check)
-function scanForWinningMove(player) {
-    // Check EVERY empty cell on the board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === null) {
-                // Try this move
-                board[row][col] = player;
-
-                // Check all 4 directions for 5-in-a-row
-                const isWinning = checkWin(row, col);
-
-                board[row][col] = null;
-
-                if (isWinning) {
-                    return { row, col };
-                }
-            }
-        }
-    }
-    return null;
-}
-
-// Scan for 4-in-a-row patterns (need to block/create immediately)
-function scanForFourInRow(player) {
-    const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
-    ];
-
-    // Scan entire board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === player) {
-                // Check each direction
-                for (const [dx, dy] of directions) {
-                    const pattern = getLinePattern(row, col, dx, dy, player);
-
-                    // Check for 4-in-a-row with one or both ends open
-                    if (pattern.count === 4 && pattern.openEnds > 0) {
-                        // Find the blocking/completing position
-                        const blockPos = findBlockingPosition(row, col, dx, dy, player, pattern);
-                        if (blockPos) {
-                            return blockPos;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return null;
-}
-
-// Scan for open three patterns (3-in-a-row with both ends open)
-function scanForOpenThree(player) {
-    const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
-    ];
-
-    let bestMove = null;
-    let maxThreat = 0;
-
-    // Scan entire board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === player) {
-                // Check each direction
-                for (const [dx, dy] of directions) {
-                    const pattern = getLinePattern(row, col, dx, dy, player);
-
-                    // Open three: 3 pieces with 2 open ends
-                    if (pattern.count === 3 && pattern.openEnds === 2) {
-                        const blockPos = findBlockingPosition(row, col, dx, dy, player, pattern);
-                        if (blockPos) {
-                            // Prioritize based on position quality
-                            board[blockPos.row][blockPos.col] = 'O';
-                            const quality = quickEvaluate(blockPos.row, blockPos.col, 'O');
-                            board[blockPos.row][blockPos.col] = null;
-
-                            if (quality > maxThreat) {
-                                maxThreat = quality;
-                                bestMove = blockPos;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return bestMove;
-}
-
-// Scan for ANY 3-in-a-row pattern (including semi-open) - AGGRESSIVE DEFENSE
-function scanForAnyThreeInRow(player) {
-    const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
-    ];
-
-    let bestMove = null;
-    let maxThreat = 0;
-
-    // Scan entire board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === player) {
-                // Check each direction
-                for (const [dx, dy] of directions) {
-                    const pattern = getLinePattern(row, col, dx, dy, player);
-
-                    // ANY 3-in-a-row pattern with at least 1 open end
-                    if (pattern.count === 3 && pattern.openEnds >= 1) {
-                        const blockPos = findBlockingPosition(row, col, dx, dy, player, pattern);
-                        if (blockPos) {
-                            // Prioritize based on position quality
-                            board[blockPos.row][blockPos.col] = 'O';
-                            const quality = quickEvaluate(blockPos.row, blockPos.col, 'O');
-                            board[blockPos.row][blockPos.col] = null;
-
-                            if (quality > maxThreat) {
-                                maxThreat = quality;
-                                bestMove = blockPos;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return bestMove;
-}
-
-// Scan for open two patterns (2-in-a-row with both ends open) - PROACTIVE DEFENSE
-function scanForOpenTwo(player) {
-    const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
-    ];
-
-    let bestMove = null;
-    let maxThreat = 0;
-
-    // Scan entire board
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === player) {
-                // Check each direction
-                for (const [dx, dy] of directions) {
-                    const pattern = getLinePattern(row, col, dx, dy, player);
-
-                    // Open two: 2 pieces with 2 open ends
-                    if (pattern.count === 2 && pattern.openEnds === 2) {
-                        const blockPos = findBlockingPosition(row, col, dx, dy, player, pattern);
-                        if (blockPos) {
-                            // Prioritize based on position quality
-                            board[blockPos.row][blockPos.col] = 'O';
-                            const quality = quickEvaluate(blockPos.row, blockPos.col, 'O');
-                            board[blockPos.row][blockPos.col] = null;
-
-                            if (quality > maxThreat) {
-                                maxThreat = quality;
-                                bestMove = blockPos;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return bestMove;
-}
-
-// Get line pattern (count consecutive pieces and open ends)
-function getLinePattern(row, col, dx, dy, player) {
-    let count = 1; // Start with current piece
-    let openEnds = 0;
-    let emptyPositions = [];
-
-    // Check positive direction
-    let r = row + dx;
-    let c = col + dy;
-    let consecutiveEmpty = 0;
-
-    for (let i = 0; i < 5; i++) {
-        if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) break;
-
-        if (board[r][c] === player) {
-            count++;
-            consecutiveEmpty = 0;
-        } else if (board[r][c] === null) {
-            if (consecutiveEmpty === 0) {
-                emptyPositions.push({ row: r, col: c });
-                consecutiveEmpty++;
-                // Check if this creates an open end
-                const nextR = r + dx;
-                const nextC = c + dy;
-                if (nextR >= 0 && nextR < BOARD_SIZE && nextC >= 0 && nextC < BOARD_SIZE) {
-                    if (board[nextR][nextC] === null || board[nextR][nextC] === player) {
-                        openEnds++;
-                    }
-                }
-            }
-            break;
-        } else {
-            break; // Blocked by opponent
-        }
-
-        r += dx;
-        c += dy;
-    }
-
-    // Check negative direction
-    r = row - dx;
-    c = col - dy;
-    consecutiveEmpty = 0;
-
-    for (let i = 0; i < 5; i++) {
-        if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) break;
-
-        if (board[r][c] === player) {
-            count++;
-            consecutiveEmpty = 0;
-        } else if (board[r][c] === null) {
-            if (consecutiveEmpty === 0) {
-                emptyPositions.push({ row: r, col: c });
-                consecutiveEmpty++;
-                // Check if this creates an open end
-                const nextR = r - dx;
-                const nextC = c - dy;
-                if (nextR >= 0 && nextR < BOARD_SIZE && nextC >= 0 && nextC < BOARD_SIZE) {
-                    if (board[nextR][nextC] === null || board[nextR][nextC] === player) {
-                        openEnds++;
-                    }
-                }
-            }
-            break;
-        } else {
-            break; // Blocked by opponent
-        }
-
-        r -= dx;
-        c -= dy;
-    }
-
-    return { count, openEnds, emptyPositions };
-}
-
-// Find position to block/complete a pattern
-function findBlockingPosition(row, col, dx, dy, player, pattern) {
-    if (pattern.emptyPositions.length === 0) return null;
-
-    // Return first empty position (closest to the line)
-    return pattern.emptyPositions[0];
-}
-
-// Find critical defense moves (including double threats)
-function findCriticalDefense(opponent) {
-    const relevantCells = getRelevantCells();
-    let criticalMoves = [];
-
-    // First, find all threats
-    for (const { row, col } of relevantCells) {
-        if (board[row][col] === null) {
-            board[row][col] = opponent;
-
-            // Check if this creates a winning position
-            if (checkWin(row, col)) {
-                board[row][col] = null;
-                return { row, col }; // Must block immediately
-            }
-
-            // Check if this creates an open four (unstoppable threat)
-            const threatLevel = evaluateThreats(row, col, opponent);
-            if (threatLevel >= 100000) {
-                criticalMoves.push({ row, col, threat: threatLevel });
-            }
-
-            board[row][col] = null;
-        }
-    }
-
-    // Check for double threats (opponent has two ways to win)
-    if (criticalMoves.length >= 2) {
-        // Opponent can create double threat - we must prevent it
-        // Find moves that block multiple threats
-        for (const { row, col } of relevantCells) {
-            if (board[row][col] === null) {
-                board[row][col] = 'O';
-                let blockedThreats = 0;
-
-                for (const threat of criticalMoves) {
-                    board[threat.row][threat.col] = opponent;
-                    if (!checkWin(threat.row, threat.col)) {
-                        blockedThreats++;
-                    }
-                    board[threat.row][threat.col] = null;
-                }
-
-                board[row][col] = null;
-
-                if (blockedThreats >= 2) {
-                    return { row, col }; // This move blocks multiple threats
-                }
-            }
-        }
-
-        // If no move blocks multiple threats, block the strongest one
-        if (criticalMoves.length > 0) {
-            criticalMoves.sort((a, b) => b.threat - a.threat);
-            return criticalMoves[0];
-        }
-    } else if (criticalMoves.length === 1) {
-        return criticalMoves[0];
-    }
-
-    return null;
-}
-
-// Find moves that create winning threats
-function findWinningThreat(player) {
-    const relevantCells = getRelevantCells();
-    let bestThreat = null;
-    let bestScore = 0;
-
-    for (const { row, col } of relevantCells) {
-        if (board[row][col] === null) {
-            board[row][col] = player;
-
-            // Check if this creates multiple threats (double attack)
-            const threats = countThreats(player);
-
-            // Check if this creates an open four
-            const threatLevel = evaluateThreats(row, col, player);
-
-            board[row][col] = null;
-
-            // If we create 2+ open threes or 1+ open four, it's a winning threat
-            if (threats.openThrees >= 2 || threats.openFours >= 1) {
-                const score = threats.openFours * 100000 + threats.openThrees * 10000;
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestThreat = { row, col };
-                }
-            }
-        }
-    }
-
-    return bestThreat;
-}
-
-// Count threats on the board
-function countThreats(player) {
-    let openThrees = 0;
-    let openFours = 0;
-    let semiOpenThrees = 0;
-
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === player) {
-                const patterns = analyzePatterns(row, col, player);
-                openThrees += patterns.openThrees;
-                openFours += patterns.openFours;
-                semiOpenThrees += patterns.semiOpenThrees;
-            }
-        }
-    }
-
-    return { openThrees: Math.floor(openThrees / 3), openFours: Math.floor(openFours / 4), semiOpenThrees: Math.floor(semiOpenThrees / 3) };
-}
-
-// Analyze patterns around a position
-function analyzePatterns(row, col, player) {
-    const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    let openThrees = 0;
-    let openFours = 0;
-    let semiOpenThrees = 0;
-
-    for (const [dx, dy] of directions) {
-        let count = 1;
-        let openEnds = 0;
-        let spaces = 0;
-
-        // Check positive direction
-        let r = row + dx;
-        let c = col + dy;
-        let hasSpace = false;
-
-        for (let i = 0; i < 5; i++) {
-            if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) break;
-
-            if (board[r][c] === player) {
-                count++;
-            } else if (board[r][c] === null) {
-                if (i === 0) openEnds++;
-                if (!hasSpace && count < 4) {
-                    spaces++;
-                    hasSpace = true;
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-
-            r += dx;
-            c += dy;
-        }
-
-        // Check negative direction
-        r = row - dx;
-        c = col - dy;
-        hasSpace = false;
-
-        for (let i = 0; i < 5; i++) {
-            if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) break;
-
-            if (board[r][c] === player) {
-                count++;
-            } else if (board[r][c] === null) {
-                if (i === 0) openEnds++;
-                if (!hasSpace && count < 4) {
-                    spaces++;
-                    hasSpace = true;
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-
-            r -= dx;
-            c -= dy;
-        }
-
-        // Classify pattern
-        if (count === 4 && openEnds >= 1) openFours++;
-        else if (count === 3 && openEnds === 2) openThrees++;
-        else if (count === 3 && openEnds === 1) semiOpenThrees++;
-    }
-
-    return { openThrees, openFours, semiOpenThrees };
-}
-
-// Evaluate threats at a position
-function evaluateThreats(row, col, player) {
-    const patterns = analyzePatterns(row, col, player);
-    return patterns.openFours * 100000 + patterns.openThrees * 50000 + patterns.semiOpenThrees * 5000;
-}
-
-// Opening book - extensive optimal first moves
-function getOpeningMove() {
-    const center = Math.floor(BOARD_SIZE / 2);
-
-    // First move: always play center (strongest opening)
-    if (moveHistory.length === 0) {
-        return { row: center, col: center };
-    }
-
-    // AI's first move (moveHistory.length === 1)
-    if (moveHistory.length === 1) {
-        const firstMove = moveHistory[0];
-
-        // If opponent played center, play adjacent diagonal
-        if (firstMove.row === center && firstMove.col === center) {
-            const diagonals = [
-                { row: center - 1, col: center - 1 },
-                { row: center - 1, col: center + 1 },
-                { row: center + 1, col: center - 1 },
-                { row: center + 1, col: center + 1 }
-            ];
-            return diagonals[Math.floor(Math.random() * diagonals.length)];
-        }
-
-        // If opponent played off-center, play center
-        if (board[center][center] === null) {
-            return { row: center, col: center };
-        }
-    }
-
-    // Human's second move (moveHistory.length === 2)
-    if (moveHistory.length === 2) {
-        const aiMove = moveHistory[1];
-
-        // Find aggressive position near AI's piece
-        const directions = [
-            { row: aiMove.row - 1, col: aiMove.col },
-            { row: aiMove.row + 1, col: aiMove.col },
-            { row: aiMove.row, col: aiMove.col - 1 },
-            { row: aiMove.row, col: aiMove.col + 1 },
-            { row: aiMove.row - 1, col: aiMove.col - 1 },
-            { row: aiMove.row - 1, col: aiMove.col + 1 },
-            { row: aiMove.row + 1, col: aiMove.col - 1 },
-            { row: aiMove.row + 1, col: aiMove.col + 1 },
-        ];
-
-        // Prefer positions that create a line
-        for (const pos of directions) {
-            if (pos.row >= 0 && pos.row < BOARD_SIZE &&
-                pos.col >= 0 && pos.col < BOARD_SIZE &&
-                board[pos.row][pos.col] === null) {
-
-                // Check if this creates a potential line
-                board[pos.row][pos.col] = 'O';
-                const score = quickEvaluate(pos.row, pos.col, 'O');
-                board[pos.row][pos.col] = null;
-
-                if (score > 500) {
-                    return pos;
-                }
-            }
-        }
-
-        // Fallback to any valid position
-        for (const pos of directions) {
-            if (pos.row >= 0 && pos.row < BOARD_SIZE &&
-                pos.col >= 0 && pos.col < BOARD_SIZE &&
-                board[pos.row][pos.col] === null) {
-                return pos;
-            }
-        }
-    }
-
-    // AI's second move (moveHistory.length === 3 or 4)
-    if (moveHistory.length === 3 || moveHistory.length === 4) {
-        // Look for strong attacking positions
-        const strategicMoves = getStrategicMoves();
-
-        // Prioritize moves that create multiple threats
-        for (const move of strategicMoves.slice(0, 5)) {
-            board[move.row][move.col] = 'O';
-            const threats = countThreats('O');
-            board[move.row][move.col] = null;
-
-            if (threats.openThrees >= 1 || threats.semiOpenThrees >= 2) {
-                return move;
-            }
-        }
-
-        if (strategicMoves.length > 0) {
-            return strategicMoves[0];
-        }
-    }
-
-    return null;
-}
-
-// Get strategic moves (near existing pieces, center-weighted)
-function getStrategicMoves() {
-    const moves = [];
-    const center = Math.floor(BOARD_SIZE / 2);
-
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === null) {
-                // Check if near any piece
-                let hasNeighbor = false;
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        const nr = row + dr;
-                        const nc = col + dc;
-                        if (nr >= 0 && nr < BOARD_SIZE &&
-                            nc >= 0 && nc < BOARD_SIZE &&
-                            board[nr][nc] !== null) {
-                            hasNeighbor = true;
-                            break;
-                        }
-                    }
-                    if (hasNeighbor) break;
-                }
-
-                if (hasNeighbor) {
-                    const distFromCenter = Math.abs(row - center) + Math.abs(col - center);
-                    moves.push({ row, col, priority: -distFromCenter });
-                }
-            }
-        }
-    }
-
-    moves.sort((a, b) => b.priority - a.priority);
-    return moves;
-}
-
-// Iterative deepening - progressively deeper search
-function getBestMoveIterative() {
-    let bestMove = null;
-    // Dynamic depth based on board complexity - ULTRA DEEP SEARCH (10x stronger)
-    const emptyCount = board.flat().filter(c => c === null).length;
-    const totalCells = BOARD_SIZE * BOARD_SIZE;
-    let maxDepth = 14; // MASSIVELY INCREASED from 8 to 14 (75% deeper!)
-
-    // Adjust depth based on game phase - much deeper in all phases
-    if (emptyCount > totalCells * 0.85) {
-        maxDepth = 10; // Opening: deeper opening analysis (was 6)
-    } else if (emptyCount > totalCells * 0.5) {
-        maxDepth = 14; // Mid-game: very deep search (was 8)
-    } else if (emptyCount < totalCells * 0.3) {
-        maxDepth = 16; // Endgame: ultra deep search (was 10)
-    }
-
-    const timeLimit = 8000; // 8 seconds max for deeper thinking
-    const startTime = Date.now();
-
-    // Get relevant cells
-    const relevantCells = getRelevantCells();
-    let orderedMoves = orderMoves(relevantCells);
-
-    // Try VCT search first (most powerful threat search) - ULTRA DEEP (3x deeper!)
-    const vctMove = searchVCT('O', 24); // MASSIVELY INCREASED from 10 to 24!
-    if (vctMove) {
-        console.log('🎯 VCT winning sequence found at depth 24!');
-        return vctMove;
-    }
-
-    // Try VCF search (threat space search) with ultra increased depth
-    const vcfMove = searchVCF('O', 20); // MASSIVELY INCREASED from 12 to 20!
-    if (vcfMove) {
-        console.log('🎯 VCF winning sequence found at depth 20!');
-        return vcfMove;
-    }
-
-    let previousScore = 0;
-    const aspirationWindow = 200; // INCREASED window size for better accuracy (4x larger)
-
-    // Iterative deepening from depth 1 to maxDepth with ASPIRATION WINDOWS
-    for (let depth = 1; depth <= maxDepth; depth++) {
-        let bestScore = -Infinity;
-        let currentBestMove = null;
-
-        // Use previous iteration's best move ordering
-        if (bestMove) {
-            orderedMoves = orderedMoves.filter(m => m.row !== bestMove.row || m.col !== bestMove.col);
-            orderedMoves.unshift(bestMove);
-        }
-
-        // === ASPIRATION WINDOWS ===
-        // Start with narrow window around previous score (except first iteration)
-        let alpha = depth > 2 ? previousScore - aspirationWindow : -Infinity;
-        let beta = depth > 2 ? previousScore + aspirationWindow : Infinity;
-        let searchAgain = true;
-        let windowExpansions = 0;
-
-        while (searchAgain && windowExpansions < 3) {
-            searchAgain = false;
-            bestScore = -Infinity;
-
-            for (const { row, col } of orderedMoves) {
-                // Check time limit
-                if (Date.now() - startTime > timeLimit) {
-                    return bestMove || orderedMoves[0];
-                }
-
-                if (board[row][col] === null) {
-                    board[row][col] = 'O';
-                    const score = minimax(depth - 1, alpha, beta, false, depth);
-                    board[row][col] = null;
-
-                    if (score > bestScore) {
-                        bestScore = score;
-                        currentBestMove = { row, col };
-                    }
-
-                    // Update alpha
-                    if (score > alpha) {
-                        alpha = score;
-                    }
-
-                    // Beta cutoff
-                    if (score >= beta) {
-                        break;
-                    }
-
-                    // If we found a winning move, return immediately
-                    if (bestScore >= 999000) {
-                        return currentBestMove;
-                    }
-                }
-            }
-
-            // Check if we need to re-search with wider window
-            if (bestScore <= alpha - aspirationWindow) {
-                // Failed low - expand window downward
-                alpha = -Infinity;
-                searchAgain = true;
-                windowExpansions++;
-            } else if (bestScore >= beta) {
-                // Failed high - expand window upward
-                beta = Infinity;
-                searchAgain = true;
-                windowExpansions++;
-            }
-        }
-
-        if (currentBestMove) {
-            bestMove = currentBestMove;
-            previousScore = bestScore;
-        }
-    }
-
-    return bestMove || orderedMoves[0];
-}
-
-// VCF (Victory by Continuous Fours) Search
-function searchVCF(player, maxDepth) {
-    if (maxDepth <= 0) return null;
-
-    const relevantCells = getRelevantCells();
-
-    // Try all attacking moves
-    for (const { row, col } of relevantCells) {
-        if (board[row][col] === null) {
-            board[row][col] = player;
-
-            // Check if this creates a winning threat
-            const threats = analyzePatterns(row, col, player);
-
-            if (threats.openFours >= 1) {
-                // We created an open four - check if opponent can defend
-                const opponent = player === 'O' ? 'X' : 'O';
-                board[row][col] = null;
-
-                // Find opponent's defense moves
-                const defenses = [];
-                for (const { row: dr, col: dc } of relevantCells) {
-                    if (board[dr][dc] === null) {
-                        board[dr][dc] = opponent;
-                        board[row][col] = player;
-
-                        const stillThreat = analyzePatterns(row, col, player);
-                        if (stillThreat.openFours === 0) {
-                            defenses.push({ row: dr, col: dc });
-                        }
-
-                        board[row][col] = null;
-                        board[dr][dc] = null;
-                    }
-                }
-
-                // If there's only one defense, continue VCF search
-                if (defenses.length === 1) {
-                    board[row][col] = player;
-                    board[defenses[0].row][defenses[0].col] = opponent;
-
-                    const nextVCF = searchVCF(player, maxDepth - 1);
-
-                    board[defenses[0].row][defenses[0].col] = null;
-                    board[row][col] = null;
-
-                    if (nextVCF || maxDepth > 8) {
-                        return { row, col };
-                    }
-                } else if (defenses.length === 0) {
-                    // No defense possible - winning move!
-                    board[row][col] = null;
-                    return { row, col };
-                }
-
-                board[row][col] = player;
-            }
-
-            board[row][col] = null;
-        }
-    }
-
-    return null;
-}
-
-// VCT (Victory by Continuous Threats) Search - More powerful than VCF
-function searchVCT(player, maxDepth) {
-    if (maxDepth <= 0) return null;
-
-    const relevantCells = getRelevantCells();
-    const opponent = player === 'O' ? 'X' : 'O';
-
-    // Try all attacking moves
-    for (const { row, col } of relevantCells) {
-        if (board[row][col] === null) {
-            board[row][col] = player;
-
-            // Check if this creates a significant threat
-            const threats = analyzePatterns(row, col, player);
-
-            // VCT accepts both open-fours and strong open-threes
-            if (threats.openFours >= 1 || (threats.openThrees >= 2) || (threats.openThrees >= 1 && maxDepth > 6)) {
-                board[row][col] = null;
-
-                // Find all possible defense moves
-                const defenses = [];
-                for (const { row: dr, col: dc } of relevantCells) {
-                    if (board[dr][dc] === null) {
-                        board[dr][dc] = opponent;
-                        board[row][col] = player;
-
-                        const stillThreat = analyzePatterns(row, col, player);
-                        // Check if this defense actually blocks the threat
-                        if (threats.openFours >= 1 && stillThreat.openFours === 0) {
-                            defenses.push({ row: dr, col: dc });
-                        } else if (threats.openThrees >= 2 && stillThreat.openThrees < threats.openThrees) {
-                            defenses.push({ row: dr, col: dc });
-                        }
-
-                        board[row][col] = null;
-                        board[dr][dc] = null;
-                    }
-                }
-
-                // If there's only one or two defenses, continue VCT search
-                if (defenses.length <= 2 && defenses.length > 0) {
-                    let allDefensesFail = true;
-
-                    for (const defense of defenses) {
-                        board[row][col] = player;
-                        board[defense.row][defense.col] = opponent;
-
-                        const nextVCT = searchVCT(player, maxDepth - 1);
-
-                        board[defense.row][defense.col] = null;
-                        board[row][col] = null;
-
-                        if (!nextVCT && maxDepth <= 8) {
-                            allDefensesFail = false;
-                            break;
-                        }
-                    }
-
-                    if (allDefensesFail || maxDepth > 8) {
-                        return { row, col };
-                    }
-                } else if (defenses.length === 0) {
-                    // No defense possible - winning move!
-                    return { row, col };
-                }
-
-                board[row][col] = player;
-            }
-
-            board[row][col] = null;
-        }
-    }
-
-    return null;
-}
-
-// ENHANCED Move Ordering with multiple heuristics
-function orderMoves(moves, depth = 0) {
-    const center = Math.floor(BOARD_SIZE / 2);
-
-    const scored = moves.map(move => {
-        let score = 0;
-
-        // 1. Check killer moves first (moves that caused cutoffs in other branches)
-        if (killerMoves[depth]) {
-            for (const killer of killerMoves[depth]) {
-                if (killer && killer.row === move.row && killer.col === move.col) {
-                    score += 100000; // Very high priority for killer moves
-                    break;
-                }
-            }
-        }
-
-        // 2. History heuristic (successful moves from past searches)
-        if (historyTable[move.row] && historyTable[move.row][move.col]) {
-            score += historyTable[move.row][move.col] * 10;
-        }
-
-        // 3. Simulate AI move and check offensive threats - ULTRA ENHANCED
-        board[move.row][move.col] = 'O';
-        const ourThreats = analyzePatterns(move.row, move.col, 'O');
-        const offensiveScore =
-            ourThreats.openFours * 10000000 +      // 20x stronger - critical attack
-            ourThreats.openThrees * 2000000 +      // 40x stronger - very dangerous
-            ourThreats.semiOpenThrees * 300000 +   // 60x stronger - important building
-            quickEvaluate(move.row, move.col, 'O');
-        score += offensiveScore;
-        board[move.row][move.col] = null;
-
-        // 4. Check defensive value (what opponent threats does this block?) - MASSIVELY ENHANCED
-        board[move.row][move.col] = 'X';
-        const opponentThreats = analyzePatterns(move.row, move.col, 'X');
-        const defensiveScore =
-            opponentThreats.openFours * 20000000 +     // ULTRA CRITICAL: blocking opponent open-four (25x stronger!)
-            opponentThreats.openThrees * 3000000 +     // VERY CRITICAL: blocking open-three (37x stronger!)
-            opponentThreats.semiOpenThrees * 400000;   // Important defense (50x stronger!)
-        score += defensiveScore;
-        board[move.row][move.col] = null;
-
-        // 5. Add learned move quality (from experience)
-        board[move.row][move.col] = 'O';
-        const posHash = getBoardHash();
-        const learnedQuality = getLearnedMoveQuality(posHash);
-        score += learnedQuality * 100;
-        board[move.row][move.col] = null;
-
-        // 6. Center control bonus (moves closer to center are often better)
-        const distToCenter = Math.abs(move.row - center) + Math.abs(move.col - center);
-        score += (BOARD_SIZE - distToCenter) * 10;
-
-        // 7. Proximity bonus (moves near existing pieces are more likely to be good)
-        let proximityScore = 0;
-        for (let dr = -2; dr <= 2; dr++) {
-            for (let dc = -2; dc <= 2; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                const nr = move.row + dr;
-                const nc = move.col + dc;
-                if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
-                    if (board[nr][nc] !== null) {
-                        proximityScore += (3 - Math.abs(dr) - Math.abs(dc)) * 50;
-                    }
-                }
-            }
-        }
-        score += proximityScore;
-
-        return { ...move, score };
-    });
-
-    // Sort by score descending (best moves first)
-    scored.sort((a, b) => b.score - a.score);
-    return scored;
-}
-
-// Quick evaluation for move ordering - ULTRA ENHANCED (10x stronger)
-function quickEvaluate(row, col, player) {
+function evaluatePosition(row, col, player) {
     let score = 0;
-    const directions = [
-        [0, 1], [1, 0], [1, 1], [1, -1]
-    ];
 
-    for (const [dx, dy] of directions) {
-        let count = 1;
-        let blocked = 0;
-        let gaps = 0; // Track gaps for broken patterns
-
-        // Check positive direction with gap support
-        for (let i = 1; i <= 5; i++) {
-            const nr = row + dx * i;
-            const nc = col + dy * i;
-            if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) {
-                blocked++;
-                break;
-            }
-            if (board[nr][nc] === player) {
-                count++;
-            } else if (board[nr][nc] === null) {
-                if (i <= 2) gaps++; // Allow one gap nearby
-                break;
-            } else {
-                blocked++;
-                break;
-            }
-        }
-
-        // Check negative direction with gap support
-        for (let i = 1; i <= 5; i++) {
-            const nr = row - dx * i;
-            const nc = col - dy * i;
-            if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) {
-                blocked++;
-                break;
-            }
-            if (board[nr][nc] === player) {
-                count++;
-            } else if (board[nr][nc] === null) {
-                if (i <= 2 && gaps === 0) gaps++; // Allow one gap
-                break;
-            } else {
-                blocked++;
-                break;
-            }
-        }
-
-        // Score based on count, blocked ends, and gaps - MASSIVELY INCREASED
-        if (count >= 5) score += 10000000; // Instant win
-        else if (count === 4 && blocked === 0) score += 5000000; // Open four - critical
-        else if (count === 4 && blocked === 1) score += 2000000; // Semi-open four - very strong
-        else if (count === 3 && blocked === 0) score += 500000; // Open three - 100x stronger!
-        else if (count === 3 && blocked === 1) score += 100000; // Semi-open three - 100x stronger!
-        else if (count === 2 && blocked === 0) score += 50000; // Open two - 100x stronger!
-        else if (count === 2 && blocked === 1) score += 10000; // Semi-open two - 100x stronger!
-        else if (count === 2 && gaps === 1) score += 25000; // Broken two - still valuable
-    }
+    // Evaluate all directions
+    score += evaluateLine(row, col, 1, 0, player);   // Vertical
+    score += evaluateLine(row, col, 0, 1, player);   // Horizontal
+    score += evaluateLine(row, col, 1, 1, player);   // Diagonal \
+    score += evaluateLine(row, col, 1, -1, player);  // Diagonal /
 
     return score;
 }
 
-// ADVANCED MINIMAX with PVS (Principal Variation Search), Null Move Pruning, LMR
-function minimax(depth, alpha, beta, isMaximizing, originalDepth, allowNullMove = true) {
-    // Check transposition table
-    const hash = getZobristHash(isMaximizing);
-    const cached = transpositionTable.get(hash);
-
-    if (cached && cached.depth >= depth) {
-        if (cached.flag === 'exact') return cached.score;
-        if (cached.flag === 'lowerbound') alpha = Math.max(alpha, cached.score);
-        else if (cached.flag === 'upperbound') beta = Math.min(beta, cached.score);
-
-        if (alpha >= beta) return cached.score;
-    }
-
-    // Check terminal states
-    const winner = checkWinner();
-    if (winner === 'O') return 1000000 - (originalDepth - depth); // Prefer faster wins
-    if (winner === 'X') return -1000000 + (originalDepth - depth); // Prefer slower losses
-    if (isBoardFull() || depth === 0) return evaluateBoard();
-
-    // === NULL MOVE PRUNING ===
-    // If we're not in check and can skip our turn and still beat beta, prune
-    if (allowNullMove && depth >= 3 && !isInCheck(isMaximizing ? 'O' : 'X')) {
-        const R = 2; // Reduction factor
-        const nullScore = -minimax(depth - 1 - R, -beta, -beta + 1, !isMaximizing, originalDepth, false);
-        if (nullScore >= beta) {
-            return beta; // Null move cutoff
-        }
-    }
-
-    const relevantCells = getRelevantCells();
-    const depthIndex = originalDepth - depth;
-
-    // Order moves for better pruning
-    const orderedMoves = orderMoves(relevantCells, depthIndex).slice(0, Math.max(20, 30 - depth * 2));
-
-    if (isMaximizing) {
-        let maxScore = -Infinity;
-        let bestMove = null;
-        let searchedMoves = 0;
-
-        for (let i = 0; i < orderedMoves.length; i++) {
-            const { row, col } = orderedMoves[i];
-            if (board[row][col] === null) {
-                board[row][col] = 'O';
-                let score;
-
-                // === PRINCIPAL VARIATION SEARCH (PVS) ===
-                if (searchedMoves === 0) {
-                    // First move - search with full window
-                    score = minimax(depth - 1, alpha, beta, false, originalDepth, allowNullMove);
-                } else {
-                    // === LATE MOVE REDUCTION (LMR) ===
-                    let reduction = 0;
-                    if (depth >= 3 && searchedMoves >= 4 && !isInCheck('O')) {
-                        reduction = 1;
-                        if (searchedMoves >= 8) reduction = 2;
-                    }
-
-                    // Try with null window first (PVS)
-                    score = -minimax(depth - 1 - reduction, -alpha - 1, -alpha, false, originalDepth, allowNullMove);
-
-                    // If it failed high, re-search with full window
-                    if (score > alpha && score < beta) {
-                        score = minimax(depth - 1, alpha, beta, false, originalDepth, allowNullMove);
-                    }
-                }
-
-                board[row][col] = null;
-                searchedMoves++;
-
-                if (score > maxScore) {
-                    maxScore = score;
-                    bestMove = { row, col };
-                }
-
-                alpha = Math.max(alpha, score);
-
-                if (beta <= alpha) {
-                    // Beta cutoff - store killer move
-                    if (!killerMoves[depthIndex]) killerMoves[depthIndex] = [];
-                    killerMoves[depthIndex].unshift(bestMove);
-                    if (killerMoves[depthIndex].length > 2) killerMoves[depthIndex].pop();
-                    break;
-                }
-            }
-        }
-
-        // Store in transposition table with replacement strategy
-        const flag = maxScore <= alpha ? 'upperbound' : maxScore >= beta ? 'lowerbound' : 'exact';
-        storeTransposition(hash, maxScore, depth, flag);
-
-        return maxScore;
-    } else {
-        let minScore = Infinity;
-        let bestMove = null;
-        let searchedMoves = 0;
-
-        for (let i = 0; i < orderedMoves.length; i++) {
-            const { row, col } = orderedMoves[i];
-            if (board[row][col] === null) {
-                board[row][col] = 'X';
-                let score;
-
-                // === PRINCIPAL VARIATION SEARCH (PVS) ===
-                if (searchedMoves === 0) {
-                    // First move - search with full window
-                    score = minimax(depth - 1, alpha, beta, true, originalDepth, allowNullMove);
-                } else {
-                    // === LATE MOVE REDUCTION (LMR) ===
-                    let reduction = 0;
-                    if (depth >= 3 && searchedMoves >= 4 && !isInCheck('X')) {
-                        reduction = 1;
-                        if (searchedMoves >= 8) reduction = 2;
-                    }
-
-                    // Try with null window first (PVS)
-                    score = -minimax(depth - 1 - reduction, -beta, -beta + 1, true, originalDepth, allowNullMove);
-
-                    // If it failed low, re-search with full window
-                    if (score > alpha && score < beta) {
-                        score = minimax(depth - 1, alpha, beta, true, originalDepth, allowNullMove);
-                    }
-                }
-
-                board[row][col] = null;
-                searchedMoves++;
-
-                if (score < minScore) {
-                    minScore = score;
-                    bestMove = { row, col };
-                }
-
-                beta = Math.min(beta, score);
-
-                if (beta <= alpha) {
-                    // Alpha cutoff - store killer move
-                    if (!killerMoves[depthIndex]) killerMoves[depthIndex] = [];
-                    killerMoves[depthIndex].unshift(bestMove);
-                    if (killerMoves[depthIndex].length > 2) killerMoves[depthIndex].pop();
-                    break;
-                }
-            }
-        }
-
-        // Store in transposition table with replacement strategy
-        const flag = minScore >= beta ? 'lowerbound' : minScore <= alpha ? 'upperbound' : 'exact';
-        storeTransposition(hash, minScore, depth, flag);
-
-        return minScore;
-    }
-}
-
-// Check if player is in "check" (has immediate threat)
-function isInCheck(player) {
-    const opponent = player === 'O' ? 'X' : 'O';
-    // Quick check: does opponent have 4-in-a-row or open-three?
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] === opponent) {
-                const threats = analyzePatterns(row, col, opponent);
-                if (threats.openFours >= 1 || threats.openThrees >= 1) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-// Improved transposition table storage with replacement strategy
-function storeTransposition(hash, score, depth, flag) {
-    const existing = transpositionTable.get(hash);
-
-    // Always replace or replace if new entry is deeper
-    if (!existing || depth >= existing.depth) {
-        transpositionTable.set(hash, { score, depth, flag });
-    }
-}
-
-function checkWinner() {
-    for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-            if (board[row][col] !== null) {
-                const winningCells = checkWin(row, col);
-                if (winningCells) {
-                    return board[row][col];
-                }
-            }
-        }
-    }
-    return null;
-}
-
 function evaluateBoard() {
     let aiScore = 0;
-    let opponentScore = 0;
+    let playerScore = 0;
 
-    // Evaluate all positions using pattern recognition
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             if (board[row][col] === 'O') {
                 aiScore += evaluatePosition(row, col, 'O');
             } else if (board[row][col] === 'X') {
-                opponentScore += evaluatePosition(row, col, 'X');
+                playerScore += evaluatePosition(row, col, 'X');
             }
         }
     }
 
-    // ULTRA CRITICAL: Defense is PARAMOUNT in Gomoku (10x stronger AI)
-    // Defense multiplier 4.5 - AI MUST prioritize blocking threats AGGRESSIVELY
-    // This ensures AI will ALWAYS block dangerous patterns before attacking
-    // Higher multiplier = more defensive = harder to beat
-    return aiScore - (opponentScore * 4.5); // Increased from 3.0 to 4.5 (50% more defensive!)
+    // Apply personality modifiers
+    const personality = AI_PERSONALITIES[aiPersonality];
+    aiScore *= personality.attackMultiplier;
+    playerScore *= personality.defenseMultiplier;
+
+    // Defense-first approach with multiplier
+    return aiScore - (playerScore * 4.5);
 }
 
-function evaluatePosition(row, col, player) {
+// ================================
+// AI MOVE GENERATION - MULTI-LEVEL
+// ================================
+
+function getAIMove() {
+    const config = AI_CONFIGS[aiDifficulty];
+
+    // Initialize if needed
+    if (zobristTable.length === 0) {
+        initZobrist();
+        initHistoryTable();
+    }
+
+    // Priority-based decision making
+    // 1. Check for immediate win
+    let move = scanForWinningMove('O');
+    if (move) return move;
+
+    // 2. Block opponent's immediate win
+    move = scanForWinningMove('X');
+    if (move) return move;
+
+    // 3. Block opponent's 4-in-a-row
+    move = scanForFourInRow('X');
+    if (move) return move;
+
+    // 4. Create own 4-in-a-row
+    move = scanForFourInRow('O');
+    if (move) return move;
+
+    // 5. Block opponent's open three
+    move = scanForOpenThree('X');
+    if (move) return move;
+
+    // 6. Create own open three
+    move = scanForOpenThree('O');
+    if (move) return move;
+
+    // 7. Use advanced AI based on difficulty
+    if (aiDifficulty === 'grandmaster') {
+        // VCT/VCF for grandmaster
+        move = vctSearch(config.vctDepth);
+        if (move) return move;
+
+        move = vcfSearch(config.vcfDepth);
+        if (move) return move;
+    }
+
+    // 8. Use minimax with depth based on difficulty
+    const candidates = getRelevantMoves(config.searchWidth);
+    if (candidates.length === 0) {
+        // First move - center of board
+        const center = Math.floor(BOARD_SIZE / 2);
+        return { row: center, col: center };
+    }
+
+    move = minimaxMove(candidates, config.depth);
+
+    // Add randomness for lower difficulties
+    if (config.randomness > 0 && Math.random() < config.randomness) {
+        const randomIndex = Math.floor(Math.random() * Math.min(3, candidates.length));
+        move = candidates[randomIndex];
+    }
+
+    return move;
+}
+
+function scanForWinningMove(player) {
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                board[row][col] = player;
+                if (checkWin(row, col)) {
+                    board[row][col] = null;
+                    return { row, col };
+                }
+                board[row][col] = null;
+            }
+        }
+    }
+    return null;
+}
+
+function scanForFourInRow(player) {
     const directions = [
-        [0, 1],   // Horizontal
-        [1, 0],   // Vertical
-        [1, 1],   // Diagonal \
-        [1, -1]   // Diagonal /
+        [0, 1], [1, 0], [1, 1], [1, -1]
     ];
 
-    let totalScore = 0;
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] !== null) continue;
 
-    for (const [dx, dy] of directions) {
-        // Get line extending from this position
-        const line = [];
+            for (const [dx, dy] of directions) {
+                let count = 0;
 
-        // Go back 5 positions
-        for (let i = -5; i <= 5; i++) {
-            const r = row + dx * i;
-            const c = col + dy * i;
-            if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
-                line.push(board[r][c]);
+                // Count in both directions
+                for (let dir = -1; dir <= 1; dir += 2) {
+                    let r = row + dx * dir;
+                    let c = col + dy * dir;
+
+                    while (
+                        r >= 0 && r < BOARD_SIZE &&
+                        c >= 0 && c < BOARD_SIZE &&
+                        board[r][c] === player
+                    ) {
+                        count++;
+                        r += dx * dir;
+                        c += dy * dir;
+                    }
+                }
+
+                if (count >= 3) {
+                    return { row, col };
+                }
             }
-        }
-
-        // Detect all patterns in this line
-        const patterns = detectPatternsInLine(line, player);
-
-        // Sum up pattern scores
-        for (const pattern of patterns) {
-            totalScore += pattern.score;
         }
     }
 
-    // Avoid double counting (patterns overlap)
-    totalScore /= 4;
-
-    // ULTRA ENHANCED center control bonus (10x stronger)
-    const center = Math.floor(BOARD_SIZE / 2);
-    const distFromCenter = Math.abs(row - center) + Math.abs(col - center);
-    const centerBonus = (BOARD_SIZE - distFromCenter) * 100; // 10x stronger positional play
-    totalScore += centerBonus;
-
-    // Strategic position bonus - corners and edges are weaker
-    const isEdge = row === 0 || row === BOARD_SIZE - 1 || col === 0 || col === BOARD_SIZE - 1;
-    const isCorner = (row === 0 || row === BOARD_SIZE - 1) && (col === 0 || col === BOARD_SIZE - 1);
-    if (isCorner) totalScore -= 5000; // Corners are weak in Gomoku
-    else if (isEdge) totalScore -= 2000; // Edges are also weaker
-
-    return totalScore;
+    return null;
 }
 
-function getRelevantCells() {
-    const relevant = new Map(); // Use Map to store priority
-    const distance = 2;
+function scanForOpenThree(player) {
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                const score = evaluatePosition(row, col, player);
+                if (score >= PATTERNS.OPEN_THREE.score * 0.8) {
+                    return { row, col };
+                }
+            }
+        }
+    }
+    return null;
+}
 
-    // First, add cells near threats (higher priority)
+function getRelevantMoves(maxMoves) {
+    const moves = [];
+    const evaluated = new Set();
+
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             if (board[row][col] !== null) {
-                // Calculate threat level of this piece
-                const threatLevel = calculateThreatLevel(row, col);
+                // Add adjacent empty cells
+                for (let dr = -2; dr <= 2; dr++) {
+                    for (let dc = -2; dc <= 2; dc++) {
+                        const r = row + dr;
+                        const c = col + dc;
+                        const key = `${r},${c}`;
 
-                // Add cells around this piece with priority based on threat
-                for (let dr = -distance; dr <= distance; dr++) {
-                    for (let dc = -distance; dc <= distance; dc++) {
-                        if (dr === 0 && dc === 0) continue;
+                        if (r >= 0 && r < BOARD_SIZE &&
+                            c >= 0 && c < BOARD_SIZE &&
+                            board[r][c] === null &&
+                            !evaluated.has(key)) {
 
-                        const nr = row + dr;
-                        const nc = col + dc;
-
-                        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === null) {
-                            const key = `${nr},${nc}`;
-                            const currentPriority = relevant.get(key) || 0;
-                            const distFactor = Math.max(0, distance - Math.abs(dr) - Math.abs(dc));
-                            const newPriority = threatLevel * distFactor;
-
-                            if (newPriority > currentPriority) {
-                                relevant.set(key, newPriority);
-                            }
+                            evaluated.add(key);
+                            const score = evaluatePosition(r, c, 'O') - evaluatePosition(r, c, 'X');
+                            moves.push({ row: r, col: c, score });
                         }
                     }
                 }
@@ -2070,299 +904,449 @@ function getRelevantCells() {
         }
     }
 
-    // If board is empty, start from center
-    if (relevant.size === 0) {
-        const center = Math.floor(BOARD_SIZE / 2);
-        relevant.set(`${center},${center}`, 100);
-    }
-
-    // Convert to array and sort by priority
-    const cells = Array.from(relevant.entries()).map(([pos, priority]) => {
-        const [row, col] = pos.split(',').map(Number);
-        return { row, col, priority };
-    });
-
-    cells.sort((a, b) => b.priority - a.priority);
-
-    return cells;
+    // Sort by score and return top candidates
+    moves.sort((a, b) => b.score - a.score);
+    return moves.slice(0, maxMoves);
 }
 
-// Calculate how threatening a position is
-function calculateThreatLevel(row, col) {
-    const player = board[row][col];
-    const directions = [
-        [0, 1], [1, 0], [1, 1], [1, -1]
-    ];
+function minimaxMove(candidates, depth) {
+    let bestMove = candidates[0];
+    let bestScore = -Infinity;
 
-    let maxThreat = 0;
+    for (const move of candidates) {
+        board[move.row][move.col] = 'O';
+        const score = minimax(depth - 1, -Infinity, Infinity, false);
+        board[move.row][move.col] = null;
 
-    for (const [dx, dy] of directions) {
-        let count = 1;
-        let openEnds = 0;
-
-        // Count consecutive pieces and open ends
-        let r = row + dx;
-        let c = col + dy;
-        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-            count++;
-            r += dx;
-            c += dy;
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
         }
-        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === null) {
-            openEnds++;
-        }
-
-        r = row - dx;
-        c = col - dy;
-        while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-            count++;
-            r -= dx;
-            c -= dy;
-        }
-        if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === null) {
-            openEnds++;
-        }
-
-        // Calculate threat level
-        let threat = 0;
-        if (count >= 4) threat = 1000;
-        else if (count === 3 && openEnds === 2) threat = 500;
-        else if (count === 3 && openEnds === 1) threat = 300;
-        else if (count === 2 && openEnds === 2) threat = 100;
-        else if (count === 2 && openEnds === 1) threat = 50;
-
-        maxThreat = Math.max(maxThreat, threat);
     }
 
-    return maxThreat;
+    return bestMove;
+}
+
+function minimax(depth, alpha, beta, isMaximizing) {
+    // Check for terminal state
+    const evaluation = evaluateBoard();
+
+    if (depth === 0 || Math.abs(evaluation) > 1000000) {
+        return evaluation;
+    }
+
+    const config = AI_CONFIGS[aiDifficulty];
+    const moves = getRelevantMoves(config.searchWidth);
+
+    if (moves.length === 0) {
+        return evaluation;
+    }
+
+    if (isMaximizing) {
+        let maxEval = -Infinity;
+
+        for (const move of moves) {
+            board[move.row][move.col] = 'O';
+            const eval = minimax(depth - 1, alpha, beta, false);
+            board[move.row][move.col] = null;
+
+            maxEval = Math.max(maxEval, eval);
+            alpha = Math.max(alpha, eval);
+
+            if (beta <= alpha) break; // Pruning
+        }
+
+        return maxEval;
+    } else {
+        let minEval = Infinity;
+
+        for (const move of moves) {
+            board[move.row][move.col] = 'X';
+            const eval = minimax(depth - 1, alpha, beta, true);
+            board[move.row][move.col] = null;
+
+            minEval = Math.min(minEval, eval);
+            beta = Math.min(beta, eval);
+
+            if (beta <= alpha) break; // Pruning
+        }
+
+        return minEval;
+    }
+}
+
+// VCT (Victory by Continuous Threats) Search
+function vctSearch(depth) {
+    if (depth <= 0) return null;
+
+    const threats = [];
+
+    // Find all threat moves
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                board[row][col] = 'O';
+                const score = evaluatePosition(row, col, 'O');
+
+                if (score >= PATTERNS.OPEN_THREE.score) {
+                    threats.push({ row, col, score });
+                }
+
+                board[row][col] = null;
+            }
+        }
+    }
+
+    // Try best threats recursively
+    threats.sort((a, b) => b.score - a.score);
+
+    for (const threat of threats.slice(0, 5)) {
+        board[threat.row][threat.col] = 'O';
+
+        const defense = scanForWinningMove('X');
+        if (!defense) {
+            board[threat.row][threat.col] = null;
+            return threat;
+        }
+
+        board[defense.row][defense.col] = 'X';
+        const nextThreat = vctSearch(depth - 1);
+        board[defense.row][defense.col] = null;
+        board[threat.row][threat.col] = null;
+
+        if (nextThreat) {
+            return threat;
+        }
+    }
+
+    return null;
+}
+
+// VCF (Victory by Continuous Fours) Search
+function vcfSearch(depth) {
+    if (depth <= 0) return null;
+
+    // Find moves that create four-in-a-row
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                board[row][col] = 'O';
+                const score = evaluatePosition(row, col, 'O');
+
+                if (score >= PATTERNS.FOUR.score) {
+                    board[row][col] = null;
+                    return { row, col };
+                }
+
+                board[row][col] = null;
+            }
+        }
+    }
+
+    return null;
 }
 
 // ================================
-// AI LEARNING SYSTEM - EXPERIENCE & ADAPTATION
+// AI LEARNING SYSTEM
 // ================================
 
-// Generate hash for current board state
 function getBoardHash() {
     let hash = '';
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
-            hash += board[row][col] === null ? '0' : (board[row][col] === 'X' ? '1' : '2');
+            hash += board[row][col] || '-';
         }
     }
     return hash;
 }
 
-// Learn from completed game
 function learnFromGame(result) {
-    currentGameData.result = result;
     experienceDB.gamesPlayed++;
 
-    const isAIWin = result === 'O';
-    const isAILoss = result === 'X';
-    const isDraw = result === 'draw';
+    // Update pattern knowledge
+    currentGameData.positions.forEach((posHash, index) => {
+        const eval = currentGameData.evaluations[index];
 
-    // Update move quality based on result
-    for (let i = 0; i < currentGameData.positions.length; i++) {
-        const posHash = currentGameData.positions[i];
-        const evaluation = currentGameData.evaluations[i];
-
-        // Calculate reward based on result and move index
-        let reward = 0;
-        if (isAIWin) {
-            // Winning moves get positive reward (later moves get more credit)
-            reward = 1.0 * (i + 1) / currentGameData.positions.length;
-        } else if (isAILoss) {
-            // Losing moves get negative reward (early mistakes penalized more)
-            reward = -1.0 * (currentGameData.positions.length - i) / currentGameData.positions.length;
-        } else {
-            // Draw gets small positive reward
-            reward = 0.1;
-        }
-
-        // Update move quality in database
-        if (!experienceDB.moveQuality.has(posHash)) {
-            experienceDB.moveQuality.set(posHash, {
-                quality: reward,
-                count: 1,
-                avgEval: evaluation,
-                wins: isAIWin ? 1 : 0,
-                losses: isAILoss ? 1 : 0,
-                draws: isDraw ? 1 : 0
+        if (!experienceDB.patterns.has(posHash)) {
+            experienceDB.patterns.set(posHash, {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                avgScore: eval
             });
-        } else {
-            const data = experienceDB.moveQuality.get(posHash);
-            data.count++;
-            data.quality = (data.quality * (data.count - 1) + reward) / data.count;
-            data.avgEval = (data.avgEval * (data.count - 1) + evaluation) / data.count;
-            if (isAIWin) data.wins++;
-            if (isAILoss) data.losses++;
-            if (isDraw) data.draws++;
         }
-    }
 
-    // Learn opening patterns (first 5 moves)
-    if (currentGameData.moves.length >= 2) {
-        const opening = currentGameData.moves.slice(0, Math.min(5, currentGameData.moves.length))
-            .map(m => `${m.row},${m.col}`)
-            .join('|');
+        const pattern = experienceDB.patterns.get(posHash);
 
-        if (!experienceDB.openingBook.has(opening)) {
-            experienceDB.openingBook.set(opening, {
-                wins: isAIWin ? 1 : 0,
-                losses: isAILoss ? 1 : 0,
-                draws: isDraw ? 1 : 0,
-                totalGames: 1
-            });
+        if (result === 'O') {
+            pattern.wins++;
+        } else if (result === 'X') {
+            pattern.losses++;
         } else {
-            const data = experienceDB.openingBook.get(opening);
-            if (isAIWin) data.wins++;
-            if (isAILoss) data.losses++;
-            if (isDraw) data.draws++;
-            data.totalGames++;
+            pattern.draws++;
         }
-    }
 
-    // Adaptive weight adjustment based on game outcome
-    if (isAILoss && currentGameData.evaluations.length > 0) {
-        // If we lost, slightly adjust weights to be more defensive
-        experienceDB.adaptiveWeights.openThree *= 1.05;
-        experienceDB.adaptiveWeights.semiOpenThree *= 1.03;
-    } else if (isAIWin && currentGameData.evaluations.length > 0) {
-        // If we won, slightly boost offensive patterns
-        experienceDB.adaptiveWeights.openFour *= 1.01;
-    }
+        // Update average score
+        const total = pattern.wins + pattern.losses + pattern.draws;
+        pattern.avgScore = (pattern.avgScore * (total - 1) + eval) / total;
+    });
 
     experienceDB.totalLearnings++;
 
-    // Save learning data every 5 games
-    if (experienceDB.gamesPlayed % 5 === 0) {
-        saveLearningData();
-    }
-}
-
-// Get learned move quality for a position
-function getLearnedMoveQuality(posHash) {
-    const data = experienceDB.moveQuality.get(posHash);
-    if (!data) return 0;
-
-    // Calculate win rate
-    const total = data.wins + data.losses + data.draws;
-    if (total === 0) return 0;
-
-    const winRate = (data.wins + data.draws * 0.5) / total;
-
-    // Combine quality score with win rate
-    return data.quality * 1000 + winRate * 5000;
-}
-
-// Check if opening is in learned book
-function getLearnedOpening() {
-    if (moveHistory.length === 0 || moveHistory.length > 5) return null;
-
-    const currentSeq = moveHistory
-        .map(m => `${m.row},${m.col}`)
-        .join('|');
-
-    // Find best continuation from learned openings
-    let bestContinuation = null;
-    let bestWinRate = -1;
-
-    for (const [opening, data] of experienceDB.openingBook) {
-        if (opening.startsWith(currentSeq) && opening.length > currentSeq.length) {
-            const total = data.totalGames;
-            if (total < 3) continue; // Need at least 3 games
-
-            const winRate = (data.wins + data.draws * 0.5) / total;
-
-            if (winRate > bestWinRate && winRate > 0.5) {
-                bestWinRate = winRate;
-
-                // Extract next move from opening
-                const remainingMoves = opening.substring(currentSeq.length + 1);
-                const nextMove = remainingMoves.split('|')[0];
-                if (nextMove) {
-                    const [row, col] = nextMove.split(',').map(Number);
-                    if (board[row] && board[row][col] === null) {
-                        bestContinuation = { row, col };
-                    }
-                }
-            }
-        }
-    }
-
-    return bestContinuation;
-}
-
-// Enhanced evaluation using learned patterns
-function evaluateBoardWithLearning() {
-    const baseEval = evaluateBoard();
-    const posHash = getBoardHash();
-    const learnedQuality = getLearnedMoveQuality(posHash);
-
-    // Combine base evaluation with learned quality
-    return baseEval + learnedQuality * 0.3; // 30% weight to learned data
-}
-
-// Save learning data to localStorage
-function saveLearningData() {
+    // Save to localStorage
     try {
-        const learningData = {
-            moveQuality: Array.from(experienceDB.moveQuality.entries()),
-            openingBook: Array.from(experienceDB.openingBook.entries()),
-            adaptiveWeights: experienceDB.adaptiveWeights,
+        localStorage.setItem('cocaro_experience', JSON.stringify({
             gamesPlayed: experienceDB.gamesPlayed,
             totalLearnings: experienceDB.totalLearnings
-        };
-
-        localStorage.setItem('caroAILearning', JSON.stringify(learningData));
-        console.log(`✓ AI Learning saved: ${experienceDB.gamesPlayed} games, ${experienceDB.moveQuality.size} positions learned`);
+        }));
     } catch (e) {
-        console.error('Failed to save learning data:', e);
+        console.error('Failed to save experience:', e);
     }
-}
-
-// Load learning data from localStorage
-function loadLearningData() {
-    try {
-        const saved = localStorage.getItem('caroAILearning');
-        if (saved) {
-            const learningData = JSON.parse(saved);
-
-            experienceDB.moveQuality = new Map(learningData.moveQuality || []);
-            experienceDB.openingBook = new Map(learningData.openingBook || []);
-            experienceDB.adaptiveWeights = learningData.adaptiveWeights || experienceDB.adaptiveWeights;
-            experienceDB.gamesPlayed = learningData.gamesPlayed || 0;
-            experienceDB.totalLearnings = learningData.totalLearnings || 0;
-
-            console.log(`✓ AI Learning loaded: ${experienceDB.gamesPlayed} games, ${experienceDB.moveQuality.size} positions in database`);
-        }
-    } catch (e) {
-        console.error('Failed to load learning data:', e);
-    }
-}
-
-// Reset learning data (for testing)
-function resetLearning() {
-    experienceDB = {
-        patterns: new Map(),
-        moveQuality: new Map(),
-        openingBook: new Map(),
-        adaptiveWeights: {
-            openFour: 100000,
-            openThree: 50000,
-            semiOpenThree: 5000,
-            openTwo: 1000,
-            centerControl: 5
-        },
-        gamesPlayed: 0,
-        totalLearnings: 0
-    };
-    localStorage.removeItem('caroAILearning');
-    console.log('✓ AI Learning data reset');
 }
 
 // ================================
-// UNDO/REDO
+// GAME ANALYSIS MODE
+// ================================
+
+function updateAnalysisPanel() {
+    if (!analysisMode || !analysisPanel) return;
+
+    const evaluation = evaluateBoard();
+    const normalizedEval = Math.max(-100, Math.min(100, evaluation / 10000));
+
+    // Update evaluation bar
+    if (evaluationBar) {
+        const percentage = ((normalizedEval + 100) / 2);
+        evaluationBar.style.width = `${percentage}%`;
+
+        if (normalizedEval > 20) {
+            evaluationBar.style.backgroundColor = '#007aff';
+        } else if (normalizedEval < -20) {
+            evaluationBar.style.backgroundColor = '#ff3b30';
+        } else {
+            evaluationBar.style.backgroundColor = '#ffcc00';
+        }
+    }
+
+    // Calculate move quality
+    if (moveQualityElement && moveHistory.length > 0) {
+        const lastMove = moveHistory[moveHistory.length - 1];
+        const quality = evaluatePosition(lastMove.row, lastMove.col, lastMove.player);
+
+        let qualityText = '';
+        if (quality > 500000) qualityText = 'Xuất sắc! ⭐⭐⭐';
+        else if (quality > 100000) qualityText = 'Tốt ✓';
+        else if (quality > 10000) qualityText = 'Bình thường';
+        else qualityText = 'Yếu';
+
+        moveQualityElement.textContent = qualityText;
+    }
+
+    // Calculate threat level
+    if (threatLevelElement) {
+        const playerThreats = scanForOpenThree('X') ? 'Cao' : (scanForFourInRow('X') ? 'Rất cao!' : 'Thấp');
+        const aiThreats = scanForOpenThree('O') ? 'Cao' : (scanForFourInRow('O') ? 'Rất cao!' : 'Thấp');
+
+        threatLevelElement.innerHTML = `
+            <div>Người chơi: <span style="color: var(--color-player-x)">${playerThreats}</span></div>
+            <div>AI: <span style="color: var(--color-player-o)">${aiThreats}</span></div>
+        `;
+    }
+}
+
+// ================================
+// SAVE/LOAD GAME SYSTEM
+// ================================
+
+function saveGameToSlot() {
+    const gameData = {
+        board: board.map(row => [...row]),
+        moveHistory: [...moveHistory],
+        currentMoveIndex,
+        currentPlayer,
+        gameMode,
+        aiDifficulty,
+        aiPersonality,
+        timestamp: Date.now(),
+        boardSize: BOARD_SIZE
+    };
+
+    savedGames.push(gameData);
+
+    try {
+        localStorage.setItem('cocaro_saved_games', JSON.stringify(savedGames));
+        alert('Game đã được lưu!');
+    } catch (e) {
+        alert('Không thể lưu game: ' + e.message);
+    }
+}
+
+function loadGameFromSlot(index) {
+    if (index < 0 || index >= savedGames.length) return;
+
+    const gameData = savedGames[index];
+
+    BOARD_SIZE = gameData.boardSize;
+    board = gameData.board.map(row => [...row]);
+    moveHistory = [...gameData.moveHistory];
+    currentMoveIndex = gameData.currentMoveIndex;
+    currentPlayer = gameData.currentPlayer;
+    gameMode = gameData.gameMode;
+    aiDifficulty = gameData.aiDifficulty || 'grandmaster';
+    aiPersonality = gameData.aiPersonality || 'balanced';
+    gameActive = true;
+
+    // Recreate board
+    boardElement.innerHTML = '';
+    createBoard();
+
+    // Replay moves
+    for (let i = 0; i <= currentMoveIndex; i++) {
+        const move = moveHistory[i];
+        const index = move.row * BOARD_SIZE + move.col;
+        const cell = boardElement.children[index];
+        cell.textContent = move.player;
+        cell.classList.add(move.player.toLowerCase());
+        cell.disabled = true;
+    }
+
+    updateStatus();
+    updateHistoryUI();
+    updateUndoRedoButtons();
+
+    if (analysisMode) {
+        updateAnalysisPanel();
+    }
+}
+
+function exportGameToJSON() {
+    const gameData = {
+        version: '4.0.0',
+        board: board,
+        moveHistory: moveHistory,
+        boardSize: BOARD_SIZE,
+        gameMode: gameMode,
+        aiDifficulty: aiDifficulty,
+        aiPersonality: aiPersonality,
+        result: currentGameData.result,
+        timestamp: Date.now()
+    };
+
+    const json = JSON.stringify(gameData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cocaro-game-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importGameFromJSON(file) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const gameData = JSON.parse(e.target.result);
+
+            BOARD_SIZE = gameData.boardSize || 15;
+            board = gameData.board;
+            moveHistory = gameData.moveHistory;
+            currentMoveIndex = moveHistory.length - 1;
+            gameMode = gameData.gameMode || 'pvc';
+            aiDifficulty = gameData.aiDifficulty || 'grandmaster';
+            aiPersonality = gameData.aiPersonality || 'balanced';
+            gameActive = true;
+
+            // Recreate board
+            boardElement.innerHTML = '';
+            createBoard();
+
+            // Replay moves
+            for (let i = 0; i < moveHistory.length; i++) {
+                const move = moveHistory[i];
+                const index = move.row * BOARD_SIZE + move.col;
+                const cell = boardElement.children[index];
+                cell.textContent = move.player;
+                cell.classList.add(move.player.toLowerCase());
+                cell.disabled = true;
+            }
+
+            currentPlayer = moveHistory.length > 0 ?
+                (moveHistory[moveHistory.length - 1].player === 'X' ? 'O' : 'X') : 'X';
+
+            updateStatus();
+            updateHistoryUI();
+            updateUndoRedoButtons();
+
+            alert('Game đã được nhập thành công!');
+        } catch (err) {
+            alert('Lỗi khi nhập game: ' + err.message);
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+// ================================
+// TUTORIAL MODE
+// ================================
+
+function showTutorialMessage(message) {
+    if (!tutorialMode) return;
+
+    const tutorialDiv = document.createElement('div');
+    tutorialDiv.className = 'tutorial-message';
+    tutorialDiv.textContent = message;
+    tutorialDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--color-primary);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        animation: slideDown 0.3s ease;
+    `;
+
+    document.body.appendChild(tutorialDiv);
+
+    setTimeout(() => {
+        tutorialDiv.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => tutorialDiv.remove(), 300);
+    }, 3000);
+}
+
+// ================================
+// AI THINKING VISUALIZATION
+// ================================
+
+function showAIThinking() {
+    if (!aiThinkingElement) return;
+
+    aiThinkingElement.style.display = 'block';
+    aiThinkingElement.innerHTML = `
+        <div class="thinking-animation">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+        <div>AI đang suy nghĩ...</div>
+    `;
+}
+
+function hideAIThinking() {
+    if (!aiThinkingElement) {
+        return;
+    }
+    aiThinkingElement.style.display = 'none';
+}
+
+// ================================
+// UNDO/REDO SYSTEM
 // ================================
 
 function undo() {
@@ -2370,6 +1354,7 @@ function undo() {
 
     const move = moveHistory[currentMoveIndex];
     board[move.row][move.col] = null;
+
     const index = move.row * BOARD_SIZE + move.col;
     const cell = boardElement.children[index];
     cell.textContent = '';
@@ -2379,14 +1364,22 @@ function undo() {
     currentMoveIndex--;
     currentPlayer = move.player;
     gameActive = true;
+
+    // If in PvC mode, undo AI move too
+    if (gameMode === 'pvc' && currentMoveIndex >= 0 && moveHistory[currentMoveIndex].player === 'O') {
+        undo();
+        return;
+    }
+
     updateStatus();
     updateHistoryUI();
     updateUndoRedoButtons();
 
-    // Clear all winning highlights
-    for (let i = 0; i < boardElement.children.length; i++) {
-        boardElement.children[i].classList.remove('winning');
+    if (analysisMode) {
+        updateAnalysisPanel();
     }
+
+    saveGame();
 }
 
 function redo() {
@@ -2402,30 +1395,39 @@ function redo() {
     cell.classList.add(move.player.toLowerCase());
     cell.disabled = true;
 
-    currentPlayer = move.player === 'X' ? 'O' : 'X';
-
     // Check if this was the winning move
     const winningCells = checkWin(move.row, move.col);
     if (winningCells) {
         gameActive = false;
         highlightWinningCells(winningCells);
-        const winnerName = (gameMode === 'pvc' && move.player === 'O') ? 'AI' : move.player;
-        statusElement.innerHTML = `<span class="player-${move.player.toLowerCase()}">${winnerName} thắng</span>`;
-    } else if (isBoardFull()) {
-        gameActive = false;
-        statusElement.textContent = 'Hòa';
-    } else {
-        gameActive = true;
-        updateStatus();
     }
 
+    currentPlayer = move.player === 'X' ? 'O' : 'X';
+
+    // If in PvC mode, redo AI move too
+    if (gameMode === 'pvc' && currentMoveIndex < moveHistory.length - 1 && moveHistory[currentMoveIndex + 1].player === 'O') {
+        redo();
+        return;
+    }
+
+    updateStatus();
     updateHistoryUI();
     updateUndoRedoButtons();
+
+    if (analysisMode) {
+        updateAnalysisPanel();
+    }
+
+    saveGame();
 }
 
 function updateUndoRedoButtons() {
-    undoBtn.disabled = currentMoveIndex < 0;
-    redoBtn.disabled = currentMoveIndex >= moveHistory.length - 1;
+    if (undoBtn) {
+        undoBtn.disabled = currentMoveIndex < 0;
+    }
+    if (redoBtn) {
+        redoBtn.disabled = currentMoveIndex >= moveHistory.length - 1;
+    }
 }
 
 // ================================
@@ -2434,58 +1436,30 @@ function updateUndoRedoButtons() {
 
 function showHint() {
     if (!gameActive) return;
+    if (gameMode === 'pvc' && currentPlayer === 'O') return;
 
-    // Remove previous hint
-    for (let i = 0; i < boardElement.children.length; i++) {
-        boardElement.children[i].classList.remove('hint');
-    }
+    // Clear previous hints
+    Array.from(boardElement.children).forEach(cell => {
+        cell.classList.remove('hint');
+    });
 
-    let hintMove;
-    if (currentPlayer === 'O' && gameMode === 'pvc') {
-        // Don't give hint for AI
-        return;
-    }
-
-    // Use simplified AI logic to find best move for player X
-    // Check for immediate winning move
-    hintMove = findImmediateWin('X');
-
-    if (!hintMove) {
-        // Check for immediate blocking move
-        hintMove = findImmediateWin('O');
-    }
-
-    if (!hintMove) {
-        // Find best strategic move
-        const relevantCells = getRelevantCells();
-        const orderedMoves = orderMoves(relevantCells).slice(0, 10);
-
-        let bestScore = -Infinity;
-        for (const { row, col } of orderedMoves) {
-            if (board[row][col] === null) {
-                board[row][col] = 'X';
-                const score = quickEvaluate(row, col, 'X') + evaluateThreats(row, col, 'X');
-                board[row][col] = null;
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    hintMove = { row, col };
-                }
-            }
-        }
-    }
-
-    if (hintMove) {
-        const index = hintMove.row * BOARD_SIZE + hintMove.col;
+    // Get AI suggestion
+    const hint = getAIMove();
+    if (hint) {
+        const index = hint.row * BOARD_SIZE + hint.col;
         const cell = boardElement.children[index];
         cell.classList.add('hint');
 
-        // Remove hint after 2 seconds
+        playSound('hint');
+
+        if (tutorialMode) {
+            showTutorialMessage(`Gợi ý: Đặt quân tại hàng ${hint.row + 1}, cột ${hint.col + 1}`);
+        }
+
+        // Remove hint after 3 seconds
         setTimeout(() => {
             cell.classList.remove('hint');
-        }, 2000);
-
-        playSound('hint');
+        }, 3000);
     }
 }
 
@@ -2494,36 +1468,93 @@ function showHint() {
 // ================================
 
 function updateHistoryUI() {
+    if (!moveHistoryElement) return;
+
     moveHistoryElement.innerHTML = '';
 
     moveHistory.forEach((move, index) => {
-        const moveDiv = document.createElement('div');
-        moveDiv.className = `history-item ${index === currentMoveIndex ? 'current' : ''} ${index > currentMoveIndex ? 'future' : ''}`;
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
 
-        const moveNumber = index + 1;
-        const row = String.fromCharCode(65 + move.row); // A, B, C...
-        const col = move.col + 1;
+        if (index === currentMoveIndex) {
+            historyItem.classList.add('current');
+        } else if (index > currentMoveIndex) {
+            historyItem.classList.add('future');
+        }
 
-        moveDiv.innerHTML = `
-            <span class="move-number">${moveNumber}.</span>
-            <span class="player-${move.player.toLowerCase()}">${move.player}</span>
-            <span class="move-position">${row}${col}</span>
+        const playerClass = move.player === 'X' ? 'player-x' : 'player-o';
+        const position = `${String.fromCharCode(65 + move.col)}${move.row + 1}`;
+
+        historyItem.innerHTML = `
+            <span class="move-number">${index + 1}.</span>
+            <span class="${playerClass}">${move.player}</span>
+            <span class="move-position">${position}</span>
         `;
 
-        moveDiv.addEventListener('click', () => jumpToMove(index));
-        moveHistoryElement.appendChild(moveDiv);
+        historyItem.onclick = () => {
+            jumpToMove(index);
+        };
+
+        moveHistoryElement.appendChild(historyItem);
     });
 
-    // Auto scroll to bottom
-    moveHistoryElement.scrollTop = moveHistoryElement.scrollHeight;
+    // Scroll to current move
+    if (moveHistory.length > 0) {
+        const currentItem = moveHistoryElement.children[currentMoveIndex];
+        if (currentItem) {
+            currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
 }
 
-function jumpToMove(index) {
-    while (currentMoveIndex > index) {
+function jumpToMove(targetIndex) {
+    while (currentMoveIndex > targetIndex) {
         undo();
     }
-    while (currentMoveIndex < index) {
+    while (currentMoveIndex < targetIndex) {
         redo();
+    }
+}
+
+// ================================
+// STATISTICS
+// ================================
+
+function updateStats(winner) {
+    if (winner === 'X') {
+        stats.xWins++;
+    } else if (winner === 'O') {
+        stats.oWins++;
+    } else {
+        stats.draws++;
+    }
+
+    if (xWinsElement) xWinsElement.textContent = stats.xWins;
+    if (oWinsElement) oWinsElement.textContent = stats.oWins;
+    if (drawsElement) drawsElement.textContent = stats.draws;
+
+    saveStats();
+}
+
+function saveStats() {
+    try {
+        localStorage.setItem('cocaro_stats', JSON.stringify(stats));
+    } catch (e) {
+        console.error('Failed to save stats:', e);
+    }
+}
+
+function loadStats() {
+    try {
+        const saved = localStorage.getItem('cocaro_stats');
+        if (saved) {
+            stats = JSON.parse(saved);
+            if (xWinsElement) xWinsElement.textContent = stats.xWins;
+            if (oWinsElement) oWinsElement.textContent = stats.oWins;
+            if (drawsElement) drawsElement.textContent = stats.draws;
+        }
+    } catch (e) {
+        console.error('Failed to load stats:', e);
     }
 }
 
@@ -2533,12 +1564,21 @@ function jumpToMove(index) {
 
 function startTimer() {
     timerSeconds = 0;
-    timerElement.style.display = 'block';
+    if (timerDisplay) {
+        timerDisplay.textContent = '00:00';
+    }
+    if (timerElement) {
+        timerElement.style.display = 'block';
+    }
+
     timerInterval = setInterval(() => {
         timerSeconds++;
         const minutes = Math.floor(timerSeconds / 60);
         const seconds = timerSeconds % 60;
-        timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (timerDisplay) {
+            timerDisplay.textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
     }, 1000);
 }
 
@@ -2550,45 +1590,12 @@ function stopTimer() {
 }
 
 // ================================
-// STATISTICS
-// ================================
-
-function updateStats(result) {
-    if (result === 'X') {
-        stats.xWins++;
-        xWinsElement.textContent = stats.xWins;
-    } else if (result === 'O') {
-        stats.oWins++;
-        oWinsElement.textContent = stats.oWins;
-    } else if (result === 'draw') {
-        stats.draws++;
-        drawsElement.textContent = stats.draws;
-    }
-    saveStats();
-}
-
-function loadStats() {
-    const saved = localStorage.getItem('caroStats');
-    if (saved) {
-        stats = JSON.parse(saved);
-        xWinsElement.textContent = stats.xWins;
-        oWinsElement.textContent = stats.oWins;
-        drawsElement.textContent = stats.draws;
-    }
-}
-
-function saveStats() {
-    localStorage.setItem('caroStats', JSON.stringify(stats));
-}
-
-// ================================
 // SOUND EFFECTS
 // ================================
 
 function playSound(type) {
     if (!soundEnabled) return;
 
-    // Create simple beep sounds using Web Audio API
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -2596,62 +1603,54 @@ function playSound(type) {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.value = 0.1;
 
-    switch(type) {
-        case 'move':
-            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
-            break;
-        case 'win':
-            // Play ascending notes
-            [523, 659, 784].forEach((freq, i) => {
+    if (type === 'move') {
+        oscillator.frequency.value = 600;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } else if (type === 'win') {
+        // Play victory chord
+        const frequencies = [523.25, 659.25, 783.99]; // C, E, G
+        frequencies.forEach((freq, i) => {
+            setTimeout(() => {
                 const osc = audioContext.createOscillator();
                 const gain = audioContext.createGain();
                 osc.connect(gain);
                 gain.connect(audioContext.destination);
-                osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
-                gain.gain.setValueAtTime(0.1, audioContext.currentTime + i * 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
-                osc.start(audioContext.currentTime + i * 0.1);
-                osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
-            });
-            break;
-        case 'draw':
-            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
-            break;
-        case 'hint':
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.05);
-            break;
+                gain.gain.value = 0.1;
+                osc.frequency.value = freq;
+                osc.start();
+                osc.stop(audioContext.currentTime + 0.3);
+            }, i * 100);
+        });
+    } else if (type === 'draw') {
+        oscillator.frequency.value = 400;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
+    } else if (type === 'hint') {
+        oscillator.frequency.value = 800;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.15);
     }
 }
 
 // ================================
-// PARTICLES ANIMATION
+// PARTICLE EFFECTS
 // ================================
 
 function createParticles() {
-    particlesCanvas.width = particlesCanvas.offsetWidth;
-    particlesCanvas.height = particlesCanvas.offsetHeight;
+    particlesCanvas.width = boardElement.offsetWidth;
+    particlesCanvas.height = boardElement.offsetHeight;
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
         particles.push({
-            x: Math.random() * particlesCanvas.width,
-            y: Math.random() * particlesCanvas.height,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            radius: Math.random() * 4 + 2,
-            color: `hsl(${Math.random() * 360}, 70%, 60%)`,
-            life: 100
+            x: particlesCanvas.width / 2,
+            y: particlesCanvas.height / 2,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10,
+            life: 1,
+            color: `hsl(${Math.random() * 360}, 70%, 60%)`
         });
     }
 
@@ -2659,29 +1658,139 @@ function createParticles() {
 }
 
 function animateParticles() {
-    if (particles.length === 0) return;
-
     particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
 
-    particles = particles.filter(p => {
+    particles = particles.filter(p => p.life > 0);
+
+    particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
-        p.life--;
+        p.vy += 0.2; // Gravity
+        p.life -= 0.02;
 
-        particlesCtx.globalAlpha = p.life / 100;
+        particlesCtx.globalAlpha = p.life;
         particlesCtx.fillStyle = p.color;
         particlesCtx.beginPath();
-        particlesCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        particlesCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         particlesCtx.fill();
-
-        return p.life > 0;
     });
 
     if (particles.length > 0) {
         requestAnimationFrame(animateParticles);
-    } else {
-        particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
     }
+}
+
+// ================================
+// PERSISTENCE
+// ================================
+
+function saveGame() {
+    try {
+        const gameState = {
+            board,
+            moveHistory,
+            currentMoveIndex,
+            currentPlayer,
+            gameActive,
+            gameMode,
+            aiDifficulty,
+            aiPersonality,
+            currentTheme,
+            soundEnabled,
+            timerEnabled,
+            analysisMode,
+            tutorialMode,
+            boardSize: BOARD_SIZE
+        };
+        localStorage.setItem('cocaro_game', JSON.stringify(gameState));
+    } catch (e) {
+        console.error('Failed to save game:', e);
+    }
+}
+
+function loadGame() {
+    try {
+        const saved = localStorage.getItem('cocaro_game');
+        if (saved) {
+            const gameState = JSON.parse(saved);
+
+            // Don't auto-load if it's an empty game
+            if (gameState.moveHistory && gameState.moveHistory.length > 0) {
+                const response = confirm('Tiếp tục game trước đó?');
+                if (response) {
+                    BOARD_SIZE = gameState.boardSize || 15;
+                    board = gameState.board;
+                    moveHistory = gameState.moveHistory;
+                    currentMoveIndex = gameState.currentMoveIndex;
+                    currentPlayer = gameState.currentPlayer;
+                    gameActive = gameState.gameActive;
+                    gameMode = gameState.gameMode || 'pvc';
+                    aiDifficulty = gameState.aiDifficulty || 'grandmaster';
+                    aiPersonality = gameState.aiPersonality || 'balanced';
+                    currentTheme = gameState.currentTheme || 'default';
+                    soundEnabled = gameState.soundEnabled !== false;
+                    timerEnabled = gameState.timerEnabled || false;
+                    analysisMode = gameState.analysisMode || false;
+                    tutorialMode = gameState.tutorialMode || false;
+
+                    // Recreate board
+                    boardElement.innerHTML = '';
+                    createBoard();
+
+                    // Replay moves
+                    for (let i = 0; i <= currentMoveIndex; i++) {
+                        const move = moveHistory[i];
+                        const index = move.row * BOARD_SIZE + move.col;
+                        const cell = boardElement.children[index];
+                        cell.textContent = move.player;
+                        cell.classList.add(move.player.toLowerCase());
+                        cell.disabled = true;
+                    }
+
+                    updateStatus();
+                    updateHistoryUI();
+                    updateUndoRedoButtons();
+
+                    if (analysisMode) {
+                        updateAnalysisPanel();
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load game:', e);
+    }
+}
+
+function loadSavedGames() {
+    try {
+        const saved = localStorage.getItem('cocaro_saved_games');
+        if (saved) {
+            savedGames = JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('Failed to load saved games:', e);
+    }
+}
+
+// ================================
+// THEME SYSTEM
+// ================================
+
+function applyTheme(themeName) {
+    currentTheme = themeName;
+    const theme = THEMES[themeName];
+
+    // Apply theme to all cells
+    Array.from(boardElement.children).forEach(cell => {
+        applyThemeToCell(cell);
+    });
+
+    // Apply to CSS variables if needed
+    document.documentElement.style.setProperty('--theme-player-x', theme.playerX);
+    document.documentElement.style.setProperty('--theme-player-o', theme.playerO);
+
+    saveGame();
 }
 
 // ================================
@@ -2691,79 +1800,41 @@ function animateParticles() {
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
-    updateDarkModeIcon(isDark);
-    localStorage.setItem('darkMode', isDark);
-}
 
-function loadDarkMode() {
-    const isDark = localStorage.getItem('darkMode') === 'true';
-    if (isDark) {
-        document.body.classList.add('dark-mode');
-        updateDarkModeIcon(true);
+    try {
+        localStorage.setItem('cocaro_darkmode', isDark);
+    } catch (e) {
+        console.error('Failed to save dark mode preference:', e);
+    }
+
+    // Update dark mode icon
+    if (darkModeToggle) {
+        if (isDark) {
+            darkModeToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <circle cx="10" cy="10" r="4"/>
+                    <path d="M10 0v2M10 18v2M20 10h-2M2 10H0M17.07 2.93l-1.41 1.41M4.34 15.66l-1.41 1.41M17.07 17.07l-1.41-1.41M4.34 4.34L2.93 2.93"/>
+                </svg>
+            `;
+        } else {
+            darkModeToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                </svg>
+            `;
+        }
     }
 }
 
-function updateDarkModeIcon(isDark) {
-    darkModeToggle.innerHTML = isDark
-        ? '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="4"/><path d="M10 0v2M10 18v2M20 10h-2M2 10H0M16.95 16.95l-1.41-1.41M4.46 4.46L3.05 3.05M16.95 3.05l-1.41 1.41M4.46 15.54L3.05 16.95"/></svg>'
-        : '<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>';
-}
-
-// ================================
-// SAVE/LOAD GAME
-// ================================
-
-function saveGame() {
-    const gameState = {
-        board,
-        currentPlayer,
-        gameActive,
-        moveHistory,
-        currentMoveIndex,
-        BOARD_SIZE
-    };
-    localStorage.setItem('caroGame', JSON.stringify(gameState));
-}
-
-function loadGame() {
-    const saved = localStorage.getItem('caroGame');
-    if (saved) {
-        try {
-            const gameState = JSON.parse(saved);
-            board = gameState.board;
-            currentPlayer = gameState.currentPlayer;
-            gameActive = gameState.gameActive;
-            moveHistory = gameState.moveHistory || [];
-            currentMoveIndex = gameState.currentMoveIndex || -1;
-            BOARD_SIZE = gameState.BOARD_SIZE || 15;
-
-            // Update board size select
-            boardSizeSelect.value = BOARD_SIZE;
-
-            // Recreate board UI
-            boardElement.innerHTML = '';
-            createBoard();
-
-            // Restore board state
-            for (let row = 0; row < BOARD_SIZE; row++) {
-                for (let col = 0; col < BOARD_SIZE; col++) {
-                    if (board[row][col] !== null) {
-                        const index = row * BOARD_SIZE + col;
-                        const cell = boardElement.children[index];
-                        cell.textContent = board[row][col];
-                        cell.classList.add(board[row][col].toLowerCase());
-                        cell.disabled = true;
-                    }
-                }
-            }
-
-            updateStatus();
-            updateHistoryUI();
-            updateUndoRedoButtons();
-        } catch (e) {
-            console.error('Failed to load game:', e);
-            initGame();
+function loadDarkMode() {
+    try {
+        const darkMode = localStorage.getItem('cocaro_darkmode');
+        if (darkMode === 'true') {
+            document.body.classList.add('dark-mode');
+            toggleDarkMode(); // To update icon
         }
+    } catch (e) {
+        console.error('Failed to load dark mode:', e);
     }
 }
 
@@ -2771,50 +1842,157 @@ function loadGame() {
 // EVENT LISTENERS
 // ================================
 
-resetBtn.addEventListener('click', initGame);
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        if (gameActive && moveHistory.length > 0) {
+            if (!confirm('Bắt đầu game mới?')) return;
+        }
+        initGame();
+    });
+}
 
-startGameBtn.addEventListener('click', () => {
-    BOARD_SIZE = parseInt(boardSizeSelect.value);
-    soundEnabled = soundToggle.checked;
-    timerEnabled = timerToggle.checked;
-    initGame();
-});
+if (startGameBtn) {
+    startGameBtn.addEventListener('click', () => {
+        // Update settings
+        if (boardSizeSelect) {
+            BOARD_SIZE = parseInt(boardSizeSelect.value);
+        }
+        if (soundToggle) {
+            soundEnabled = soundToggle.checked;
+        }
+        if (timerToggle) {
+            timerEnabled = timerToggle.checked;
+        }
+        if (gameModeSelect) {
+            gameMode = gameModeSelect.value;
+        }
+        if (aiDifficultySelect) {
+            aiDifficulty = aiDifficultySelect.value;
+        }
+        if (aiPersonalitySelect) {
+            aiPersonality = aiPersonalitySelect.value;
+        }
+        if (analysisModeToggle) {
+            analysisMode = analysisModeToggle.checked;
+        }
+        if (tutorialModeToggle) {
+            tutorialMode = tutorialModeToggle.checked;
+        }
+        if (themeSelect) {
+            applyTheme(themeSelect.value);
+        }
 
-darkModeToggle.addEventListener('click', toggleDarkMode);
+        // Hide settings panel
+        if (settingsPanel) {
+            settingsPanel.classList.add('collapsed');
+        }
 
-undoBtn.addEventListener('click', undo);
-redoBtn.addEventListener('click', redo);
-hintBtn.addEventListener('click', showHint);
+        initGame();
+    });
+}
 
-settingsToggle.addEventListener('click', () => {
-    settingsPanel.classList.toggle('collapsed');
-});
+if (settingsToggle) {
+    settingsToggle.addEventListener('click', () => {
+        if (settingsPanel) {
+            settingsPanel.classList.toggle('collapsed');
+        }
+    });
+}
 
-historyToggle.addEventListener('click', () => {
-    sidePanel.classList.toggle('collapsed');
-});
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+}
+
+if (historyToggle) {
+    historyToggle.addEventListener('click', () => {
+        if (sidePanel) {
+            sidePanel.classList.toggle('collapsed');
+        }
+    });
+}
+
+if (undoBtn) {
+    undoBtn.addEventListener('click', undo);
+}
+
+if (redoBtn) {
+    redoBtn.addEventListener('click', redo);
+}
+
+if (hintBtn) {
+    hintBtn.addEventListener('click', showHint);
+}
+
+if (saveGameBtn) {
+    saveGameBtn.addEventListener('click', saveGameToSlot);
+}
+
+if (loadGameBtn) {
+    loadGameBtn.addEventListener('click', () => {
+        if (savedGames.length === 0) {
+            alert('Không có game nào được lưu!');
+            return;
+        }
+
+        const index = prompt(`Nhập số thứ tự game (1-${savedGames.length}):`);
+        if (index) {
+            const i = parseInt(index) - 1;
+            if (i >= 0 && i < savedGames.length) {
+                loadGameFromSlot(i);
+            } else {
+                alert('Số thứ tự không hợp lệ!');
+            }
+        }
+    });
+}
+
+if (exportGameBtn) {
+    exportGameBtn.addEventListener('click', exportGameToJSON);
+}
+
+if (importGameBtn) {
+    importGameBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                importGameFromJSON(file);
+            }
+        };
+        input.click();
+    });
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'z' && !e.shiftKey) {
+        if (e.key === 'z') {
             e.preventDefault();
             undo();
-        } else if ((e.key === 'y') || (e.key === 'z' && e.shiftKey)) {
+        } else if (e.key === 'y') {
             e.preventDefault();
             redo();
         }
-    }
-    if (e.key === 'h' || e.key === 'H') {
+    } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
         showHint();
     }
 });
 
 // ================================
-// INITIALIZE ON LOAD
+// INITIALIZATION ON LOAD
 // ================================
 
-loadDarkMode();
-loadStats();
-loadLearningData(); // Load AI learning experience
-loadGame();
+window.addEventListener('DOMContentLoaded', () => {
+    loadDarkMode();
+    loadStats();
+    loadSavedGames();
+    loadGame();
+
+    // If no saved game, start new
+    if (moveHistory.length === 0) {
+        initGame();
+    }
+});

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cờ Caro</title>
+    <title>Cờ Caro 4.0 - Ultra Advanced</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Cờ Caro <span class="version">v3.0.0</span></h1>
+            <h1>Cờ Caro <span class="version">v4.0.0</span> <span class="version-badge">ULTRA</span></h1>
             <div class="header-controls">
                 <button id="settingsToggle" class="icon-btn" title="Cài đặt">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -24,9 +24,19 @@
             </div>
         </div>
 
-        <!-- Settings Panel - Hidden by default -->
+        <!-- Settings Panel - Enhanced for V4.0 -->
         <div class="settings-panel collapsed" id="settingsPanel">
             <div class="settings-grid">
+                <!-- Game Mode -->
+                <div class="setting-item">
+                    <label>Chế độ chơi</label>
+                    <select id="gameMode" class="select-input">
+                        <option value="pvc" selected>Người vs AI</option>
+                        <option value="pvp">Người vs Người</option>
+                    </select>
+                </div>
+
+                <!-- Board Size -->
                 <div class="setting-item">
                     <label>Bàn cờ</label>
                     <select id="boardSize" class="select-input">
@@ -36,6 +46,40 @@
                     </select>
                 </div>
 
+                <!-- AI Difficulty (only for PvC) -->
+                <div class="setting-item" id="aiDifficultyContainer">
+                    <label>Độ khó AI</label>
+                    <select id="aiDifficulty" class="select-input">
+                        <option value="easy">Dễ</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="hard">Khó</option>
+                        <option value="grandmaster" selected>Grand Master</option>
+                    </select>
+                </div>
+
+                <!-- AI Personality (only for PvC) -->
+                <div class="setting-item" id="aiPersonalityContainer">
+                    <label>Tính cách AI</label>
+                    <select id="aiPersonality" class="select-input">
+                        <option value="aggressive">Tấn công</option>
+                        <option value="balanced" selected>Cân bằng</option>
+                        <option value="defensive">Phòng thủ</option>
+                    </select>
+                </div>
+
+                <!-- Theme -->
+                <div class="setting-item">
+                    <label>Giao diện</label>
+                    <select id="theme" class="select-input">
+                        <option value="default" selected>Mặc định</option>
+                        <option value="ocean">Đại dương</option>
+                        <option value="forest">Rừng xanh</option>
+                        <option value="sunset">Hoàng hôn</option>
+                        <option value="neon">Neon</option>
+                    </select>
+                </div>
+
+                <!-- Sound Toggle -->
                 <div class="setting-item toggle-item">
                     <label>Âm thanh</label>
                     <label class="switch">
@@ -44,6 +88,7 @@
                     </label>
                 </div>
 
+                <!-- Timer Toggle -->
                 <div class="setting-item toggle-item">
                     <label>Đồng hồ</label>
                     <label class="switch">
@@ -51,9 +96,35 @@
                         <span class="slider"></span>
                     </label>
                 </div>
+
+                <!-- Analysis Mode Toggle -->
+                <div class="setting-item toggle-item">
+                    <label>Phân tích</label>
+                    <label class="switch">
+                        <input type="checkbox" id="analysisMode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Tutorial Mode Toggle -->
+                <div class="setting-item toggle-item">
+                    <label>Hướng dẫn</label>
+                    <label class="switch">
+                        <input type="checkbox" id="tutorialMode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
 
-            <button id="startGameBtn" class="btn btn-primary">Game mới</button>
+            <!-- Game Management Buttons -->
+            <div class="game-management">
+                <button id="saveGameBtn" class="btn btn-secondary">💾 Lưu game</button>
+                <button id="loadGameBtn" class="btn btn-secondary">📁 Tải game</button>
+                <button id="exportGameBtn" class="btn btn-secondary">📤 Xuất</button>
+                <button id="importGameBtn" class="btn btn-secondary">📥 Nhập</button>
+            </div>
+
+            <button id="startGameBtn" class="btn btn-primary">🎮 Game mới</button>
         </div>
 
         <!-- Compact Stats -->
@@ -72,6 +143,30 @@
             <div class="status" id="status">Lượt <span class="player-x">X</span></div>
             <div class="timer" id="timer" style="display: none;">
                 <span id="timerDisplay">00:00</span>
+            </div>
+            <div class="ai-thinking" id="aiThinking" style="display: none;"></div>
+        </div>
+
+        <!-- Analysis Panel (V4.0 NEW) -->
+        <div class="analysis-panel collapsed" id="analysisPanel">
+            <div class="analysis-header">
+                <h4>📊 Phân tích</h4>
+            </div>
+            <div class="analysis-content">
+                <div class="analysis-item">
+                    <label>Đánh giá thế cờ:</label>
+                    <div class="evaluation-bar-container">
+                        <div class="evaluation-bar" id="evaluationBar"></div>
+                    </div>
+                </div>
+                <div class="analysis-item">
+                    <label>Chất lượng nước đi:</label>
+                    <div class="move-quality" id="moveQuality">-</div>
+                </div>
+                <div class="analysis-item">
+                    <label>Mức độ nguy hiểm:</label>
+                    <div class="threat-level" id="threatLevel">-</div>
+                </div>
             </div>
         </div>
 
@@ -122,8 +217,44 @@
                 </svg>
             </button>
         </div>
+
+        <!-- V4.0 Footer -->
+        <div class="footer">
+            <p>CoCaro 4.0 - Ultra Advanced AI |
+                <span class="feature-badge">4 Cấp độ AI</span> |
+                <span class="feature-badge">3 Tính cách AI</span> |
+                <span class="feature-badge">5 Themes</span> |
+                <span class="feature-badge">Phân tích thời gian thực</span>
+            </p>
+        </div>
     </div>
 
     <script src="game.js"></script>
+
+    <!-- Dynamic script to show/hide AI settings -->
+    <script>
+        // Show/hide AI settings based on game mode
+        const gameModeSelect = document.getElementById('gameMode');
+        const aiDifficultyContainer = document.getElementById('aiDifficultyContainer');
+        const aiPersonalityContainer = document.getElementById('aiPersonalityContainer');
+        const analysisModeToggle = document.getElementById('analysisMode');
+        const analysisPanel = document.getElementById('analysisPanel');
+
+        if (gameModeSelect) {
+            gameModeSelect.addEventListener('change', (e) => {
+                const isPvC = e.target.value === 'pvc';
+                if (aiDifficultyContainer) aiDifficultyContainer.style.display = isPvC ? 'flex' : 'none';
+                if (aiPersonalityContainer) aiPersonalityContainer.style.display = isPvC ? 'flex' : 'none';
+            });
+        }
+
+        if (analysisModeToggle) {
+            analysisModeToggle.addEventListener('change', (e) => {
+                if (analysisPanel) {
+                    analysisPanel.classList.toggle('collapsed', !e.target.checked);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
