@@ -1911,6 +1911,27 @@ if (historyToggle) {
     });
 }
 
+// Show/hide AI settings based on game mode
+if (gameModeSelect) {
+    gameModeSelect.addEventListener('change', (e) => {
+        const isPvC = e.target.value === 'pvc';
+        const aiDifficultyContainer = document.getElementById('aiDifficultyContainer');
+        const aiPersonalityContainer = document.getElementById('aiPersonalityContainer');
+
+        if (aiDifficultyContainer) aiDifficultyContainer.style.display = isPvC ? 'flex' : 'none';
+        if (aiPersonalityContainer) aiPersonalityContainer.style.display = isPvC ? 'flex' : 'none';
+    });
+}
+
+// Show/hide analysis panel based on toggle
+if (analysisModeToggle) {
+    analysisModeToggle.addEventListener('change', (e) => {
+        if (analysisPanel) {
+            analysisPanel.classList.toggle('collapsed', !e.target.checked);
+        }
+    });
+}
+
 if (undoBtn) {
     undoBtn.addEventListener('click', undo);
 }
