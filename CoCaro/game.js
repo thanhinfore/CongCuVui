@@ -1,7 +1,7 @@
 // ================================
-// CỜ CARO 7.1 - OPTIMIZED GPU-ACCELERATED AI
-// Version: 7.1.0
-// Optimized AI with Smart GPU Usage, Progressive Deepening & Performance Tuning
+// CỜ CARO 7.1.1 - HOTFIX: STABILITY OPTIMIZATIONS
+// Version: 7.1.1
+// Aggressive optimizations for stability - reduced complexity
 // ================================
 
 // ================================
@@ -128,17 +128,18 @@ const AI_CONFIGS = {
         thinkTime: 1500
     },
     supreme: {
-        depth: 5,           // V7.1: Reduced from 8 for better performance
-        vctDepth: 14,       // V7.1: Reduced from 20
-        vcfDepth: 12,       // V7.1: Reduced from 16
-        searchWidth: 30,    // V7.1: Reduced from 50
+        depth: 3,           // V7.1.1: Hotfix - reduced to 3 for stability
+        vctDepth: 10,       // V7.1.1: Reduced to 10
+        vcfDepth: 8,        // V7.1.1: Reduced to 8
+        searchWidth: 15,    // V7.1.1: CRITICAL - reduced to 15 (from 30)
         randomness: 0,
         evaluationMultiplier: 1.0,
         useGPU: true,       // Smart GPU usage (only when beneficial)
         useNeuralNet: true, // Neural network with caching
         progressiveDeepening: true, // V7.1: Start shallow, go deeper if time allows
-        maxThinkTime: 3000, // V7.1: Hard timeout
-        thinkTime: 2000
+        maxThinkTime: 2500, // V7.1.1: Reduced to 2.5s
+        earlyGameDepth: 2,  // V7.1.1: Use depth 2 for first 10 moves
+        thinkTime: 1500
     }
 };
 
@@ -1517,9 +1518,10 @@ function getAIMoveInternal() {
     if (move) return move;
 
     // ============================================
-    // V7.1: SMART VCT/VCF - ONLY WHEN NEEDED
+    // V7.1.1: SMART VCT/VCF - DISABLED FOR EARLY GAME
     // ============================================
-    if (aiDifficulty === 'grandmaster' || aiDifficulty === 'supreme') {
+    // V7.1.1 HOTFIX: Only use VCT/VCF after move 10 to prevent early game freeze
+    if ((aiDifficulty === 'grandmaster' || aiDifficulty === 'supreme') && moveCount >= 10) {
         const emptyCount = countEmptyCells();
 
         // Only run VCT/VCF in late game (board is filling up)
@@ -1544,13 +1546,15 @@ function getAIMoveInternal() {
         return { row: center, col: center };
     }
 
-    // V7.1: Progressive deepening for Supreme mode
+    // V7.1.1: Progressive deepening with early game optimization
     if (config.progressiveDeepening && aiDifficulty === 'supreme') {
         let bestMove = null;
         let currentDepth = 2; // Start shallow
-        const maxDepth = config.depth;
 
-        console.log(`🔍 Progressive deepening: depth 2 → ${maxDepth}`);
+        // V7.1.1 HOTFIX: Use shallow depth for early game (first 10 moves)
+        const maxDepth = moveCount < 10 ? (config.earlyGameDepth || 2) : config.depth;
+
+        console.log(`🔍 Progressive deepening (move ${moveCount}): depth 2 → ${maxDepth}`);
 
         // Iteratively deepen until timeout or max depth
         while (currentDepth <= maxDepth && !aiInterrupted) {
@@ -1558,6 +1562,13 @@ function getAIMoveInternal() {
             if (depthMove && !aiInterrupted) {
                 bestMove = depthMove;
                 console.log(`  ✓ Depth ${currentDepth} complete`);
+
+                // V7.1.1: Early exit if we found a really good move (score > 1M)
+                const evaluation = evaluateBoard();
+                if (Math.abs(evaluation) > 1000000) {
+                    console.log(`  🎯 Found winning move, stopping search`);
+                    break;
+                }
             }
 
             if (aiInterrupted) {
