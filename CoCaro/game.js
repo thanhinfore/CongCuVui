@@ -1,7 +1,7 @@
 // ================================
-// CỜ CARO 7.0 - GPU-ACCELERATED AI
-// Version: 7.0.0
-// Revolutionary AI with GPU Computation, Neural Networks & Deep Search (Depth 8)
+// CỜ CARO 7.1 - OPTIMIZED GPU-ACCELERATED AI
+// Version: 7.1.0
+// Optimized AI with Smart GPU Usage, Progressive Deepening & Performance Tuning
 // ================================
 
 // ================================
@@ -53,6 +53,18 @@ let gpuKernels = {};
 let neuralModel = null;
 let gpuEnabled = false;
 let tfReady = false;
+
+// V7.1: Performance optimization state
+let aiTimeout = null;
+let aiInterrupted = false;
+let performanceStats = {
+    avgThinkTime: 0,
+    maxThinkTime: 0,
+    movesCalculated: 0,
+    gpuUsageCount: 0,
+    cpuUsageCount: 0
+};
+let nnCache = new Map(); // Neural network prediction cache
 
 // ================================
 // AI LEARNING & EXPERIENCE SYSTEM
@@ -116,14 +128,16 @@ const AI_CONFIGS = {
         thinkTime: 1500
     },
     supreme: {
-        depth: 8,           // GPU-enabled deep search
-        vctDepth: 20,       // Enhanced VCT with GPU
-        vcfDepth: 16,       // Enhanced VCF with GPU
-        searchWidth: 50,    // Massive search width
+        depth: 5,           // V7.1: Reduced from 8 for better performance
+        vctDepth: 14,       // V7.1: Reduced from 20
+        vcfDepth: 12,       // V7.1: Reduced from 16
+        searchWidth: 30,    // V7.1: Reduced from 50
         randomness: 0,
         evaluationMultiplier: 1.0,
-        useGPU: true,       // GPU acceleration
-        useNeuralNet: true, // Neural network evaluation
+        useGPU: true,       // Smart GPU usage (only when beneficial)
+        useNeuralNet: true, // Neural network with caching
+        progressiveDeepening: true, // V7.1: Start shallow, go deeper if time allows
+        maxThinkTime: 3000, // V7.1: Hard timeout
         thinkTime: 2000
     }
 };
@@ -503,7 +517,7 @@ function createPositionEvaluationModel() {
 }
 
 /**
- * Evaluate position using neural network
+ * V7.1: Evaluate position using neural network WITH CACHING
  */
 function evaluatePositionNN(boardArray, boardSize) {
     if (!tfReady || !neuralModel) {
@@ -511,6 +525,14 @@ function evaluatePositionNN(boardArray, boardSize) {
     }
 
     try {
+        // V7.1: Generate cache key from board state
+        const cacheKey = generateBoardHash(boardArray, boardSize);
+
+        // Check cache first
+        if (nnCache.has(cacheKey)) {
+            return nnCache.get(cacheKey);
+        }
+
         // Flatten and normalize board
         const input = [];
         for (let i = 0; i < boardSize; i++) {
@@ -536,12 +558,33 @@ function evaluatePositionNN(boardArray, boardSize) {
         tensor.dispose();
         prediction.dispose();
 
-        return score * 100000; // Scale to match traditional evaluation
+        const finalScore = score * 100000; // Scale to match traditional evaluation
+
+        // V7.1: Cache result (limit cache size)
+        if (nnCache.size < 5000) {
+            nnCache.set(cacheKey, finalScore);
+        }
+
+        return finalScore;
 
     } catch (error) {
         console.error('Neural network evaluation failed:', error);
         return 0;
     }
+}
+
+/**
+ * V7.1: Generate hash for board state (for NN cache)
+ */
+function generateBoardHash(boardArray, boardSize) {
+    let hash = '';
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+            const cell = boardArray[i][j];
+            hash += cell === 'X' ? '1' : (cell === 'O' ? '2' : '0');
+        }
+    }
+    return hash;
 }
 
 // ================================
@@ -1147,7 +1190,7 @@ function evaluatePosition(row, col, player) {
     return score;
 }
 
-// V5.0: Cached evaluation for massive performance boost
+// V7.1: Optimized evaluation with smart GPU usage
 function evaluateBoard() {
     // Check cache first
     const hash = getZobristHash();
@@ -1161,20 +1204,28 @@ function evaluateBoard() {
     let aiScore = 0;
     let playerScore = 0;
 
-    // V7.0: Use GPU acceleration for Supreme mode
+    // V7.1: Smart GPU usage - only use GPU when board is complex enough
     const config = AI_CONFIGS[aiDifficulty];
-    if (config && config.useGPU && gpuEnabled) {
+    const occupiedCells = countOccupiedCells();
+    const boardFullness = occupiedCells / (BOARD_SIZE * BOARD_SIZE);
+
+    // Use GPU only when board is >40% full (complex enough to benefit from GPU)
+    const shouldUseGPU = config && config.useGPU && gpuEnabled && boardFullness > 0.4;
+
+    if (shouldUseGPU) {
         // Try GPU-accelerated evaluation
         const gpuScore = evaluateBoardGPU(board, BOARD_SIZE);
         if (gpuScore !== null) {
+            performanceStats.gpuUsageCount++;
+
             // GPU evaluation successful
             const personality = AI_PERSONALITIES[aiPersonality];
 
             // Apply personality modifiers to GPU score
             const result = gpuScore * personality.attackMultiplier - (gpuScore * 0.5 * personality.defenseMultiplier);
 
-            // Add Neural Network evaluation if available
-            if (config.useNeuralNet && tfReady) {
+            // Add Neural Network evaluation if available (only for mid-late game)
+            if (config.useNeuralNet && tfReady && boardFullness > 0.3) {
                 const nnScore = evaluatePositionNN(board, BOARD_SIZE);
                 // Blend traditional + GPU + NN scores (weighted average)
                 const blended = result * 0.7 + nnScore * 0.3;
@@ -1193,7 +1244,9 @@ function evaluateBoard() {
         // GPU failed, fallback to CPU
     }
 
-    // Traditional CPU evaluation
+    // Traditional CPU evaluation (early game or GPU not beneficial)
+    performanceStats.cpuUsageCount++;
+
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             if (board[row][col] === 'O') {
@@ -1212,8 +1265,8 @@ function evaluateBoard() {
     // Defense-first approach with multiplier
     const result = aiScore - (playerScore * 4.5);
 
-    // V7.0: Add Neural Network evaluation for Supreme mode (CPU fallback)
-    if (config && config.useNeuralNet && tfReady) {
+    // V7.1: Add Neural Network for mid-game+ (CPU path)
+    if (config && config.useNeuralNet && tfReady && boardFullness > 0.3) {
         const nnScore = evaluatePositionNN(board, BOARD_SIZE);
         const blended = result * 0.8 + nnScore * 0.2;
 
@@ -1229,6 +1282,17 @@ function evaluateBoard() {
     }
 
     return result;
+}
+
+// V7.1: Count occupied cells for smart GPU usage decision
+function countOccupiedCells() {
+    let count = 0;
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] !== null) count++;
+        }
+    }
+    return count;
 }
 
 // ================================
@@ -1335,9 +1399,50 @@ function logAIPerformance() {
 // These should be executed quickly without long think time
 let isForcedMove = false;
 
+// V7.1: Progressive deepening wrapper
 function getAIMove() {
     const config = AI_CONFIGS[aiDifficulty];
     isForcedMove = false; // Reset
+
+    // V7.1: Reset interrupt flag
+    aiInterrupted = false;
+
+    // V7.1: Set timeout for AI thinking
+    if (config.maxThinkTime) {
+        clearTimeout(aiTimeout);
+        aiTimeout = setTimeout(() => {
+            aiInterrupted = true;
+            console.warn('⏱️ AI timeout reached, interrupting search...');
+        }, config.maxThinkTime);
+    }
+
+    // Track performance
+    const startTime = Date.now();
+
+    try {
+        const move = getAIMoveInternal();
+
+        // V7.1: Track performance stats
+        const thinkTime = Date.now() - startTime;
+        performanceStats.movesCalculated++;
+        performanceStats.avgThinkTime =
+            (performanceStats.avgThinkTime * (performanceStats.movesCalculated - 1) + thinkTime)
+            / performanceStats.movesCalculated;
+        performanceStats.maxThinkTime = Math.max(performanceStats.maxThinkTime, thinkTime);
+
+        console.log(`🤖 AI think time: ${thinkTime}ms | GPU: ${performanceStats.gpuUsageCount} | CPU: ${performanceStats.cpuUsageCount}`);
+
+        return move;
+    } finally {
+        // V7.1: Clear timeout
+        clearTimeout(aiTimeout);
+        aiInterrupted = false;
+    }
+}
+
+// V7.1: Internal AI move logic (separated for progressive deepening)
+function getAIMoveInternal() {
+    const config = AI_CONFIGS[aiDifficulty];
 
     // Initialize if needed
     if (zobristTable.length === 0) {
@@ -1412,25 +1517,25 @@ function getAIMove() {
     if (move) return move;
 
     // ============================================
-    // V5.0: SMART VCT/VCF - ONLY WHEN NEEDED
+    // V7.1: SMART VCT/VCF - ONLY WHEN NEEDED
     // ============================================
-    if (aiDifficulty === 'grandmaster') {
+    if (aiDifficulty === 'grandmaster' || aiDifficulty === 'supreme') {
         const emptyCount = countEmptyCells();
 
         // Only run VCT/VCF in late game (board is filling up)
-        if (emptyCount < SEARCH_CONTROL.maxEmptyCellsForVCT) {
+        if (!aiInterrupted && emptyCount < SEARCH_CONTROL.maxEmptyCellsForVCT) {
             move = vctSearch(config.vctDepth);
             if (move) return move;
         }
 
-        if (emptyCount < SEARCH_CONTROL.maxEmptyCellsForVCF) {
+        if (!aiInterrupted && emptyCount < SEARCH_CONTROL.maxEmptyCellsForVCF) {
             move = vcfSearch(config.vcfDepth);
             if (move) return move;
         }
     }
 
     // ============================================
-    // STRATEGIC SEARCH - MINIMAX
+    // V7.1: STRATEGIC SEARCH WITH PROGRESSIVE DEEPENING
     // ============================================
     const candidates = getRelevantMoves(config.searchWidth);
     if (candidates.length === 0) {
@@ -1439,7 +1544,35 @@ function getAIMove() {
         return { row: center, col: center };
     }
 
-    move = minimaxMove(candidates, config.depth);
+    // V7.1: Progressive deepening for Supreme mode
+    if (config.progressiveDeepening && aiDifficulty === 'supreme') {
+        let bestMove = null;
+        let currentDepth = 2; // Start shallow
+        const maxDepth = config.depth;
+
+        console.log(`🔍 Progressive deepening: depth 2 → ${maxDepth}`);
+
+        // Iteratively deepen until timeout or max depth
+        while (currentDepth <= maxDepth && !aiInterrupted) {
+            const depthMove = minimaxMove(candidates, currentDepth);
+            if (depthMove && !aiInterrupted) {
+                bestMove = depthMove;
+                console.log(`  ✓ Depth ${currentDepth} complete`);
+            }
+
+            if (aiInterrupted) {
+                console.log(`  ⏱️ Interrupted at depth ${currentDepth}`);
+                break;
+            }
+
+            currentDepth++;
+        }
+
+        move = bestMove || candidates[0]; // Fallback to best candidate
+    } else {
+        // Traditional fixed-depth search
+        move = minimaxMove(candidates, config.depth);
+    }
 
     // Add randomness for lower difficulties
     if (config.randomness > 0 && Math.random() < config.randomness) {
@@ -1624,7 +1757,13 @@ function minimaxMove(candidates, depth) {
     return bestMove;
 }
 
+// V7.1: Minimax with timeout checking
 function minimax(depth, alpha, beta, isMaximizing) {
+    // V7.1: Check if AI was interrupted (timeout)
+    if (aiInterrupted) {
+        return 0; // Return neutral evaluation on interrupt
+    }
+
     // Check for terminal state
     const evaluation = evaluateBoard();
 
@@ -1643,6 +1782,9 @@ function minimax(depth, alpha, beta, isMaximizing) {
         let maxEval = -Infinity;
 
         for (const move of moves) {
+            // V7.1: Check interrupt before each move
+            if (aiInterrupted) break;
+
             board[move.row][move.col] = 'O';
             const eval = minimax(depth - 1, alpha, beta, false);
             board[move.row][move.col] = null;
@@ -1658,6 +1800,9 @@ function minimax(depth, alpha, beta, isMaximizing) {
         let minEval = Infinity;
 
         for (const move of moves) {
+            // V7.1: Check interrupt before each move
+            if (aiInterrupted) break;
+
             board[move.row][move.col] = 'X';
             const eval = minimax(depth - 1, alpha, beta, true);
             board[move.row][move.col] = null;
@@ -1672,15 +1817,17 @@ function minimax(depth, alpha, beta, isMaximizing) {
     }
 }
 
-// VCT (Victory by Continuous Threats) Search
+// V7.1: VCT with timeout checking
 function vctSearch(depth) {
-    if (depth <= 0) return null;
+    if (depth <= 0 || aiInterrupted) return null;
 
     const threats = [];
 
     // Find all threat moves
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
+            if (aiInterrupted) break; // Early exit on timeout
+
             if (board[row][col] === null) {
                 board[row][col] = 'O';
                 const score = evaluatePosition(row, col, 'O');
@@ -1692,12 +1839,15 @@ function vctSearch(depth) {
                 board[row][col] = null;
             }
         }
+        if (aiInterrupted) break;
     }
 
     // Try best threats recursively
     threats.sort((a, b) => b.score - a.score);
 
     for (const threat of threats.slice(0, 5)) {
+        if (aiInterrupted) break; // Early exit on timeout
+
         board[threat.row][threat.col] = 'O';
 
         const defense = scanForWinningMove('X');
@@ -1719,9 +1869,9 @@ function vctSearch(depth) {
     return null;
 }
 
-// VCF (Victory by Continuous Fours) Search
+// V7.1: VCF with timeout checking
 function vcfSearch(depth) {
-    if (depth <= 0) return null;
+    if (depth <= 0 || aiInterrupted) return null;
 
     // Find moves that create four-in-a-row
     for (let row = 0; row < BOARD_SIZE; row++) {
