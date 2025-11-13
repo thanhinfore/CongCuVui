@@ -4252,8 +4252,8 @@ document.addEventListener('keydown', (e) => {
 // ================================
 
 window.addEventListener('DOMContentLoaded', async () => {
-    // V7.0: Initialize GPU and Neural Network
-    console.log('🚀 Initializing CoCaro 7.0...');
+    // V9.1: Initialize GPU and Neural Network
+    console.log('🚀 Initializing CoCaro 9.1...');
 
     // Initialize GPU.js
     initGPU();
@@ -4275,5 +4275,5 @@ window.addEventListener('DOMContentLoaded', async () => {
         initGame();
     }
 
-    console.log('✅ CoCaro 7.0 ready!');
+    console.log('✅ CoCaro 9.1 ready!');
 });
