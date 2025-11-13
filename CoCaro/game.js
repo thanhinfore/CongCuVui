@@ -858,11 +858,11 @@ function detectMultipleThreats(player) {
                 board[row][col] = null;
 
                 // Check if this creates a threat (open-three or better)
-                if (score >= PATTERNS.OPEN_THREE.score) {
+                if (score >= PATTERNS_V9.OPEN_THREE.score) {
                     threats.push({
                         row, col, score,
-                        type: score >= PATTERNS.FOUR.score ? 'four' :
-                              score >= PATTERNS.OPEN_THREE.score ? 'open-three' : 'threat'
+                        type: score >= PATTERNS_V9.FOUR.score ? 'four' :
+                              score >= PATTERNS_V9.OPEN_THREE.score ? 'open-three' : 'threat'
                     });
                 }
             }
@@ -2387,7 +2387,7 @@ function detectPatternsInLine(line, player) {
     // Check for FIVE
     for (let i = 0; i <= len - 5; i++) {
         if (numLine.slice(i, i + 5).every(c => c === 1)) {
-            patterns.push({ type: 'FIVE', score: PATTERNS.FIVE.score, pos: i });
+            patterns.push({ type: 'FIVE', score: PATTERNS_V9.FIVE.score, pos: i });
         }
     }
 
@@ -2396,7 +2396,7 @@ function detectPatternsInLine(line, player) {
         if (numLine[i] === 0 &&
             numLine.slice(i + 1, i + 5).every(c => c === 1) &&
             numLine[i + 5] === 0) {
-            patterns.push({ type: 'OPEN_FOUR', score: PATTERNS.OPEN_FOUR.score, pos: i });
+            patterns.push({ type: 'OPEN_FOUR', score: PATTERNS_V9.OPEN_FOUR.score, pos: i });
         }
     }
 
@@ -2406,7 +2406,7 @@ function detectPatternsInLine(line, player) {
             const leftOpen = (i === 0 || numLine[i - 1] === 0);
             const rightOpen = (i + 4 >= len || numLine[i + 4] === 0);
             if (leftOpen || rightOpen) {
-                patterns.push({ type: 'FOUR', score: PATTERNS.FOUR.score, pos: i });
+                patterns.push({ type: 'FOUR', score: PATTERNS_V9.FOUR.score, pos: i });
             }
         }
     }
@@ -2416,7 +2416,7 @@ function detectPatternsInLine(line, player) {
         if (numLine[i] === 0 &&
             numLine.slice(i + 1, i + 4).every(c => c === 1) &&
             numLine[i + 4] === 0) {
-            patterns.push({ type: 'OPEN_THREE', score: PATTERNS.OPEN_THREE.score, pos: i });
+            patterns.push({ type: 'OPEN_THREE', score: PATTERNS_V9.OPEN_THREE.score, pos: i });
         }
     }
 
@@ -2426,12 +2426,12 @@ function detectPatternsInLine(line, player) {
         // _XX_X_
         if (slice[0] === 0 && slice[1] === 1 && slice[2] === 1 &&
             slice[3] === 0 && slice[4] === 1 && slice[5] === 0) {
-            patterns.push({ type: 'BROKEN_THREE_A', score: PATTERNS.BROKEN_THREE_A.score, pos: i });
+            patterns.push({ type: 'BROKEN_THREE_A', score: PATTERNS_V9.BROKEN_THREE_A.score, pos: i });
         }
         // _X_XX_
         if (slice[0] === 0 && slice[1] === 1 && slice[2] === 0 &&
             slice[3] === 1 && slice[4] === 1 && slice[5] === 0) {
-            patterns.push({ type: 'BROKEN_THREE_B', score: PATTERNS.BROKEN_THREE_B.score, pos: i });
+            patterns.push({ type: 'BROKEN_THREE_B', score: PATTERNS_V9.BROKEN_THREE_B.score, pos: i });
         }
     }
 
@@ -2441,7 +2441,7 @@ function detectPatternsInLine(line, player) {
             const leftOpen = (i === 0 || numLine[i - 1] === 0);
             const rightOpen = (i + 3 >= len || numLine[i + 3] === 0);
             if ((leftOpen && !rightOpen) || (!leftOpen && rightOpen)) {
-                patterns.push({ type: 'SEMI_OPEN_THREE', score: PATTERNS.SEMI_OPEN_THREE.score, pos: i });
+                patterns.push({ type: 'SEMI_OPEN_THREE', score: PATTERNS_V9.SEMI_OPEN_THREE.score, pos: i });
             }
         }
     }
@@ -2450,7 +2450,7 @@ function detectPatternsInLine(line, player) {
     for (let i = 0; i <= len - 4; i++) {
         if (numLine[i] === 0 && numLine[i + 1] === 1 &&
             numLine[i + 2] === 1 && numLine[i + 3] === 0) {
-            patterns.push({ type: 'OPEN_TWO', score: PATTERNS.OPEN_TWO.score, pos: i });
+            patterns.push({ type: 'OPEN_TWO', score: PATTERNS_V9.OPEN_TWO.score, pos: i });
         }
     }
 
@@ -2459,7 +2459,7 @@ function detectPatternsInLine(line, player) {
         if (numLine[i] === 0 && numLine[i + 1] === 1 &&
             numLine[i + 2] === 0 && numLine[i + 3] === 1 &&
             numLine[i + 4] === 0) {
-            patterns.push({ type: 'BROKEN_TWO', score: PATTERNS.BROKEN_TWO.score, pos: i });
+            patterns.push({ type: 'BROKEN_TWO', score: PATTERNS_V9.BROKEN_TWO.score, pos: i });
         }
     }
 
@@ -3103,7 +3103,7 @@ function scanForOpenThree(player) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             if (board[row][col] === null) {
                 const score = evaluatePosition(row, col, player);
-                if (score >= PATTERNS.OPEN_THREE.score * 0.8) {
+                if (score >= PATTERNS_V9.OPEN_THREE.score * 0.8) {
                     return { row, col };
                 }
             }
@@ -3245,7 +3245,7 @@ function vctSearch(depth) {
                 board[row][col] = 'O';
                 const score = evaluatePosition(row, col, 'O');
 
-                if (score >= PATTERNS.OPEN_THREE.score) {
+                if (score >= PATTERNS_V9.OPEN_THREE.score) {
                     threats.push({ row, col, score });
                 }
 
@@ -3293,7 +3293,7 @@ function vcfSearch(depth) {
                 board[row][col] = 'O';
                 const score = evaluatePosition(row, col, 'O');
 
-                if (score >= PATTERNS.FOUR.score) {
+                if (score >= PATTERNS_V9.FOUR.score) {
                     board[row][col] = null;
                     return { row, col };
                 }
