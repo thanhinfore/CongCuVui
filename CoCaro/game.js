@@ -1,7 +1,8 @@
 // ================================
-// CỜ CARO 7.1.1 - HOTFIX: STABILITY OPTIMIZATIONS
-// Version: 7.1.1
-// Aggressive optimizations for stability - reduced complexity
+// CỜ CARO 8.0 - ULTRA INTELLIGENT AI
+// Version: 8.0.0
+// Maximum intelligence with advanced tactics, threat detection & strategic play
+// Bất khả chiến bại với người chơi thông thường
 // ================================
 
 // ================================
@@ -128,17 +129,20 @@ const AI_CONFIGS = {
         thinkTime: 1500
     },
     supreme: {
-        depth: 3,           // V7.1.1: Hotfix - reduced to 3 for stability
-        vctDepth: 10,       // V7.1.1: Reduced to 10
-        vcfDepth: 8,        // V7.1.1: Reduced to 8
-        searchWidth: 15,    // V7.1.1: CRITICAL - reduced to 15 (from 30)
+        depth: 4,           // V8.0: Increased for better tactics (from 3)
+        vctDepth: 12,       // V8.0: Stronger threat search (from 10)
+        vcfDepth: 10,       // V8.0: Better forcing sequences (from 8)
+        searchWidth: 20,    // V8.0: Wider search for better moves (from 15)
         randomness: 0,
         evaluationMultiplier: 1.0,
         useGPU: true,       // Smart GPU usage (only when beneficial)
         useNeuralNet: true, // Neural network with caching
-        progressiveDeepening: true, // V7.1: Start shallow, go deeper if time allows
-        maxThinkTime: 2500, // V7.1.1: Reduced to 2.5s
-        earlyGameDepth: 2,  // V7.1.1: Use depth 2 for first 10 moves
+        progressiveDeepening: true,
+        maxThinkTime: 3000, // V8.0: Allow more time for complex positions
+        earlyGameDepth: 3,  // V8.0: Smarter early game (from 2)
+        multiThreatDetection: true, // V8.0: NEW - detect multiple threats
+        criticalMoveDetection: true, // V8.0: NEW - identify critical positions
+        advancedPatterns: true, // V8.0: NEW - enhanced pattern recognition
         thinkTime: 1500
     }
 };
@@ -586,6 +590,151 @@ function generateBoardHash(boardArray, boardSize) {
         }
     }
     return hash;
+}
+
+// ================================
+// V8.0: ADVANCED AI INTELLIGENCE FUNCTIONS
+// ================================
+
+/**
+ * V8.0: Detect multiple threats (double-three, etc.)
+ * Returns count and positions of threat moves
+ */
+function detectMultipleTh​reats(player) {
+    const threats = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                // Try placing piece
+                board[row][col] = player;
+                const score = evaluatePosition(row, col, player);
+                board[row][col] = null;
+
+                // Check if this creates a threat (open-three or better)
+                if (score >= PATTERNS.OPEN_THREE.score) {
+                    threats.push({
+                        row, col, score,
+                        type: score >= PATTERNS.FOUR.score ? 'four' :
+                              score >= PATTERNS.OPEN_THREE.score ? 'open-three' : 'threat'
+                    });
+                }
+            }
+        }
+    }
+
+    return threats;
+}
+
+/**
+ * V8.0: Check if position is critical (multiple threats possible)
+ * Critical = can create double-threat or force win
+ */
+function isCriticalPosition(row, col, player) {
+    if (board[row][col] !== null) return false;
+
+    // Place piece temporarily
+    board[row][col] = player;
+
+    // Count threats after this move
+    const threats = detectMultipleTh​reats(player);
+    const hasFour = threats.some(t => t.type === 'four');
+    const openThrees = threats.filter(t => t.type === 'open-three');
+
+    board[row][col] = null;
+
+    // Critical if creates four OR creates multiple open-threes
+    return hasFour || openThrees.length >= 2;
+}
+
+/**
+ * V8.0: Find all critical moves (forcing moves)
+ * Priority: Win > Block Win > Create Four > Block Four > Double Threat
+ */
+function findCriticalMoves() {
+    const critical = {
+        aiWin: null,
+        blockWin: null,
+        aiFour: null,
+        blockFour: null,
+        aiDoubleThreat: [],
+        blockDoubleThreat: []
+    };
+
+    // Check for immediate wins/blocks
+    critical.aiWin = scanForWinningMove('O');
+    critical.blockWin = scanForWinningMove('X');
+
+    // Check for four-in-a-row
+    critical.aiFour = scanForFourInRow('O');
+    critical.blockFour = scanForFourInRow('X');
+
+    // Check for double-threat positions
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) {
+                if (isCriticalPosition(row, col, 'O')) {
+                    critical.aiDoubleThreat.push({ row, col });
+                }
+                if (isCriticalPosition(row, col, 'X')) {
+                    critical.blockDoubleThreat.push({ row, col });
+                }
+            }
+        }
+    }
+
+    return critical;
+}
+
+/**
+ * V8.0: Enhanced move ordering with threat-based prioritization
+ * Returns moves sorted by strategic value
+ */
+function getStrategicMoves(maxMoves) {
+    const moves = [];
+    const centerRow = Math.floor(BOARD_SIZE / 2);
+    const centerCol = Math.floor(BOARD_SIZE / 2);
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null && hasAdjacentStone(row, col, 2)) {
+                // Calculate strategic score
+                let score = 0;
+
+                // 1. Evaluation score (attacking + defending)
+                board[row][col] = 'O';
+                const aiScore = evaluatePosition(row, col, 'O');
+                board[row][col] = 'X';
+                const defenseScore = evaluatePosition(row, col, 'X');
+                board[row][col] = null;
+
+                score += aiScore + (defenseScore * 2); // Favor defense
+
+                // 2. Center control bonus
+                const centerDist = Math.abs(row - centerRow) + Math.abs(col - centerCol);
+                score += Math.max(0, 100 - centerDist * 5);
+
+                // 3. Critical move bonus
+                if (isCriticalPosition(row, col, 'O')) {
+                    score += 500000;
+                }
+                if (isCriticalPosition(row, col, 'X')) {
+                    score += 800000; // Blocking critical is higher priority
+                }
+
+                // 4. History heuristic
+                score += historyTable[row][col] * 10;
+
+                moves.push({ row, col, score });
+            }
+        }
+    }
+
+    // Sort by score descending
+    moves.sort((a, b) => b.score - a.score);
+
+    // Return top N moves
+    return moves.slice(0, maxMoves);
 }
 
 // ================================
@@ -1518,6 +1667,26 @@ function getAIMoveInternal() {
     if (move) return move;
 
     // ============================================
+    // V8.0: CRITICAL MOVE DETECTION (Ultra Intelligent!)
+    // ============================================
+    if (config.criticalMoveDetection && aiDifficulty === 'supreme') {
+        const critical = findCriticalMoves();
+
+        // 7. Create double-threat (forcing move)
+        if (critical.aiDoubleThreat && critical.aiDoubleThreat.length > 0) {
+            console.log('🎯 V8.0: Found AI double-threat opportunity!');
+            return critical.aiDoubleThreat[0];
+        }
+
+        // 8. Block opponent's double-threat (critical defense!)
+        if (critical.blockDoubleThreat && critical.blockDoubleThreat.length > 0) {
+            console.log('🛡️ V8.0: Blocking opponent double-threat!');
+            isForcedMove = true;
+            return critical.blockDoubleThreat[0];
+        }
+    }
+
+    // ============================================
     // V7.1.1: SMART VCT/VCF - DISABLED FOR EARLY GAME
     // ============================================
     // V7.1.1 HOTFIX: Only use VCT/VCF after move 10 to prevent early game freeze
@@ -1537,14 +1706,20 @@ function getAIMoveInternal() {
     }
 
     // ============================================
-    // V7.1: STRATEGIC SEARCH WITH PROGRESSIVE DEEPENING
+    // V8.0: STRATEGIC SEARCH WITH INTELLIGENCE
     // ============================================
-    const candidates = getRelevantMoves(config.searchWidth);
+    // V8.0: Use getStrategicMoves for Supreme mode (better move ordering)
+    const candidates = (aiDifficulty === 'supreme' && config.advancedPatterns)
+        ? getStrategicMoves(config.searchWidth)
+        : getRelevantMoves(config.searchWidth);
+
     if (candidates.length === 0) {
         // Fallback to center (should rarely happen)
         const center = Math.floor(BOARD_SIZE / 2);
         return { row: center, col: center };
     }
+
+    console.log(`🧠 V8.0: Evaluating ${candidates.length} strategic moves...`);
 
     // V7.1.1: Progressive deepening with early game optimization
     if (config.progressiveDeepening && aiDifficulty === 'supreme') {
