@@ -2459,7 +2459,7 @@ function detectPatternsInLine(line, player) {
         if (numLine[i] === 0 && numLine[i + 1] === 1 &&
             numLine[i + 2] === 0 && numLine[i + 3] === 1 &&
             numLine[i + 4] === 0) {
-            patterns.push({ type: 'BROKEN_TWO', score: PATTERNS_V9.BROKEN_TWO.score, pos: i });
+            patterns.push({ type: 'BROKEN_TWO_A', score: PATTERNS_V9.BROKEN_TWO_A.score, pos: i });
         }
     }
 
