@@ -456,9 +456,24 @@ function initGPU() {
             return;
         }
 
-        gpu = new GPU({
-            mode: 'gpu' // Force GPU mode, will fallback to CPU if needed
-        });
+        // V9.1 FIX: Cross-browser GPU.js constructor
+        // v2.4.3+ has regression bug in Chrome/Edge, needs window.GPU.GPU
+        // Try standard constructor first, fallback to window.GPU.GPU
+        try {
+            gpu = new GPU({
+                mode: 'gpu' // Force GPU mode, will fallback to CPU if needed
+            });
+        } catch (e) {
+            // Fallback for newer GPU.js versions (v2.4.3+)
+            if (typeof window.GPU.GPU !== 'undefined') {
+                gpu = new window.GPU.GPU({
+                    mode: 'gpu'
+                });
+                console.log('🔧 Using window.GPU.GPU constructor (v2.4.3+ compatibility)');
+            } else {
+                throw e;
+            }
+        }
 
         console.log('🚀 GPU.js initialized successfully');
         console.log('GPU Mode:', gpu.mode);
