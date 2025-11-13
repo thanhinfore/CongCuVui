@@ -1,7 +1,8 @@
 // ================================
-// CỜ CARO 5.0 - LIGHTNING FAST AI
-// Version: 5.0.0
-// Ultra-optimized AI with Opening Book, Smart Evaluation Cache & Instant Reflexes
+// CỜ CARO 6.0 - ADAPTIVE INTELLIGENCE
+// Version: 6.0.0
+// Revolutionary AI with Adaptive Depth, Iterative Deepening & Smart Complexity Analysis
+// Fast for simple positions, Deep thinking for complex battles
 // ================================
 
 // ================================
@@ -73,38 +74,38 @@ let currentGameData = {
 };
 
 // ================================
-// AI DIFFICULTY CONFIGURATIONS
+// V6.0: AI DIFFICULTY CONFIGURATIONS WITH ADAPTIVE DEPTH
 // ================================
 const AI_CONFIGS = {
     easy: {
-        depth: 1,
-        searchWidth: 5,
-        randomness: 0.3,
+        depth: 2,              // Base depth (will be adaptive)
+        searchWidth: 8,        // Increased for better move selection
+        randomness: 0.25,      // Slight randomness for variety
         evaluationMultiplier: 0.3,
         thinkTime: 500
     },
     medium: {
-        depth: 2,
-        searchWidth: 10,
-        randomness: 0.15,
+        depth: 3,              // Base depth (will be adaptive)
+        searchWidth: 12,       // Increased for better move selection
+        randomness: 0.1,       // Less randomness
         evaluationMultiplier: 0.6,
-        thinkTime: 800
+        thinkTime: 1000        // Increased from 800
     },
     hard: {
-        depth: 3,
-        searchWidth: 15,
-        randomness: 0.05,
+        depth: 4,              // Base depth (will be adaptive)
+        searchWidth: 18,       // Increased for better move selection
+        randomness: 0.03,      // Minimal randomness
         evaluationMultiplier: 0.85,
-        thinkTime: 1200
+        thinkTime: 1500        // Increased from 1200
     },
     grandmaster: {
-        depth: 4,
-        vctDepth: 12,  // Reduced from 24 for better performance
-        vcfDepth: 10,  // Reduced from 20 for better performance
-        searchWidth: 25,
-        randomness: 0,
+        depth: 6,              // V6.0: Adaptive depth (2-8 range)
+        vctDepth: 12,          // Victory by Continuous Threats
+        vcfDepth: 10,          // Victory by Continuous Fours
+        searchWidth: 25,       // Full search width
+        randomness: 0,         // No randomness
         evaluationMultiplier: 1.0,
-        thinkTime: 1500
+        thinkTime: 2000        // V6.0: Increased for deeper search
     }
 };
 
@@ -162,13 +163,34 @@ const AI_CACHE = {
     cacheMisses: 0
 };
 
-// V5.0: Smart search control (FIXED for better intelligence)
+// V6.0: Advanced adaptive search control
 const SEARCH_CONTROL = {
     maxEmptyCellsForVCT: 150,   // Run VCT if board has < 150 empty cells (67% full)
     maxEmptyCellsForVCF: 175,   // Run VCF if board has < 175 empty cells (78% full)
     earlyGameMoveLimit: 6,      // Use opening book for first 6 moves only (more conservative)
     minThreatsForVCT: 1,        // Minimum threats needed to trigger VCT
-    useSmartOpeningBook: true   // Use intelligent opening book with tactical evaluation
+    useSmartOpeningBook: true,  // Use intelligent opening book with tactical evaluation
+    // V6.0: Adaptive depth settings
+    minDepth: 2,                // Minimum search depth
+    maxDepth: 8,                // Maximum search depth for complex positions
+    simplePositionDepth: 3,     // Quick depth for simple positions
+    complexPositionDepth: 6,    // Deep search for complex positions
+    // V6.0: Complexity thresholds
+    simpleThreshold: 3,         // <= 3 critical moves = simple
+    complexThreshold: 10,       // >= 10 critical moves = complex
+    // V6.0: Time management for iterative deepening
+    timeBufferMs: 100,          // Safety buffer to avoid timeout
+    depthTimeMultiplier: 2.5    // Estimate: next depth takes 2.5x longer
+};
+
+// V6.0: Global search state for iterative deepening
+let searchState = {
+    pvMove: null,               // Principal Variation move from last iteration
+    killerMoves: [],            // Moves that caused cutoffs (2 per depth level)
+    searchDepth: 0,             // Current search depth
+    nodesSearched: 0,           // Statistics
+    lastIterationTime: 0,       // Time taken for last depth
+    bestMoveHistory: []         // Best moves from each iteration
 };
 
 // ================================
@@ -645,6 +667,367 @@ function getZobristHash(isMaximizing) {
 }
 
 // ================================
+// V6.0: ADAPTIVE INTELLIGENCE SYSTEM
+// ================================
+
+/**
+ * V6.0: Analyze position complexity to determine optimal search depth
+ * Returns: { level: 'simple'|'medium'|'complex', score: number, threats: number, criticalMoves: number }
+ */
+function analyzePositionComplexity() {
+    let complexityScore = 0;
+    let threatCount = 0;
+    let criticalMoveCount = 0;
+
+    // Count threats and critical patterns
+    const aiThreats = {
+        openFour: 0,
+        four: 0,
+        openThree: 0,
+        semiOpenThree: 0
+    };
+
+    const playerThreats = {
+        openFour: 0,
+        four: 0,
+        openThree: 0,
+        semiOpenThree: 0
+    };
+
+    // Scan board for threats
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (board[row][col] === null) continue;
+
+            const player = board[row][col];
+            const score = evaluatePosition(row, col, player);
+
+            // Categorize threats
+            if (player === 'O') {
+                if (score >= PATTERNS.OPEN_FOUR.score) aiThreats.openFour++;
+                else if (score >= PATTERNS.FOUR.score) aiThreats.four++;
+                else if (score >= PATTERNS.OPEN_THREE.score) aiThreats.openThree++;
+                else if (score >= PATTERNS.SEMI_OPEN_THREE.score) aiThreats.semiOpenThree++;
+            } else {
+                if (score >= PATTERNS.OPEN_FOUR.score) playerThreats.openFour++;
+                else if (score >= PATTERNS.FOUR.score) playerThreats.four++;
+                else if (score >= PATTERNS.OPEN_THREE.score) playerThreats.openThree++;
+                else if (score >= PATTERNS.SEMI_OPEN_THREE.score) playerThreats.semiOpenThree++;
+            }
+        }
+    }
+
+    // Calculate threat count (higher weight for more dangerous threats)
+    threatCount =
+        (aiThreats.openFour + playerThreats.openFour) * 10 +
+        (aiThreats.four + playerThreats.four) * 8 +
+        (aiThreats.openThree + playerThreats.openThree) * 5 +
+        (aiThreats.semiOpenThree + playerThreats.semiOpenThree) * 2;
+
+    // Count critical moves (moves that must be responded to)
+    const config = AI_CONFIGS[aiDifficulty] || AI_CONFIGS.grandmaster;
+    const relevantMoves = getRelevantMoves(config.searchWidth || 25);
+
+    // Analyze each move for criticality
+    for (const move of relevantMoves) {
+        board[move.row][move.col] = 'O';
+        const aiScore = evaluatePosition(move.row, move.col, 'O');
+        board[move.row][move.col] = 'X';
+        const playerScore = evaluatePosition(move.row, move.col, 'X');
+        board[move.row][move.col] = null;
+
+        // Critical if creates or blocks significant threat
+        if (aiScore >= PATTERNS.OPEN_THREE.score || playerScore >= PATTERNS.OPEN_THREE.score) {
+            criticalMoveCount++;
+        }
+    }
+
+    // Calculate board density (affects branching factor)
+    const filledCells = board.flat().filter(cell => cell !== null).length;
+    const totalCells = BOARD_SIZE * BOARD_SIZE;
+    const density = filledCells / totalCells;
+
+    // Complexity score formula
+    complexityScore = threatCount + (criticalMoveCount * 2) + (density * 10);
+
+    // Determine complexity level
+    let level = 'medium';
+    if (criticalMoveCount <= SEARCH_CONTROL.simpleThreshold && threatCount < 10) {
+        level = 'simple';
+    } else if (criticalMoveCount >= SEARCH_CONTROL.complexThreshold || threatCount >= 30) {
+        level = 'complex';
+    }
+
+    return {
+        level,
+        score: complexityScore,
+        threats: threatCount,
+        criticalMoves: criticalMoveCount,
+        density,
+        aiThreats,
+        playerThreats
+    };
+}
+
+/**
+ * V6.0: Calculate adaptive search depth based on position complexity and time available
+ */
+function calculateAdaptiveDepth(maxTime) {
+    const complexity = analyzePositionComplexity();
+    const config = AI_CONFIGS[aiDifficulty] || AI_CONFIGS.grandmaster;
+
+    let minDepth, maxDepth;
+
+    // Adjust depth based on complexity level
+    if (complexity.level === 'simple') {
+        // Simple positions: quick shallow search is enough
+        minDepth = SEARCH_CONTROL.minDepth;
+        maxDepth = SEARCH_CONTROL.simplePositionDepth;
+    } else if (complexity.level === 'complex') {
+        // Complex positions: need deep search
+        minDepth = SEARCH_CONTROL.simplePositionDepth;
+        maxDepth = SEARCH_CONTROL.complexPositionDepth;
+    } else {
+        // Medium complexity
+        minDepth = SEARCH_CONTROL.minDepth + 1;
+        maxDepth = SEARCH_CONTROL.simplePositionDepth + 2;
+    }
+
+    // Adjust for difficulty level (lower difficulties = shallower search)
+    if (aiDifficulty === 'easy') {
+        maxDepth = Math.min(maxDepth, 2);
+        minDepth = 1;
+    } else if (aiDifficulty === 'medium') {
+        maxDepth = Math.min(maxDepth, 3);
+        minDepth = 2;
+    } else if (aiDifficulty === 'hard') {
+        maxDepth = Math.min(maxDepth, 5);
+        minDepth = 2;
+    }
+    // grandmaster uses full depth
+
+    // Adjust based on available time
+    if (maxTime < 500) {
+        maxDepth = Math.min(maxDepth, 3);
+    } else if (maxTime < 1000) {
+        maxDepth = Math.min(maxDepth, 4);
+    }
+
+    return {
+        minDepth,
+        maxDepth,
+        startDepth: minDepth,
+        complexity
+    };
+}
+
+/**
+ * V6.0: Get threat-space moves (only critical moves for simple positions)
+ * This dramatically reduces search space for simple positions
+ */
+function getThreatSpaceMoves(complexity, maxMoves = 25) {
+    const allMoves = getRelevantMoves(maxMoves);
+
+    // For complex positions, return all relevant moves
+    if (complexity.level === 'complex' || complexity.criticalMoves >= 8) {
+        return allMoves;
+    }
+
+    // For simple positions, filter to threat-creating/blocking moves only
+    const threatMoves = [];
+
+    for (const move of allMoves) {
+        // Test AI move
+        board[move.row][move.col] = 'O';
+        const aiScore = evaluatePosition(move.row, move.col, 'O');
+        board[move.row][move.col] = null;
+
+        // Test player move (what if player plays here?)
+        board[move.row][move.col] = 'X';
+        const playerScore = evaluatePosition(move.row, move.col, 'X');
+        board[move.row][move.col] = null;
+
+        // Include if move creates or blocks significant threat
+        if (aiScore >= PATTERNS.OPEN_TWO.score || playerScore >= PATTERNS.OPEN_TWO.score) {
+            threatMoves.push({
+                ...move,
+                threatValue: Math.max(aiScore, playerScore)
+            });
+        }
+    }
+
+    // If threat space is too restrictive, include top moves
+    if (threatMoves.length < 3 && allMoves.length > 0) {
+        return allMoves.slice(0, Math.min(8, allMoves.length));
+    }
+
+    // Sort by threat value
+    threatMoves.sort((a, b) => (b.threatValue || 0) - (a.threatValue || 0));
+
+    return threatMoves.slice(0, Math.min(15, threatMoves.length));
+}
+
+/**
+ * V6.0: Enhanced move ordering with PV-move and killer moves
+ */
+function orderMoves(moves, depth) {
+    const orderedMoves = [];
+    const normalMoves = [];
+
+    for (const move of moves) {
+        let priority = 0;
+
+        // PV-move from previous iteration gets highest priority
+        if (searchState.pvMove &&
+            move.row === searchState.pvMove.row &&
+            move.col === searchState.pvMove.col) {
+            priority += 10000;
+        }
+
+        // Killer moves get high priority
+        const isKiller = searchState.killerMoves.some(km =>
+            km && km.row === move.row && km.col === move.col
+        );
+        if (isKiller) {
+            priority += 5000;
+        }
+
+        // History heuristic
+        if (historyTable && historyTable[move.row]) {
+            priority += historyTable[move.row][move.col] || 0;
+        }
+
+        // Tactical evaluation
+        board[move.row][move.col] = 'O';
+        const aiScore = evaluatePosition(move.row, move.col, 'O');
+        board[move.row][move.col] = 'X';
+        const playerScore = evaluatePosition(move.row, move.col, 'X');
+        board[move.row][move.col] = null;
+
+        priority += aiScore + playerScore;
+
+        orderedMoves.push({
+            ...move,
+            priority
+        });
+    }
+
+    // Sort by priority (descending)
+    orderedMoves.sort((a, b) => b.priority - a.priority);
+
+    return orderedMoves;
+}
+
+/**
+ * V6.0: ITERATIVE DEEPENING SEARCH - THE HEART OF ADAPTIVE INTELLIGENCE
+ * Gradually increases search depth until time runs out
+ * Keeps best move from each completed iteration
+ */
+function iterativeDeepeningSearch(maxTimeMs) {
+    const startTime = Date.now();
+    const depthConfig = calculateAdaptiveDepth(maxTimeMs);
+
+    let bestMove = null;
+    let bestScore = -Infinity;
+    let currentDepth = depthConfig.startDepth;
+
+    // Reset search state
+    searchState.nodesSearched = 0;
+    searchState.bestMoveHistory = [];
+    searchState.killerMoves = [];
+
+    // Get candidate moves with adaptive threat-space search
+    const complexity = depthConfig.complexity;
+    const config = AI_CONFIGS[aiDifficulty] || AI_CONFIGS.grandmaster;
+    let candidates = getThreatSpaceMoves(complexity, config.searchWidth || 25);
+
+    // Fallback if no candidates
+    if (candidates.length === 0) {
+        const center = Math.floor(BOARD_SIZE / 2);
+        return { row: center, col: center };
+    }
+
+    // Iterative deepening loop
+    while (currentDepth <= depthConfig.maxDepth) {
+        const iterationStart = Date.now();
+        const timeUsed = iterationStart - startTime;
+        const timeRemaining = maxTimeMs - timeUsed - SEARCH_CONTROL.timeBufferMs;
+
+        // Check if we have enough time for this depth
+        if (timeRemaining < 50) {
+            break; // Not enough time, use best move from previous iteration
+        }
+
+        // Estimate time needed for this depth
+        if (searchState.lastIterationTime > 0) {
+            const estimatedTime = searchState.lastIterationTime * SEARCH_CONTROL.depthTimeMultiplier;
+            if (estimatedTime > timeRemaining) {
+                break; // Predicted timeout, stop here
+            }
+        }
+
+        // Order moves using info from previous iterations
+        const orderedCandidates = orderMoves(candidates, currentDepth);
+
+        // Search at current depth
+        let depthBestMove = null;
+        let depthBestScore = -Infinity;
+
+        for (const move of orderedCandidates) {
+            // Time check during move loop
+            if (Date.now() - startTime > maxTimeMs - SEARCH_CONTROL.timeBufferMs) {
+                break;
+            }
+
+            board[move.row][move.col] = 'O';
+            const score = minimax(currentDepth - 1, -Infinity, Infinity, false, currentDepth);
+            board[move.row][move.col] = null;
+
+            searchState.nodesSearched++;
+
+            if (score > depthBestScore) {
+                depthBestScore = score;
+                depthBestMove = move;
+            }
+
+            // Early exit if we found a winning move
+            if (score >= PATTERNS.FIVE.score * 0.8) {
+                bestMove = depthBestMove;
+                bestScore = depthBestScore;
+                searchState.pvMove = bestMove;
+                break;
+            }
+        }
+
+        // Update best move if this depth completed
+        if (depthBestMove) {
+            bestMove = depthBestMove;
+            bestScore = depthBestScore;
+            searchState.pvMove = bestMove;
+            searchState.bestMoveHistory.push({
+                depth: currentDepth,
+                move: bestMove,
+                score: bestScore
+            });
+        }
+
+        // Record iteration time for prediction
+        const iterationTime = Date.now() - iterationStart;
+        searchState.lastIterationTime = iterationTime;
+        searchState.searchDepth = currentDepth;
+
+        // If we found a winning move, no need to search deeper
+        if (bestScore >= PATTERNS.FIVE.score * 0.8) {
+            break;
+        }
+
+        currentDepth++;
+    }
+
+    return bestMove || candidates[0];
+}
+
+// ================================
 // ADVANCED PATTERN RECOGNITION
 // ================================
 
@@ -896,17 +1279,25 @@ function hasAdjacentStone(row, col, distance) {
     return false;
 }
 
-// V5.0: Log AI performance statistics (for debugging)
+// V6.0: Log AI performance statistics (for debugging)
 function logAIPerformance() {
     const totalRequests = AI_CACHE.cacheHits + AI_CACHE.cacheMisses;
     const hitRate = totalRequests > 0 ? (AI_CACHE.cacheHits / totalRequests * 100).toFixed(2) : 0;
 
-    console.log('=== CoCaro 5.0 AI Performance ===');
+    console.log('=== CoCaro 6.0 ADAPTIVE AI Performance ===');
+    console.log(`Search Depth Reached: ${searchState.searchDepth}`);
+    console.log(`Nodes Searched: ${searchState.nodesSearched}`);
+    console.log(`Best Move History: ${searchState.bestMoveHistory.length} iterations`);
     console.log(`Cache Hit Rate: ${hitRate}% (${AI_CACHE.cacheHits}/${totalRequests})`);
     console.log(`Evaluation Cache Size: ${AI_CACHE.evaluationCache.size}`);
     console.log(`Pattern Cache Size: ${AI_CACHE.patternCache.size}`);
     console.log(`Move Ordering Cache Size: ${AI_CACHE.moveOrderingCache.size}`);
-    console.log('================================');
+
+    // V6.0: Log complexity analysis
+    const complexity = analyzePositionComplexity();
+    console.log(`Position Complexity: ${complexity.level} (score: ${complexity.score.toFixed(2)})`);
+    console.log(`Critical Moves: ${complexity.criticalMoves}, Threats: ${complexity.threats}`);
+    console.log('==========================================');
 }
 
 // ================================
@@ -1013,21 +1404,23 @@ function getAIMove() {
     }
 
     // ============================================
-    // STRATEGIC SEARCH - MINIMAX
+    // V6.0: ADAPTIVE STRATEGIC SEARCH - ITERATIVE DEEPENING
     // ============================================
-    const candidates = getRelevantMoves(config.searchWidth);
-    if (candidates.length === 0) {
-        // Fallback to center (should rarely happen)
-        const center = Math.floor(BOARD_SIZE / 2);
-        return { row: center, col: center };
-    }
 
-    move = minimaxMove(candidates, config.depth);
+    // Calculate available think time
+    const thinkTimeMs = calculateThinkTime();
 
-    // Add randomness for lower difficulties
+    // V6.0: Use iterative deepening for intelligent adaptive search
+    // This allows AI to be fast for simple positions, deep for complex ones
+    move = iterativeDeepeningSearch(thinkTimeMs);
+
+    // Add randomness for lower difficulties (but less effective with adaptive search)
     if (config.randomness > 0 && Math.random() < config.randomness) {
-        const randomIndex = Math.floor(Math.random() * Math.min(3, candidates.length));
-        move = candidates[randomIndex];
+        const candidates = getRelevantMoves(config.searchWidth);
+        if (candidates.length > 0) {
+            const randomIndex = Math.floor(Math.random() * Math.min(3, candidates.length));
+            move = candidates[randomIndex];
+        }
     }
 
     return move;
@@ -1207,7 +1600,8 @@ function minimaxMove(candidates, depth) {
     return bestMove;
 }
 
-function minimax(depth, alpha, beta, isMaximizing) {
+// V6.0: Enhanced minimax with killer move heuristic
+function minimax(depth, alpha, beta, isMaximizing, maxDepth = 0) {
     // Check for terminal state
     const evaluation = evaluateBoard();
 
@@ -1215,40 +1609,99 @@ function minimax(depth, alpha, beta, isMaximizing) {
         return evaluation;
     }
 
-    const config = AI_CONFIGS[aiDifficulty];
-    const moves = getRelevantMoves(config.searchWidth);
+    const config = AI_CONFIGS[aiDifficulty] || AI_CONFIGS.grandmaster;
+    let moves = getRelevantMoves(config.searchWidth || 25);
 
     if (moves.length === 0) {
         return evaluation;
     }
 
+    // V6.0: Order moves for better pruning
+    const currentDepth = maxDepth - depth;
+    moves = orderMoves(moves, currentDepth);
+
     if (isMaximizing) {
         let maxEval = -Infinity;
+        let bestMoveIndex = -1;
 
-        for (const move of moves) {
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
             board[move.row][move.col] = 'O';
-            const eval = minimax(depth - 1, alpha, beta, false);
+            const eval = minimax(depth - 1, alpha, beta, false, maxDepth);
             board[move.row][move.col] = null;
 
-            maxEval = Math.max(maxEval, eval);
+            if (eval > maxEval) {
+                maxEval = eval;
+                bestMoveIndex = i;
+            }
+
             alpha = Math.max(alpha, eval);
 
-            if (beta <= alpha) break; // Pruning
+            // V6.0: Update killer move on cutoff
+            if (beta <= alpha) {
+                // Store killer move for this depth level
+                if (bestMoveIndex >= 0) {
+                    const killerMove = moves[bestMoveIndex];
+                    // Keep only 2 killer moves per search
+                    if (searchState.killerMoves.length < 2) {
+                        searchState.killerMoves.push(killerMove);
+                    } else {
+                        searchState.killerMoves[1] = searchState.killerMoves[0];
+                        searchState.killerMoves[0] = killerMove;
+                    }
+                }
+                break; // Pruning
+            }
+        }
+
+        // Update history table for best move
+        if (bestMoveIndex >= 0 && historyTable) {
+            const bestMove = moves[bestMoveIndex];
+            if (historyTable[bestMove.row]) {
+                historyTable[bestMove.row][bestMove.col] += depth * depth;
+            }
         }
 
         return maxEval;
     } else {
         let minEval = Infinity;
+        let bestMoveIndex = -1;
 
-        for (const move of moves) {
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
             board[move.row][move.col] = 'X';
-            const eval = minimax(depth - 1, alpha, beta, true);
+            const eval = minimax(depth - 1, alpha, beta, true, maxDepth);
             board[move.row][move.col] = null;
 
-            minEval = Math.min(minEval, eval);
+            if (eval < minEval) {
+                minEval = eval;
+                bestMoveIndex = i;
+            }
+
             beta = Math.min(beta, eval);
 
-            if (beta <= alpha) break; // Pruning
+            // V6.0: Update killer move on cutoff
+            if (beta <= alpha) {
+                // Store killer move for this depth level
+                if (bestMoveIndex >= 0) {
+                    const killerMove = moves[bestMoveIndex];
+                    if (searchState.killerMoves.length < 2) {
+                        searchState.killerMoves.push(killerMove);
+                    } else {
+                        searchState.killerMoves[1] = searchState.killerMoves[0];
+                        searchState.killerMoves[0] = killerMove;
+                    }
+                }
+                break; // Pruning
+            }
+        }
+
+        // Update history table for best move
+        if (bestMoveIndex >= 0 && historyTable) {
+            const bestMove = moves[bestMoveIndex];
+            if (historyTable[bestMove.row]) {
+                historyTable[bestMove.row][bestMove.col] += depth * depth;
+            }
         }
 
         return minEval;
@@ -1501,7 +1954,7 @@ function loadGameFromSlot(index) {
 
 function exportGameToJSON() {
     const gameData = {
-        version: '4.0.0',
+        version: '6.0.0',
         board: board,
         moveHistory: moveHistory,
         boardSize: BOARD_SIZE,
@@ -1509,7 +1962,13 @@ function exportGameToJSON() {
         aiDifficulty: aiDifficulty,
         aiPersonality: aiPersonality,
         result: currentGameData.result,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        // V6.0: Include AI performance data
+        aiStats: {
+            searchDepth: searchState.searchDepth,
+            nodesSearched: searchState.nodesSearched,
+            complexity: analyzePositionComplexity()
+        }
     };
 
     const json = JSON.stringify(gameData, null, 2);
