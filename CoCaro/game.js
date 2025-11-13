@@ -1,8 +1,8 @@
 // ================================
-// CỜ CARO 9.0 - GRANDMASTER AI
-// Version: 9.0.0
-// Professional-grade AI with Opening Book, Threat Space Search, Endgame Tablebase & 50+ Patterns
-// Đẳng cấp Grandmaster thực thụ - AI bất khả chiến bại
+// CỜ CARO 9.1 - ADVANCED AI (Machine Learning & MCTS)
+// Version: 9.1.0
+// Real Neural Network Training, MCTS Integration & Persistent Learning
+// Đẳng cấp AI với khả năng học và tiến hóa theo thời gian
 // ================================
 
 // ================================
@@ -68,6 +68,105 @@ let performanceStats = {
 let nnCache = new Map(); // Neural network prediction cache
 
 // ================================
+// V9.1: REAL NEURAL NETWORK TRAINING STATE
+// ================================
+let trainingData = {
+    positions: [],      // Training positions (board states)
+    labels: [],         // Labels (win/loss/draw scores)
+    batchSize: 32,
+    epochs: 10,
+    learningRate: 0.001,
+    totalSamples: 0,
+    lastTrainTime: null,
+    autoTrain: true,    // Auto-train after collecting enough data
+    minSamplesForTrain: 100
+};
+
+let nnTrainingStats = {
+    totalTrainingSessions: 0,
+    totalEpochs: 0,
+    currentAccuracy: 0,
+    bestAccuracy: 0,
+    lastLoss: 0,
+    trainingHistory: []
+};
+
+// ================================
+// V9.1: MCTS (Monte Carlo Tree Search) STATE
+// ================================
+let mctsEnabled = false;
+let mctsStats = {
+    totalSimulations: 0,
+    avgSimulationTime: 0,
+    bestMoveFound: 0,
+    explorationConstant: 1.414 // UCB1 constant (√2)
+};
+
+// MCTS Node class
+class MCTSNode {
+    constructor(board, player, move = null, parent = null) {
+        this.board = JSON.parse(JSON.stringify(board)); // Deep copy
+        this.player = player;
+        this.move = move;
+        this.parent = parent;
+        this.children = [];
+        this.wins = 0;
+        this.visits = 0;
+        this.untriedMoves = null; // Will be populated lazily
+    }
+
+    isFullyExpanded() {
+        return this.untriedMoves && this.untriedMoves.length === 0;
+    }
+
+    isTerminal() {
+        // Check if game is over
+        return checkWinCondition(this.board) || isBoardFull(this.board);
+    }
+
+    ucb1(explorationConstant = 1.414) {
+        if (this.visits === 0) return Infinity;
+        const exploitation = this.wins / this.visits;
+        const exploration = Math.sqrt(Math.log(this.parent.visits) / this.visits);
+        return exploitation + explorationConstant * exploration;
+    }
+}
+
+// ================================
+// V9.1: PERSISTENT LEARNING STATE (IndexedDB)
+// ================================
+let persistentLearning = {
+    enabled: true,
+    dbName: 'CoCaroLearningDB',
+    version: 1,
+    db: null,
+
+    // Player profiling
+    playerProfile: {
+        gamesPlayed: 0,
+        style: 'unknown', // 'aggressive', 'defensive', 'tactical', 'balanced'
+        commonPatterns: [],
+        weaknesses: [],
+        favoriteOpenings: [],
+        avgMoveTime: 0
+    },
+
+    // Position memory
+    positionMemory: {
+        wins: new Map(),
+        losses: new Map(),
+        draws: new Map()
+    },
+
+    // Adaptive weights
+    adaptiveWeights: {
+        aggressiveness: 1.0,
+        defensiveness: 1.0,
+        tacticalness: 1.0
+    }
+};
+
+// ================================
 // AI LEARNING & EXPERIENCE SYSTEM
 // ================================
 let experienceDB = {
@@ -129,29 +228,36 @@ const AI_CONFIGS = {
         thinkTime: 1500
     },
     supreme: {
-        depth: 5,           // V9.0: Increased for Grandmaster level (from 4)
-        vctDepth: 14,       // V9.0: Enhanced threat search (from 12)
-        vcfDepth: 12,       // V9.0: Stronger forcing (from 10)
-        searchWidth: 25,    // V9.0: Wider for better tactics (from 20)
+        depth: 5,           // V9.0: Increased for Grandmaster level
+        vctDepth: 14,       // V9.0: Enhanced threat search
+        vcfDepth: 12,       // V9.0: Stronger forcing
+        searchWidth: 25,    // V9.0: Wider for better tactics
         randomness: 0,
         evaluationMultiplier: 1.0,
         useGPU: true,       // Smart GPU usage
         useNeuralNet: true, // Neural network with caching
         progressiveDeepening: true,
-        maxThinkTime: 4000, // V9.0: More time for complex analysis (from 3000ms)
-        earlyGameDepth: 4,  // V9.0: Professional opening (from 3)
+        maxThinkTime: 5000, // V9.1: Extended for MCTS (from 4000ms)
+        earlyGameDepth: 4,  // V9.0: Professional opening
 
         // V8.0 features
         multiThreatDetection: true,
         criticalMoveDetection: true,
         advancedPatterns: true,
 
-        // V9.0 NEW features
-        useOpeningBook: true,        // V9.0: Professional opening database
-        useThreatSpaceSearch: true,  // V9.0: Renju threat space search
-        useEndgameTablebase: true,   // V9.0: Perfect endgame play
-        useRenjuCombinations: true,  // V9.0: 3-3, 4-4, 4-3 detection
-        usePatternsV9: true,         // V9.0: 50+ professional patterns
+        // V9.0 features
+        useOpeningBook: true,        // Professional opening database
+        useThreatSpaceSearch: true,  // Renju threat space search
+        useEndgameTablebase: true,   // Perfect endgame play
+        useRenjuCombinations: true,  // 3-3, 4-4, 4-3 detection
+        usePatternsV9: true,         // 50+ professional patterns
+
+        // V9.1 ADVANCED features
+        useRealNN: true,             // V9.1: Real neural network training
+        useMCTS: true,               // V9.1: Monte Carlo Tree Search
+        mctsSimulations: 100,        // V9.1: MCTS simulation count
+        usePersistentLearning: true, // V9.1: IndexedDB learning
+        useAdaptiveStrategy: true,   // V9.1: Adapt to player style
 
         thinkTime: 1500
     }
@@ -1153,6 +1259,571 @@ function getOpeningBookMove() {
     }
 
     return null;
+}
+
+// ================================
+// V9.1: REAL NEURAL NETWORK TRAINING FUNCTIONS
+// ================================
+
+/**
+ * V9.1: Create and compile neural network model for position evaluation
+ */
+async function createNeuralNetworkModel() {
+    if (typeof tf === 'undefined') {
+        console.warn('TensorFlow.js not loaded, skipping NN creation');
+        return null;
+    }
+
+    try {
+        const model = tf.sequential();
+
+        // Input layer: board state (15x15 = 225 cells, each can be -1/0/1)
+        model.add(tf.layers.dense({
+            inputShape: [225],
+            units: 128,
+            activation: 'relu',
+            kernelInitializer: 'heNormal'
+        }));
+
+        model.add(tf.layers.dropout({ rate: 0.2 }));
+
+        model.add(tf.layers.dense({
+            units: 64,
+            activation: 'relu',
+            kernelInitializer: 'heNormal'
+        }));
+
+        model.add(tf.layers.dropout({ rate: 0.2 }));
+
+        model.add(tf.layers.dense({
+            units: 32,
+            activation: 'relu',
+            kernelInitializer: 'heNormal'
+        }));
+
+        // Output layer: single value (position evaluation score -1 to 1)
+        model.add(tf.layers.dense({
+            units: 1,
+            activation: 'tanh' // Output between -1 and 1
+        }));
+
+        // Compile model
+        model.compile({
+            optimizer: tf.train.adam(trainingData.learningRate),
+            loss: 'meanSquaredError',
+            metrics: ['mse', 'mae']
+        });
+
+        console.log('🧠 V9.1: Neural Network model created successfully!');
+        model.summary();
+
+        return model;
+
+    } catch (error) {
+        console.error('Failed to create NN model:', error);
+        return null;
+    }
+}
+
+/**
+ * V9.1: Convert board to tensor input for neural network
+ */
+function boardToTensor(boardState) {
+    const flatBoard = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            const cell = boardState[row][col];
+            // Convert to -1 (X), 0 (empty), 1 (O)
+            if (cell === 'X') flatBoard.push(-1);
+            else if (cell === 'O') flatBoard.push(1);
+            else flatBoard.push(0);
+        }
+    }
+
+    return tf.tensor2d([flatBoard], [1, 225]);
+}
+
+/**
+ * V9.1: Collect training data from current game
+ */
+function collectTrainingData(boardState, evaluation, gameResult) {
+    if (!trainingData.autoTrain) return;
+
+    // Store position and evaluation
+    const flatBoard = [];
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            const cell = boardState[row][col];
+            if (cell === 'X') flatBoard.push(-1);
+            else if (cell === 'O') flatBoard.push(1);
+            else flatBoard.push(0);
+        }
+    }
+
+    trainingData.positions.push(flatBoard);
+
+    // Normalize label between -1 and 1
+    let label = 0;
+    if (gameResult === 'win') label = 1.0;
+    else if (gameResult === 'loss') label = -1.0;
+    else if (gameResult === 'draw') label = 0.0;
+    else {
+        // During game, use normalized evaluation
+        label = Math.max(-1, Math.min(1, evaluation / 10000000));
+    }
+
+    trainingData.labels.push(label);
+    trainingData.totalSamples++;
+
+    // Auto-train when enough samples collected
+    if (trainingData.totalSamples >= trainingData.minSamplesForTrain &&
+        trainingData.totalSamples % trainingData.minSamplesForTrain === 0) {
+        console.log(`📊 V9.1: Collected ${trainingData.totalSamples} samples, starting training...`);
+        trainNeuralNetwork();
+    }
+}
+
+/**
+ * V9.1: Train neural network with collected data
+ */
+async function trainNeuralNetwork() {
+    if (!neuralModel || trainingData.positions.length < trainingData.batchSize) {
+        return;
+    }
+
+    try {
+        console.log('🎓 V9.1: Training neural network...');
+
+        // Convert training data to tensors
+        const xs = tf.tensor2d(trainingData.positions);
+        const ys = tf.tensor2d(trainingData.labels, [trainingData.labels.length, 1]);
+
+        // Train model
+        const history = await neuralModel.fit(xs, ys, {
+            epochs: trainingData.epochs,
+            batchSize: trainingData.batchSize,
+            validationSplit: 0.2,
+            shuffle: true,
+            verbose: 0,
+            callbacks: {
+                onEpochEnd: (epoch, logs) => {
+                    if (epoch % 2 === 0) {
+                        console.log(`  Epoch ${epoch + 1}/${trainingData.epochs}: loss=${logs.loss.toFixed(4)}, val_loss=${logs.val_loss.toFixed(4)}`);
+                    }
+                }
+            }
+        });
+
+        // Update stats
+        nnTrainingStats.totalTrainingSessions++;
+        nnTrainingStats.totalEpochs += trainingData.epochs;
+        nnTrainingStats.lastLoss = history.history.loss[history.history.loss.length - 1];
+
+        const valLoss = history.history.val_loss[history.history.val_loss.length - 1];
+        nnTrainingStats.currentAccuracy = 1 - valLoss;
+        nnTrainingStats.bestAccuracy = Math.max(nnTrainingStats.bestAccuracy, nnTrainingStats.currentAccuracy);
+
+        nnTrainingStats.trainingHistory.push({
+            session: nnTrainingStats.totalTrainingSessions,
+            samples: trainingData.totalSamples,
+            loss: nnTrainingStats.lastLoss,
+            accuracy: nnTrainingStats.currentAccuracy,
+            timestamp: Date.now()
+        });
+
+        console.log(`✅ V9.1: Training complete! Accuracy: ${(nnTrainingStats.currentAccuracy * 100).toFixed(2)}%`);
+
+        trainingData.lastTrainTime = Date.now();
+
+        // Cleanup tensors
+        xs.dispose();
+        ys.dispose();
+
+    } catch (error) {
+        console.error('❌ V9.1: Training failed:', error);
+    }
+}
+
+/**
+ * V9.1: Use trained neural network for position evaluation
+ */
+function evaluateWithNN(boardState) {
+    if (!neuralModel || !tfReady) return null;
+
+    try {
+        const tensor = boardToTensor(boardState);
+        const prediction = neuralModel.predict(tensor);
+        const score = prediction.dataSync()[0]; // Value between -1 and 1
+
+        // Cleanup
+        tensor.dispose();
+        prediction.dispose();
+
+        // Convert to game score scale
+        return score * 5000000; // Scale to match pattern scores
+
+    } catch (error) {
+        console.error('NN evaluation error:', error);
+        return null;
+    }
+}
+
+// ================================
+// V9.1: MCTS (Monte Carlo Tree Search) FUNCTIONS
+// ================================
+
+/**
+ * V9.1: MCTS main search function
+ */
+function mctsSearch(rootBoard, player, numSimulations = 100) {
+    const startTime = Date.now();
+    const root = new MCTSNode(rootBoard, player);
+
+    for (let i = 0; i < numSimulations; i++) {
+        // 1. Selection
+        let node = selectNode(root);
+
+        // 2. Expansion
+        if (!node.isTerminal() && node.visits > 0) {
+            node = expandNode(node);
+        }
+
+        // 3. Simulation (Rollout)
+        const result = simulateGame(node);
+
+        // 4. Backpropagation
+        backpropagate(node, result);
+
+        // Early exit if interrupted
+        if (aiInterrupted) break;
+    }
+
+    // Select best move based on visit count
+    const bestChild = root.children.reduce((best, child) =>
+        child.visits > best.visits ? child : best
+    );
+
+    const thinkTime = Date.now() - startTime;
+    mctsStats.totalSimulations += numSimulations;
+    mctsStats.avgSimulationTime = (mctsStats.avgSimulationTime + thinkTime) / 2;
+
+    console.log(`🌳 V9.1: MCTS completed ${numSimulations} simulations in ${thinkTime}ms`);
+    console.log(`   Best move: (${bestChild.move.row}, ${bestChild.move.col}) with ${bestChild.visits} visits, ${(bestChild.wins/bestChild.visits*100).toFixed(1)}% win rate`);
+
+    return bestChild.move;
+}
+
+/**
+ * V9.1: Select most promising node using UCB1
+ */
+function selectNode(node) {
+    while (!node.isTerminal()) {
+        if (!node.isFullyExpanded()) {
+            return node;
+        }
+
+        // Select child with highest UCB1 score
+        node = node.children.reduce((best, child) =>
+            child.ucb1(mctsStats.explorationConstant) > best.ucb1(mctsStats.explorationConstant) ? child : best
+        );
+    }
+    return node;
+}
+
+/**
+ * V9.1: Expand node by adding a new child
+ */
+function expandNode(node) {
+    // Get untried moves lazily
+    if (node.untriedMoves === null) {
+        node.untriedMoves = getValidMoves(node.board);
+    }
+
+    if (node.untriedMoves.length === 0) {
+        return node;
+    }
+
+    // Pick random untried move
+    const moveIndex = Math.floor(Math.random() * node.untriedMoves.length);
+    const move = node.untriedMoves.splice(moveIndex, 1)[0];
+
+    // Create new board state
+    const newBoard = JSON.parse(JSON.stringify(node.board));
+    newBoard[move.row][move.col] = node.player;
+
+    // Create child node
+    const opponent = node.player === 'O' ? 'X' : 'O';
+    const child = new MCTSNode(newBoard, opponent, move, node);
+    node.children.push(child);
+
+    return child;
+}
+
+/**
+ * V9.1: Simulate random game from node position
+ */
+function simulateGame(node) {
+    const simBoard = JSON.parse(JSON.stringify(node.board));
+    let currentPlayer = node.player;
+    let movesPlayed = 0;
+    const maxMoves = 50; // Limit simulation length
+
+    while (movesPlayed < maxMoves) {
+        // Check terminal state
+        const winner = checkWinCondition(simBoard);
+        if (winner) {
+            return winner === 'O' ? 1 : -1;
+        }
+
+        if (isBoardFull(simBoard)) {
+            return 0; // Draw
+        }
+
+        // Make random move
+        const validMoves = getValidMoves(simBoard);
+        if (validMoves.length === 0) break;
+
+        const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+        simBoard[randomMove.row][randomMove.col] = currentPlayer;
+
+        currentPlayer = currentPlayer === 'O' ? 'X' : 'O';
+        movesPlayed++;
+    }
+
+    // If reached max moves, evaluate position
+    return 0; // Draw by default
+}
+
+/**
+ * V9.1: Backpropagate result up the tree
+ */
+function backpropagate(node, result) {
+    while (node !== null) {
+        node.visits++;
+
+        // Update wins (from perspective of node's player)
+        if ((node.player === 'O' && result > 0) || (node.player === 'X' && result < 0)) {
+            node.wins++;
+        } else if (result === 0) {
+            node.wins += 0.5; // Draw counts as half win
+        }
+
+        node = node.parent;
+    }
+}
+
+/**
+ * V9.1: Get valid moves for MCTS
+ */
+function getValidMoves(boardState) {
+    const moves = [];
+
+    for (let row = 0; row < BOARD_SIZE; row++) {
+        for (let col = 0; col < BOARD_SIZE; col++) {
+            if (boardState[row][col] === null && hasAdjacentStone(row, col, 2)) {
+                moves.push({ row, col });
+            }
+        }
+    }
+
+    // If no adjacent moves, allow center area
+    if (moves.length === 0) {
+        const center = Math.floor(BOARD_SIZE / 2);
+        for (let dr = -2; dr <= 2; dr++) {
+            for (let dc = -2; dc <= 2; dc++) {
+                const r = center + dr;
+                const c = center + dc;
+                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && boardState[r][c] === null) {
+                    moves.push({ row: r, col: c });
+                }
+            }
+        }
+    }
+
+    return moves;
+}
+
+// ================================
+// V9.1: PERSISTENT LEARNING (IndexedDB) FUNCTIONS
+// ================================
+
+/**
+ * V9.1: Initialize IndexedDB for persistent learning
+ */
+function initPersistentLearning() {
+    if (!persistentLearning.enabled || !window.indexedDB) {
+        console.warn('IndexedDB not available, persistent learning disabled');
+        return;
+    }
+
+    const request = indexedDB.open(persistentLearning.dbName, persistentLearning.version);
+
+    request.onerror = () => {
+        console.error('Failed to open IndexedDB');
+        persistentLearning.enabled = false;
+    };
+
+    request.onsuccess = (event) => {
+        persistentLearning.db = event.target.result;
+        console.log('💾 V9.1: Persistent learning database initialized');
+
+        // Load existing data
+        loadPersistentData();
+    };
+
+    request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+
+        // Create object stores
+        if (!db.objectStoreNames.contains('playerProfile')) {
+            db.createObjectStore('playerProfile', { keyPath: 'id' });
+        }
+
+        if (!db.objectStoreNames.contains('positionMemory')) {
+            db.createObjectStore('positionMemory', { keyPath: 'hash' });
+        }
+
+        if (!db.objectStoreNames.contains('gameHistory')) {
+            db.createObjectStore('gameHistory', { keyPath: 'id', autoIncrement: true });
+        }
+
+        console.log('💾 V9.1: Database schema created');
+    };
+}
+
+/**
+ * V9.1: Load persistent data from IndexedDB
+ */
+function loadPersistentData() {
+    if (!persistentLearning.db) return;
+
+    const transaction = persistentLearning.db.transaction(['playerProfile'], 'readonly');
+    const store = transaction.objectStore('playerProfile');
+    const request = store.get('default');
+
+    request.onsuccess = () => {
+        if (request.result) {
+            persistentLearning.playerProfile = request.result.data;
+            console.log('📊 V9.1: Loaded player profile:', persistentLearning.playerProfile);
+        }
+    };
+}
+
+/**
+ * V9.1: Save persistent data to IndexedDB
+ */
+function savePersistentData() {
+    if (!persistentLearning.db) return;
+
+    const transaction = persistentLearning.db.transaction(['playerProfile'], 'readwrite');
+    const store = transaction.objectStore('playerProfile');
+
+    store.put({
+        id: 'default',
+        data: persistentLearning.playerProfile
+    });
+}
+
+/**
+ * V9.1: Analyze player style based on move history
+ */
+function analyzePlayerStyle() {
+    if (moveHistory.length < 10) return;
+
+    let aggressiveMoves = 0;
+    let defensiveMoves = 0;
+    let tacticalMoves = 0;
+
+    // Analyze last 20 moves
+    const recentMoves = moveHistory.slice(-20);
+
+    for (const move of recentMoves) {
+        if (move.player === 'X') { // Human player
+            // Simple heuristic: check if move creates threat or blocks threat
+            const score = evaluatePosition(move.row, move.col, 'X');
+
+            if (score > 100000) aggressiveMoves++;
+            else if (score < 50000) defensiveMoves++;
+            else tacticalMoves++;
+        }
+    }
+
+    // Determine dominant style
+    const max = Math.max(aggressiveMoves, defensiveMoves, tacticalMoves);
+
+    if (max === aggressiveMoves) {
+        persistentLearning.playerProfile.style = 'aggressive';
+    } else if (max === defensiveMoves) {
+        persistentLearning.playerProfile.style = 'defensive';
+    } else {
+        persistentLearning.playerProfile.style = 'tactical';
+    }
+
+    console.log(`👤 V9.1: Player style detected: ${persistentLearning.playerProfile.style}`);
+
+    // Adapt AI strategy
+    adaptAIStrategy();
+}
+
+/**
+ * V9.1: Adapt AI strategy based on player profile
+ */
+function adaptAIStrategy() {
+    const style = persistentLearning.playerProfile.style;
+
+    switch (style) {
+        case 'aggressive':
+            // Against aggressive player, play more defensively
+            persistentLearning.adaptiveWeights.aggressiveness = 0.7;
+            persistentLearning.adaptiveWeights.defensiveness = 1.5;
+            console.log('🛡️ V9.1: Adapting to aggressive player - defensive strategy');
+            break;
+
+        case 'defensive':
+            // Against defensive player, play more aggressively
+            persistentLearning.adaptiveWeights.aggressiveness = 1.5;
+            persistentLearning.adaptiveWeights.defensiveness = 0.7;
+            console.log('⚔️ V9.1: Adapting to defensive player - aggressive strategy');
+            break;
+
+        case 'tactical':
+            // Against tactical player, balance approach
+            persistentLearning.adaptiveWeights.aggressiveness = 1.0;
+            persistentLearning.adaptiveWeights.defensiveness = 1.0;
+            persistentLearning.adaptiveWeights.tacticalness = 1.3;
+            console.log('🧩 V9.1: Adapting to tactical player - balanced strategy');
+            break;
+    }
+
+    savePersistentData();
+}
+
+/**
+ * V9.1: Remember position outcome for learning
+ */
+function rememberPosition(boardState, result) {
+    const hash = generateBoardHash(boardState, BOARD_SIZE);
+
+    if (result === 'win') {
+        persistentLearning.positionMemory.wins.set(hash, true);
+    } else if (result === 'loss') {
+        persistentLearning.positionMemory.losses.set(hash, true);
+    } else {
+        persistentLearning.positionMemory.draws.set(hash, true);
+    }
+
+    // Save to IndexedDB
+    if (persistentLearning.db) {
+        const transaction = persistentLearning.db.transaction(['positionMemory'], 'readwrite');
+        const store = transaction.objectStore('positionMemory');
+
+        store.put({
+            hash: hash,
+            result: result,
+            timestamp: Date.now()
+        });
+    }
 }
 
 // ================================
