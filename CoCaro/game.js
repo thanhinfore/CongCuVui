@@ -600,7 +600,7 @@ function generateBoardHash(boardArray, boardSize) {
  * V8.0: Detect multiple threats (double-three, etc.)
  * Returns count and positions of threat moves
  */
-function detectMultipleTh​reats(player) {
+function detectMultipleThreats(player) {
     const threats = [];
 
     for (let row = 0; row < BOARD_SIZE; row++) {
@@ -637,7 +637,7 @@ function isCriticalPosition(row, col, player) {
     board[row][col] = player;
 
     // Count threats after this move
-    const threats = detectMultipleTh​reats(player);
+    const threats = detectMultipleThreats(player);
     const hasFour = threats.some(t => t.type === 'four');
     const openThrees = threats.filter(t => t.type === 'open-three');
 
