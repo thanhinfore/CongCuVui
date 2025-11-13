@@ -1,13 +1,41 @@
-# 🚀 Cờ Caro 7.0 - GPU-Accelerated AI Game
+# ⚡ Cờ Caro 7.1 - Optimized GPU-Accelerated AI
 
-Một trò chơi cờ caro (Gomoku) **cách mạng** với **AI sử dụng GPU**, Neural Networks và giao diện đẹp mắt với **nhiều tính năng nâng cao vượt trội**.
+Một trò chơi cờ caro (Gomoku) **cách mạng** với **AI sử dụng GPU được tối ưu hóa**, Neural Networks với caching và giao diện đẹp mắt với **nhiều tính năng nâng cao vượt trội**.
 
-![Version](https://img.shields.io/badge/version-7.0.0-blue)
-![AI](https://img.shields.io/badge/AI-GPU%20Accelerated-red)
-![GPU](https://img.shields.io/badge/GPU-WebGL%20%2B%20TensorFlow-orange)
+![Version](https://img.shields.io/badge/version-7.1.0-blue)
+![AI](https://img.shields.io/badge/AI-Optimized%20GPU-red)
+![Performance](https://img.shields.io/badge/Performance-Enhanced-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🔥 TÍNH NĂNG CỰC MỚI TRONG VERSION 7.0
+## 🔥 TÍNH NĂNG TỐI ƯU TRONG VERSION 7.1
+
+### ⚡ **PERFORMANCE OPTIMIZATIONS - Giải quyết vấn đề mắc kẹt v7.0!**
+- **🆕 Progressive Deepening**: Bắt đầu depth 2, tăng dần đến 5 (thay vì fixed depth 8)
+- **🆕 Smart GPU Usage**: Chỉ dùng GPU khi board >40% full (tối ưu early game)
+- **🆕 Neural Network Caching**: Cache 5000 predictions để tránh tính lại
+- **🆕 Timeout Protection**: Hard timeout 3000ms, không bị treo game
+- **🆕 Interrupt Mechanism**: Có thể dừng search bất cứ lúc nào
+- **🆕 Performance Monitoring**: Track GPU/CPU usage, think time
+
+### 🎯 **OPTIMIZED SUPREME AI CONFIG**
+- **Depth: 5** (giảm từ 8 - optimal balance)
+- **VCT Depth: 14** (giảm từ 20 - still strong)
+- **VCF Depth: 12** (giảm từ 16 - adequate)
+- **Search Width: 30** (giảm từ 50 - focused search)
+- **Max Think Time: 3000ms** (hard timeout)
+
+### 📊 **VERSION 7.0 vs 7.1 COMPARISON**
+
+| Metric | v7.0 | v7.1 | Cải thiện |
+|--------|------|------|-----------|
+| Depth | 8 (fixed) | 2→5 (progressive) | **Adaptive** |
+| Search Width | 50 | 30 | **-40% complexity** |
+| GPU Usage | Always | Smart (>40% board) | **Early game faster** |
+| NN Calls | Uncached | Cached (5000) | **Instant repeats** |
+| Timeout | None | 3000ms hard | **No freeze** |
+| Think Time | Varies | Monitored | **Predictable** |
+
+## 🔥 TÍNH NĂNG CỐT LÕI (từ v7.0)
 
 ### 🚀 **GPU-ACCELERATED AI - Revolutionary Technology!**
 - **GPU.js Integration**: Tính toán song song trên GPU để tăng tốc AI
@@ -26,7 +54,7 @@ Một trò chơi cờ caro (Gomoku) **cách mạng** với **AI sử dụng GPU*
 - **Trung bình**: Thách thức vừa phải (Depth: 2, Randomness: 15%)
 - **Khó**: AI mạnh với chiến thuật cao cấp (Depth: 3, Randomness: 5%)
 - **Grand Master**: AI cực mạnh với VCT/VCF depth 12/10 - Gần như bất khả chiến bại! 🏆
-- **🆕 Supreme (GPU)**: AI tối thượng với GPU + Neural Network (Depth: 8, VCT: 20, VCF: 16) 🔥
+- **🆕 Supreme (GPU)**: AI tối ưu với GPU + NN + Progressive Deepening (Depth: 2→5, VCT: 14, VCF: 12) ⚡
 
 ### 🎭 **3 TÍNH CÁCH AI**
 - **Tấn công**: AI aggressive, ưu tiên tấn công (Attack x1.5, Defense x0.7)
@@ -386,7 +414,18 @@ Dự án này được phát hành dưới MIT License.
 
 ## 📝 Changelog
 
-### Version 7.0.0 (Current - GPU-ACCELERATED AI!) 🚀🔥
+### Version 7.1.0 (Current - OPTIMIZED GPU AI!) ⚡🔥
+- ✅ **🆕 PROGRESSIVE DEEPENING**: Adaptive depth 2→5 thay vì fixed depth 8
+- ✅ **🆕 SMART GPU USAGE**: Chỉ dùng GPU khi board >40% full (early game nhanh hơn)
+- ✅ **🆕 NN CACHING**: Cache 5000 predictions, tránh tính lại
+- ✅ **🆕 TIMEOUT PROTECTION**: Hard timeout 3000ms, không bị treo
+- ✅ **🆕 INTERRUPT MECHANISM**: Có thể dừng minimax/VCT/VCF bất cứ lúc nào
+- ✅ **🆕 PERFORMANCE MONITORING**: Track GPU/CPU usage, avg/max think time
+- ✅ **🆕 OPTIMIZED CONFIGS**: Depth 8→5, SearchWidth 50→30, VCT 20→14, VCF 16→12
+- ✅ **BUG FIX**: Giải quyết vấn đề AI bị mắc kẹt sau vài nước đi trong v7.0
+- ✅ All GPU + Neural Network features from v7.0 with better performance
+
+### Version 7.0.0 (GPU-ACCELERATED AI) 🚀
 - ✅ **🆕 GPU ACCELERATION**: GPU.js integration cho parallel computation
 - ✅ **🆕 NEURAL NETWORK AI**: TensorFlow.js với 4-layer deep network
 - ✅ **🆕 SUPREME AI LEVEL**: Depth 8, VCT 20, VCF 16 với GPU
