@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện Caro 5.0 - Lightning Fast AI</title>
+    <title>Luyện Caro 7.0 - GPU-Accelerated AI</title>
     <link rel="stylesheet" href="style.css">
+    <!-- GPU.js for GPU-accelerated computation -->
+    <script src="https://cdn.jsdelivr.net/npm/gpu.js@latest/dist/gpu-browser.min.js"></script>
+    <!-- TensorFlow.js for Neural Network -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Luyện Cờ Caro <span class="version">v5.0.0 ⚡</span> <span style="cursor:pointer" onclick="javascript: window.open('https://luyenai.vn');" class="version-badge">Học vibe coding tại Luyện AI</span></h1>
+            <h1>Luyện Cờ Caro <span class="version">v7.0.0 🚀</span> <span style="cursor:pointer" onclick="javascript: window.open('https://luyenai.vn');" class="version-badge">Học vibe coding tại Luyện AI</span></h1>
             <div class="header-controls">
                 <button id="settingsToggle" class="icon-btn" title="Cài đặt">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -53,7 +57,8 @@
                         <option value="easy">Dễ</option>
                         <option value="medium">Trung bình</option>
                         <option value="hard">Khó</option>
-                        <option value="grandmaster" selected>Grand Master</option>
+                        <option value="grandmaster">Grand Master</option>
+                        <option value="supreme" selected>Supreme (GPU)</option>
                     </select>
                 </div>
 
@@ -218,12 +223,13 @@
             </button>
         </div>
 
-        <!-- V4.0 Footer -->
+        <!-- V7.0 Footer -->
         <div class="footer">
-            <p>CoCaro 4.0 - Ultra Advanced AI |
-                <span class="feature-badge">4 Cấp độ AI</span> |
-                <span class="feature-badge">3 Tính cách AI</span> |
-                <span class="feature-badge">5 Themes</span> |
+            <p>CoCaro 7.0 - GPU-Accelerated AI |
+                <span class="feature-badge">5 Cấp độ AI</span> |
+                <span class="feature-badge">GPU Computation</span> |
+                <span class="feature-badge">Neural Network</span> |
+                <span class="feature-badge">Deep Search (Depth 8)</span> |
                 <span class="feature-badge">Phân tích thời gian thực</span>
             </p>
         </div>
