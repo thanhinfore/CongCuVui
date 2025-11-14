@@ -373,7 +373,7 @@ input:checked + .slider:before {
 
 .cell {
     background: var(--color-bg);
-    border: none;
+    border: 1px solid var(--color-border);
     cursor: pointer;
     font-size: 20px;
     font-weight: var(--font-weight-semibold);
@@ -382,6 +382,10 @@ input:checked + .slider:before {
     justify-content: center;
     transition: all var(--transition-fast);
     position: relative;
+    /* V10.0 FIX: Add dimensions for cells to display */
+    min-width: 30px;
+    min-height: 30px;
+    aspect-ratio: 1;
 }
 
 .cell:hover:not(:disabled) {
