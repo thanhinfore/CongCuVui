@@ -1,17 +1,19 @@
 // ================================
-// CỜ CARO 11.6 - EVENT HANDLERS
-// Version: 11.6.0
-// UI event handling with enhanced effects
+// CỜ CARO 12.0 - EVENT HANDLERS
+// Version: 12.0.0
+// Cờ Caro Nổ 5 Khóa Edition
 // ================================
 
-import { gameState, resetGame, togglePlayer, addMoveToHistory, updateStats } from '../core/game-state.js';
+import { gameState, resetGame, togglePlayer, addMoveToHistory, updateStats, updateExplosionScore } from '../core/game-state.js';
 import { makeMove } from '../core/board.js';
-import { checkWinAtPosition } from '../core/rules.js';
-import { renderBoard, updateCell, highlightWinningLine, updateStatus, updateStatsDisplay } from './renderer.js';
+import { checkWinAtPosition, checkAfterMoveWithExplosion } from '../core/rules.js';
+import { renderBoard, updateCell, highlightWinningLine, updateStatus, updateStatsDisplay, updateExplosionScores, clearCells } from './renderer.js';
 import { getAIMoveWithTimeout } from '../ai/ai-engine.js';
 import {
     animateCellPlacement,
     animateWinningLine,
+    animateExplosion,
+    animateOpenFiveWin,
     showAIThinking,
     hideAIThinking,
     shakeCell
@@ -54,22 +56,52 @@ async function handleCellClick(event) {
     // Animate placement with effects
     animateCellPlacement(row, col, gameState.currentPlayer);
 
-    // Check win
-    const winResult = checkWinAtPosition(gameState.board, row, col);
-    if (winResult) {
-        highlightWinningLine(winResult.line);
-        animateWinningLine(winResult.line, winResult.winner);
-        updateStatus(`${winResult.winner} wins!`);
+    // Check win/explosion (v12.0)
+    const result = checkAfterMoveWithExplosion(
+        gameState.board,
+        row,
+        col,
+        gameState.currentPlayer,
+        gameState.explosionModeEnabled
+    );
+
+    // Handle win
+    if (result.type === 'win') {
+        animateOpenFiveWin(result.line, result.winner);
+        updateStatus(`💥 ${result.winner} WINS with OPEN FIVE! 💥`);
         gameState.gameActive = false;
 
         // Update and save stats
-        updateStats(winResult.winner);
+        updateStats(result.winner);
         updateStatsDisplay(gameState.stats);
 
         return;
     }
 
-    // Switch player
+    // Handle explosion
+    if (result.type === 'explosion') {
+        console.log(`💥 EXPLOSION! ${result.explosionCount} sequences, ${result.cellsRemoved} cells removed`);
+
+        // Update explosion score
+        updateExplosionScore(result.player, result.explosionPoints);
+        updateExplosionScores(gameState.explosionScores);
+
+        // Animate explosion
+        const allCells = result.explodedCells;
+        animateExplosion(allCells, result.player);
+
+        // Clear cells from UI after animation
+        setTimeout(() => {
+            clearCells(allCells);
+        }, 900);
+
+        updateStatus(`${result.player} created ${result.explosionCount} locked five(s)! +${result.explosionPoints} points`);
+
+        // Don't toggle player - same player continues
+        return;
+    }
+
+    // Switch player (only if no explosion)
     togglePlayer();
 
     // AI move (if PvC mode)
@@ -95,16 +127,52 @@ async function handleCellClick(event) {
                 // Animate AI placement with effects
                 animateCellPlacement(aiMove.row, aiMove.col, 'O');
 
-                const aiWinResult = checkWinAtPosition(gameState.board, aiMove.row, aiMove.col);
-                if (aiWinResult) {
-                    highlightWinningLine(aiWinResult.line);
-                    animateWinningLine(aiWinResult.line, aiWinResult.winner);
-                    updateStatus('AI wins!');
+                // Check AI win/explosion (v12.0)
+                const aiResult = checkAfterMoveWithExplosion(
+                    gameState.board,
+                    aiMove.row,
+                    aiMove.col,
+                    'O',
+                    gameState.explosionModeEnabled
+                );
+
+                // Handle AI win
+                if (aiResult.type === 'win') {
+                    animateOpenFiveWin(aiResult.line, aiResult.winner);
+                    updateStatus(`💥 AI WINS with OPEN FIVE! 💥`);
                     gameState.gameActive = false;
 
                     // Update and save stats
-                    updateStats(aiWinResult.winner);
+                    updateStats(aiResult.winner);
                     updateStatsDisplay(gameState.stats);
+
+                    return;
+                }
+
+                // Handle AI explosion
+                if (aiResult.type === 'explosion') {
+                    console.log(`💥 AI EXPLOSION! ${aiResult.explosionCount} sequences, ${aiResult.cellsRemoved} cells removed`);
+
+                    // Update explosion score
+                    updateExplosionScore(aiResult.player, aiResult.explosionPoints);
+                    updateExplosionScores(gameState.explosionScores);
+
+                    // Animate explosion
+                    const allCells = aiResult.explodedCells;
+                    animateExplosion(allCells, aiResult.player);
+
+                    // Clear cells from UI after animation
+                    setTimeout(() => {
+                        clearCells(allCells);
+                    }, 900);
+
+                    updateStatus(`AI created ${aiResult.explosionCount} locked five(s)! +${aiResult.explosionPoints} points`);
+
+                    // AI continues (don't toggle)
+                    // Trigger another AI move
+                    setTimeout(() => {
+                        handleCellClick({ target: { classList: { contains: () => false } } });
+                    }, 1500);
 
                     return;
                 }

@@ -227,6 +227,55 @@ class SoundManager {
     }
 
     /**
+     * Sound: Explosion - v12.0
+     * Hiệu ứng nổ cho 5 khóa
+     */
+    playExplosion() {
+        if (!this.enabled || !this.audioContext) return;
+
+        const now = this.audioContext.currentTime;
+
+        // Deep bass rumble
+        const bass = this.audioContext.createOscillator();
+        const bassGain = this.audioContext.createGain();
+        bass.connect(bassGain);
+        bassGain.connect(this.audioContext.destination);
+
+        bass.type = 'sawtooth';
+        bass.frequency.setValueAtTime(50, now);
+        bass.frequency.exponentialRampToValueAtTime(20, now + 0.3);
+
+        bassGain.gain.setValueAtTime(0.5, now);
+        bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        bass.start(now);
+        bass.stop(now + 0.3);
+
+        // Mid-range explosion crackle
+        for (let i = 0; i < 15; i++) {
+            setTimeout(() => {
+                const freq = 100 + Math.random() * 400;
+                this.playTone(freq, 0.08, 'square', 0.2);
+            }, i * 15);
+        }
+
+        // High sparkle (debris sounds)
+        setTimeout(() => {
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const freq = 2000 + Math.random() * 2000;
+                    this.playTone(freq, 0.05, 'sine', 0.15);
+                }, i * 25);
+            }
+        }, 100);
+
+        // Final impact
+        setTimeout(() => {
+            this.playTone(80, 0.2, 'triangle', 0.4);
+        }, 300);
+    }
+
+    /**
      * Toggle sound on/off
      */
     toggle() {

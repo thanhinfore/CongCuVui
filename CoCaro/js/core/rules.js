@@ -1,12 +1,20 @@
 // ================================
-// CỜ CARO 10.0 - GAME RULES
-// Version: 10.0.0
-// Win detection and move validation
+// CỜ CARO 12.0 - GAME RULES
+// Version: 12.0.0
+// Win detection and explosion logic
+// Cờ Caro Nổ 5 Khóa Edition
 // ================================
 
 import { BOARD_SIZE, WIN_CONDITION, DIRECTIONS } from '../config/constants.js';
 import { isValidPosition } from '../utils/helpers.js';
 import { countLine } from './board.js';
+import {
+    checkAfterMove,
+    executeExplosions,
+    calculateExplosionScore,
+    checkExplosionWin,
+    checkDrawWithExplosionScore
+} from '../game-logic/explosion-detector.js';
 
 /**
  * Check for win condition at a specific position
@@ -95,4 +103,75 @@ export function isTerminalState(board) {
     }
 
     return true; // Draw
+}
+
+// ================================
+// CỜ CARO NỔ 5 KHÓA - v12.0
+// ================================
+
+/**
+ * Check win/explosion after move in Explosion Mode
+ * Trả về:
+ * - Classic mode: Kết quả win cổ điển
+ * - Explosion mode: Kết quả bao gồm win/explosion/continue
+ */
+export function checkAfterMoveWithExplosion(board, row, col, player, explosionModeEnabled) {
+    // Nếu không bật explosion mode, dùng logic cũ
+    if (!explosionModeEnabled) {
+        return {
+            type: 'classic',
+            result: checkWinAtPosition(board, row, col)
+        };
+    }
+
+    // Explosion mode logic
+    const explosionResult = checkAfterMove(board, row, col, player);
+
+    if (explosionResult.win) {
+        // 5 MỞ → THẮNG!
+        return {
+            type: 'win',
+            winType: 'OPEN_FIVE',
+            winner: player,
+            line: explosionResult.winningSequence.cells,
+            sequence: explosionResult.winningSequence
+        };
+    }
+
+    if (explosionResult.explosionCount > 0) {
+        // 5 KHÓA → NỔ!
+        const explosionPoints = calculateExplosionScore(explosionResult.explosionCount);
+        const explosionData = executeExplosions(board, explosionResult.explosions);
+
+        return {
+            type: 'explosion',
+            player,
+            explosions: explosionResult.explosions,
+            explosionCount: explosionResult.explosionCount,
+            explosionPoints,
+            explodedCells: explosionData.positions,
+            cellsRemoved: explosionData.count
+        };
+    }
+
+    // Không có gì xảy ra → Tiếp tục
+    return {
+        type: 'continue'
+    };
+}
+
+/**
+ * Check explosion-based win conditions
+ * (Tùy chọn: Thắng bằng điểm nổ)
+ */
+export function checkExplosionScoreWin(xScore, oScore, threshold = 5) {
+    return checkExplosionWin(xScore, oScore, threshold);
+}
+
+/**
+ * Check draw with explosion score tiebreaker
+ * Nếu hết chỗ, ai nhiều điểm nổ hơn thắng
+ */
+export function checkDrawWithExplosion(board, xScore, oScore) {
+    return checkDrawWithExplosionScore(board, xScore, oScore);
 }

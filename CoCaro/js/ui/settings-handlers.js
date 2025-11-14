@@ -190,6 +190,30 @@ function initSettingsChanges() {
             }
         });
     }
+
+    // Explosion mode toggle (v12.0)
+    const explosionToggle = document.getElementById('explosionMode');
+    if (explosionToggle) {
+        explosionToggle.addEventListener('change', (e) => {
+            gameState.explosionModeEnabled = e.target.checked;
+            const explosionStatsContainer = document.getElementById('explosionStatsContainer');
+
+            // Show/hide explosion stats
+            if (explosionStatsContainer) {
+                explosionStatsContainer.style.display = e.target.checked ? 'flex' : 'none';
+            }
+
+            soundManager.playButtonClick();
+
+            if (e.target.checked) {
+                updateStatus('💥 Chế độ Nổ 5 Khóa: BẬT - 5 Mở Thắng, 5 Khóa Nổ!');
+            } else {
+                updateStatus('Chế độ Caro truyền thống: BẬT');
+            }
+
+            console.log(`💥 Explosion Mode: ${e.target.checked ? 'ENABLED' : 'DISABLED'}`);
+        });
+    }
 }
 
 /**

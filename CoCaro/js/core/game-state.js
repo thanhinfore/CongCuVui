@@ -1,7 +1,7 @@
 // ================================
-// CỜ CARO 10.0 - GAME STATE
-// Version: 10.0.0
-// Centralized game state management
+// CỜ CARO 12.0 - GAME STATE
+// Version: 12.0.0
+// Cờ Caro Nổ 5 Khóa Edition
 // ================================
 
 import { BOARD_SIZE, GAME_MODES, AI_DIFFICULTY, AI_PERSONALITY, THEMES } from '../config/constants.js';
@@ -16,6 +16,15 @@ export const gameState = {
     currentPlayer: 'X',
     gameActive: true,
     gameMode: GAME_MODES.PVC,
+
+    // Explosion Mode (v12.0 NEW!)
+    explosionModeEnabled: true,        // Bật/tắt chế độ Cờ Caro Nổ 5 Khóa
+    explosionScores: {
+        X: 0,                           // Điểm nổ của X
+        O: 0                            // Điểm nổ của O
+    },
+    explosionWinThreshold: 5,          // Đạt 5 điểm nổ = thắng (tùy chọn)
+    explosionWinEnabled: false,        // Bật/tắt thắng bằng điểm nổ
 
     // AI settings
     aiDifficulty: AI_DIFFICULTY.SUPREME,
@@ -93,6 +102,10 @@ export function resetGame() {
     gameState.aiInterrupted = false;
     gameState.timerSeconds = 0;
 
+    // Reset explosion scores (v12.0)
+    gameState.explosionScores.X = 0;
+    gameState.explosionScores.O = 0;
+
     if (gameState.timerInterval) {
         clearInterval(gameState.timerInterval);
         gameState.timerInterval = null;
@@ -122,6 +135,17 @@ export function addMoveToHistory(row, col, player) {
 
     gameState.moveHistory.push({ row, col, player, timestamp: Date.now() });
     gameState.currentMoveIndex = gameState.moveHistory.length - 1;
+}
+
+/**
+ * Update explosion score (v12.0)
+ */
+export function updateExplosionScore(player, points) {
+    if (player === 'X') {
+        gameState.explosionScores.X += points;
+    } else if (player === 'O') {
+        gameState.explosionScores.O += points;
+    }
 }
 
 /**
