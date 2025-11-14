@@ -1,11 +1,122 @@
-# 🤖 Cờ Caro 9.1 - Advanced AI (Machine Learning & MCTS)
+# 🏗️ Cờ Caro 10.0 - Modern Modular Architecture
 
-Một trò chơi cờ caro (Gomoku) **đột phá với Machine Learning thực sự** - **Real Neural Network Training, MCTS & Persistent Learning** - AI tự học và tiến hóa theo thời gian!
+Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular, dễ bảo trì** - Refactored từ monolithic 4294 lines thành **21 ES6 modules** với separation of concerns!
 
-![Version](https://img.shields.io/badge/version-9.1.0-blue)
-![AI](https://img.shields.io/badge/AI-Self%20Learning-red)
-![Status](https://img.shields.io/badge/Status-Advanced-brightgreen)
+![Version](https://img.shields.io/badge/version-10.0.0-blue)
+![Architecture](https://img.shields.io/badge/Architecture-Modular-orange)
+![Modules](https://img.shields.io/badge/Modules-21-green)
+![ES6](https://img.shields.io/badge/ES6-Modules-yellow)
+![Status](https://img.shields.io/badge/Status-Production-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+## 🏗️ VERSION 10.0 - MODERN MODULAR ARCHITECTURE
+
+**Mục tiêu v10.0**: Refactor kiến trúc từ **monolithic** sang **modular** để dễ bảo trì, mở rộng và collaboration
+
+### ✨ MAJOR REFACTORING - 21 ES6 MODULES
+
+**Trước v10.0:**
+- ❌ 1 file monolithic: `game.js` (4294 lines)
+- ❌ Khó maintain, debug, và extend
+- ❌ Không thể tree-shaking
+- ❌ Khó collaborate (merge conflicts)
+
+**Sau v10.0:**
+- ✅ 21 modules ES6 với imports/exports
+- ✅ Separation of Concerns - mỗi module có trách nhiệm rõ ràng
+- ✅ Easy Maintenance - tìm & fix bugs nhanh hơn
+- ✅ Scalability - thêm features không ảnh hưởng code cũ
+- ✅ Testability - test từng module độc lập
+- ✅ Tree-shaking support - chỉ load code cần thiết
+
+### 📂 KIẾN TRÚC 6 LAYERS
+
+```
+CoCaro/
+├── js/
+│   ├── config/          # Configuration Layer (3 modules)
+│   │   ├── constants.js       # Game constants, thresholds
+│   │   ├── ai-configs.js      # AI difficulty & personality
+│   │   └── patterns.js        # PATTERNS_V9 & OPENING_BOOK_V9
+│   │
+│   ├── utils/           # Utilities Layer (3 modules)
+│   │   ├── helpers.js         # Common utilities
+│   │   ├── zobrist.js         # Zobrist hashing
+│   │   └── gpu.js             # GPU.js initialization
+│   │
+│   ├── core/            # Core Game Logic (3 modules)
+│   │   ├── board.js           # Board operations
+│   │   ├── rules.js           # Win detection, validation
+│   │   └── game-state.js      # State management
+│   │
+│   ├── ai/              # AI Engine (8 modules)
+│   │   ├── pattern-matching.js    # Pattern detection
+│   │   ├── opening-book.js        # Opening database
+│   │   ├── endgame-tablebase.js   # Endgame perfect play
+│   │   ├── threat-search.js       # VCT/VCF search
+│   │   ├── minimax.js             # Minimax + alpha-beta
+│   │   ├── mcts.js                # Monte Carlo Tree Search
+│   │   ├── neural-network.js      # TensorFlow.js
+│   │   └── ai-engine.js           # Main orchestrator
+│   │
+│   ├── ui/              # User Interface (3 modules)
+│   │   ├── renderer.js        # Board & UI rendering
+│   │   ├── event-handlers.js  # Click handlers
+│   │   └── animations.js      # Visual effects
+│   │
+│   └── main.js          # Entry Point (1 module)
+│       └── App initialization & orchestration
+```
+
+### 🎯 BENEFITS
+
+**1. Separation of Concerns**
+- Mỗi module có một trách nhiệm duy nhất
+- Config tách khỏi logic, AI tách khỏi UI
+- Dễ hiểu, dễ maintain
+
+**2. Easy Maintenance**
+- Bug trong AI? → Chỉ cần xem `js/ai/`
+- Update patterns? → Chỉ sửa `js/config/patterns.js`
+- Tìm code nhanh hơn 10x
+
+**3. Scalability**
+- Thêm algorithm mới: tạo file mới trong `js/ai/`
+- Thêm UI component: tạo file mới trong `js/ui/`
+- Không lo breaking changes
+
+**4. Testability**
+- Test từng module độc lập
+- Mock dependencies dễ dàng
+- Unit tests cho từng function
+
+**5. Team Collaboration**
+- Nhiều người làm song song khác modules
+- Giảm merge conflicts
+- Code review dễ hơn (nhỏ hơn, focused)
+
+**6. Performance**
+- ES6 modules support tree-shaking
+- Browser chỉ load code cần thiết
+- Lazy loading potential
+
+### 🔄 BACKWARD COMPATIBILITY
+
+- ✅ Tất cả features v9.1 được preserve
+- ✅ Same gameplay & AI intelligence
+- ✅ Same patterns, openings, algorithms
+- ✅ Chỉ refactor structure, không thay đổi logic
+
+### 📊 STATISTICS
+
+- **21 modules** created
+- **6 layers** architectural
+- **~2600 lines** refactored
+- **4294 lines** → **21 files** (~200 lines/file average)
+- **ES6 imports/exports** throughout
+- **Type: module** in HTML
+
+---
 
 ## 🤖 VERSION 9.1 - ADVANCED AI (Machine Learning & MCTS)
 
