@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện Caro 11.6 - Polished Edition</title>
+    <title>Luyện Caro 12.0 - Cờ Caro Nổ 5 Khóa</title>
     <link rel="stylesheet" href="style.css">
     <!-- GPU.js for GPU-accelerated computation (v2.4.2 - last stable version) -->
     <script src="https://unpkg.com/gpu.js@2.4.2/dist/gpu-browser.min.js"></script>
@@ -13,7 +13,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Luyện Cờ Caro <span class="version">v11.6 ✨🎮</span> <span style="cursor:pointer" onclick="javascript: window.open('https://luyenai.vn');" class="version-badge">Học vibe coding tại Luyện AI</span></h1>
+            <h1>Luyện Cờ Caro <span class="version">v12.0 💥🎮</span> <span class="version-badge">Cờ Caro Nổ 5 Khóa</span></h1>
             <div class="header-controls">
                 <button id="soundToggle" class="icon-btn" title="Bật/Tắt âm thanh">
                     <svg id="soundIcon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
@@ -124,6 +124,15 @@
                         <span class="slider"></span>
                     </label>
                 </div>
+
+                <!-- Explosion Mode Toggle (v12.0 NEW!) -->
+                <div class="setting-item toggle-item">
+                    <label>💥 Chế độ Nổ 5 Khóa</label>
+                    <label class="switch">
+                        <input type="checkbox" id="explosionMode" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
 
             <!-- Game Management Buttons -->
@@ -140,11 +149,18 @@
         <!-- Compact Stats -->
         <div class="stats-compact">
             <div class="stat-item">
+                <span class="stat-label">Thắng:</span>
                 <span class="stat-value player-x" id="xWins">0</span>
                 <span class="stat-sep">–</span>
                 <span class="stat-value" id="draws">0</span>
                 <span class="stat-sep">–</span>
                 <span class="stat-value player-o" id="oWins">0</span>
+            </div>
+            <div class="stat-item explosion-stats" id="explosionStatsContainer">
+                <span class="stat-label">💥 Điểm Nổ:</span>
+                <span class="stat-value player-x" id="xExplosions">0</span>
+                <span class="stat-sep">–</span>
+                <span class="stat-value player-o" id="oExplosions">0</span>
             </div>
         </div>
 

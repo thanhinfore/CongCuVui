@@ -82,3 +82,34 @@ export function updateStatsDisplay(stats) {
     if (oWinsEl) oWinsEl.textContent = stats.oWins;
     if (drawsEl) drawsEl.textContent = stats.draws;
 }
+
+/**
+ * Update explosion scores display (v12.0)
+ */
+export function updateExplosionScores(explosionScores) {
+    const xExpEl = document.querySelector('#xExplosions');
+    const oExpEl = document.querySelector('#oExplosions');
+
+    if (xExpEl) xExpEl.textContent = explosionScores.X;
+    if (oExpEl) oExpEl.textContent = explosionScores.O;
+}
+
+/**
+ * Clear cell (for explosions - v12.0)
+ */
+export function clearCell(row, col) {
+    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    if (cell) {
+        cell.textContent = '';
+        cell.classList.remove('occupied', 'x', 'o', 'explosion-warning', 'explosion-fade');
+    }
+}
+
+/**
+ * Clear multiple cells (for explosions - v12.0)
+ */
+export function clearCells(positions) {
+    positions.forEach(({ row, col }) => {
+        clearCell(row, col);
+    });
+}

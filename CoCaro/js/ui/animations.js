@@ -473,6 +473,161 @@ export function showCriticalMoveWarning(row, col) {
     }
 }
 
+// ================================
+// CỜ CARO NỔ 5 KHÓA - v12.0
+// ================================
+
+/**
+ * Animate explosion of locked five
+ * Hiệu ứng nổ khi 5 khóa
+ */
+export function animateExplosion(cells, player) {
+    const colors = player === 'X'
+        ? ['#FF6B6B', '#FF4444', '#FF0000']
+        : ['#4ECDC4', '#00CED1', '#00BFFF'];
+
+    // Flash cells before explosion
+    cells.forEach(({ row, col }) => {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add('explosion-warning');
+        }
+    });
+
+    // Play explosion sound
+    soundManager.playExplosion();
+
+    // Wait 300ms then explode
+    setTimeout(() => {
+        cells.forEach(({ row, col }) => {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (!cell) return;
+
+            const rect = cell.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Create explosion particles
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'explosion-particle';
+                particle.style.position = 'fixed';
+                particle.style.width = '10px';
+                particle.style.height = '10px';
+                particle.style.borderRadius = '50%';
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '10000';
+
+                const angle = (Math.PI * 2 * i) / 20;
+                const velocity = 100 + Math.random() * 100;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                document.body.appendChild(particle);
+
+                // Animate particle
+                let x = centerX;
+                let y = centerY;
+                let opacity = 1;
+                let size = 10;
+
+                const animateParticle = () => {
+                    x += vx * 0.016; // 60fps
+                    y += vy * 0.016;
+                    opacity -= 0.02;
+                    size -= 0.15;
+
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    particle.style.opacity = opacity;
+                    particle.style.width = size + 'px';
+                    particle.style.height = size + 'px';
+
+                    if (opacity > 0 && size > 0) {
+                        requestAnimationFrame(animateParticle);
+                    } else {
+                        particle.remove();
+                    }
+                };
+
+                requestAnimationFrame(animateParticle);
+            }
+
+            // Remove cell content
+            cell.classList.remove('explosion-warning');
+            cell.classList.add('explosion-fade');
+        });
+
+        // Show explosion score popup
+        setTimeout(() => {
+            showExplosionScore(cells.length, player);
+        }, 200);
+    }, 300);
+}
+
+/**
+ * Show explosion score popup
+ */
+function showExplosionScore(cellCount, player) {
+    const popup = document.createElement('div');
+    popup.className = 'explosion-score-popup';
+    popup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        background: linear-gradient(135deg, ${player === 'X' ? '#FF6B6B' : '#4ECDC4'}, ${player === 'X' ? '#FF4444' : '#00CED1'});
+        color: white;
+        padding: 30px 50px;
+        border-radius: 20px;
+        font-size: 36px;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        z-index: 10001;
+        animation: explosionScorePop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    `;
+    popup.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 10px;">💥</div>
+        <div>NỔ ${cellCount} QUÂN!</div>
+        <div style="font-size: 28px; margin-top: 10px;">+${cellCount >= 10 ? 3 : 1} điểm</div>
+    `;
+
+    document.body.appendChild(popup);
+
+    setTimeout(() => {
+        popup.style.transition = 'opacity 0.5s, transform 0.5s';
+        popup.style.opacity = '0';
+        popup.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        setTimeout(() => popup.remove(), 500);
+    }, 2000);
+}
+
+/**
+ * Animate open five victory
+ * Hiệu ứng thắng với 5 mở
+ */
+export function animateOpenFiveWin(cells, player) {
+    // Highlight winning line
+    cells.forEach(({ row, col }) => {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.classList.add('open-five-win');
+        }
+    });
+
+    // Play win sound
+    soundManager.playWin();
+
+    // Victory celebration
+    setTimeout(() => {
+        triggerVictoryCelebration();
+    }, 500);
+}
+
 /**
  * Initialize all animation effects
  */
@@ -582,6 +737,43 @@ function addAnimationStyles() {
         @keyframes thinking {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        /* Explosion animations - v12.0 */
+        .explosion-warning {
+            animation: explosionWarning 0.15s ease-in-out 2;
+            background-color: rgba(255, 69, 0, 0.5) !important;
+        }
+
+        @keyframes explosionWarning {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .explosion-fade {
+            animation: explosionFade 0.3s ease-out forwards;
+        }
+
+        @keyframes explosionFade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+
+        @keyframes explosionScorePop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .open-five-win {
+            animation: openFiveWin 0.6s ease-in-out infinite;
+            background-color: rgba(255, 215, 0, 0.6) !important;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes openFiveWin {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.9; }
         }
     `;
     document.head.appendChild(style);

@@ -1,8 +1,8 @@
 // ================================
-// CỜ CARO 11.6 - MAIN ENTRY POINT
-// Version: 11.6.0
-// Modern Modular Architecture with Superior AI
-// Application initialization and orchestration
+// CỜ CARO 12.0 - MAIN ENTRY POINT
+// Version: 12.0.0
+// Cờ Caro Nổ 5 Khóa Edition
+// Modern Modular Architecture with Explosion Mechanics
 // ================================
 
 // Config imports
@@ -19,7 +19,7 @@ import { gameState, resetGame, loadStats } from './core/game-state.js';
 import { initNeuralNetwork } from './ai/neural-network.js';
 
 // UI imports
-import { renderBoard, updateStatus, updateStatsDisplay } from './ui/renderer.js';
+import { renderBoard, updateStatus, updateStatsDisplay, updateExplosionScores } from './ui/renderer.js';
 import { initEventListeners } from './ui/event-handlers.js';
 import { initAnimations } from './ui/animations.js';
 import { initSettingsHandlers, loadSavedSettings } from './ui/settings-handlers.js';
@@ -29,8 +29,8 @@ import { soundManager } from './ui/sound-manager.js';
  * Initialize Application
  */
 async function initApp() {
-    console.log('🚀 Initializing CoCaro 11.6...');
-    console.log('📐 Modern Modular Architecture + Superior AI');
+    console.log('🚀 Initializing CoCaro 12.0 - Cờ Caro Nổ 5 Khóa...');
+    console.log('📐 Modern Modular Architecture + Explosion Mechanics');
 
     try {
         // Initialize utilities
@@ -49,8 +49,8 @@ async function initApp() {
         // Initialize sound and animations
         console.log('🎵 Initializing Sound & Animations...');
         initAnimations();
-        console.log('✅ Sound Manager: READY');
-        console.log('✨ Animations: READY');
+        console.log('✅ Sound Manager: READY (with Explosion Sounds!)');
+        console.log('✨ Animations: READY (with Explosion Effects!)');
 
         // Load saved settings
         loadSavedSettings();
@@ -63,8 +63,9 @@ async function initApp() {
 
         // Render initial UI
         renderBoard(gameState.board);
-        updateStatus('Welcome to CoCaro 11.6 - Polished Edition!');
+        updateStatus('💥 Welcome to CoCaro 12.0 - Cờ Caro Nổ 5 Khóa! 💥');
         updateStatsDisplay(gameState.stats);
+        updateExplosionScores(gameState.explosionScores);
 
         // Initialize event listeners
         initEventListeners();
@@ -73,9 +74,9 @@ async function initApp() {
         initSettingsHandlers();
         console.log('✅ Settings Handlers: READY');
 
-        console.log('✅ CoCaro 11.6 ready!');
+        console.log('✅ CoCaro 12.0 ready!');
         console.log(`📊 Architecture: ${getModuleCount()} modules loaded`);
-        console.log('🎮 New in v11.6: Fixed Stats Counter - Everything Works Perfectly!');
+        console.log('💥 New in v12.0: Cờ Caro Nổ 5 Khóa - 5 Mở Thắng, 5 Khóa Nổ!');
 
     } catch (error) {
         console.error('❌ Initialization error:', error);
@@ -87,7 +88,7 @@ async function initApp() {
  * Get module count for stats
  */
 function getModuleCount() {
-    return 24; // Modules in v11.5 (added immediate-threat-detector.js)
+    return 25; // Modules in v12.0 (added explosion-detector.js)
 }
 
 /**
@@ -96,23 +97,24 @@ function getModuleCount() {
 function displayArchitectureInfo() {
     console.log(`
 ╔════════════════════════════════════════════════╗
-║         CỜ CARO 11.6 - POLISHED EDITION       ║
+║      CỜ CARO 12.0 - NỔ 5 KHÓA EDITION         ║
 ╠════════════════════════════════════════════════╣
 ║ 📁 Config:    constants, patterns, ai-configs ║
 ║ 🛠️ Utils:     helpers, zobrist, gpu            ║
 ║ 🎮 Core:      game-state, board, rules         ║
+║ 💥 Logic:     explosion-detector (NEW!)        ║
 ║ 🤖 AI:        9 modules (SUPERIOR!)            ║
 ║ 🎨 UI:        renderer, event, anim, settings  ║
-║ 🎵 Effects:   sound-manager                    ║
-║ 📚 Learning:  (available in full version)      ║
+║ 🎵 Effects:   sound-manager + explosion        ║
 ╠════════════════════════════════════════════════╣
-║ ✨ v11.6 - POLISHED & COMPLETE:                ║
-║   • Stats Counter Fixed & Working              ║
-║   • Win/Loss/Draw Tracking Perfect             ║
-║   • Superior AI (Never Misses Blocks)          ║
-║   • All Controls Working                       ║
-║   • Sound + Visual Effects                     ║
-║   • Production Ready!                          ║
+║ 💥 v12.0 - CỜ CARO NỔ 5 KHÓA:                  ║
+║   • 5 Mở (Open Five) → THẮNG! 🏆              ║
+║   • 5 Khóa (Locked Five) → NỔ! 💥            ║
+║   • Explosion Score Tracking                   ║
+║   • Combo Bonus (2+ explosions = 3 pts)        ║
+║   • Superior AI + Explosion Mechanics          ║
+║   • Dramatic Visual & Sound Effects            ║
+║   • Toggle Classic/Explosion Mode              ║
 ╚════════════════════════════════════════════════╝
     `);
 }
@@ -129,7 +131,8 @@ displayArchitectureInfo();
 
 // Export for debugging
 window.CoCaroGame = {
-    version: '11.6.0',
+    version: '12.0.0',
+    edition: 'Cờ Caro Nổ 5 Khóa',
     architecture: 'modular',
     gameState,
     soundManager,
@@ -137,8 +140,16 @@ window.CoCaroGame = {
         config: 3,
         utils: 3,
         core: 3,
-        ai: 9, // Added immediate-threat-detector.js
-        ui: 5, // renderer, event-handlers, animations, sound-manager, settings-handlers
+        logic: 1, // explosion-detector.js (NEW!)
+        ai: 9,
+        ui: 5,
         effects: 1
+    },
+    features: {
+        explosionMode: true,
+        openFive: 'WINS',
+        lockedFive: 'EXPLODES',
+        comboBonus: true,
+        explosionScoreTracking: true
     }
 };
