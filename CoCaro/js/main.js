@@ -1,7 +1,7 @@
 // ================================
-// CỜ CARO 11.1 - MAIN ENTRY POINT
-// Version: 11.1.0
-// Modern Modular Architecture with Enhanced Effects
+// CỜ CARO 11.5 - MAIN ENTRY POINT
+// Version: 11.5.0
+// Modern Modular Architecture with Superior AI
 // Application initialization and orchestration
 // ================================
 
@@ -29,8 +29,8 @@ import { soundManager } from './ui/sound-manager.js';
  * Initialize Application
  */
 async function initApp() {
-    console.log('🚀 Initializing CoCaro 11.1...');
-    console.log('📐 Modern Modular Architecture + Enhanced Effects');
+    console.log('🚀 Initializing CoCaro 11.5...');
+    console.log('📐 Modern Modular Architecture + Superior AI');
 
     try {
         // Initialize utilities
@@ -63,7 +63,7 @@ async function initApp() {
 
         // Render initial UI
         renderBoard(gameState.board);
-        updateStatus('Welcome to CoCaro 11.1 - Click to start!');
+        updateStatus('Welcome to CoCaro 11.5 - Superior AI!');
         updateStatsDisplay(gameState.stats);
 
         // Initialize event listeners
@@ -73,9 +73,9 @@ async function initApp() {
         initSettingsHandlers();
         console.log('✅ Settings Handlers: READY');
 
-        console.log('✅ CoCaro 11.1 ready!');
+        console.log('✅ CoCaro 11.5 ready!');
         console.log(`📊 Architecture: ${getModuleCount()} modules loaded`);
-        console.log('🎮 New in v11.1: Full UI Controls + Better AI + Save/Load!');
+        console.log('🎮 New in v11.5: SUPERIOR AI with Immediate Threat Detection!');
 
     } catch (error) {
         console.error('❌ Initialization error:', error);
@@ -87,7 +87,7 @@ async function initApp() {
  * Get module count for stats
  */
 function getModuleCount() {
-    return 23; // Modules in v11.1 (added settings-handlers.js)
+    return 24; // Modules in v11.5 (added immediate-threat-detector.js)
 }
 
 /**
@@ -96,22 +96,23 @@ function getModuleCount() {
 function displayArchitectureInfo() {
     console.log(`
 ╔════════════════════════════════════════════════╗
-║         CỜ CARO 11.1 - ARCHITECTURE           ║
+║         CỜ CARO 11.5 - ARCHITECTURE           ║
 ╠════════════════════════════════════════════════╣
 ║ 📁 Config:    constants, patterns, ai-configs ║
 ║ 🛠️ Utils:     helpers, zobrist, gpu            ║
 ║ 🎮 Core:      game-state, board, rules         ║
-║ 🤖 AI:        8 modules (minimax, mcts, etc.)  ║
+║ 🤖 AI:        9 modules (IMPROVED!)            ║
 ║ 🎨 UI:        renderer, event, anim, settings  ║
 ║ 🎵 Effects:   sound-manager                    ║
 ║ 📚 Learning:  (available in full version)      ║
 ╠════════════════════════════════════════════════╣
-║ ✨ New in v11.1:                               ║
-║   • Fixed All UI Controls (Settings, Buttons)  ║
-║   • Save/Load Game Functionality               ║
-║   • Undo/Redo Support                          ║
-║   • Theme Switcher                             ║
-║   • Dark Mode                                  ║
+║ ✨ New in v11.5 - SUPERIOR AI:                 ║
+║   • Immediate Win Detection (Priority 10000)   ║
+║   • Immediate Block Detection (Priority 9000)  ║
+║   • 4-in-a-row Recognition                     ║
+║   • Open-3 Threat Detection                    ║
+║   • Advanced Defensive Logic                   ║
+║   • AI will NEVER miss obvious blocks!         ║
 ╚════════════════════════════════════════════════╝
     `);
 }
@@ -128,7 +129,7 @@ displayArchitectureInfo();
 
 // Export for debugging
 window.CoCaroGame = {
-    version: '11.1.0',
+    version: '11.5.0',
     architecture: 'modular',
     gameState,
     soundManager,
@@ -136,7 +137,7 @@ window.CoCaroGame = {
         config: 3,
         utils: 3,
         core: 3,
-        ai: 8,
+        ai: 9, // Added immediate-threat-detector.js
         ui: 5, // renderer, event-handlers, animations, sound-manager, settings-handlers
         effects: 1
     }
