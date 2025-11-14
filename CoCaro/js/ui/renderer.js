@@ -11,7 +11,16 @@ import { BOARD_SIZE } from '../config/constants.js';
  */
 export function renderBoard(board, containerSelector = '#board') {
     const boardContainer = document.querySelector(containerSelector);
-    if (!boardContainer) return;
+
+    console.log('🎨 Rendering board...');
+    console.log('Container found:', boardContainer);
+    console.log('Board size:', BOARD_SIZE);
+    console.log('Board data:', board);
+
+    if (!boardContainer) {
+        console.error('❌ Board container not found!');
+        return;
+    }
 
     boardContainer.innerHTML = '';
     boardContainer.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`;
@@ -31,6 +40,8 @@ export function renderBoard(board, containerSelector = '#board') {
             boardContainer.appendChild(cell);
         }
     }
+
+    console.log('✅ Board rendered:', boardContainer.children.length, 'cells');
 }
 
 /**
