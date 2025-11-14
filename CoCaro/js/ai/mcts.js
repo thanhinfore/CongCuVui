@@ -5,7 +5,8 @@
 // ================================
 
 import { checkWinCondition, isTerminalState } from '../core/rules.js';
-import { getValidMoves, makeMove, undoMove, copyBoard } from '../core/board.js';
+import { makeMove, undoMove, copyBoard } from '../core/board.js';
+import { getValidMoves } from '../utils/helpers.js';
 import { MCTS } from '../config/constants.js';
 
 /**
