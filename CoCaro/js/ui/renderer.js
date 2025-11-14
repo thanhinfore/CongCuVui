@@ -74,8 +74,8 @@ export function updateStatus(message) {
  * Update statistics display
  */
 export function updateStatsDisplay(stats) {
-    const xWinsEl = document.querySelector('#x-wins');
-    const oWinsEl = document.querySelector('#o-wins');
+    const xWinsEl = document.querySelector('#xWins');
+    const oWinsEl = document.querySelector('#oWins');
     const drawsEl = document.querySelector('#draws');
 
     if (xWinsEl) xWinsEl.textContent = stats.xWins;
