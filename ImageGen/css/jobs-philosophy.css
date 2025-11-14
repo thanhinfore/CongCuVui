@@ -1,0 +1,596 @@
+/* =====================================================
+   STEVE JOBS DESIGN PHILOSOPHY
+   "Design is not just what it looks like and feels like.
+    Design is how it works." - Steve Jobs
+
+   Focus on:
+   1. Extreme Simplicity - Remove everything unnecessary
+   2. Intuitive Flow - No learning curve
+   3. Magical Experience - Delight at every interaction
+   4. Premium Feel - Every pixel matters
+   5. Focus - One thing at a time
+   ===================================================== */
+
+/* ===== STEVE JOBS PRINCIPLE #1: EXTREME SIMPLIFICATION ===== */
+
+/* Hide all advanced features by default - Progressive Disclosure */
+#presetsSection,
+#filtersSection,
+#advancedPositioningSection,
+#folderImagesSection {
+    display: none !important;
+}
+
+/* Show them only when users click a "Show Advanced" button */
+.show-advanced #presetsSection,
+.show-advanced #filtersSection,
+.show-advanced #advancedPositioningSection,
+.show-advanced #folderImagesSection {
+    display: block !important;
+    animation: gentleSlideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes gentleSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 2000px;
+    }
+}
+
+/* ===== PRINCIPLE #2: FOCUS - ONE CLEAR PATH ===== */
+
+/* Create a visual hierarchy that guides the eye */
+.control-panel {
+    counter-reset: step-counter;
+}
+
+/* Add step numbers to guide users through the flow */
+#textSection::before,
+#uploadSection::before,
+#styleSection::before {
+    counter-increment: step-counter;
+    content: "Step " counter(step-counter);
+    display: block;
+    font-family: var(--apple-font-display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--apple-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+    animation-delay: calc(0.1s * (counter(step-counter) - 1));
+}
+
+/* Make text section the hero - largest and most prominent */
+#textSection {
+    border: 2px solid rgba(102, 126, 234, 0.2) !important;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15) !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+#textSection::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: var(--apple-radius-xl);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s var(--apple-ease);
+    pointer-events: none;
+}
+
+#textSection:hover::after {
+    opacity: 1;
+}
+
+/* ===== PRINCIPLE #3: MAGICAL INTERACTIONS ===== */
+
+/* Breathing effect on the main action button */
+#addTextButton {
+    animation: breathe 3s ease-in-out infinite;
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3) !important;
+    position: relative;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 12px 48px rgba(0, 122, 255, 0.4);
+    }
+}
+
+#addTextButton:hover {
+    animation: none;
+    transform: scale(1.05) !important;
+}
+
+/* Add a glow effect on hover */
+#addTextButton::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: var(--apple-radius-lg);
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-blue-light));
+    z-index: -1;
+    opacity: 0;
+    filter: blur(20px);
+    transition: opacity 0.3s var(--apple-ease);
+}
+
+#addTextButton:hover::after {
+    opacity: 0.5;
+}
+
+/* ===== PRINCIPLE #4: BEAUTIFUL DETAILS ===== */
+
+/* Perfect spacing and rhythm */
+.control-panel > * {
+    margin-bottom: 20px !important;
+}
+
+/* Enhanced text input with focus glow */
+.text-input:focus,
+.markdown-textarea:focus {
+    box-shadow:
+        0 0 0 4px rgba(0, 122, 255, 0.1),
+        0 8px 24px rgba(0, 122, 255, 0.12) !important;
+}
+
+/* Smooth section transitions */
+.panel-section {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-section:not(.collapsed) {
+    margin-bottom: 24px !important;
+}
+
+/* ===== PRINCIPLE #5: SMART DEFAULTS ===== */
+
+/* Make the Knowledge Mode section more prominent */
+.knowledge-mode-section {
+    position: relative;
+    overflow: visible !important;
+}
+
+.knowledge-mode-section::before {
+    content: '✨ RECOMMENDED';
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #667eea;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: wiggle 2s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+}
+
+/* ===== ADVANCED TOGGLE BUTTON ===== */
+/* Add a beautiful toggle for advanced features */
+.advanced-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-blue-dark));
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+    cursor: pointer;
+    transition: all 0.3s var(--apple-spring);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.advanced-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 32px rgba(0, 122, 255, 0.45);
+}
+
+.advanced-toggle:active {
+    transform: scale(0.95);
+}
+
+.show-advanced .advanced-toggle {
+    background: linear-gradient(135deg, var(--apple-gray-5), var(--apple-gray-6));
+    transform: rotate(45deg);
+}
+
+/* ===== MICRO-INTERACTIONS - DELIGHTFUL DETAILS ===== */
+
+/* Smooth hover states with scale */
+.helper-button,
+.secondary-button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.helper-button:hover,
+.secondary-button:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+/* Enhanced checkbox with smooth animation */
+.checkbox,
+input[type="checkbox"] {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.checkbox:checked,
+input[type="checkbox"]:checked {
+    transform: scale(1.1);
+}
+
+/* Color picker with pop effect */
+.color-picker {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.color-picker:active {
+    transform: scale(0.9) !important;
+}
+
+/* ===== LOADING STATES - ELEGANT FEEDBACK ===== */
+
+/* Add skeleton loaders */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--apple-gray-2) 0%,
+        var(--apple-gray-1) 50%,
+        var(--apple-gray-2) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--apple-radius-md);
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ===== EMPTY STATES - BEAUTIFUL & INVITING ===== */
+.empty-state {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.empty-state svg {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ===== PREVIEW PANEL - GALLERY EXCELLENCE ===== */
+.preview-panel {
+    animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Canvas items with stagger animation */
+.canvas-item {
+    animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+.canvas-item:nth-child(1) { animation-delay: 0.1s; }
+.canvas-item:nth-child(2) { animation-delay: 0.2s; }
+.canvas-item:nth-child(3) { animation-delay: 0.3s; }
+.canvas-item:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===== SECTION TRANSITIONS - SMOOTH REVEAL ===== */
+.panel-section {
+    animation: revealSection 0.6s ease-out backwards;
+}
+
+.panel-section:nth-child(1) { animation-delay: 0.1s; }
+.panel-section:nth-child(2) { animation-delay: 0.2s; }
+.panel-section:nth-child(3) { animation-delay: 0.3s; }
+.panel-section:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes revealSection {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== SUCCESS STATES - CELEBRATION ===== */
+.success-checkmark {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    animation: scaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ===== TYPOGRAPHY - PERFECT HIERARCHY ===== */
+.section-title {
+    background: linear-gradient(135deg, #000000 0%, #3C3C43 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== SMART HINTS - CONTEXTUAL HELP ===== */
+.hint-badge {
+    transition: all 0.2s var(--apple-ease);
+    cursor: pointer;
+}
+
+.hint-badge:hover {
+    transform: translateY(-2px);
+    background: var(--apple-blue) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+/* ===== UPLOAD AREA - INVITING & FUN ===== */
+.upload-area {
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 122, 255, 0.05) 0%,
+        rgba(90, 200, 250, 0.05) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s var(--apple-ease);
+}
+
+.upload-area:hover::before {
+    opacity: 1;
+}
+
+.upload-icon {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.upload-area:hover .upload-icon {
+    transform: scale(1.1) translateY(-4px);
+}
+
+/* ===== SOLID BACKGROUND - QUICK CREATE ===== */
+#solidBackgroundSection {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03), rgba(118, 75, 162, 0.03)) !important;
+    border: 2px dashed rgba(102, 126, 234, 0.2) !important;
+}
+
+#solidBackgroundSection:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)) !important;
+    border-color: rgba(102, 126, 234, 0.4) !important;
+}
+
+/* ===== FOOTER/EXPORT SECTION - CLEAN ===== */
+#exportSection .section-title::after {
+    content: '(Optional)';
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--apple-gray-6);
+    margin-left: 8px;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+    .advanced-toggle {
+        bottom: 80px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+    }
+
+    #textSection::before,
+    #uploadSection::before,
+    #styleSection::before {
+        font-size: 11px;
+    }
+
+    .knowledge-mode-section::before {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+}
+
+/* ===== ACCESSIBILITY - RESPECT PREFERENCES ===== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+@media (prefers-color-scheme: dark) {
+    .section-title {
+        background: linear-gradient(135deg, #FFFFFF 0%, #EBEBF5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    #textSection {
+        border-color: rgba(102, 126, 234, 0.4) !important;
+        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25) !important;
+    }
+
+    .knowledge-mode-section::before {
+        background: rgba(44, 44, 46, 0.95);
+    }
+}
+
+/* ===== FOCUS MODE - ULTIMATE SIMPLIFICATION ===== */
+/* When user is actively working, hide distractions */
+body.focus-mode .app-header {
+    transform: translateY(-100%);
+    transition: transform 0.3s var(--apple-ease);
+}
+
+body.focus-mode .control-panel > .panel-section:not(#textSection):not(#uploadSection) {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: blur(2px);
+    transition: all 0.3s var(--apple-ease);
+}
+
+/* ===== STEVE JOBS' FAVORITE: THE "WOW" MOMENT ===== */
+/* Add confetti or celebration when images are generated */
+.celebration {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    animation: fadeOut 2s ease-out 1s forwards;
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+    }
+}
+
+/* ===== PREMIUM FEEL - SUBTLE GRADIENTS ===== */
+.primary-button,
+#addTextButton {
+    background: linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-blue-dark) 100%) !important;
+    position: relative;
+}
+
+.primary-button::after,
+#addTextButton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s var(--apple-ease);
+}
+
+.primary-button:hover::after,
+#addTextButton:hover::after {
+    opacity: 1;
+}
+
+/* ===== THE FINAL TOUCH - PERFECTION IN EVERY PIXEL ===== */
+/* Ensure everything aligns to a 4px grid */
+* {
+    box-sizing: border-box;
+}
+
+/* Perfect anti-aliasing */
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth page transitions */
+.app-container {
+    animation: pageLoad 0.8s ease-out;
+}
+
+@keyframes pageLoad {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===== INSPIRATIONAL QUOTE (HIDDEN EASTER EGG) ===== */
+.app-container::after {
+    content: '"Simple can be harder than complex: You have to work hard to get your thinking clean to make it simple." - Steve Jobs';
+    position: fixed;
+    bottom: -1000px;
+    left: 0;
+    opacity: 0;
+    font-size: 0;
+    pointer-events: none;
+}
