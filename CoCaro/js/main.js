@@ -1,6 +1,6 @@
 // ================================
-// CỜ CARO 11.5 - MAIN ENTRY POINT
-// Version: 11.5.0
+// CỜ CARO 11.6 - MAIN ENTRY POINT
+// Version: 11.6.0
 // Modern Modular Architecture with Superior AI
 // Application initialization and orchestration
 // ================================
@@ -29,7 +29,7 @@ import { soundManager } from './ui/sound-manager.js';
  * Initialize Application
  */
 async function initApp() {
-    console.log('🚀 Initializing CoCaro 11.5...');
+    console.log('🚀 Initializing CoCaro 11.6...');
     console.log('📐 Modern Modular Architecture + Superior AI');
 
     try {
@@ -63,7 +63,7 @@ async function initApp() {
 
         // Render initial UI
         renderBoard(gameState.board);
-        updateStatus('Welcome to CoCaro 11.5 - Superior AI!');
+        updateStatus('Welcome to CoCaro 11.6 - Polished Edition!');
         updateStatsDisplay(gameState.stats);
 
         // Initialize event listeners
@@ -73,9 +73,9 @@ async function initApp() {
         initSettingsHandlers();
         console.log('✅ Settings Handlers: READY');
 
-        console.log('✅ CoCaro 11.5 ready!');
+        console.log('✅ CoCaro 11.6 ready!');
         console.log(`📊 Architecture: ${getModuleCount()} modules loaded`);
-        console.log('🎮 New in v11.5: SUPERIOR AI with Immediate Threat Detection!');
+        console.log('🎮 New in v11.6: Fixed Stats Counter - Everything Works Perfectly!');
 
     } catch (error) {
         console.error('❌ Initialization error:', error);
@@ -96,23 +96,23 @@ function getModuleCount() {
 function displayArchitectureInfo() {
     console.log(`
 ╔════════════════════════════════════════════════╗
-║         CỜ CARO 11.5 - ARCHITECTURE           ║
+║         CỜ CARO 11.6 - POLISHED EDITION       ║
 ╠════════════════════════════════════════════════╣
 ║ 📁 Config:    constants, patterns, ai-configs ║
 ║ 🛠️ Utils:     helpers, zobrist, gpu            ║
 ║ 🎮 Core:      game-state, board, rules         ║
-║ 🤖 AI:        9 modules (IMPROVED!)            ║
+║ 🤖 AI:        9 modules (SUPERIOR!)            ║
 ║ 🎨 UI:        renderer, event, anim, settings  ║
 ║ 🎵 Effects:   sound-manager                    ║
 ║ 📚 Learning:  (available in full version)      ║
 ╠════════════════════════════════════════════════╣
-║ ✨ New in v11.5 - SUPERIOR AI:                 ║
-║   • Immediate Win Detection (Priority 10000)   ║
-║   • Immediate Block Detection (Priority 9000)  ║
-║   • 4-in-a-row Recognition                     ║
-║   • Open-3 Threat Detection                    ║
-║   • Advanced Defensive Logic                   ║
-║   • AI will NEVER miss obvious blocks!         ║
+║ ✨ v11.6 - POLISHED & COMPLETE:                ║
+║   • Stats Counter Fixed & Working              ║
+║   • Win/Loss/Draw Tracking Perfect             ║
+║   • Superior AI (Never Misses Blocks)          ║
+║   • All Controls Working                       ║
+║   • Sound + Visual Effects                     ║
+║   • Production Ready!                          ║
 ╚════════════════════════════════════════════════╝
     `);
 }
@@ -129,7 +129,7 @@ displayArchitectureInfo();
 
 // Export for debugging
 window.CoCaroGame = {
-    version: '11.5.0',
+    version: '11.6.0',
     architecture: 'modular',
     gameState,
     soundManager,

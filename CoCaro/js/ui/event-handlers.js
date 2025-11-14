@@ -1,13 +1,13 @@
 // ================================
-// CỜ CARO 11.0 - EVENT HANDLERS
-// Version: 11.0.0
+// CỜ CARO 11.6 - EVENT HANDLERS
+// Version: 11.6.0
 // UI event handling with enhanced effects
 // ================================
 
-import { gameState, resetGame, togglePlayer, addMoveToHistory } from '../core/game-state.js';
+import { gameState, resetGame, togglePlayer, addMoveToHistory, updateStats } from '../core/game-state.js';
 import { makeMove } from '../core/board.js';
 import { checkWinAtPosition } from '../core/rules.js';
-import { renderBoard, updateCell, highlightWinningLine, updateStatus } from './renderer.js';
+import { renderBoard, updateCell, highlightWinningLine, updateStatus, updateStatsDisplay } from './renderer.js';
 import { getAIMoveWithTimeout } from '../ai/ai-engine.js';
 import {
     animateCellPlacement,
@@ -62,12 +62,10 @@ async function handleCellClick(event) {
         updateStatus(`${winResult.winner} wins!`);
         gameState.gameActive = false;
 
-        // Update stats
-        if (winResult.winner === 'X') {
-            gameState.stats.xWins++;
-        } else {
-            gameState.stats.oWins++;
-        }
+        // Update and save stats
+        updateStats(winResult.winner);
+        updateStatsDisplay(gameState.stats);
+
         return;
     }
 
@@ -104,8 +102,10 @@ async function handleCellClick(event) {
                     updateStatus('AI wins!');
                     gameState.gameActive = false;
 
-                    // Update stats
-                    gameState.stats.oWins++;
+                    // Update and save stats
+                    updateStats(aiWinResult.winner);
+                    updateStatsDisplay(gameState.stats);
+
                     return;
                 }
 
