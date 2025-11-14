@@ -44,11 +44,11 @@ export function minimax(board, depth, alpha, beta, isMaximizing, player, config)
 
         for (const move of moves) {
             makeMove(board, move.row, move.col, player);
-            const eval = minimax(board, depth - 1, alpha, beta, false, player, config);
+            const evalScore = minimax(board, depth - 1, alpha, beta, false, player, config);
             undoMove(board, move.row, move.col);
 
-            maxEval = Math.max(maxEval, eval);
-            alpha = Math.max(alpha, eval);
+            maxEval = Math.max(maxEval, evalScore);
+            alpha = Math.max(alpha, evalScore);
 
             if (beta <= alpha) break; // Alpha-Beta pruning
         }
@@ -61,11 +61,11 @@ export function minimax(board, depth, alpha, beta, isMaximizing, player, config)
 
         for (const move of moves) {
             makeMove(board, move.row, move.col, opponent);
-            const eval = minimax(board, depth - 1, alpha, beta, true, player, config);
+            const evalScore = minimax(board, depth - 1, alpha, beta, true, player, config);
             undoMove(board, move.row, move.col);
 
-            minEval = Math.min(minEval, eval);
-            beta = Math.min(beta, eval);
+            minEval = Math.min(minEval, evalScore);
+            beta = Math.min(beta, evalScore);
 
             if (beta <= alpha) break; // Alpha-Beta pruning
         }
