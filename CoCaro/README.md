@@ -1,14 +1,51 @@
-# 🎮✨ Cờ Caro 11.0 - Enhanced Effects Edition
+# 🎮✨ Cờ Caro 11.1 - Complete Edition
 
-Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular, dễ bảo trì** + **Hiệu ứng âm thanh & hình ảnh siêu đẹp** - Refactored từ monolithic 4294 lines thành **22 ES6 modules** với separation of concerns!
+Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular, dễ bảo trì** + **Hiệu ứng âm thanh & hình ảnh siêu đẹp** + **Đầy đủ tính năng UI** - Refactored từ monolithic 4294 lines thành **23 ES6 modules** với separation of concerns!
 
-![Version](https://img.shields.io/badge/version-11.0.0-blue)
+![Version](https://img.shields.io/badge/version-11.1.0-blue)
 ![Architecture](https://img.shields.io/badge/Architecture-Modular-orange)
-![Modules](https://img.shields.io/badge/Modules-22-green)
+![Modules](https://img.shields.io/badge/Modules-23-green)
 ![ES6](https://img.shields.io/badge/ES6-Modules-yellow)
 ![Effects](https://img.shields.io/badge/Effects-Sound%20%2B%20Particles-purple)
 ![Status](https://img.shields.io/badge/Status-Production-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+## 🔧 VERSION 11.1 - COMPLETE EDITION (CURRENT)
+
+**Mục tiêu v11.1**: Hoàn thiện tất cả tính năng UI - Fix controls, thêm Save/Load, Undo/Redo
+
+### ✨ NEW IN V11.1 - FULL UI FUNCTIONALITY
+
+**🔧 Fixed UI Controls:**
+- ✅ Fixed "New Game" button (was using wrong ID)
+- ✅ All settings controls now working
+- ✅ Settings panel toggle functional
+- ✅ Dark mode toggle working
+- ✅ Theme switcher operational
+
+**💾 Save/Load System:**
+- ✅ Save game to localStorage
+- ✅ Load saved games
+- ✅ Export game to JSON file
+- ✅ Import game from JSON file
+
+**⏮️ Undo/Redo:**
+- ✅ Undo last move (or 2 moves in PvC)
+- ✅ Redo functionality (placeholder)
+- ✅ Hint system (placeholder)
+
+**⚙️ Settings Management:**
+- ✅ Game mode (PvC / PvP)
+- ✅ AI difficulty levels
+- ✅ AI personality
+- ✅ Theme selection
+- ✅ Sound toggle
+- ✅ Timer toggle
+- ✅ Analysis mode
+- ✅ Tutorial mode
+
+**🎨 New Module:**
+- `settings-handlers.js` (442 lines) - Complete settings management
 
 ## 🎮 VERSION 11.0 - ENHANCED EFFECTS EDITION
 
@@ -47,19 +84,18 @@ Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular,
 - ✅ Critical move warning animation
 - ✅ Smooth transitions everywhere
 
-### 🏗️ ARCHITECTURE - 22 ES6 MODULES
+### 🏗️ ARCHITECTURE - 23 ES6 MODULES
 
-**Từ v10.0:**
-- ✅ 21 modules ES6 với imports/exports
-- ✅ Separation of Concerns
-- ✅ Easy Maintenance
-- ✅ Scalability
-- ✅ Testability
+**Evolution:**
+- v10.0: 21 modules (modular refactor)
+- v11.0: 22 modules (+ sound-manager.js)
+- v11.1: 23 modules (+ settings-handlers.js)
 
-**v11.0 additions:**
-- ✅ `sound-manager.js` - Professional Web Audio API integration
-- ✅ Enhanced `animations.js` - 589 lines of animation code
-- ✅ Updated all modules to v11.0.0
+**v11.1 additions:**
+- ✅ `settings-handlers.js` - Complete UI controls management (442 lines)
+- ✅ Fixed all event handlers
+- ✅ Integrated save/load system
+- ✅ Undo/redo support
 
 ### 📂 KIẾN TRÚC 6 LAYERS
 
@@ -91,11 +127,12 @@ CoCaro/
 │   │   ├── neural-network.js      # TensorFlow.js
 │   │   └── ai-engine.js           # Main orchestrator
 │   │
-│   ├── ui/              # User Interface (4 modules) ⭐NEW
-│   │   ├── renderer.js        # Board & UI rendering
-│   │   ├── event-handlers.js  # Click handlers
-│   │   ├── animations.js      # Visual effects (ENHANCED v11)
-│   │   └── sound-manager.js   # Sound effects (NEW v11) ⭐
+│   ├── ui/              # User Interface (5 modules) ⭐v11.1
+│   │   ├── renderer.js         # Board & UI rendering
+│   │   ├── event-handlers.js   # Click handlers
+│   │   ├── animations.js       # Visual effects (ENHANCED v11)
+│   │   ├── sound-manager.js    # Sound effects (NEW v11)
+│   │   └── settings-handlers.js # Settings & controls (NEW v11.1) ⭐
 │   │
 │   └── main.js          # Entry Point (1 module)
 │       └── App initialization & orchestration

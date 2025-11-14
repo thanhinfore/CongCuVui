@@ -25,10 +25,6 @@ export function initEventListeners() {
     // Board click handler
     document.querySelector('#board')?.addEventListener('click', handleCellClick);
 
-    // Control buttons
-    document.querySelector('#new-game-btn')?.addEventListener('click', handleNewGame);
-    document.querySelector('#undo-btn')?.addEventListener('click', handleUndo);
-
     console.log('✅ Event listeners initialized');
 }
 
@@ -124,21 +120,4 @@ async function handleCellClick(event) {
             hideAIThinking();
         }
     }
-}
-
-/**
- * Handle new game
- */
-function handleNewGame() {
-    resetGame();
-    renderBoard(gameState.board);
-    updateStatus('Game started - X goes first');
-}
-
-/**
- * Handle undo
- */
-function handleUndo() {
-    // Implementation needed
-    console.log('Undo not yet implemented in v10.0');
 }

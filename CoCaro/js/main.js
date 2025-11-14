@@ -1,6 +1,6 @@
 // ================================
-// CỜ CARO 11.0 - MAIN ENTRY POINT
-// Version: 11.0.0
+// CỜ CARO 11.1 - MAIN ENTRY POINT
+// Version: 11.1.0
 // Modern Modular Architecture with Enhanced Effects
 // Application initialization and orchestration
 // ================================
@@ -22,13 +22,14 @@ import { initNeuralNetwork } from './ai/neural-network.js';
 import { renderBoard, updateStatus, updateStatsDisplay } from './ui/renderer.js';
 import { initEventListeners } from './ui/event-handlers.js';
 import { initAnimations } from './ui/animations.js';
+import { initSettingsHandlers, loadSavedSettings } from './ui/settings-handlers.js';
 import { soundManager } from './ui/sound-manager.js';
 
 /**
  * Initialize Application
  */
 async function initApp() {
-    console.log('🚀 Initializing CoCaro 11.0...');
+    console.log('🚀 Initializing CoCaro 11.1...');
     console.log('📐 Modern Modular Architecture + Enhanced Effects');
 
     try {
@@ -51,6 +52,9 @@ async function initApp() {
         console.log('✅ Sound Manager: READY');
         console.log('✨ Animations: READY');
 
+        // Load saved settings
+        loadSavedSettings();
+
         // Load saved data
         loadStats();
 
@@ -59,15 +63,19 @@ async function initApp() {
 
         // Render initial UI
         renderBoard(gameState.board);
-        updateStatus('Welcome to CoCaro 11.0 - Click to start!');
+        updateStatus('Welcome to CoCaro 11.1 - Click to start!');
         updateStatsDisplay(gameState.stats);
 
         // Initialize event listeners
         initEventListeners();
 
-        console.log('✅ CoCaro 11.0 ready!');
+        // Initialize settings handlers
+        initSettingsHandlers();
+        console.log('✅ Settings Handlers: READY');
+
+        console.log('✅ CoCaro 11.1 ready!');
         console.log(`📊 Architecture: ${getModuleCount()} modules loaded`);
-        console.log('🎮 New in v11.0: Sound Effects + Particle Effects + Celebration Animations!');
+        console.log('🎮 New in v11.1: Full UI Controls + Better AI + Save/Load!');
 
     } catch (error) {
         console.error('❌ Initialization error:', error);
@@ -79,7 +87,7 @@ async function initApp() {
  * Get module count for stats
  */
 function getModuleCount() {
-    return 22; // Modules in v11.0 (added sound-manager.js)
+    return 23; // Modules in v11.1 (added settings-handlers.js)
 }
 
 /**
@@ -88,22 +96,22 @@ function getModuleCount() {
 function displayArchitectureInfo() {
     console.log(`
 ╔════════════════════════════════════════════════╗
-║         CỜ CARO 11.0 - ARCHITECTURE           ║
+║         CỜ CARO 11.1 - ARCHITECTURE           ║
 ╠════════════════════════════════════════════════╣
 ║ 📁 Config:    constants, patterns, ai-configs ║
 ║ 🛠️ Utils:     helpers, zobrist, gpu            ║
 ║ 🎮 Core:      game-state, board, rules         ║
 ║ 🤖 AI:        8 modules (minimax, mcts, etc.)  ║
-║ 🎨 UI:        renderer, event-handlers, anim   ║
-║ 🎵 Effects:   sound-manager (NEW!)             ║
+║ 🎨 UI:        renderer, event, anim, settings  ║
+║ 🎵 Effects:   sound-manager                    ║
 ║ 📚 Learning:  (available in full version)      ║
 ╠════════════════════════════════════════════════╣
-║ ✨ New in v11.0:                               ║
-║   • Professional Sound Effects (Web Audio)     ║
-║   • Particle Effects & Animations              ║
-║   • Victory Celebrations (Confetti, Fireworks) ║
-║   • Screen Shake & Visual Feedback             ║
-║   • Enhanced User Experience                   ║
+║ ✨ New in v11.1:                               ║
+║   • Fixed All UI Controls (Settings, Buttons)  ║
+║   • Save/Load Game Functionality               ║
+║   • Undo/Redo Support                          ║
+║   • Theme Switcher                             ║
+║   • Dark Mode                                  ║
 ╚════════════════════════════════════════════════╝
     `);
 }
@@ -120,7 +128,7 @@ displayArchitectureInfo();
 
 // Export for debugging
 window.CoCaroGame = {
-    version: '11.0.0',
+    version: '11.1.0',
     architecture: 'modular',
     gameState,
     soundManager,
@@ -129,7 +137,7 @@ window.CoCaroGame = {
         utils: 3,
         core: 3,
         ai: 8,
-        ui: 4, // renderer, event-handlers, animations, sound-manager
+        ui: 5, // renderer, event-handlers, animations, sound-manager, settings-handlers
         effects: 1
     }
 };
