@@ -1,33 +1,65 @@
-# 🏗️ Cờ Caro 10.0 - Modern Modular Architecture
+# 🎮✨ Cờ Caro 11.0 - Enhanced Effects Edition
 
-Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular, dễ bảo trì** - Refactored từ monolithic 4294 lines thành **21 ES6 modules** với separation of concerns!
+Một trò chơi cờ caro (Gomoku) với **kiến trúc hiện đại, modular, dễ bảo trì** + **Hiệu ứng âm thanh & hình ảnh siêu đẹp** - Refactored từ monolithic 4294 lines thành **22 ES6 modules** với separation of concerns!
 
-![Version](https://img.shields.io/badge/version-10.0.0-blue)
+![Version](https://img.shields.io/badge/version-11.0.0-blue)
 ![Architecture](https://img.shields.io/badge/Architecture-Modular-orange)
-![Modules](https://img.shields.io/badge/Modules-21-green)
+![Modules](https://img.shields.io/badge/Modules-22-green)
 ![ES6](https://img.shields.io/badge/ES6-Modules-yellow)
+![Effects](https://img.shields.io/badge/Effects-Sound%20%2B%20Particles-purple)
 ![Status](https://img.shields.io/badge/Status-Production-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🏗️ VERSION 10.0 - MODERN MODULAR ARCHITECTURE
+## 🎮 VERSION 11.0 - ENHANCED EFFECTS EDITION
 
-**Mục tiêu v10.0**: Refactor kiến trúc từ **monolithic** sang **modular** để dễ bảo trì, mở rộng và collaboration
+**Mục tiêu v11.0**: Nâng cấp trải nghiệm người dùng với **âm thanh & hình ảnh chuyên nghiệp** để tạo cảm giác hứng thú mạnh mẽ khi chơi!
 
-### ✨ MAJOR REFACTORING - 21 ES6 MODULES
+### ✨ NEW IN V11.0 - ENHANCED USER EXPERIENCE
 
-**Trước v10.0:**
-- ❌ 1 file monolithic: `game.js` (4294 lines)
-- ❌ Khó maintain, debug, và extend
-- ❌ Không thể tree-shaking
-- ❌ Khó collaborate (merge conflicts)
+**🎵 Sound Effects (Web Audio API):**
+- ✅ Âm thanh đặt quân (khác biệt giữa Player vs AI)
+- ✅ Âm thanh hover trên ô cờ
+- ✅ Âm thanh thắng/thua với fanfare chuyên nghiệp
+- ✅ Âm thanh nút bấm và UI interactions
+- ✅ Âm thanh pháo hoa khi celebration
+- ✅ Âm thanh AI thinking pulse
+- ✅ Nút tắt/bật âm thanh dễ dàng
 
-**Sau v10.0:**
+**✨ Particle Effects:**
+- ✅ Particle burst khi đặt quân (12 particles với physics)
+- ✅ Ripple effect lan toa từ ô cờ
+- ✅ Glow effects khác màu cho X và O
+- ✅ Rainbow glow cho winning line
+- ✅ Confetti explosion khi thắng (150 particles)
+- ✅ Fireworks với trajectory thực tế
+
+**🎉 Victory Celebrations:**
+- ✅ Screen shake với decay effect
+- ✅ Confetti rơi từ trên xuống
+- ✅ 5 đợt fireworks liên tiếp
+- ✅ Victory message với pop animation
+- ✅ Winning line pulse effect
+
+**🎨 Visual Enhancements:**
+- ✅ Hover effects với scale & background
+- ✅ Pop-in animation khi đặt quân
+- ✅ Shake effect khi đánh sai
+- ✅ Critical move warning animation
+- ✅ Smooth transitions everywhere
+
+### 🏗️ ARCHITECTURE - 22 ES6 MODULES
+
+**Từ v10.0:**
 - ✅ 21 modules ES6 với imports/exports
-- ✅ Separation of Concerns - mỗi module có trách nhiệm rõ ràng
-- ✅ Easy Maintenance - tìm & fix bugs nhanh hơn
-- ✅ Scalability - thêm features không ảnh hưởng code cũ
-- ✅ Testability - test từng module độc lập
-- ✅ Tree-shaking support - chỉ load code cần thiết
+- ✅ Separation of Concerns
+- ✅ Easy Maintenance
+- ✅ Scalability
+- ✅ Testability
+
+**v11.0 additions:**
+- ✅ `sound-manager.js` - Professional Web Audio API integration
+- ✅ Enhanced `animations.js` - 589 lines of animation code
+- ✅ Updated all modules to v11.0.0
 
 ### 📂 KIẾN TRÚC 6 LAYERS
 
@@ -59,10 +91,11 @@ CoCaro/
 │   │   ├── neural-network.js      # TensorFlow.js
 │   │   └── ai-engine.js           # Main orchestrator
 │   │
-│   ├── ui/              # User Interface (3 modules)
+│   ├── ui/              # User Interface (4 modules) ⭐NEW
 │   │   ├── renderer.js        # Board & UI rendering
 │   │   ├── event-handlers.js  # Click handlers
-│   │   └── animations.js      # Visual effects
+│   │   ├── animations.js      # Visual effects (ENHANCED v11)
+│   │   └── sound-manager.js   # Sound effects (NEW v11) ⭐
 │   │
 │   └── main.js          # Entry Point (1 module)
 │       └── App initialization & orchestration

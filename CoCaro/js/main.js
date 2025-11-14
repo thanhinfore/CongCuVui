@@ -1,7 +1,7 @@
 // ================================
-// CỜ CARO 10.0 - MAIN ENTRY POINT
-// Version: 10.0.0
-// Modern Modular Architecture
+// CỜ CARO 11.0 - MAIN ENTRY POINT
+// Version: 11.0.0
+// Modern Modular Architecture with Enhanced Effects
 // Application initialization and orchestration
 // ================================
 
@@ -21,13 +21,15 @@ import { initNeuralNetwork } from './ai/neural-network.js';
 // UI imports
 import { renderBoard, updateStatus, updateStatsDisplay } from './ui/renderer.js';
 import { initEventListeners } from './ui/event-handlers.js';
+import { initAnimations } from './ui/animations.js';
+import { soundManager } from './ui/sound-manager.js';
 
 /**
  * Initialize Application
  */
 async function initApp() {
-    console.log('🚀 Initializing CoCaro 10.0...');
-    console.log('📐 Modern Modular Architecture');
+    console.log('🚀 Initializing CoCaro 11.0...');
+    console.log('📐 Modern Modular Architecture + Enhanced Effects');
 
     try {
         // Initialize utilities
@@ -43,6 +45,12 @@ async function initApp() {
         const nnStatus = await initNeuralNetwork();
         console.log(`✅ Neural Network Status: ${nnStatus ? 'READY' : 'NOT READY'}`);
 
+        // Initialize sound and animations
+        console.log('🎵 Initializing Sound & Animations...');
+        initAnimations();
+        console.log('✅ Sound Manager: READY');
+        console.log('✨ Animations: READY');
+
         // Load saved data
         loadStats();
 
@@ -51,14 +59,15 @@ async function initApp() {
 
         // Render initial UI
         renderBoard(gameState.board);
-        updateStatus('Welcome to CoCaro 10.0 - Click to start!');
+        updateStatus('Welcome to CoCaro 11.0 - Click to start!');
         updateStatsDisplay(gameState.stats);
 
         // Initialize event listeners
         initEventListeners();
 
-        console.log('✅ CoCaro 10.0 ready!');
+        console.log('✅ CoCaro 11.0 ready!');
         console.log(`📊 Architecture: ${getModuleCount()} modules loaded`);
+        console.log('🎮 New in v11.0: Sound Effects + Particle Effects + Celebration Animations!');
 
     } catch (error) {
         console.error('❌ Initialization error:', error);
@@ -70,7 +79,7 @@ async function initApp() {
  * Get module count for stats
  */
 function getModuleCount() {
-    return 20; // Approximate number of modules in v10.0
+    return 22; // Modules in v11.0 (added sound-manager.js)
 }
 
 /**
@@ -79,20 +88,22 @@ function getModuleCount() {
 function displayArchitectureInfo() {
     console.log(`
 ╔════════════════════════════════════════════════╗
-║         CỜ CARO 10.0 - ARCHITECTURE           ║
+║         CỜ CARO 11.0 - ARCHITECTURE           ║
 ╠════════════════════════════════════════════════╣
 ║ 📁 Config:    constants, patterns, ai-configs ║
 ║ 🛠️ Utils:     helpers, zobrist, gpu            ║
 ║ 🎮 Core:      game-state, board, rules         ║
 ║ 🤖 AI:        8 modules (minimax, mcts, etc.)  ║
 ║ 🎨 UI:        renderer, event-handlers, anim   ║
+║ 🎵 Effects:   sound-manager (NEW!)             ║
 ║ 📚 Learning:  (available in full version)      ║
 ╠════════════════════════════════════════════════╣
-║ ✨ Benefits:                                   ║
-║   • Separation of Concerns                     ║
-║   • Easy Maintenance                           ║
-║   • Scalability                                ║
-║   • Testability                                ║
+║ ✨ New in v11.0:                               ║
+║   • Professional Sound Effects (Web Audio)     ║
+║   • Particle Effects & Animations              ║
+║   • Victory Celebrations (Confetti, Fireworks) ║
+║   • Screen Shake & Visual Feedback             ║
+║   • Enhanced User Experience                   ║
 ╚════════════════════════════════════════════════╝
     `);
 }
@@ -109,14 +120,16 @@ displayArchitectureInfo();
 
 // Export for debugging
 window.CoCaroGame = {
-    version: '10.0.0',
+    version: '11.0.0',
     architecture: 'modular',
     gameState,
+    soundManager,
     modules: {
         config: 3,
         utils: 3,
         core: 3,
         ai: 8,
-        ui: 3
+        ui: 4, // renderer, event-handlers, animations, sound-manager
+        effects: 1
     }
 };

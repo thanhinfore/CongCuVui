@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện Caro 10.0 - Modern Architecture</title>
+    <title>Luyện Caro 11.0 - Enhanced Effects Edition</title>
     <link rel="stylesheet" href="style.css">
     <!-- GPU.js for GPU-accelerated computation (v2.4.2 - last stable version) -->
     <script src="https://unpkg.com/gpu.js@2.4.2/dist/gpu-browser.min.js"></script>
@@ -13,8 +13,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Luyện Cờ Caro <span class="version">v10.0 🏗️</span> <span style="cursor:pointer" onclick="javascript: window.open('https://luyenai.vn');" class="version-badge">Học vibe coding tại Luyện AI</span></h1>
+            <h1>Luyện Cờ Caro <span class="version">v11.0 🎮✨</span> <span style="cursor:pointer" onclick="javascript: window.open('https://luyenai.vn');" class="version-badge">Học vibe coding tại Luyện AI</span></h1>
             <div class="header-controls">
+                <button id="soundToggle" class="icon-btn" title="Bật/Tắt âm thanh">
+                    <svg id="soundIcon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"/>
+                    </svg>
+                </button>
                 <button id="settingsToggle" class="icon-btn" title="Cài đặt">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
@@ -223,20 +228,47 @@
             </button>
         </div>
 
-        <!-- V10.0 Footer -->
+        <!-- V11.0 Footer -->
         <div class="footer">
-            <p>CoCaro 10.0 - Modern Modular Architecture |
-                <span class="feature-badge">20+ Modules</span> |
-                <span class="feature-badge">Separation of Concerns</span> |
-                <span class="feature-badge">Easy Maintenance</span> |
-                <span class="feature-badge">Scalable</span> |
-                <span class="feature-badge">ES6 Modules</span> |
-                <span class="feature-badge">Professional Structure</span>
+            <p>CoCaro 11.0 - Enhanced Effects Edition |
+                <span class="feature-badge">🎵 Sound Effects</span> |
+                <span class="feature-badge">✨ Particle Effects</span> |
+                <span class="feature-badge">🎉 Celebrations</span> |
+                <span class="feature-badge">🎮 Screen Shake</span> |
+                <span class="feature-badge">22+ Modules</span> |
+                <span class="feature-badge">Web Audio API</span>
             </p>
         </div>
     </div>
 
-    <!-- V10.0: ES6 Module System -->
+    <!-- V11.0: ES6 Module System -->
     <script type="module" src="js/main.js"></script>
+
+    <!-- Sound Toggle Handler -->
+    <script type="module">
+        import { soundManager } from './js/ui/sound-manager.js';
+
+        // Sound toggle button
+        const soundToggle = document.getElementById('soundToggle');
+        const soundIcon = document.getElementById('soundIcon');
+
+        if (soundToggle) {
+            soundToggle.addEventListener('click', () => {
+                const enabled = soundManager.toggle();
+
+                // Update icon based on sound state
+                if (enabled) {
+                    soundIcon.innerHTML = '<path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"/>';
+                } else {
+                    soundIcon.innerHTML = '<path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"/>';
+                }
+
+                // Play a test sound
+                if (enabled) {
+                    soundManager.playButtonClick();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
