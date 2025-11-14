@@ -67,6 +67,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="favicon.ico" />
     <Content Include="game.js" />
     <Content Include="index.html" />
     <Content Include="style.css" />
