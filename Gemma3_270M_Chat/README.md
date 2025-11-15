@@ -5,7 +5,7 @@
 ## ✨ Tính năng
 
 - 🚀 **Chạy hoàn toàn trên trình duyệt** - Không cần server, dữ liệu luôn được bảo mật
-- 🤖 **Mô hình Gemma AI** - Sử dụng Gemma 2 2B IT (optimized cho browser)
+- 🤖 **Mô hình Gemma 3 270M** - Sử dụng Gemma 3 270M IT ONNX (optimized cho browser)
 - 💾 **Lưu trữ lịch sử chat** - Tự động lưu vào IndexedDB
 - 🎨 **Giao diện đẹp mắt** - Dark mode, responsive, animations mượt mà
 - ⚙️ **Tùy chỉnh linh hoạt** - Temperature, Top-P, Max Tokens, System Prompt
@@ -103,9 +103,9 @@ Hướng dẫn chung cho AI về cách trả lời (role, style, format)
 - ✅ Safari 15+
 
 ### Yêu cầu tối thiểu
-- **RAM**: 4GB+ (khuyến nghị 8GB+)
-- **Kết nối Internet**: Cần cho lần đầu tải model (~150MB)
-- **Dung lượng lưu trữ**: ~200MB cho model cache
+- **RAM**: 2GB+ (khuyến nghị 4GB+)
+- **Kết nối Internet**: Cần cho lần đầu tải model (~200-300MB)
+- **Dung lượng lưu trữ**: ~400MB cho model cache
 
 ### Tính năng tùy chọn
 - **WebGPU**: Tăng tốc inference (Chrome 113+, Edge 113+)
@@ -131,7 +131,7 @@ Hướng dẫn chung cho AI về cách trả lời (role, style, format)
 
 ### Version 1.0.0 (2025-11-15)
 - ✨ Ra mắt phiên bản đầu tiên
-- 🤖 Tích hợp Gemma 2 2B IT model
+- 🤖 Tích hợp Gemma 3 270M IT ONNX model
 - 💬 Chat interface với streaming
 - 💾 Lưu trữ lịch sử với IndexedDB
 - 🎨 Dark mode
@@ -165,4 +165,4 @@ Phát triển bởi Claude Code cho dự án CongCuVui
 
 ---
 
-**Lưu ý**: Ứng dụng sử dụng Gemma 2 2B IT thay vì Gemma 3 270M do model 270M chưa có phiên bản ONNX optimized cho browser. Gemma 2 2B IT đã được tối ưu hóa và cho kết quả tốt hơn trên browser.
+**Lưu ý**: Ứng dụng sử dụng **Gemma 3 270M IT ONNX** (`onnx-community/gemma-3-270m-it-ONNX`) - model nhỏ gọn 270M parameters được Google phát hành tháng 8/2025, đã được tối ưu hóa ONNX cho browser với WebGPU support. Model có context window 32K tokens và vocabulary 256K tokens, phù hợp cho on-device AI tasks.

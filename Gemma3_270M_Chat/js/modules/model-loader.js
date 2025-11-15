@@ -10,8 +10,7 @@ export class ModelLoader {
         this.isLoaded = false;
         this.isLoading = false;
         this.worker = null;
-        this.modelId = 'onnx-community/gemma-2-2b-it'; // Using Gemma 2 2B as 270M might not be available
-        // Note: We'll use the smallest available Gemma model for browser use
+        this.modelId = 'onnx-community/gemma-3-270m-it-ONNX'; // Gemma 3 270M IT ONNX optimized for browser
         this.progressCallback = null;
         this.statusCallback = null;
     }
