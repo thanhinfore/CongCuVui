@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ICOConvert", "ICOConvert\IC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoCaro", "CoCaro\CoCaro.csproj", "{A63FDA9D-8ABC-468F-975B-6B27C2B1BF22}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemma3_270M_Chat", "Gemma3_270M_Chat\Gemma3_270M_Chat.csproj", "{CBE98B90-064E-4314-B11A-9AB5698BC494}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{A63FDA9D-8ABC-468F-975B-6B27C2B1BF22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A63FDA9D-8ABC-468F-975B-6B27C2B1BF22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A63FDA9D-8ABC-468F-975B-6B27C2B1BF22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
