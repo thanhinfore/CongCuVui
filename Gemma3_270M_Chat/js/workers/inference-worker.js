@@ -107,14 +107,18 @@ async function generate(id, prompt, options) {
             max_new_tokens = 512
         } = options;
 
-        // Generate text with streaming
+        // Generate text with improved parameters (learned from GemmaLabelling)
         const output = await generator(prompt, {
             max_new_tokens,
             temperature,
             top_p,
+            top_k: 50,                    // Limit sampling to top 50 tokens for better quality
+            repetition_penalty: 1.15,     // Prevent repetitive responses (higher than GemmaLabelling's 1.1 for chat)
             do_sample: temperature > 0,
             return_full_text: false,
-            // Stream tokens (note: actual streaming depends on model support)
+            // Tokenizer special tokens (if available)
+            pad_token_id: generator.tokenizer?.pad_token_id,
+            eos_token_id: generator.tokenizer?.eos_token_id,
         });
 
         if (shouldStop) {
