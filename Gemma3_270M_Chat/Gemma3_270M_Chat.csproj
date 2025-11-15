@@ -67,6 +67,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="css\chat.css" />
+    <Content Include="css\main.css" />
+    <Content Include="index.html" />
+    <Content Include="js\app.js" />
+    <Content Include="js\modules\chat-manager.js" />
+    <Content Include="js\modules\model-loader.js" />
+    <Content Include="js\modules\settings-manager.js" />
+    <Content Include="js\modules\storage-manager.js" />
+    <Content Include="js\modules\ui-controller.js" />
+    <Content Include="js\workers\inference-worker.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="README.md" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
