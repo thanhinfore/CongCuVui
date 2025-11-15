@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GemmaLabelling", "GemmaLabe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuanLiQuanHeXaHoi", "QuanLiQuanHeXaHoi\QuanLiQuanHeXaHoi.csproj", "{71368D81-8657-48D0-96E6-89C0E38356D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassSurvey", "ClassSurvey\ClassSurvey.csproj", "{160ECBF0-939F-403D-B2E7-CA5B433EDD2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,10 @@ Global
 		{71368D81-8657-48D0-96E6-89C0E38356D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71368D81-8657-48D0-96E6-89C0E38356D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71368D81-8657-48D0-96E6-89C0E38356D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{160ECBF0-939F-403D-B2E7-CA5B433EDD2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{160ECBF0-939F-403D-B2E7-CA5B433EDD2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{160ECBF0-939F-403D-B2E7-CA5B433EDD2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{160ECBF0-939F-403D-B2E7-CA5B433EDD2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
