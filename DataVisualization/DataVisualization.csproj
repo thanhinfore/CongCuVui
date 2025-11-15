@@ -43,6 +43,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
@@ -60,11 +63,6 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="background.wav" />
@@ -88,7 +86,6 @@
     <Content Include="CHANGELOG_v3.0.md" />
     <Content Include="CHANGELOG_v4.0.md" />
     <Content Include="CHANGELOG_v4.5.md" />
-    <None Include="packages.config" />
     <Content Include="README.md" />
     <Content Include="UPGRADE_SUMMARY_v2.0.md" />
     <Content Include="V3_INTEGRATION_COMPLETE.md" />
@@ -97,6 +94,7 @@
     <Content Include="V4_UPGRADE_SUMMARY.md" />
     <Content Include="V5.0_GRAPHICS_REVOLUTION.md" />
     <Content Include="V5.5_VISUAL_TRACKING_REVOLUTION.md" />
+    <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
