@@ -90,8 +90,14 @@ export class ChatManager {
         let prompt = `<start_of_turn>system\n${systemPrompt}<end_of_turn>\n`;
 
         // Add conversation history (last 10 messages for context)
+        // Exclude the last message if it's from user (to avoid duplication)
         const recentMessages = this.messages.slice(-10);
         for (const msg of recentMessages) {
+            // Skip if this is the current user message (it will be added separately)
+            if (msg.role === 'user' && msg.content === userMessage) {
+                continue;
+            }
+
             if (msg.role === 'user') {
                 prompt += `<start_of_turn>user\n${msg.content}<end_of_turn>\n`;
             } else if (msg.role === 'assistant') {
