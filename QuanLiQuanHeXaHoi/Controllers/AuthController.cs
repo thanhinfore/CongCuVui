@@ -23,47 +23,62 @@ namespace QuanLiQuanHeXaHoi.Controllers
         [Route("register")]
         public IHttpActionResult Register([FromBody] RegisterRequest request)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Ensure database is created
+                _db.Database.CreateIfNotExists();
+
+                // Check if username already exists
+                if (_db.Users.Any(u => u.Username == request.Username))
+                {
+                    return BadRequest("Tên đăng nhập đã tồn tại");
+                }
+
+                // Check if email already exists
+                if (_db.Users.Any(u => u.Email == request.Email))
+                {
+                    return BadRequest("Email đã được sử dụng");
+                }
+
+                // Create new user
+                var user = new User
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    FullName = request.FullName,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                _db.Users.Add(user);
+                _db.SaveChanges();
+
+                var response = new LoginResponse
+                {
+                    UserId = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Token = GenerateSimpleToken(user.Id)
+                };
+
+                return Ok(ApiResponse<LoginResponse>.SuccessResult(response, "Đăng ký thành công!"));
             }
-
-            // Check if username already exists
-            if (_db.Users.Any(u => u.Username == request.Username))
+            catch (Exception ex)
             {
-                return BadRequest("Tên đăng nhập đã tồn tại");
+                // Log the error (in production, use proper logging)
+                System.Diagnostics.Debug.WriteLine($"Register error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                return Content(System.Net.HttpStatusCode.InternalServerError,
+                    ApiResponse<object>.ErrorResult($"Lỗi server: {ex.Message}"));
             }
-
-            // Check if email already exists
-            if (_db.Users.Any(u => u.Email == request.Email))
-            {
-                return BadRequest("Email đã được sử dụng");
-            }
-
-            // Create new user
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                FullName = request.FullName,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
-
-            _db.Users.Add(user);
-            _db.SaveChanges();
-
-            var response = new LoginResponse
-            {
-                UserId = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Token = GenerateSimpleToken(user.Id)
-            };
-
-            return Ok(ApiResponse<LoginResponse>.SuccessResult(response, "Đăng ký thành công!"));
         }
 
         /// <summary>
@@ -74,46 +89,57 @@ namespace QuanLiQuanHeXaHoi.Controllers
         [Route("login")]
         public IHttpActionResult Login([FromBody] LoginRequest request)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Find user by username or email
+                var user = _db.Users.FirstOrDefault(u =>
+                    u.Username == request.UsernameOrEmail ||
+                    u.Email == request.UsernameOrEmail);
+
+                if (user == null)
+                {
+                    return BadRequest("Tên đăng nhập hoặc mật khẩu không đúng");
+                }
+
+                // Verify password
+                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                {
+                    return BadRequest("Tên đăng nhập hoặc mật khẩu không đúng");
+                }
+
+                if (!user.IsActive)
+                {
+                    return BadRequest("Tài khoản đã bị vô hiệu hóa");
+                }
+
+                // Update last login
+                user.LastLoginAt = DateTime.UtcNow;
+                _db.SaveChanges();
+
+                var response = new LoginResponse
+                {
+                    UserId = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Token = GenerateSimpleToken(user.Id)
+                };
+
+                return Ok(ApiResponse<LoginResponse>.SuccessResult(response, "Đăng nhập thành công!"));
             }
-
-            // Find user by username or email
-            var user = _db.Users.FirstOrDefault(u =>
-                u.Username == request.UsernameOrEmail ||
-                u.Email == request.UsernameOrEmail);
-
-            if (user == null)
+            catch (Exception ex)
             {
-                return BadRequest("Tên đăng nhập hoặc mật khẩu không đúng");
+                System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                return Content(System.Net.HttpStatusCode.InternalServerError,
+                    ApiResponse<object>.ErrorResult($"Lỗi server: {ex.Message}"));
             }
-
-            // Verify password
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            {
-                return BadRequest("Tên đăng nhập hoặc mật khẩu không đúng");
-            }
-
-            if (!user.IsActive)
-            {
-                return BadRequest("Tài khoản đã bị vô hiệu hóa");
-            }
-
-            // Update last login
-            user.LastLoginAt = DateTime.UtcNow;
-            _db.SaveChanges();
-
-            var response = new LoginResponse
-            {
-                UserId = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Token = GenerateSimpleToken(user.Id)
-            };
-
-            return Ok(ApiResponse<LoginResponse>.SuccessResult(response, "Đăng nhập thành công!"));
         }
 
         /// <summary>
