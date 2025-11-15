@@ -226,11 +226,11 @@ namespace QuanLiQuanHeXaHoi.Controllers
         /// <summary>
         /// Validate Dunbar limits for a given level
         /// </summary>
-        private (bool IsValid, string Message) ValidateDunbarLimit(int userId, string level, int? excludeContactId = null)
+        private DunbarValidationResult ValidateDunbarLimit(int userId, string level, int? excludeContactId = null)
         {
             if (level == "others")
             {
-                return (true, null);
+                return new DunbarValidationResult { IsValid = true, Message = null };
             }
 
             var limits = new Dictionary<string, int>
@@ -244,7 +244,7 @@ namespace QuanLiQuanHeXaHoi.Controllers
 
             if (!limits.ContainsKey(level))
             {
-                return (false, "Mức độ quan hệ không hợp lệ");
+                return new DunbarValidationResult { IsValid = false, Message = "Mức độ quan hệ không hợp lệ" };
             }
 
             var query = _db.Contacts.Where(c => c.UserId == userId && c.Level == level);
@@ -259,10 +259,23 @@ namespace QuanLiQuanHeXaHoi.Controllers
 
             if (currentCount >= limit)
             {
-                return (false, $"Bạn đã đạt giới hạn cho nhóm này ({limit} người). Vui lòng chọn nhóm khác hoặc xóa bớt người trong nhóm hiện tại.");
+                return new DunbarValidationResult
+                {
+                    IsValid = false,
+                    Message = $"Bạn đã đạt giới hạn cho nhóm này ({limit} người). Vui lòng chọn nhóm khác hoặc xóa bớt người trong nhóm hiện tại."
+                };
             }
 
-            return (true, null);
+            return new DunbarValidationResult { IsValid = true, Message = null };
+        }
+
+        /// <summary>
+        /// Helper class for validation result
+        /// </summary>
+        private class DunbarValidationResult
+        {
+            public bool IsValid { get; set; }
+            public string Message { get; set; }
         }
 
         protected override void Dispose(bool disposing)
