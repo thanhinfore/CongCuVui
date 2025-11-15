@@ -1,0 +1,1386 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Labeler - LM Studio API</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --border: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+            .header h1 {
+                font-size: 2.5rem;
+                background: linear-gradient(135deg, var(--primary), var(--secondary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 10px;
+            }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+            .card h2 {
+                font-size: 1.5rem;
+                color: var(--dark);
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            background: var(--light);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .api-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+            .api-input:focus {
+                outline: none;
+                border-color: var(--primary);
+            }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+        }
+
+            .btn-primary:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            }
+
+        .btn-secondary {
+            background: var(--gray);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-small {
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            background: var(--danger);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-remove {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: var(--danger);
+            color: var(--white);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--border);
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+            .upload-area:hover {
+                border-color: var(--primary);
+                background: rgba(102, 126, 234, 0.05);
+            }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+            .upload-label svg {
+                color: var(--primary);
+            }
+
+            .upload-label p {
+                font-size: 1.2rem;
+                color: var(--dark);
+                font-weight: 500;
+            }
+
+        .file-info {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .file-info-box {
+            padding: 15px;
+            background: var(--light);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .questions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            display: flex;
+            gap: 10px;
+        }
+
+        .question-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .preview-stats {
+            display: flex;
+            gap: 30px;
+            padding: 15px;
+            background: var(--light);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--light);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--dark);
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 35px;
+            background: var(--light);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--light);
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            padding: 20px;
+            background: var(--light);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .batch-settings {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .batch-input {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid var(--border);
+            border-radius: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📊 Excel Data Labeler</h1>
+            <p class="subtitle">AI-Powered Data Labeling with LM Studio</p>
+        </header>
+
+        <!-- API Configuration -->
+        <div class="card">
+            <h2>🚀 LM Studio API Configuration</h2>
+            <div class="api-input-group">
+                <input type="text" class="api-input" id="apiUrl" value="http://192.168.11.32:1234" placeholder="API URL">
+                <button class="btn btn-primary" onclick="testConnection()">Test Connection</button>
+            </div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">Connection</span>
+                    <span class="status-value" id="connectionStatus">Not Connected</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Model</span>
+                    <span class="status-value" id="modelName">--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Server</span>
+                    <span class="status-value" id="serverStatus">--</span>
+                </div>
+            </div>
+            <div class="batch-settings">
+                <label>Batch Size:</label>
+                <input type="number" class="batch-input" id="batchSize" value="10" min="1" max="50">
+                <label>Parallel Requests:</label>
+                <input type="number" class="batch-input" id="parallelRequests" value="5" min="1" max="20">
+                <label>Temperature:</label>
+                <input type="number" class="batch-input" id="temperature" value="0.05" min="0" max="1" step="0.05">
+            </div>
+            <details style="margin-top: 15px;">
+                <summary style="cursor: pointer; font-weight: 600; color: var(--primary);">⚙️ Advanced Prompt Settings</summary>
+                <div style="margin-top: 10px; padding: 15px; background: var(--light); border-radius: 8px;">
+                    <label style="display: block; margin-bottom: 5px;">Response Format:</label>
+                    <select id="responseFormat" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 5px;">
+                        <option value="auto">Auto-detect from question</option>
+                        <option value="single">Single word only</option>
+                        <option value="short">1-3 words</option>
+                        <option value="options">From given options only</option>
+                        <option value="yesno">Yes/No/Unclear</option>
+                        <option value="sentiment">Positive/Negative/Neutral</option>
+                    </select>
+
+                    <label style="display: block; margin-bottom: 5px;">Model Behavior:</label>
+                    <select id="modelBehavior" style="width: 100%; padding: 8px; border: 2px solid var(--border); border-radius: 5px;">
+                        <option value="precise">Precise (Recommended for Gemma)</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="creative">Creative</option>
+                    </select>
+                </div>
+            </details>
+        </div>
+
+        <!-- File Upload -->
+        <div class="card">
+            <h2>📁 Step 1: Upload Excel File</h2>
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept=".xlsx,.xls">
+                <label for="fileInput" class="upload-label">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Click to upload Excel file (.xlsx)</p>
+                    <span class="file-info">File must contain "Publish Content" column</span>
+                </label>
+            </div>
+            <div id="fileInfo" class="file-info-box" style="display: none;">
+                <span id="fileName"></span>
+                <button class="btn-small" onclick="clearFile()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Labeling Questions -->
+        <div class="card" id="questionsCard" style="display: none;">
+            <h2>🏷️ Step 2: Define Labeling Questions</h2>
+            <div class="questions-container" id="questionsContainer">
+                <div class="question-item">
+                    <input type="text" class="question-input" placeholder="e.g., What is the sentiment? (positive/negative/neutral)">
+                    <button class="btn-remove" onclick="removeQuestion(this)">×</button>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="addQuestion()">+ Add Question</button>
+        </div>
+
+        <!-- Data Preview -->
+        <div class="card" id="previewCard" style="display: none;">
+            <h2>👁️ Data Preview</h2>
+            <div class="preview-stats">
+                <span>Total Rows: <strong id="totalRows">0</strong></span>
+                <span>Content Column: <strong>✓ Found</strong></span>
+            </div>
+            <div class="table-container">
+                <table id="previewTable">
+                    <thead>
+                        <tr id="previewHeader"></tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Process Controls -->
+        <div class="card" id="processCard" style="display: none;">
+            <h2>⚡ Step 3: Process Data</h2>
+            <div class="process-controls">
+                <button class="btn btn-primary" id="processBtn" onclick="processData()">
+                    Start Labeling
+                </button>
+                <button class="btn btn-secondary" id="pauseBtn" onclick="pauseProcess()" style="display: none;">
+                    Pause
+                </button>
+            </div>
+            <div class="progress-info" id="progressInfo" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="processFill">0%</div>
+                </div>
+                <div class="progress-stats">
+                    <span>Processing: <strong id="currentRow">0</strong> / <strong id="totalRowsProcess">0</strong></span>
+                    <span>Time: <strong id="processTime">0s</strong></span>
+                    <span>Speed: <strong id="processSpeed">--</strong> rows/min</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2>✅ Results</h2>
+            <div class="results-actions">
+                <button class="btn btn-success" onclick="downloadResults()">
+                    📥 Download Labeled Excel
+                </button>
+                <button class="btn btn-secondary" onclick="previewResults()">
+                    👁️ Preview Results
+                </button>
+            </div>
+            <div class="results-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Rows Processed</span>
+                    <span class="stat-value" id="rowsProcessed">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Labels Added</span>
+                    <span class="stat-value" id="labelsAdded">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Time</span>
+                    <span class="stat-value" id="totalTime">0s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="resultsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Results Preview</h3>
+                    <button class="btn-close" onclick="closeResultsModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table id="resultsTable">
+                            <thead>
+                                <tr id="resultsHeader"></tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let excelData = null;
+        let workbook = null;
+        let questions = [];
+        let isProcessing = false;
+        let isPaused = false;  // Renamed from pauseProcessing
+        let processedData = [];
+        let startTime = null;
+        let apiConnected = false;
+
+        // Test LM Studio connection
+        window.testConnection = async function () {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const connectionStatus = document.getElementById('connectionStatus');
+            const modelName = document.getElementById('modelName');
+            const serverStatus = document.getElementById('serverStatus');
+
+            try {
+                connectionStatus.textContent = 'Connecting...';
+                connectionStatus.style.color = 'var(--warning)';
+
+                const response = await fetch(`${apiUrl}/v1/models`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const model = data.data?.[0]?.id || 'Unknown Model';
+
+                    connectionStatus.textContent = 'Connected';
+                    connectionStatus.style.color = 'var(--success)';
+                    modelName.textContent = model.split('/').pop();
+                    serverStatus.textContent = 'Online';
+                    serverStatus.style.color = 'var(--success)';
+                    apiConnected = true;
+
+                    document.getElementById('questionsCard').style.display = 'block';
+
+                    // Test chat endpoint
+                    await window.testChatEndpoint(apiUrl);
+                } else {
+                    throw new Error('Connection failed');
+                }
+            } catch (error) {
+                connectionStatus.textContent = 'Failed';
+                connectionStatus.style.color = 'var(--danger)';
+                modelName.textContent = '--';
+                serverStatus.textContent = 'Offline';
+                serverStatus.style.color = 'var(--danger)';
+                apiConnected = false;
+                alert(`Connection failed: ${error.message}\nMake sure LM Studio is running with a model loaded.`);
+            }
+        }
+
+        // Test chat endpoint
+        window.testChatEndpoint = async function (apiUrl) {
+            try {
+                const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: 'user', content: 'Test' }
+                        ],
+                        temperature: 0.1,
+                        max_tokens: 5,
+                        stream: false
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Chat endpoint working');
+                }
+            } catch (error) {
+                console.error('Chat endpoint test failed:', error);
+            }
+        }
+
+        // Process single prompt with LM Studio - OPTIMIZED FOR GEMMA
+        window.callLMStudio = async function (prompt, question, examples = '') {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const temperature = parseFloat(document.getElementById('temperature').value) || 0.05;
+            const modelBehavior = document.getElementById('modelBehavior').value || 'precise';
+
+            // Adjust parameters based on model behavior
+            let topP = 0.95;
+            let topK = 10;
+            let repPenalty = 1.1;
+
+            if (modelBehavior === 'balanced') {
+                topP = 0.9;
+                topK = 20;
+                repPenalty = 1.05;
+            } else if (modelBehavior === 'creative') {
+                topP = 0.95;
+                topK = 40;
+                repPenalty = 1.0;
+            }
+
+            // Gemma-optimized system prompt with clear instructions
+            const systemPrompt = `You are a precise data labeling assistant. Your task is to analyze text and answer specific questions with ONLY the requested format.
+
+RULES:
+1. Answer ONLY with the options provided in the question if any
+2. Use 1-3 words maximum unless specified otherwise
+3. Be factual and objective
+4. If unsure, answer "unknown" or "unclear"
+5. Focus on the main topic/sentiment/category asked
+
+${examples}
+
+Remember: Your answer must directly address what is being asked, nothing more.`;
+
+            try {
+                const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            {
+                                role: 'system',
+                                content: systemPrompt
+                            },
+                            {
+                                role: 'user',
+                                content: prompt
+                            }
+                        ],
+                        temperature: temperature,
+                        max_tokens: 15,
+                        top_p: topP,
+                        top_k: topK,
+                        repetition_penalty: repPenalty,
+                        stream: false
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let answer = data.choices[0].message.content.trim();
+
+                    // Clean up answer - remove extra words
+                    answer = answer.replace(/^(Answer:|Response:)/i, '').trim();
+                    answer = answer.replace(/[.,!?;]$/, '').trim();
+
+                    // Validate answer based on question type and format setting
+                    answer = validateAnswer(answer, question);
+
+                    return answer;
+                } else {
+                    throw new Error('API request failed');
+                }
+            } catch (error) {
+                console.error('LM Studio API error:', error);
+                return 'Error';
+            }
+        }
+
+        // Validate and clean answer based on question type
+        window.validateAnswer = function (answer, question) {
+            const lowerQuestion = question.toLowerCase();
+            const lowerAnswer = answer.toLowerCase().trim();
+
+            // Extract options from question if present
+            const optionsMatch = question.match(/\(([^)]+)\)/);
+            if (optionsMatch) {
+                const options = optionsMatch[1].split('/').map(o => o.trim().toLowerCase());
+
+                // Check if answer matches any option
+                for (const option of options) {
+                    if (lowerAnswer.includes(option) || option.includes(lowerAnswer)) {
+                        return option;
+                    }
+                }
+
+                // If no match, try to find closest option
+                if (lowerAnswer.includes('pos') && options.includes('positive')) return 'positive';
+                if (lowerAnswer.includes('neg') && options.includes('negative')) return 'negative';
+                if (lowerAnswer.includes('neu') && options.includes('neutral')) return 'neutral';
+
+                // Default to first option if completely unclear
+                if (lowerAnswer === 'unclear' || lowerAnswer === 'unknown') {
+                    return 'unclear';
+                }
+            }
+
+            // Sentiment analysis - standardize responses
+            if (lowerQuestion.includes('sentiment') || lowerQuestion.includes('emotion') || lowerQuestion.includes('tone')) {
+                const sentimentMap = {
+                    'positive': ['positive', 'good', 'happy', 'great', 'excellent', 'love', 'like', 'enjoy', 'wonderful', 'amazing'],
+                    'negative': ['negative', 'bad', 'sad', 'terrible', 'awful', 'hate', 'dislike', 'poor', 'horrible', 'worst'],
+                    'neutral': ['neutral', 'mixed', 'okay', 'fine', 'average', 'normal', 'unclear', 'unknown']
+                };
+
+                for (const [sentiment, keywords] of Object.entries(sentimentMap)) {
+                    if (keywords.some(keyword => lowerAnswer.includes(keyword))) {
+                        return sentiment;
+                    }
+                }
+            }
+
+            // Yes/No questions - standardize
+            if (lowerQuestion.includes('is this') || lowerQuestion.includes('does this') ||
+                lowerQuestion.includes('is it') || lowerQuestion.includes('are there') ||
+                lowerQuestion.includes('is there') || lowerQuestion.includes('do you')) {
+
+                if (lowerAnswer.includes('yes') || lowerAnswer.includes('true') ||
+                    lowerAnswer.includes('correct') || lowerAnswer.includes('affirmative')) {
+                    return 'yes';
+                } else if (lowerAnswer.includes('no') || lowerAnswer.includes('false') ||
+                    lowerAnswer.includes('incorrect') || lowerAnswer.includes('negative')) {
+                    return 'no';
+                } else if (lowerAnswer.includes('maybe') || lowerAnswer.includes('unclear') ||
+                    lowerAnswer.includes('unknown') || lowerAnswer.includes('unsure')) {
+                    return 'unclear';
+                }
+            }
+
+            // Category/Topic detection - clean up
+            if (lowerQuestion.includes('category') || lowerQuestion.includes('topic') ||
+                lowerQuestion.includes('type') || lowerQuestion.includes('subject')) {
+
+                // Remove common prefixes
+                let cleaned = answer.replace(/^(the |a |an |this |that )/i, '');
+                cleaned = cleaned.replace(/^(main |primary |key )/i, '');
+                cleaned = cleaned.replace(/^(topic:|category:|type:|subject:)/i, '');
+
+                // Limit to 2 words for categories
+                const words = cleaned.trim().split(' ');
+                if (words.length > 2) {
+                    return words.slice(0, 2).join(' ').toLowerCase();
+                }
+                return cleaned.trim().toLowerCase();
+            }
+
+            // Number extraction - ensure only number is returned
+            if (lowerQuestion.includes('how many') || lowerQuestion.includes('count') ||
+                lowerQuestion.includes('number of') || lowerQuestion.includes('total')) {
+
+                const numbers = answer.match(/\d+/);
+                if (numbers) {
+                    return numbers[0];
+                }
+
+                // Word to number conversion
+                const wordNumbers = {
+                    'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4',
+                    'five': '5', 'six': '6', 'seven': '7', 'eight': '8', 'nine': '9',
+                    'ten': '10', 'none': '0', 'single': '1', 'couple': '2', 'few': '3-5',
+                    'several': '3-7', 'many': '5+', 'multiple': '2+'
+                };
+
+                for (const [word, num] of Object.entries(wordNumbers)) {
+                    if (lowerAnswer.includes(word)) {
+                        return num;
+                    }
+                }
+            }
+
+            // Location/place - clean up
+            if (lowerQuestion.includes('where') || lowerQuestion.includes('location') ||
+                lowerQuestion.includes('place') || lowerQuestion.includes('city') ||
+                lowerQuestion.includes('country')) {
+
+                // Remove common location prefixes
+                let cleaned = answer.replace(/^(in |at |from |near |around )/i, '');
+                cleaned = cleaned.replace(/^(the |a |an )/i, '');
+
+                // Capitalize properly for locations
+                return cleaned.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .slice(0, 3)
+                    .join(' ');
+            }
+
+            // Person/who - clean up
+            if (lowerQuestion.includes('who') || lowerQuestion.includes('person') ||
+                lowerQuestion.includes('author') || lowerQuestion.includes('name')) {
+
+                // Remove titles if present
+                let cleaned = answer.replace(/^(mr\.|mrs\.|ms\.|dr\.|prof\.) /i, '');
+
+                // Capitalize properly for names
+                return cleaned.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .slice(0, 3)
+                    .join(' ');
+            }
+
+            // Default: clean and limit to 3 words
+            let cleaned = answer.trim();
+            cleaned = cleaned.replace(/^(answer:|response:|result:)/i, '');
+            cleaned = cleaned.replace(/[.,!?;:'"]/g, '');
+
+            const words = cleaned.split(' ').filter(w => w.length > 0);
+            if (words.length > 3) {
+                return words.slice(0, 3).join(' ');
+            }
+
+            return cleaned || 'unknown';
+        }
+
+        // Generate examples based on question type
+        window.generateExamples = function (question) {
+            const lowerQuestion = question.toLowerCase();
+
+            if (lowerQuestion.includes('sentiment')) {
+                return `Examples:
+- "I love this product!" → positive
+- "This is terrible" → negative
+- "It's okay" → neutral`;
+            }
+
+            if (lowerQuestion.includes('topic') || lowerQuestion.includes('category')) {
+                return `Examples:
+- "Latest iPhone review" → technology
+- "Hospital waiting times" → healthcare
+- "Stock market crash" → finance`;
+            }
+
+            if (lowerQuestion.includes('yes') || lowerQuestion.includes('no')) {
+                return `Examples:
+- Question with clear evidence → yes
+- Question without evidence → no
+- Ambiguous case → unclear`;
+            }
+
+            return '';
+        }
+
+        // Process batch of rows - OPTIMIZED FOR GEMMA
+        window.processBatch = async function (rows, questions) {
+            const batchSize = parseInt(document.getElementById('parallelRequests').value) || 5;
+            const results = [];
+
+            for (const row of rows) {
+                const content = row['Publish Content'] || '';
+                if (!content) {
+                    results.push({ ...row });
+                    continue;
+                }
+
+                const rowResult = { ...row };
+
+                // Process questions in parallel batches
+                for (let i = 0; i < questions.length; i += batchSize) {
+                    const questionBatch = questions.slice(i, i + batchSize);
+                    const promises = questionBatch.map(async (question) => {
+                        // Generate examples for this question type
+                        const examples = window.generateExamples(question);
+
+                        // Build structured prompt for Gemma
+                        const prompt = buildGemmaPrompt(question, content);
+
+                        const answer = await window.callLMStudio(prompt, question, examples);
+                        return { question, answer };
+                    });
+
+                    const answers = await Promise.all(promises);
+
+                    for (const { question, answer } of answers) {
+                        const colName = `AI_${question.substring(0, 30)}`;
+                        rowResult[colName] = answer;
+                    }
+                }
+
+                results.push(rowResult);
+            }
+
+            return results;
+        }
+
+        // Build optimized prompt for Gemma model
+        window.buildGemmaPrompt = function (question, content) {
+            // Truncate content to focus on relevant part
+            const truncatedContent = content.substring(0, 250);
+            const responseFormat = document.getElementById('responseFormat').value || 'auto';
+            const lowerQuestion = question.toLowerCase();
+
+            // Handle manual response format override
+            if (responseFormat !== 'auto') {
+                const formatInstructions = {
+                    'single': 'Answer with EXACTLY ONE WORD:',
+                    'short': 'Answer in 1-3 words maximum:',
+                    'options': 'Choose from the options in the question:',
+                    'yesno': 'Answer with ONLY "yes", "no", or "unclear":',
+                    'sentiment': 'Answer with ONLY "positive", "negative", or "neutral":'
+                };
+
+                return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+${formatInstructions[responseFormat] || 'Answer concisely:'}`;
+            }
+
+            // Auto-detect format from question
+            // For questions with options (e.g., positive/negative/neutral)
+            if (question.includes('(') && question.includes(')')) {
+                const optionsMatch = question.match(/\(([^)]+)\)/);
+                if (optionsMatch) {
+                    const options = optionsMatch[1].split('/').map(o => o.trim());
+                    return `Text to analyze: "${truncatedContent}"
+
+Task: ${question}
+
+IMPORTANT: You must choose ONLY from these exact options: ${options.join(', ')}
+Do not add any other words or explanations.
+
+Your answer (one option only):`;
+                }
+            }
+
+            // For yes/no questions
+            if (lowerQuestion.includes('is this') || lowerQuestion.includes('does this') || lowerQuestion.includes('is it') || lowerQuestion.includes('are there')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+Answer with ONLY one of these: yes, no, unclear
+Your answer:`;
+            }
+
+            // For topic/category questions
+            if (lowerQuestion.includes('topic') || lowerQuestion.includes('category') || lowerQuestion.includes('type') || lowerQuestion.includes('subject')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Task: ${question}
+
+Identify the main topic/category using 1-2 words only.
+Examples: technology, healthcare, finance, sports, education
+
+Your answer:`;
+            }
+
+            // For sentiment questions
+            if (lowerQuestion.includes('sentiment') || lowerQuestion.includes('emotion') || lowerQuestion.includes('feeling') || lowerQuestion.includes('tone')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Task: ${question}
+
+Determine the sentiment/emotion.
+Answer with ONLY: positive, negative, or neutral
+
+Your answer:`;
+            }
+
+            // For counting questions
+            if (lowerQuestion.includes('how many') || lowerQuestion.includes('count') || lowerQuestion.includes('number of')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+Provide ONLY a number as your answer:`;
+            }
+
+            // For location questions
+            if (lowerQuestion.includes('where') || lowerQuestion.includes('location') || lowerQuestion.includes('place')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+Name the location/place in 1-3 words:`;
+            }
+
+            // For person/who questions
+            if (lowerQuestion.includes('who') || lowerQuestion.includes('person') || lowerQuestion.includes('author')) {
+                return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+Name the person or role in 1-3 words:`;
+            }
+
+            // Default format with emphasis on brevity
+            return `Text to analyze: "${truncatedContent}"
+
+Question: ${question}
+
+IMPORTANT: Answer in 1-3 words ONLY. Be extremely concise.
+Your answer:`;
+        }
+
+        // Process data
+        window.processData = async function () {
+            if (!apiConnected) {
+                alert('Please connect to LM Studio first!');
+                return;
+            }
+
+            if (!excelData) {
+                alert('Please upload an Excel file!');
+                return;
+            }
+
+            const questionInputs = document.querySelectorAll('.question-input');
+            questions = Array.from(questionInputs).map(input => input.value).filter(q => q.trim());
+
+            if (questions.length === 0) {
+                alert('Please add at least one labeling question!');
+                return;
+            }
+
+            isProcessing = true;
+            isPaused = false;  // Changed from pauseProcessing
+            processedData = [];
+            startTime = Date.now();
+
+            document.getElementById('processBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'block';
+            document.getElementById('progressInfo').style.display = 'block';
+            document.getElementById('totalRowsProcess').textContent = excelData.length;
+
+            const batchSize = parseInt(document.getElementById('batchSize').value) || 10;
+            const batches = [];
+            for (let i = 0; i < excelData.length; i += batchSize) {
+                batches.push(excelData.slice(i, Math.min(i + batchSize, excelData.length)));
+            }
+
+            console.log(`Processing ${batches.length} batches of size ${batchSize}`);
+
+            let completed = 0;
+
+            for (const batch of batches) {
+                if (isPaused) {  // Changed from pauseProcessing
+                    isProcessing = false;
+                    document.getElementById('processBtn').textContent = 'Resume';
+                    document.getElementById('processBtn').style.display = 'block';
+                    document.getElementById('pauseBtn').style.display = 'none';
+                    return;
+                }
+
+                const batchResult = await window.processBatch(batch, questions);
+                processedData.push(...batchResult);
+                completed += batchResult.length;
+                window.updateProgress(completed);
+            }
+
+            window.finishProcessing();
+        }
+
+        // Update progress
+        window.updateProgress = function (current) {
+            const total = excelData.length;
+            const percent = Math.round((current / total) * 100);
+
+            document.getElementById('processFill').style.width = `${percent}%`;
+            document.getElementById('processFill').textContent = `${percent}%`;
+            document.getElementById('currentRow').textContent = current;
+
+            const elapsed = (Date.now() - startTime) / 1000;
+            document.getElementById('processTime').textContent = `${Math.round(elapsed)}s`;
+
+            const speed = (current / elapsed) * 60;
+            document.getElementById('processSpeed').textContent = `${Math.round(speed)} rows/min`;
+        }
+
+        // Finish processing
+        window.finishProcessing = function () {
+            isProcessing = false;
+
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+
+            document.getElementById('processBtn').textContent = 'Start Labeling';
+            document.getElementById('processBtn').style.display = 'block';
+            document.getElementById('pauseBtn').style.display = 'none';
+
+            document.getElementById('resultsCard').style.display = 'block';
+            document.getElementById('rowsProcessed').textContent = processedData.length;
+            document.getElementById('labelsAdded').textContent = processedData.length * questions.length;
+            document.getElementById('totalTime').textContent = `${elapsed}s`;
+
+            const speed = (processedData.length / elapsed) * 60;
+            console.log(`✅ Completed at ${Math.round(speed)} rows/min`);
+        }
+
+        // File handling
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    workbook = XLSX.read(data, { type: 'array' });
+
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    excelData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (!excelData.some(row => row['Publish Content'])) {
+                        alert('Excel file must contain "Publish Content" column!');
+                        clearFile();
+                        return;
+                    }
+
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileInfo').style.display = 'block';
+                    document.getElementById('totalRows').textContent = excelData.length;
+
+                    window.displayPreview();
+
+                    if (apiConnected) {
+                        document.getElementById('questionsCard').style.display = 'block';
+                    }
+                    document.getElementById('previewCard').style.display = 'block';
+                    document.getElementById('processCard').style.display = 'block';
+
+                } catch (error) {
+                    console.error('File reading error:', error);
+                    alert('Error reading Excel file!');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Display preview
+        window.displayPreview = function () {
+            const header = document.getElementById('previewHeader');
+            const body = document.getElementById('previewBody');
+
+            header.innerHTML = '';
+            body.innerHTML = '';
+
+            if (!excelData || excelData.length === 0) return;
+
+            const columns = Object.keys(excelData[0]);
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                header.appendChild(th);
+            });
+
+            const previewRows = Math.min(5, excelData.length);
+            for (let i = 0; i < previewRows; i++) {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = excelData[i][col] || '';
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            }
+        }
+
+        // Clear file
+        window.clearFile = function () {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('processCard').style.display = 'none';
+            document.getElementById('resultsCard').style.display = 'none';
+            excelData = null;
+            workbook = null;
+        }
+
+        // Add question
+        window.addQuestion = function () {
+            const container = document.getElementById('questionsContainer');
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                    <input type="text" class="question-input" placeholder="e.g., What is the topic? (technology/health/finance)">
+                    <button class="btn-remove" onclick="removeQuestion(this)">×</button>
+                `;
+            container.appendChild(div);
+        }
+
+        // Remove question
+        window.removeQuestion = function (btn) {
+            btn.parentElement.remove();
+        }
+
+        // Pause processing
+        window.pauseProcess = function () {  // Renamed from pauseProcessing
+            isPaused = true;
+        }
+
+        // Download results
+        window.downloadResults = function () {
+            if (!processedData || processedData.length === 0) return;
+
+            const ws = XLSX.utils.json_to_sheet(processedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Labeled Data');
+
+            const date = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `labeled_data_${date}.xlsx`);
+        }
+
+        // Preview results
+        window.previewResults = function () {
+            const modal = document.getElementById('resultsModal');
+            const header = document.getElementById('resultsHeader');
+            const body = document.getElementById('resultsBody');
+
+            header.innerHTML = '';
+            body.innerHTML = '';
+
+            if (!processedData || processedData.length === 0) return;
+
+            const columns = Object.keys(processedData[0]);
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                header.appendChild(th);
+            });
+
+            const previewRows = Math.min(10, processedData.length);
+            for (let i = 0; i < previewRows; i++) {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = processedData[i][col] || '';
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // Close modal
+        window.closeResultsModal = function () {
+            document.getElementById('resultsModal').style.display = 'none';
+        }
+
+        // Auto-connect on load
+        window.addEventListener('load', () => {
+            window.testConnection();
+        });
+    </script>
+</body>
+</html>

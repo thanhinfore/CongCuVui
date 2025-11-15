@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoCaro", "CoCaro\CoCaro.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gemma3_270M_Chat", "Gemma3_270M_Chat\Gemma3_270M_Chat.csproj", "{CBE98B90-064E-4314-B11A-9AB5698BC494}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GemmaLabelling", "GemmaLabelling\GemmaLabelling.csproj", "{2D629711-FB15-4861-BC13-D76EDB39A0E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBE98B90-064E-4314-B11A-9AB5698BC494}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D629711-FB15-4861-BC13-D76EDB39A0E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D629711-FB15-4861-BC13-D76EDB39A0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D629711-FB15-4861-BC13-D76EDB39A0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D629711-FB15-4861-BC13-D76EDB39A0E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

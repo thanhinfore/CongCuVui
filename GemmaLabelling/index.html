@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datalac - AI-Powered Data Labeling System</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📊 DATALAC.COM</h1>
+            <p class="subtitle">Distributed AI-Powered Data Labeling System</p>
+        </header>
+
+        <!-- Mode Selection Card -->
+        <div class="card">
+            <h2>🤖 Select AI Mode</h2>
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="switchMode('browser')">
+                    💻 Browser Mode (Gemma 3)
+                </button>
+                <button class="mode-btn" onclick="switchMode('lmstudio')">
+                    🚀 LM Studio Mode (External)
+                </button>
+            </div>
+
+            <!-- Browser Mode Content -->
+            <div id="browserMode" class="mode-content active">
+                <div class="alert alert-info">
+                    <strong>Browser Mode:</strong> Runs Gemma 3 270M model directly in your browser. No server required, but slower processing.
+                    <br><small>⚠️ Mobile devices: Processing will be slower (0.5-2 rows/s)</small>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Model</span>
+                        <span class="status-value" id="browserModelName">Gemma 3 270M</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Status</span>
+                        <span class="status-value" id="browserModelStatus">Not Loaded</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Device</span>
+                        <span class="status-value" id="browserDevice">Detecting...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Performance</span>
+                        <span class="status-value" id="browserPerformance">--</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="loadModelBtn" onclick="loadBrowserModel()">
+                    <span id="loadBtnText">Load Gemma 3 Model</span>
+                </button>
+                <div class="progress-bar" id="browserProgressBar" style="display: none;">
+                    <div class="progress-fill" id="browserProgressFill">0%</div>
+                </div>
+                <div class="settings-group" style="margin-top: 15px;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="lowQualityMode" style="margin-right: 5px;">
+                        Fast Mode (Lower accuracy, 2x speed)
+                    </label>
+                    <label style="cursor: pointer; margin-left: 20px;">
+                        <input type="checkbox" id="debugMode" onchange="toggleDebugMode()" style="margin-right: 5px;">
+                        Debug Mode
+                    </label>
+                </div>
+            </div>
+
+            <!-- LM Studio Mode Content -->
+            <div id="lmstudioMode" class="mode-content">
+                <div class="alert alert-info">
+                    <strong>LM Studio Mode:</strong> Uses external LM Studio server. Faster processing, supports various models.
+                </div>
+                <div class="api-input-group">
+                    <input type="text" class="api-input" id="apiUrl" value="http://localhost:1234" placeholder="LM Studio API URL">
+                    <button class="btn btn-primary" onclick="testLMStudioConnection()">Connect</button>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Connection</span>
+                        <span class="status-value" id="lmConnectionStatus">Not Connected</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Model</span>
+                        <span class="status-value" id="lmModelName">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Server</span>
+                        <span class="status-value" id="lmServerStatus">--</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label>Temperature:</label>
+                    <input type="number" class="settings-input" id="temperature" value="0.3" min="0" max="1" step="0.1">
+                    <label>Batch Size:</label>
+                    <input type="number" class="settings-input" id="batchSize" value="5" min="1" max="20">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" id="debugModeLM" onchange="toggleDebugMode()" style="margin-right: 5px;">
+                        Debug
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Card -->
+        <div class="card">
+            <h2>📁 Step 1: Upload Excel File</h2>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Click or drag Excel file here (.xlsx)</p>
+                <span style="color: var(--gray); font-size: 0.9rem;">File must contain "Publish Content" column</span>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
+            <div id="fileInfo" class="file-info-box" style="display: none;">
+                <span id="fileName"></span>
+                <button class="btn btn-danger" onclick="clearFile()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Labeling Questions Card -->
+        <div class="card" id="questionsCard" style="display: none;">
+            <h2>🏷️ Step 2: Define Labeling Questions</h2>
+            <div class="questions-container" id="questionsContainer">
+                <div class="question-item">
+                    <input type="text" class="question-input" placeholder="e.g., What is the sentiment? (positive/negative/neutral)">
+                    <button class="btn-remove" onclick="removeQuestion(this)">×</button>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="addQuestion()">+ Add Question</button>
+
+            <div class="sample-questions">
+                <h4>Sample Questions (click to use):</h4>
+                <ul>
+                    <li onclick="useSampleQuestion(this)">What is the sentiment? (positive/negative/neutral)</li>
+                    <li onclick="useSampleQuestion(this)">What is the topic? (tech/business/health/education/other)</li>
+                    <li onclick="useSampleQuestion(this)">Is this news or opinion? (news/opinion)</li>
+                    <li onclick="useSampleQuestion(this)">What priority level? (high/medium/low)</li>
+                    <li onclick="useSampleQuestion(this)">Does this contain personal info? (yes/no)</li>
+                    <li onclick="useSampleQuestion(this)">Is this appropriate for children? (yes/no)</li>
+                    <li onclick="useSampleQuestion(this)">What emotion is expressed? (happy/sad/angry/neutral)</li>
+                    <li onclick="useSampleQuestion(this)">Is action required? (yes/no)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Data Preview Card -->
+        <div class="card" id="previewCard" style="display: none;">
+            <h2>👁️ Data Preview</h2>
+            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                <span>Total Rows: <strong id="totalRows">0</strong></span>
+                <span>Content Column: <strong style="color: var(--success);">✓ Found</strong></span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead id="previewHeader"></thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Process Controls Card -->
+        <div class="card" id="processCard" style="display: none;">
+            <h2>⚡ Step 3: Process Data</h2>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-primary" id="processBtn" onclick="processData()">
+                    Start Labeling
+                </button>
+                <button class="btn btn-secondary" id="pauseBtn" onclick="pauseProcessing()" style="display: none;">
+                    Pause
+                </button>
+            </div>
+            <div id="progressInfo" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="processFill">0%</div>
+                </div>
+                <div class="progress-stats">
+                    <div class="progress-stat">
+                        <span>Processing</span>
+                        <strong><span id="currentRow">0</span> / <span id="totalRowsProcess">0</span></strong>
+                    </div>
+                    <div class="progress-stat">
+                        <span>Time Elapsed</span>
+                        <strong id="processTime">0s</strong>
+                    </div>
+                    <div class="progress-stat">
+                        <span>Speed</span>
+                        <strong id="processSpeed">--</strong>
+                    </div>
+                    <div class="progress-stat">
+                        <span>ETA</span>
+                        <strong id="eta">--</strong>
+                    </div>
+                </div>
+                <div id="debugInfo" class="debug-panel" style="display: none;">
+                    <strong>Debug:</strong> <span id="debugStatus">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card" id="resultsCard" style="display: none;">
+            <h2>✅ Results</h2>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="downloadResults()">
+                    📥 Download Labeled Excel
+                </button>
+                <button class="btn btn-secondary" onclick="previewResults()">
+                    👁️ Preview Results
+                </button>
+            </div>
+            <div class="results-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Rows Processed</span>
+                    <span class="stat-value" id="rowsProcessed">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Labels Added</span>
+                    <span class="stat-value" id="labelsAdded">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Time</span>
+                    <span class="stat-value" id="totalTime">0s</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Avg Speed</span>
+                    <span class="stat-value" id="avgSpeed">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="resultsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Results Preview</h3>
+                    <button class="btn-close" onclick="closeResultsModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-container">
+                        <table>
+                            <thead id="resultsHeader"></thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

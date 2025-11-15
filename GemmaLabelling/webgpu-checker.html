@@ -1,0 +1,299 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Check & Setup</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-box {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #17a2b8;
+        }
+
+        .setup-steps {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #667eea;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d73a49;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            }
+
+        .gpu-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 WebGPU Status & Setup</h1>
+
+        <div id="status"></div>
+
+        <div class="setup-steps">
+            <h2>📋 Enable WebGPU in Chrome:</h2>
+
+            <div class="step">
+                <strong>Step 1:</strong> Open Chrome flags<br>
+                Type in address bar: <code>chrome://flags</code>
+            </div>
+
+            <div class="step">
+                <strong>Step 2:</strong> Enable these flags:<br>
+                • Search for <code>WebGPU</code> → Set to <strong>Enabled</strong><br>
+                • Search for <code>Unsafe WebGPU</code> → Set to <strong>Enabled</strong><br>
+                • Search for <code>WebGPU Developer Features</code> → Set to <strong>Enabled</strong><br>
+                • Search for <code>Use angle</code> → Set to <strong>D3D11</strong> or <strong>OpenGL</strong>
+            </div>
+
+            <div class="step">
+                <strong>Step 3:</strong> Hardware Acceleration<br>
+                Go to: <code>chrome://settings/system</code><br>
+                ✅ Enable <strong>"Use hardware acceleration when available"</strong>
+            </div>
+
+            <div class="step">
+                <strong>Step 4:</strong> Restart Chrome<br>
+                Click <strong>"Relaunch"</strong> button after changing flags
+            </div>
+        </div>
+
+        <button onclick="checkGPU()">🔍 Check GPU Details</button>
+        <button onclick="testWebGPU()">⚡ Test WebGPU Performance</button>
+        <button onclick="window.open('chrome://gpu', '_blank')">📊 Open GPU Info Page</button>
+
+        <div id="gpu-details"></div>
+
+        <div class="info status-box" style="margin-top: 30px;">
+            <strong>💡 Tips for Better Performance:</strong><br>
+            • Close other GPU-heavy applications<br>
+            • Use Chrome Canary for latest WebGPU support<br>
+            • Ensure NVIDIA/AMD drivers are updated<br>
+            • For laptops: Set Chrome to use discrete GPU in Windows Graphics Settings
+        </div>
+    </div>
+
+    <script>
+        async function checkWebGPU() {
+            const statusDiv = document.getElementById('status');
+            let html = '';
+
+            // Check if WebGPU is available
+            if (!navigator.gpu) {
+                html = '<div class="error status-box">❌ WebGPU NOT Available - Please enable it in Chrome flags!</div>';
+                statusDiv.innerHTML = html;
+                return false;
+            }
+
+            try {
+                // Request adapter with high performance
+                const adapter = await navigator.gpu.requestAdapter({
+                    powerPreference: 'high-performance'
+                });
+
+                if (!adapter) {
+                    html = '<div class="warning status-box">⚠️ WebGPU adapter not found - Check GPU drivers</div>';
+                    statusDiv.innerHTML = html;
+                    return false;
+                }
+
+                // Get adapter info
+                const info = await adapter.requestAdapterInfo();
+
+                // Request device
+                const device = await adapter.requestDevice();
+
+                html = `
+                    <div class="success status-box">
+                        ✅ WebGPU is READY!<br>
+                        <strong>Vendor:</strong> ${info.vendor || 'Unknown'}<br>
+                        <strong>Device:</strong> ${info.device || 'Unknown'}<br>
+                        <strong>Description:</strong> ${info.description || 'Unknown'}<br>
+                        <strong>Driver:</strong> ${info.driver || 'Unknown'}
+                    </div>
+                `;
+
+                // Check limits
+                const limits = device.limits;
+                html += `
+                    <div class="info status-box">
+                        <strong>GPU Capabilities:</strong><br>
+                        Max Texture Size: ${limits.maxTextureDimension2D}x${limits.maxTextureDimension2D}<br>
+                        Max Buffer Size: ${(limits.maxBufferSize / 1024 / 1024 / 1024).toFixed(2)} GB<br>
+                        Max Compute Workgroup: ${limits.maxComputeWorkgroupSizeX}
+                    </div>
+                `;
+
+                statusDiv.innerHTML = html;
+                return true;
+
+            } catch (error) {
+                html = `<div class="error status-box">❌ WebGPU Error: ${error.message}</div>`;
+                statusDiv.innerHTML = html;
+                return false;
+            }
+        }
+
+        async function checkGPU() {
+            const detailsDiv = document.getElementById('gpu-details');
+
+            if (!navigator.gpu) {
+                detailsDiv.innerHTML = '<div class="error status-box">WebGPU not available!</div>';
+                return;
+            }
+
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                const device = await adapter.requestDevice();
+                const info = await adapter.requestAdapterInfo();
+
+                let features = [];
+                adapter.features.forEach(feature => features.push(feature));
+
+                detailsDiv.innerHTML = `
+                    <div class="gpu-info">
+                        <h3>GPU Features Enabled:</h3>
+                        ${features.join(', ') || 'No special features'}
+
+                        <h3>Performance Tips:</h3>
+                        • Current GPU: ${info.description || 'Unknown'}<br>
+                        • For NVIDIA: Use Studio/Game Ready drivers<br>
+                        • For AMD: Update Adrenalin drivers<br>
+                        • For Intel: Update Graphics drivers
+                    </div>
+                `;
+            } catch (error) {
+                detailsDiv.innerHTML = `<div class="error status-box">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWebGPU() {
+            const statusDiv = document.getElementById('status');
+
+            if (!navigator.gpu) {
+                alert('WebGPU not available! Please enable it first.');
+                return;
+            }
+
+            try {
+                statusDiv.innerHTML = '<div class="warning status-box">⏳ Testing GPU performance...</div>';
+
+                const adapter = await navigator.gpu.requestAdapter({
+                    powerPreference: 'high-performance'
+                });
+                const device = await adapter.requestDevice();
+
+                // Simple compute test
+                const start = performance.now();
+
+                // Create buffer
+                const buffer = device.createBuffer({
+                    size: 1024 * 1024 * 4, // 4MB
+                    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+                });
+
+                const end = performance.now();
+                const time = end - start;
+
+                statusDiv.innerHTML = `
+                    <div class="success status-box">
+                        ✅ GPU Test Complete!<br>
+                        Buffer creation time: ${time.toFixed(2)}ms<br>
+                        ${time < 10 ? '🚀 Excellent performance!' : time < 50 ? '👍 Good performance' : '⚠️ Slow - check GPU settings'}
+                    </div>
+                `;
+
+                buffer.destroy();
+                device.destroy();
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error status-box">Test failed: ${error.message}</div>`;
+            }
+        }
+
+        // Check on load
+        checkWebGPU();
+    </script>
+</body>
+</html>
