@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="ClassSurvey - Phân tích và biểu diễn kết quả khảo sát lớp học từ Google Sheets">
+    <meta name="theme-color" content="#6366f1">
+
+    <title>📊 ClassSurvey - Phân tích khảo sát lớp học</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/main.css">
+
+    <!-- Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
+
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- ================================================================
+             SETUP SCREEN - Màn hình thiết lập ban đầu
+             ================================================================ -->
+        <div class="setup-screen active" id="setupScreen">
+            <div class="setup-card">
+                <div class="setup-header">
+                    <div class="setup-logo" role="img" aria-label="Survey icon">📊</div>
+                    <h1>ClassSurvey</h1>
+                    <p>Phân tích kết quả khảo sát lớp học từ Google Sheets</p>
+                </div>
+
+                <form class="setup-form" id="setupForm" novalidate>
+                    <div class="form-group">
+                        <label for="csvUrl">
+                            <span class="label-icon" aria-hidden="true">📊</span>
+                            <span>Google Sheets CSV URL</span>
+                            <span class="label-hint">(Link dữ liệu khảo sát)</span>
+                        </label>
+                        <input type="url"
+                               id="csvUrl"
+                               name="csvUrl"
+                               placeholder="https://docs.google.com/spreadsheets/d/e/..."
+                               autocomplete="url"
+                               spellcheck="false"
+                               required
+                               aria-describedby="csvUrlHint csvUrlValidation">
+                        <div class="input-hint" id="csvUrlHint">
+                            <strong>Cách lấy link:</strong><br>
+                            1. Mở Google Form responses → Click "View in Sheets"<br>
+                            2. Trong Sheets: <strong>File</strong> → <strong>Share</strong> → <strong>Publish to web</strong><br>
+                            3. Chọn định dạng <strong>CSV</strong> → Click <strong>Publish</strong><br>
+                            4. Copy link CSV được tạo và dán vào đây
+                        </div>
+                        <div class="validation-msg" id="csvUrlValidation" role="alert"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="surveyTitle">
+                            <span class="label-icon" aria-hidden="true">✏️</span>
+                            <span>Tên khảo sát</span>
+                            <span class="label-hint">(Tùy chọn)</span>
+                        </label>
+                        <input type="text"
+                               id="surveyTitle"
+                               name="surveyTitle"
+                               placeholder="VD: Khảo sát ý kiến lớp học K67"
+                               autocomplete="off">
+                    </div>
+
+                    <button type="button" class="test-btn" id="testConnection" aria-label="Kiểm tra kết nối đến Google Sheets">
+                        🔍 Kiểm tra kết nối
+                    </button>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        🚀 Bắt đầu phân tích
+                    </button>
+                </form>
+
+                <!-- Recent Sessions -->
+                <div class="recent-sessions" id="recentSessions">
+                    <div class="sessions-header">
+                        <h3>📚 Khảo sát gần đây</h3>
+                        <button class="clear-history-btn"
+                                id="clearHistory"
+                                aria-label="Xóa lịch sử">
+                            🗑️ Xóa
+                        </button>
+                    </div>
+                    <div class="sessions-list" id="sessionsList" role="list"></div>
+                </div>
+
+                <!-- Quick Guide -->
+                <div class="quick-guide">
+                    <button class="guide-toggle"
+                            id="guideToggle"
+                            aria-expanded="false"
+                            aria-controls="guideContent">
+                        ❓ Hướng dẫn chi tiết
+                    </button>
+                    <div class="guide-content" id="guideContent" aria-hidden="true">
+                        <h4>Định dạng dữ liệu Google Sheets</h4>
+                        <p>ClassSurvey hỗ trợ dữ liệu từ Google Forms với cấu trúc:</p>
+                        <ul>
+                            <li><strong>Cột 1:</strong> Timestamp (thời gian submit)</li>
+                            <li><strong>Cột 2+:</strong> Câu hỏi và câu trả lời</li>
+                        </ul>
+
+                        <h4>Các loại câu hỏi được hỗ trợ</h4>
+                        <ul>
+                            <li>✅ Multiple choice (một lựa chọn)</li>
+                            <li>✅ Checkboxes (nhiều lựa chọn)</li>
+                            <li>✅ Short answer (văn bản ngắn)</li>
+                            <li>✅ Linear scale (thang điểm)</li>
+                            <li>✅ Dropdown (danh sách)</li>
+                        </ul>
+
+                        <h4>Tính năng phân tích</h4>
+                        <ul>
+                            <li>📊 Biểu đồ cột (Bar Chart)</li>
+                            <li>🥧 Biểu đồ tròn (Pie Chart)</li>
+                            <li>📈 Biểu đồ đường (Line Chart)</li>
+                            <li>📉 Biểu đồ ngang (Horizontal Bar)</li>
+                            <li>🔢 Thống kê số liệu chi tiết</li>
+                            <li>💾 Export kết quả (JSON/CSV)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             MAIN APP - Màn hình phân tích chính
+             ================================================================ -->
+        <div class="main-app" id="mainApp">
+            <!-- Header -->
+            <header class="header" role="banner">
+                <div class="logo">📊 ClassSurvey</div>
+                <div class="survey-info" id="surveyInfo">
+                    <span class="survey-title" id="displaySurveyTitle">Khảo sát</span>
+                </div>
+                <div class="header-controls">
+                    <div class="stat-badge" aria-label="Tổng số câu hỏi">
+                        <span aria-hidden="true">📋</span>
+                        <span class="stat-value" id="totalQuestions">0</span>
+                        <span>câu</span>
+                    </div>
+                    <div class="stat-badge" aria-label="Tổng số phản hồi">
+                        <span aria-hidden="true">👥</span>
+                        <span class="stat-value" id="totalResponses">0</span>
+                        <span>phản hồi</span>
+                    </div>
+                    <button class="refresh-btn"
+                            id="refreshBtn"
+                            aria-label="Làm mới dữ liệu">
+                        <span class="refresh-icon" aria-hidden="true">🔄</span>
+                        Refresh
+                    </button>
+                    <button class="menu-btn"
+                            id="menuBtn"
+                            aria-label="Mở menu"
+                            aria-expanded="false"
+                            aria-controls="dropdownMenu">
+                        ⚙️
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dropdown Menu -->
+            <nav class="dropdown-menu" id="dropdownMenu" aria-label="Menu chính">
+                <button class="menu-item" id="exportJSON">💾 Export JSON</button>
+                <button class="menu-item" id="exportCSV">📄 Export CSV</button>
+                <button class="menu-item" id="printResults">🖨️ In kết quả</button>
+                <button class="menu-item" id="newSession">➕ Khảo sát mới</button>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-layout" role="main">
+                <!-- Questions Navigation -->
+                <aside class="questions-nav" id="questionsNav">
+                    <div class="nav-header">
+                        <h3>Danh sách câu hỏi</h3>
+                    </div>
+                    <div class="nav-list" id="navList" role="list">
+                        <div class="empty-state">
+                            <div class="empty-icon">📥</div>
+                            <div>Đang tải...</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Content Area -->
+                <div class="content-area">
+                    <!-- Chart Controls -->
+                    <div class="chart-controls">
+                        <div class="control-group">
+                            <label for="chartType">
+                                <span class="label-icon">📊</span>
+                                Loại biểu đồ
+                            </label>
+                            <select id="chartType" class="chart-select">
+                                <option value="bar">Cột dọc (Bar)</option>
+                                <option value="horizontalBar">Cột ngang (Horizontal)</option>
+                                <option value="pie">Tròn (Pie)</option>
+                                <option value="doughnut">Donut (Doughnut)</option>
+                                <option value="line">Đường (Line)</option>
+                                <option value="radar">Radar</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="colorScheme">
+                                <span class="label-icon">🎨</span>
+                                Bảng màu
+                            </label>
+                            <select id="colorScheme" class="chart-select">
+                                <option value="vibrant">Vibrant</option>
+                                <option value="pastel">Pastel</option>
+                                <option value="professional">Professional</option>
+                                <option value="ocean">Ocean</option>
+                                <option value="sunset">Sunset</option>
+                                <option value="neon">Neon</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Question Display -->
+                    <div class="question-display" id="questionDisplay">
+                        <div class="question-header">
+                            <div class="question-number" id="questionNumber">Câu 1</div>
+                            <div class="question-text" id="questionText">Đang tải câu hỏi...</div>
+                        </div>
+
+                        <!-- Statistics Summary -->
+                        <div class="stats-summary" id="statsSummary">
+                            <div class="stat-item">
+                                <div class="stat-label">Tổng phản hồi</div>
+                                <div class="stat-value" id="questionResponses">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Số lựa chọn</div>
+                                <div class="stat-value" id="questionOptions">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Phổ biến nhất</div>
+                                <div class="stat-value" id="questionMostPopular">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Chart Container -->
+                        <div class="chart-container">
+                            <canvas id="surveyChart" role="img" aria-label="Biểu đồ kết quả khảo sát"></canvas>
+                        </div>
+
+                        <!-- Data Table -->
+                        <div class="data-table-container">
+                            <table class="data-table" id="dataTable">
+                                <thead>
+                                    <tr>
+                                        <th>Lựa chọn</th>
+                                        <th>Số lượng</th>
+                                        <th>Tỷ lệ %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ================================================================
+             LOADING OVERLAY
+             ================================================================ -->
+        <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-busy="true">
+            <div class="loading-spinner" role="status" aria-label="Đang tải"></div>
+            <div class="loading-text" id="loadingText">Đang kiểm tra kết nối...</div>
+        </div>
+
+        <!-- ================================================================
+             TOAST NOTIFICATIONS
+             ================================================================ -->
+        <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-atomic="true"></div>
+
+        <!-- ================================================================
+             ERROR BOX
+             ================================================================ -->
+        <div class="error-box" id="errorBox" role="alert" aria-live="assertive">
+            <div class="error-title">⚠️ Lỗi</div>
+            <div id="errorMessage"></div>
+            <button class="error-action-btn" id="closeError">
+                ✕ Đóng
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/googleSheetsHandler.js"></script>
+    <script src="js/surveyManager.js"></script>
+    <script src="js/chartRenderer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

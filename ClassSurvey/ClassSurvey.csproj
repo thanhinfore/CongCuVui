@@ -67,7 +67,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="index.html" />
     <Content Include="Web.config" />
+    <Content Include="css\main.css" />
+    <Content Include="js\googleSheetsHandler.js" />
+    <Content Include="js\surveyManager.js" />
+    <Content Include="js\chartRenderer.js" />
+    <Content Include="js\app.js" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
