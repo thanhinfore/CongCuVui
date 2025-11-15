@@ -55,8 +55,8 @@ export class ModelLoader {
         try {
             this.updateStatus('Đang khởi tạo Web Worker...', 'loading');
 
-            // Create worker
-            this.worker = new Worker('js/workers/inference-worker.js', { type: 'module' });
+            // Create worker (not as module to allow importScripts)
+            this.worker = new Worker('js/workers/inference-worker.js');
 
             // Set up message handler
             return new Promise((resolve, reject) => {
