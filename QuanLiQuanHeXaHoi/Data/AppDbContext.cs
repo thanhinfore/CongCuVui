@@ -4,9 +4,24 @@ using QuanLiQuanHeXaHoi.Models;
 namespace QuanLiQuanHeXaHoi.Data
 {
     /// <summary>
+    /// SQLite Configuration for Entity Framework
+    /// </summary>
+    public class SQLiteConfiguration : DbConfiguration
+    {
+        public SQLiteConfiguration()
+        {
+            SetProviderFactory("System.Data.SQLite", System.Data.SQLite.SQLiteFactory.Instance);
+            SetProviderFactory("System.Data.SQLite.EF6", System.Data.SQLite.EF6.SQLiteProviderFactory.Instance);
+            SetProviderServices("System.Data.SQLite", System.Data.SQLite.EF6.SQLiteProviderServices.Instance);
+            SetProviderServices("System.Data.SQLite.EF6", System.Data.SQLite.EF6.SQLiteProviderServices.Instance);
+        }
+    }
+
+    /// <summary>
     /// Database context for Social Relationship Manager
     /// Using Entity Framework 6 with SQLite
     /// </summary>
+    [DbConfigurationType(typeof(SQLiteConfiguration))]
     public class AppDbContext : DbContext
     {
         public AppDbContext() : base("name=DefaultConnection")
