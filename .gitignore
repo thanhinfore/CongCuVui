@@ -362,3 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /QuanLiQuanHeXaHoi/Data/AppDbContext.cs
+/QuanLiQuanHeXaHoi/App_Data/README.md
+/QuanLiQuanHeXaHoi/Controllers/AuthController.cs
+/QuanLiQuanHeXaHoi/Controllers/ContactsController.cs
+/QuanLiQuanHeXaHoi/Global.asax.cs
+/QuanLiQuanHeXaHoi/RestorePackages.ps1
