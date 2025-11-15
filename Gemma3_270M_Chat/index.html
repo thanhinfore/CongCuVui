@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemma 3 270M Chat - AI Chat on Browser</title>
+    <title>Trợ Lý Học Tập AI - Gemma 3 270M</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                <h1>Gemma 3 Chat</h1>
+                <h1>Trợ Lý Học Tập AI</h1>
                 <span class="model-badge">270M</span>
             </div>
             <div class="header-actions">
@@ -73,8 +73,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <h2>Chào mừng đến với Gemma 3 Chat!</h2>
-                    <p>Mô hình AI Gemma 3 270M đang chạy hoàn toàn trên trình duyệt của bạn.</p>
+                    <h2>Chào mừng đến với Trợ Lý Học Tập AI!</h2>
+                    <p>Tôi là trợ lý giảng dạy thông minh, sẵn sàng hỗ trợ bạn học tập hiệu quả. Mô hình AI Gemma 3 270M đang chạy hoàn toàn trên trình duyệt của bạn.</p>
+                    <p class="welcome-note">💡 <strong>Gợi ý:</strong> Hãy đặt câu hỏi về bất kỳ chủ đề nào bạn muốn học, yêu cầu giải thích khái niệm, hoặc nhờ tôi tạo bài tập thực hành!</p>
                     <p class="welcome-note">Lần đầu sử dụng, mô hình sẽ được tải xuống (~200-300MB). Dữ liệu của bạn luôn được bảo mật và không gửi đi đâu cả.</p>
                 </div>
             </div>
@@ -85,7 +86,7 @@
                     <textarea
                         id="messageInput"
                         class="message-input"
-                        placeholder="Nhập tin nhắn của bạn..."
+                        placeholder="Đặt câu hỏi hoặc yêu cầu giải thích bất kỳ chủ đề nào..."
                         rows="1"
                         maxlength="2000"
                     ></textarea>
@@ -123,9 +124,9 @@
                 <div class="setting-group">
                     <label for="temperature">
                         Temperature
-                        <span class="setting-value" id="temperatureValue">0.7</span>
+                        <span class="setting-value" id="temperatureValue">0.5</span>
                     </label>
-                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.5">
                     <p class="setting-description">Độ sáng tạo của mô hình. Cao hơn = ngẫu nhiên hơn.</p>
                 </div>
 
@@ -141,16 +142,25 @@
                 <div class="setting-group">
                     <label for="maxTokens">
                         Max Tokens
-                        <span class="setting-value" id="maxTokensValue">512</span>
+                        <span class="setting-value" id="maxTokensValue">1024</span>
                     </label>
-                    <input type="range" id="maxTokens" min="64" max="2048" step="64" value="512">
+                    <input type="range" id="maxTokens" min="64" max="2048" step="64" value="1024">
                     <p class="setting-description">Độ dài tối đa của phản hồi.</p>
                 </div>
 
                 <div class="setting-group">
                     <label for="systemPrompt">System Prompt</label>
-                    <textarea id="systemPrompt" rows="4" placeholder="Hướng dẫn cho AI...">Bạn là trợ lý AI thông minh và hữu ích. Hãy trả lời ngắn gọn, chính xác và thân thiện.</textarea>
-                    <p class="setting-description">Hướng dẫn chung cho mô hình AI.</p>
+                    <textarea id="systemPrompt" rows="8" placeholder="Hướng dẫn cho AI...">Bạn là trợ lý giảng dạy thông minh, kiên nhẫn và nhiệt tình. Nhiệm vụ của bạn là hướng dẫn và giúp đỡ học viên học tập hiệu quả. Hãy:
+
+- Giải thích rõ ràng, dễ hiểu với ví dụ cụ thể
+- Kiên nhẫn trả lời mọi câu hỏi, dù đơn giản hay phức tạp
+- Khuyến khích tư duy phản biện và tự học
+- Sử dụng ngôn ngữ thân thiện, động viên học viên
+- Chia nhỏ kiến thức phức tạp thành các bước dễ hiểu
+- Đưa ra bài tập thực hành khi phù hợp
+
+Hãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đưa ra đáp án.</textarea>
+                    <p class="setting-description">Hướng dẫn vai trò và phong cách trả lời cho AI.</p>
                 </div>
 
                 <div class="setting-group">
