@@ -14,6 +14,8 @@ let generator = null;
 let isLoading = false;
 let isGenerating = false;
 let shouldStop = false;
+let deviceType = 'wasm'; // Will be auto-detected
+let dtypeConfig = 'fp32';
 
 /**
  * Send message to main thread
@@ -27,6 +29,39 @@ function sendMessage(type, data, id = null) {
 }
 
 /**
+ * Detect best available device (WebGPU or WASM)
+ */
+async function detectDevice() {
+    try {
+        // Check for WebGPU support
+        if ('gpu' in navigator) {
+            const adapter = await navigator.gpu?.requestAdapter();
+            if (adapter) {
+                deviceType = 'webgpu';
+                dtypeConfig = 'fp16'; // FP16 is faster on GPU and sufficient for Gemma 270M
+                sendMessage('deviceInfo', {
+                    device: 'WebGPU',
+                    dtype: 'fp16',
+                    message: 'Phát hiện WebGPU! Sử dụng GPU để tăng tốc đáng kể.'
+                });
+                return;
+            }
+        }
+    } catch (error) {
+        console.warn('WebGPU not available:', error);
+    }
+
+    // Fallback to WASM
+    deviceType = 'wasm';
+    dtypeConfig = 'fp32'; // WASM works better with fp32
+    sendMessage('deviceInfo', {
+        device: 'WASM (CPU)',
+        dtype: 'fp32',
+        message: 'Sử dụng WASM (CPU). Cân nhắc dùng Chrome/Edge mới nhất để hỗ trợ WebGPU.'
+    });
+}
+
+/**
  * Initialize and load the model
  */
 async function initialize(modelId) {
@@ -37,15 +72,18 @@ async function initialize(modelId) {
     try {
         isLoading = true;
 
+        // Detect best device first (WebGPU or WASM)
+        await detectDevice();
+
         sendMessage('loading', {
-            message: 'Đang tải mô hình Gemma...',
+            message: `Đang tải mô hình Gemma với ${deviceType === 'webgpu' ? 'GPU' : 'CPU'}...`,
             progress: 10
         });
 
-        // Create text generation pipeline with proper device and dtype configuration
+        // Create text generation pipeline with auto-detected device and dtype
         generator = await pipeline('text-generation', modelId, {
-            device: 'wasm',  // Use WebAssembly backend (will use WebGPU if available)
-            dtype: 'fp32',   // Use fp32 precision (not quantized q8)
+            device: deviceType,  // Auto-detected: 'webgpu' or 'wasm'
+            dtype: dtypeConfig,  // Auto-selected: 'fp16' for GPU, 'fp32' for CPU
             progress_callback: (progress) => {
                 if (progress.status === 'downloading') {
                     const percent = progress.progress ? Math.round(progress.progress) : 0;
@@ -101,13 +139,17 @@ async function generate(id, prompt, options) {
         isGenerating = true;
         shouldStop = false;
 
+        // Track performance
+        const startTime = performance.now();
+
         const {
             temperature = 0.7,
             top_p = 0.9,
             max_new_tokens = 512
         } = options;
 
-        // Generate text with improved parameters (learned from GemmaLabelling)
+        // Generate text with optimized parameters
+        const generationStart = performance.now();
         const output = await generator(prompt, {
             max_new_tokens,
             temperature,
@@ -146,7 +188,7 @@ async function generate(id, prompt, options) {
             .replace(/<end_of_text>/g, '')
             .trim();
 
-        // Send token by token (simulated streaming for better UX)
+        // Send token by token (optimized streaming for better UX and performance)
         const words = generatedText.split(' ');
         let accumulated = '';
 
@@ -163,13 +205,31 @@ async function generate(id, prompt, options) {
                 accumulated
             }, id);
 
-            // Small delay to simulate streaming
-            await new Promise(resolve => setTimeout(resolve, 30));
+            // Adaptive delay: shorter for GPU (faster), longer for CPU
+            // Also adaptive to word length for more natural streaming
+            const baseDelay = deviceType === 'webgpu' ? 8 : 15; // GPU much faster
+            const wordLengthDelay = Math.min(word.length * 0.5, 5); // Max 5ms extra
+            const delay = baseDelay + wordLengthDelay;
+
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
 
         if (!shouldStop) {
+            const totalTime = performance.now() - startTime;
+            const generationTime = performance.now() - generationStart;
+            const tokenCount = generatedText.split(/\s+/).length;
+            const tokensPerSecond = tokenCount / (generationTime / 1000);
+
             sendMessage('complete', {
-                text: generatedText
+                text: generatedText,
+                performance: {
+                    totalTime: Math.round(totalTime),
+                    generationTime: Math.round(generationTime),
+                    tokenCount,
+                    tokensPerSecond: tokensPerSecond.toFixed(2),
+                    device: deviceType,
+                    dtype: dtypeConfig
+                }
             }, id);
         }
 

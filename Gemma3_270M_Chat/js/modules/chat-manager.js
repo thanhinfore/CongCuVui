@@ -11,6 +11,7 @@ export class ChatManager {
         this.messages = [];
         this.isGenerating = false;
         this.currentGenerationController = null;
+        this.performanceCallback = null;
     }
 
     /**
@@ -22,6 +23,13 @@ export class ChatManager {
         if (history && history.length > 0) {
             this.messages = history;
         }
+    }
+
+    /**
+     * Set performance callback
+     */
+    setPerformanceCallback(callback) {
+        this.performanceCallback = callback;
     }
 
     /**
@@ -149,6 +157,12 @@ export class ChatManager {
 
                     if (onToken) {
                         onToken(token, accumulated);
+                    }
+                },
+                onPerformance: (perfData) => {
+                    // Call performance callback if set
+                    if (this.performanceCallback) {
+                        this.performanceCallback(perfData);
                     }
                 }
             });

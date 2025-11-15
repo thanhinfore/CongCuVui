@@ -17,7 +17,7 @@ export class SettingsManager {
         return {
             temperature: 0.5,
             topP: 0.9,
-            maxTokens: 1024,
+            maxTokens: 512,  // Optimized for faster chat responses (reduced from 1024)
             systemPrompt: 'Bạn là trợ lý giảng dạy thông minh, kiên nhẫn và nhiệt tình. Nhiệm vụ của bạn là hướng dẫn và giúp đỡ học viên học tập hiệu quả. Hãy:\n\n- Giải thích rõ ràng, dễ hiểu với ví dụ cụ thể\n- Kiên nhẫn trả lời mọi câu hỏi, dù đơn giản hay phức tạp\n- Khuyến khích tư duy phản biện và tự học\n- Sử dụng ngôn ngữ thân thiện, động viên học viên\n- Chia nhỏ kiến thức phức tạp thành các bước dễ hiểu\n- Đưa ra bài tập thực hành khi phù hợp\n\nHãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đưa ra đáp án.',
             darkMode: false
         };
