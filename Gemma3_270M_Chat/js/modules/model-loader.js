@@ -63,6 +63,12 @@ export class ModelLoader {
                     const { type, data } = e.data;
 
                     switch (type) {
+                        case 'deviceInfo':
+                            // Log device information
+                            console.log(`🚀 Device: ${data.device} | Precision: ${data.dtype}`);
+                            this.updateStatus(data.message, 'info');
+                            break;
+
                         case 'loading':
                             this.updateStatus(data.message, 'loading');
                             if (data.progress !== undefined) {
@@ -151,7 +157,8 @@ export class ModelLoader {
             temperature = 0.7,
             top_p = 0.9,
             max_new_tokens = 512,
-            onToken = null
+            onToken = null,
+            onPerformance = null
         } = options;
 
         return new Promise((resolve, reject) => {
@@ -176,6 +183,17 @@ export class ModelLoader {
 
                     case 'complete':
                         this.worker.removeEventListener('message', messageHandler);
+
+                        // Log and callback performance metrics if available
+                        if (data.performance) {
+                            const perf = data.performance;
+                            console.log(`⚡ Performance: ${perf.tokensPerSecond} tokens/s | ${perf.generationTime}ms | Device: ${perf.device}`);
+
+                            if (onPerformance) {
+                                onPerformance(perf);
+                            }
+                        }
+
                         resolve(data.text);
                         break;
 

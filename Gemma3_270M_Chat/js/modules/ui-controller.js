@@ -9,6 +9,10 @@ export class UIController {
         this.settingsManager = settingsManager;
         this.elements = {};
         this.isTyping = false;
+        this.scrollPending = false;
+        this.pendingUpdate = false;
+        this.lastUpdateTime = 0;
+        this.updateThrottle = 16; // ~60fps for smooth rendering
     }
 
     /**
@@ -46,7 +50,9 @@ export class UIController {
             modelStatus: document.getElementById('modelStatus'),
             statusText: document.getElementById('statusText'),
             progressFill: document.getElementById('progressFill'),
-            progressText: document.getElementById('progressText')
+            progressText: document.getElementById('progressText'),
+            performanceStats: document.getElementById('performanceStats'),
+            performanceStatsContainer: document.getElementById('performanceStatsContainer')
         };
     }
 
@@ -270,9 +276,33 @@ export class UIController {
     }
 
     /**
-     * Update streaming message
+     * Update streaming message (optimized with throttling)
      */
     updateStreamingMessage(content) {
+        const now = performance.now();
+
+        // Throttle updates to ~60fps for smoother rendering
+        if (now - this.lastUpdateTime < this.updateThrottle) {
+            // Schedule update for next frame
+            if (!this.pendingUpdate) {
+                this.pendingUpdate = true;
+                requestAnimationFrame(() => {
+                    this.performStreamingUpdate(content);
+                    this.pendingUpdate = false;
+                    this.lastUpdateTime = performance.now();
+                });
+            }
+            return;
+        }
+
+        this.performStreamingUpdate(content);
+        this.lastUpdateTime = now;
+    }
+
+    /**
+     * Perform the actual streaming update
+     */
+    performStreamingUpdate(content) {
         // Check if there's already an assistant message being streamed
         let lastMessage = this.elements.chatMessages.lastElementChild;
 
@@ -336,10 +366,16 @@ export class UIController {
     }
 
     /**
-     * Scroll to bottom
+     * Scroll to bottom (optimized with requestAnimationFrame)
      */
     scrollToBottom() {
-        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+        if (!this.scrollPending) {
+            this.scrollPending = true;
+            requestAnimationFrame(() => {
+                this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+                this.scrollPending = false;
+            });
+        }
     }
 
     /**
@@ -434,5 +470,19 @@ export class UIController {
     updateProgress(progress) {
         this.elements.progressFill.style.width = `${progress}%`;
         this.elements.progressText.textContent = `${Math.round(progress)}%`;
+    }
+
+    /**
+     * Update performance stats display
+     */
+    updatePerformanceStats(perfData) {
+        if (!perfData) return;
+
+        const statsText = `${perfData.tokensPerSecond} tokens/s | ${perfData.generationTime}ms`;
+        this.elements.performanceStats.textContent = statsText;
+        this.elements.performanceStatsContainer.style.display = 'grid';
+
+        // Log to console for debugging
+        console.log(`📊 Performance: ${statsText} | Device: ${perfData.device} (${perfData.dtype})`);
     }
 }

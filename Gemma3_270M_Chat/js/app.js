@@ -70,6 +70,11 @@ class GemmaChatApp {
                 }
             });
 
+            // Set up chat manager performance callback
+            this.chatManager.setPerformanceCallback((perfData) => {
+                this.uiController.updatePerformanceStats(perfData);
+            });
+
             // Load the model
             console.log('Loading Gemma model...');
             await this.modelLoader.loadModel();
