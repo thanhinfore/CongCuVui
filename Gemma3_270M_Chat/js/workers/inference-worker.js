@@ -42,8 +42,10 @@ async function initialize(modelId) {
             progress: 10
         });
 
-        // Create text generation pipeline
+        // Create text generation pipeline with proper device and dtype configuration
         generator = await pipeline('text-generation', modelId, {
+            device: 'wasm',  // Use WebAssembly backend (will use WebGPU if available)
+            dtype: 'fp32',   // Use fp32 precision (not quantized q8)
             progress_callback: (progress) => {
                 if (progress.status === 'downloading') {
                     const percent = progress.progress ? Math.round(progress.progress) : 0;
