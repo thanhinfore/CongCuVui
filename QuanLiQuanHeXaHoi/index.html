@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Quan Hệ Xã Hội - Social Relationship Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-users-line"></i>
+                    <h1>Quản Lý Quan Hệ Xã Hội</h1>
+                </div>
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" data-tab="dashboard">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </button>
+                    <button class="nav-tab" data-tab="contacts">
+                        <i class="fas fa-address-book"></i> Danh Bạ
+                    </button>
+                    <button class="nav-tab" data-tab="timeline">
+                        <i class="fas fa-clock"></i> Timeline
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <div class="dashboard">
+                    <h2>Tổng Quan Quan Hệ Xã Hội</h2>
+                    <p class="subtitle">Dựa trên Số Dunbar - Con người chỉ có thể duy trì tối đa 150 mối quan hệ có ý nghĩa</p>
+
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card total">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="total-contacts">0</h3>
+                                <p>Tổng số người</p>
+                            </div>
+                        </div>
+                        <div class="stat-card dunbar">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="dunbar-count">0/150</h3>
+                                <p>Trong giới hạn Dunbar</p>
+                            </div>
+                        </div>
+                        <div class="stat-card recent">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="recent-contacts">0</h3>
+                                <p>Gặp trong 30 ngày</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dunbar Circles -->
+                    <div class="dunbar-circles">
+                        <h3>Vòng Tròn Quan Hệ (Dunbar's Circles)</h3>
+                        <div class="circles-grid">
+                            <div class="circle-card" data-level="inner">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <div class="circle-count" id="inner-count">0/5</div>
+                                    <div class="circle-name">Inner Circle</div>
+                                </div>
+                                <div class="circle-description">
+                                    Người thân thiết nhất - Gia đình, người yêu, bạn tri kỷ
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="inner-progress" style="background: #667eea;"></div>
+                                </div>
+                            </div>
+
+                            <div class="circle-card" data-level="close">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <div class="circle-count" id="close-count">0/15</div>
+                                    <div class="circle-name">Close Friends</div>
+                                </div>
+                                <div class="circle-description">
+                                    Bạn thân - Gặp ít nhất mỗi tuần
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="close-progress" style="background: #f5576c;"></div>
+                                </div>
+                            </div>
+
+                            <div class="circle-card" data-level="good">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    <div class="circle-count" id="good-count">0/50</div>
+                                    <div class="circle-name">Good Friends</div>
+                                </div>
+                                <div class="circle-description">
+                                    Bạn bè tốt - Gặp ít nhất mỗi tháng
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="good-progress" style="background: #00f2fe;"></div>
+                                </div>
+                            </div>
+
+                            <div class="circle-card" data-level="friends">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                                    <div class="circle-count" id="friends-count">0/150</div>
+                                    <div class="circle-name">Friends</div>
+                                </div>
+                                <div class="circle-description">
+                                    Bạn bè - Giới hạn Dunbar (150 người)
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="friends-progress" style="background: #38f9d7;"></div>
+                                </div>
+                            </div>
+
+                            <div class="circle-card" data-level="acquaintances">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                    <div class="circle-count" id="acquaintances-count">0/500</div>
+                                    <div class="circle-name">Acquaintances</div>
+                                </div>
+                                <div class="circle-description">
+                                    Người quen - Gặp thỉnh thoảng
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="acquaintances-progress" style="background: #fee140;"></div>
+                                </div>
+                            </div>
+
+                            <div class="circle-card" data-level="others">
+                                <div class="circle-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                                    <div class="circle-count" id="others-count">0</div>
+                                    <div class="circle-name">Others</div>
+                                </div>
+                                <div class="circle-description">
+                                    Người khác - Ít gặp hoặc chưa gặp
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="others-progress" style="background: #fed6e3;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts Tab -->
+            <div id="contacts-tab" class="tab-content">
+                <div class="contacts-header">
+                    <h2>Danh Bạ Quan Hệ</h2>
+                    <button class="btn-primary" id="add-contact-btn">
+                        <i class="fas fa-plus"></i> Thêm Người
+                    </button>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="search-filter">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Tìm kiếm theo tên, email, ghi chú...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Lọc theo nhóm:</label>
+                        <select id="filter-level">
+                            <option value="">Tất cả</option>
+                            <option value="inner">Inner Circle (5)</option>
+                            <option value="close">Close Friends (15)</option>
+                            <option value="good">Good Friends (50)</option>
+                            <option value="friends">Friends (150)</option>
+                            <option value="acquaintances">Acquaintances (500)</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Sắp xếp:</label>
+                        <select id="sort-by">
+                            <option value="name">Tên (A-Z)</option>
+                            <option value="recent">Gặp gần đây</option>
+                            <option value="level">Mức độ quan trọng</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Contacts List -->
+                <div id="contacts-list" class="contacts-list">
+                    <!-- Contacts will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div id="timeline-tab" class="tab-content">
+                <div class="timeline-header">
+                    <h2>Timeline Gặp Gỡ</h2>
+                    <p class="subtitle">Lịch sử các cuộc gặp gỡ và tương tác</p>
+                </div>
+                <div id="timeline-list" class="timeline-list">
+                    <!-- Timeline items will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Contact Modal -->
+    <div id="contact-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Thêm Người Mới</h2>
+                <button class="close-modal" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="contact-form">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="contact-name">Tên <span class="required">*</span></label>
+                        <input type="text" id="contact-name" required placeholder="Nguyễn Văn A">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" placeholder="email@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-phone">Điện thoại</label>
+                        <input type="tel" id="contact-phone" placeholder="0912345678">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-level">Mức độ quan hệ <span class="required">*</span></label>
+                        <select id="contact-level" required>
+                            <option value="">Chọn mức độ...</option>
+                            <option value="inner">Inner Circle (5 người)</option>
+                            <option value="close">Close Friends (15 người)</option>
+                            <option value="good">Good Friends (50 người)</option>
+                            <option value="friends">Friends (150 người)</option>
+                            <option value="acquaintances">Acquaintances (500 người)</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-met-at">Gặp lần đầu ở đâu</label>
+                        <input type="text" id="contact-met-at" placeholder="Hội nghị, Sự kiện, Trường học...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-met-date">Ngày gặp lần đầu</label>
+                        <input type="date" id="contact-met-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-last-met">Gặp lần cuối</label>
+                        <input type="date" id="contact-last-met">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-company">Công ty/Tổ chức</label>
+                        <input type="text" id="contact-company" placeholder="Tên công ty">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-position">Chức vụ</label>
+                        <input type="text" id="contact-position" placeholder="Vị trí công việc">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-facebook">Facebook</label>
+                        <input type="text" id="contact-facebook" placeholder="facebook.com/...">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="contact-tags">Tags (phân cách bằng dấu phẩy)</label>
+                        <input type="text" id="contact-tags" placeholder="đồng nghiệp, bạn học, startup...">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="contact-notes">Ghi chú</label>
+                        <textarea id="contact-notes" rows="4" placeholder="Ghi chú về người này, sở thích, chủ đề trao đổi..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="cancel-btn">Hủy</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Contact Modal -->
+    <div id="view-contact-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="view-modal-title">Thông Tin Chi Tiết</h2>
+                <button class="close-modal" id="close-view-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="contact-details">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
