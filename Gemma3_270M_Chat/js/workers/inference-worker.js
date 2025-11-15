@@ -4,7 +4,7 @@
  */
 
 // Import Transformers.js using ES modules (requires worker to be loaded with type: 'module')
-import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.0';
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.0';
 
 // Configure transformers.js
 env.allowLocalModels = false;
