@@ -10,10 +10,11 @@ namespace QuanLiQuanHeXaHoi.Data
     {
         public SQLiteConfiguration()
         {
-            SetProviderFactory("System.Data.SQLite", System.Data.SQLite.SQLiteFactory.Instance);
+            // Register SQLite provider factory for EF6
             SetProviderFactory("System.Data.SQLite.EF6", System.Data.SQLite.EF6.SQLiteProviderFactory.Instance);
-            SetProviderServices("System.Data.SQLite", System.Data.SQLite.EF6.SQLiteProviderServices.Instance);
-            SetProviderServices("System.Data.SQLite.EF6", System.Data.SQLite.EF6.SQLiteProviderServices.Instance);
+
+            // Note: Provider services will be auto-discovered from Web.config
+            // No need to call SetProviderServices as it's internal
         }
     }
 
