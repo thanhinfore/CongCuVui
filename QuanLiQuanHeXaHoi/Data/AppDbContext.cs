@@ -67,6 +67,10 @@ namespace QuanLiQuanHeXaHoi.Data
         /// </summary>
         public static void Initialize()
         {
+            // Set database initializer to null to prevent automatic migration
+            // Database will be created on first use with CreateIfNotExists
+            Database.SetInitializer<AppDbContext>(null);
+
             using (var context = new AppDbContext())
             {
                 // This will create the database if it doesn't exist

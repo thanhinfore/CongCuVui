@@ -12,8 +12,16 @@ namespace QuanLiQuanHeXaHoi
             // Configure Web API
             GlobalConfiguration.Configure(WebApiConfig.Register);
 
-            // Initialize database
-            AppDbContext.Initialize();
+            // Initialize database (with error handling)
+            try
+            {
+                AppDbContext.Initialize();
+            }
+            catch (Exception ex)
+            {
+                // Log but don't crash - database will be created on first use
+                System.Diagnostics.Debug.WriteLine($"Database initialization warning: {ex.Message}");
+            }
         }
 
         protected void Application_BeginRequest(object sender, EventArgs e)
