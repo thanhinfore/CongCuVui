@@ -3,10 +3,8 @@
  * Handles model loading and inference in a Web Worker to prevent blocking the main thread
  */
 
-// Import Transformers.js from CDN
-importScripts('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-
-const { pipeline, env } = self.transformers;
+// Import Transformers.js using ES modules (requires worker to be loaded with type: 'module')
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.0';
 
 // Configure transformers.js
 env.allowLocalModels = false;
