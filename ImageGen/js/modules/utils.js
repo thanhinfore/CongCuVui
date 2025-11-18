@@ -1,6 +1,40 @@
 ﻿/* =====================================================
    UTILS.JS - Utility Functions Module
+   V14: Added development logger
    ===================================================== */
+
+// V14: Development mode detection
+const isDevelopment = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1' ||
+                      window.location.search.includes('debug=true');
+
+// V14: Smart logger - only logs in development mode
+export const logger = {
+    log: (...args) => {
+        if (isDevelopment) {
+            console.log(...args);
+        }
+    },
+    warn: (...args) => {
+        if (isDevelopment) {
+            console.warn(...args);
+        }
+    },
+    error: (...args) => {
+        // Always log errors
+        console.error(...args);
+    },
+    info: (...args) => {
+        if (isDevelopment) {
+            console.info(...args);
+        }
+    },
+    debug: (...args) => {
+        if (isDevelopment) {
+            console.debug('[DEBUG]', ...args);
+        }
+    }
+};
 
 export const utils = {
     // Debounce function for performance

@@ -1,7 +1,10 @@
 /* =====================================================
    COMMAND PALETTE v11 - Quick Action System
    Features: Fuzzy Search, Keyboard Nav, Quick Actions
+   V14: Enhanced with sanitization
    ===================================================== */
+
+import { sanitizer } from './sanitizer.js';
 
 export class CommandPalette {
     constructor(app) {
@@ -298,12 +301,18 @@ export class CommandPalette {
     }
 
     renderCommandItem(command, isSelected) {
+        // V14 Security: Escape all values even though they are hardcoded
+        const safeId = sanitizer.sanitizeAttribute(command.id);
+        const safeName = sanitizer.escapeHtml(command.name);
+        const safeCategory = sanitizer.escapeHtml(command.category);
+        const safeIcon = sanitizer.escapeHtml(command.icon);
+
         return `
-            <div class="command-item ${isSelected ? 'selected' : ''}" data-command-id="${command.id}">
-                <span class="command-icon">${command.icon}</span>
+            <div class="command-item ${isSelected ? 'selected' : ''}" data-command-id="${safeId}">
+                <span class="command-icon">${safeIcon}</span>
                 <div class="command-info">
-                    <div class="command-name">${command.name}</div>
-                    <div class="command-category">${command.category}</div>
+                    <div class="command-name">${safeName}</div>
+                    <div class="command-category">${safeCategory}</div>
                 </div>
             </div>
         `;

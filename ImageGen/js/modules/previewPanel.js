@@ -107,9 +107,13 @@ export class PreviewPanel {
 
         container.innerHTML = '';
 
+        // V14: Proper canvas cleanup to prevent memory leaks
         this.canvasPool.forEach(canvas => {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Force memory cleanup by resetting canvas dimensions
+            canvas.width = 0;
+            canvas.height = 0;
         });
         this.canvasPool = [];
 
@@ -967,15 +971,26 @@ export class PreviewPanel {
             link.download = `image_${config.textIndex + 1}.${format}`;
             link.style.display = 'none';
 
-            // Append to body, click, then remove
+            // V14: Improved cleanup to prevent memory leaks
             document.body.appendChild(link);
             link.click();
 
-            // Delay cleanup
-            setTimeout(() => {
+            // Cleanup immediately with proper error handling
+            try {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
-            }, 100);
+            } catch (cleanupError) {
+                // Fallback to delayed cleanup if immediate fails
+                console.warn('[V14] Immediate cleanup failed, using delayed cleanup');
+                setTimeout(() => {
+                    try {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                    } catch (e) {
+                        console.error('[V14] Delayed cleanup also failed:', e);
+                    }
+                }, 100);
+            }
 
         } catch (error) {
             console.error('Download error:', error);

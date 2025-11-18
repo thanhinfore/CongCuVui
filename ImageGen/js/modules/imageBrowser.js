@@ -1,8 +1,10 @@
 /* =====================================================
    IMAGEBROWSER.JS - Browse and Load Images from Folder
+   V14: Enhanced with XSS protection
    ===================================================== */
 
 import { utils } from './utils.js';
+import { sanitizer } from './sanitizer.js';
 
 export class ImageBrowser {
     constructor(state) {
@@ -258,8 +260,11 @@ export class ImageBrowser {
             className: 'preview-info'
         });
 
+        // V14 Security: Escape image name to prevent XSS
+        const safeName = sanitizer.escapeHtml(image.name);
+
         info.innerHTML = `
-            <h3>${image.name}</h3>
+            <h3>${safeName}</h3>
             <div class="preview-actions">
                 <button class="preview-select-btn" onclick="event.stopPropagation()">
                     <svg viewBox="0 0 24 24" width="20" height="20">

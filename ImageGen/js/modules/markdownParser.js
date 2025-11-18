@@ -1,6 +1,9 @@
 /* =====================================================
    MARKDOWNPARSER.JS - Advanced Markdown Parser for Canvas Text
+   V14: Enhanced with XSS Protection
    ===================================================== */
+
+import { sanitizer } from './sanitizer.js';
 
 /**
  * Advanced Markdown Parser with full support for:
@@ -13,6 +16,8 @@
  * - ~~Strikethrough~~
  * - ==Highlight==
  * - Emojis support
+ *
+ * V14 Security: All user input is sanitized to prevent XSS
  */
 export class MarkdownParser {
     constructor() {
@@ -414,7 +419,9 @@ export class MarkdownParser {
             html = `<mark>${html}</mark>`;
         }
         if (styles.link) {
-            html = `<a href="${segment.url}" target="_blank">${html}</a>`;
+            // V14 Security: Sanitize URL to prevent XSS
+            const safeUrl = sanitizer.sanitizeUrl(segment.url);
+            html = `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${html}</a>`;
         }
 
         return html;
