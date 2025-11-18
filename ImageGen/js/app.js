@@ -1,6 +1,6 @@
 ﻿/* =====================================================
-   APP.JS - Main Application Entry Point (v12.0)
-   AI-Powered Design Excellence
+   APP.JS - Main Application Entry Point (v13.0)
+   Streamlined Menu Architecture
    ===================================================== */
 
 import { ControlPanel } from './modules/controlPanel.js';
@@ -26,6 +26,9 @@ import { DraftManager } from './modules/draftManager.js';
 import { DarkMode } from './modules/darkMode.js';
 import { SocialMediaPresets } from './modules/socialMediaPresets.js';
 import { AISuggestions } from './modules/aiSuggestions.js';
+
+// V13 Menu System
+import { V13Menu } from './modules/v13-menu.js';
 
 class ImageTextApp {
     constructor() {
@@ -65,6 +68,9 @@ class ImageTextApp {
             this.components.darkMode = new DarkMode();
             this.components.socialPresets = new SocialMediaPresets(this.state);
             this.components.aiSuggestions = new AISuggestions(this.state, this.DOM);
+
+            // V13: Menu System
+            this.components.v13Menu = new V13Menu();
 
             // V9.1: Connect state to mode manager for proper cleanup
             this.components.modeManager.setState(this.state);

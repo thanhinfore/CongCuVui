@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="keywords" content="image editor, text overlay, image filters, batch processing, professional design">
-    <title>Knowledge Visualizer v12 - AI-Powered Design Excellence - SMCC</title>
+    <title>Knowledge Visualizer v13 - Streamlined Design - SMCC</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="css/v10.1-fixes.css">
     <link rel="stylesheet" href="css/v11.css">
     <link rel="stylesheet" href="css/v12.css">
+    <link rel="stylesheet" href="css/v13.css">
     <link rel="stylesheet" href="css/apple-design.css">
     <link rel="stylesheet" href="css/liquid-glass.css">
 </head>
@@ -43,7 +44,7 @@
                         <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" class="logo" onclick="window.location.reload();" title="Click to reload">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <h1 class="app-title">Knowledge Visualizer</h1>
-                            <span class="version-badge">🤖 v12 AI Excellence</span>
+                            <span class="version-badge">✨ v13 Streamlined</span>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -77,778 +78,644 @@
         <main class="main-content">
             <div class="container">
                 <div class="content-grid">
-                    <aside class="control-panel">
-                        <!-- Text Content Section -->
-                        <section class="panel-section active" id="textSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M17 6.1H3M21 12.1H3M15.5 18.1H3" />
-                                </svg>
-                                <h2 class="section-title">Text Content (Markdown Supported)</h2>
-                                <button class="info-button" id="markdownHelpBtn" title="Markdown Guide">
-                                    <svg viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
-                                        <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01" />
-                                    </svg>
-                                </button>
+<!-- ===== V13 CONTROL PANEL - STREAMLINED ARCHITECTURE ===== -->
+<aside class="control-panel">
+
+    <!-- ===== 1. CONTENT GROUP (Always visible) ===== -->
+    <div class="v13-section-group v13-content-section">
+        <div class="v13-group-header">
+            <div class="v13-group-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 6.1H3M21 12.1H3M15.5 18.1H3" />
+                </svg>
+            </div>
+            <h2 class="v13-group-title">📝 Content</h2>
+        </div>
+        <div class="v13-group-content">
+            <!-- Knowledge Mode Toggle -->
+            <div class="knowledge-mode-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600;">🎓 Knowledge Batch Mode</h3>
+                    </div>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="knowledgeModeCheckbox" style="width: 20px; height: 20px; cursor: pointer;">
+                    </label>
+                </div>
+                <div id="knowledgeModeInfo" style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.5; display: none;">
+                    ✨ <strong>Mỗi dòng = 1 ảnh!</strong> Nhập mỗi câu tri thức trên một dòng riêng biệt.<br>
+                    💡 Sử dụng <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">\n</code> để xuống dòng trong cùng 1 ảnh.<br>
+                    📊 Hệ thống sẽ tự động tạo ảnh cho từng dòng tri thức.
+                </div>
+                <div id="knowledgeStats" style="color: white; font-size: 13px; margin-top: 8px; padding: 8px 12px; background: rgba(255,255,255,0.15); border-radius: 6px; display: none;">
+                    <strong>📋 Preview:</strong> <span id="knowledgeLineCount">0</span> dòng → <span id="knowledgeImageCount">0</span> ảnh sẽ được tạo
+                </div>
+            </div>
+
+            <!-- Text Editor -->
+            <div class="form-group">
+                <div class="markdown-editor">
+                    <div class="editor-tabs">
+                        <button class="editor-tab active" data-tab="edit">✏️ Edit</button>
+                        <button class="editor-tab" data-tab="preview">👁️ Preview</button>
+                    </div>
+                    <div class="editor-content">
+                        <textarea id="textInput" class="text-input markdown-textarea v7-emoji-support" placeholder="🎓 Knowledge Mode: Mỗi dòng (Enter) = 1 ảnh riêng&#10;💡 Dùng \n để xuống dòng trong cùng 1 ảnh&#10;&#10;Ví dụ:&#10;**Tri thức 1:** Dòng này sẽ là ảnh 1&#10;**Tri thức 2:** Dòng này sẽ là ảnh 2\nCó thể xuống dòng với \n&#10;&#10;Markdown: **Bold** *Italic* `Code` ==Highlight== 🎉" rows="8"></textarea>
+                        <div id="markdownPreview" class="markdown-preview-panel" style="display: none;">
+                            <div class="preview-content">Your preview will appear here...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="markdown-hints">
+                    <span class="hint-badge">**bold**</span>
+                    <span class="hint-badge">*italic*</span>
+                    <span class="hint-badge">`code`</span>
+                    <span class="hint-badge">~~strike~~</span>
+                    <span class="hint-badge">==highlight==</span>
+                </div>
+                <div class="button-group">
+                    <button id="insertFooterText" class="helper-button primary">Add footer text</button>
+                    <button id="insertLineBreak" class="helper-button">Soft break (\n)</button>
+                    <button id="insertKnowledgeTemplate" class="helper-button" style="display: none;">📚 Insert Template</button>
+                    <button id="openFindReplace" class="helper-button">🔍 Find & Replace</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 2. BACKGROUND GROUP (Tab-based) ===== -->
+    <div class="v13-section-group">
+        <div class="v13-group-header">
+            <div class="v13-group-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                    <path d="M21 15l-5-5L5 21"/>
+                </svg>
+            </div>
+            <h2 class="v13-group-title">🖼️ Background</h2>
+            <span class="v13-group-badge" id="backgroundBadge">Select source</span>
+        </div>
+        <div class="v13-group-content">
+            <!-- Tab Navigation -->
+            <div class="v13-tabs">
+                <button class="v13-tab active" data-tab="upload">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8L12 3 7 8M12 3v12"/>
+                    </svg>
+                    Upload
+                </button>
+                <button class="v13-tab" data-tab="library">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                    </svg>
+                    Library
+                </button>
+                <button class="v13-tab" data-tab="colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M3 12h18"/>
+                    </svg>
+                    Colors
+                </button>
+                <button class="v13-tab" data-tab="templates">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    Templates
+                </button>
+            </div>
+
+            <!-- Tab Panel: Upload -->
+            <div class="v13-tab-panel active" data-panel="upload">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="imageLoader" class="file-input" multiple accept="image/*">
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+                        </svg>
+                        <p class="upload-text">Drop images here or click to browse</p>
+                        <p class="upload-hint">Support: JPG, PNG, GIF, WebP • Or press Ctrl+V to paste</p>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="pasteFromClipboard" class="helper-button">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Paste from Clipboard
+                    </button>
+                    <button id="clearAllImages" class="helper-button secondary" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                        Clear All
+                    </button>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="repeatBackgroundCheckbox" class="checkbox">
+                    <span class="checkbox-text">Repeat text for each image</span>
+                </label>
+            </div>
+
+            <!-- Tab Panel: Library -->
+            <div class="v13-tab-panel" data-panel="library">
+                <div class="folder-actions">
+                    <button id="randomImage1Btn" class="helper-button primary">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M21 16V8a2 2 0 00-2-2h-5l-2-3H5a2 2 0 00-2 2v11a2 2 0 002 2h11"/>
+                            <circle cx="17" cy="17" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                        Random 1 Image
+                    </button>
+                    <button id="randomImage3Btn" class="helper-button">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        Random 3 Images
+                    </button>
+                    <button id="selectAllFolderBtn" class="helper-button secondary">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M9 11l3 3L22 4"/>
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                        </svg>
+                        Select All
+                    </button>
+                </div>
+                <div id="folderImagesContainer" class="folder-images-container">
+                    <div class="loading-message">
+                        <svg class="spinner" viewBox="0 0 24 24" width="32" height="32">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.25"/>
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2a10 10 0 0110 10" opacity="0.75"/>
+                        </svg>
+                        <p>Loading images...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Panel: Colors (Solid Background) -->
+            <div class="v13-tab-panel" data-panel="colors">
+                <div id="solidBackgroundContent">
+                    <!-- Content will be generated by solidBackground.js -->
+                </div>
+            </div>
+
+            <!-- Tab Panel: Templates (Presets) -->
+            <div class="v13-tab-panel" data-panel="templates">
+                <!-- Search Bar -->
+                <div class="preset-search-bar">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18">
+                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path stroke="currentColor" stroke-width="2" d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="presetSearch" class="search-input" placeholder="Search presets by name, tag or description..." />
+                        <button id="clearPresetSearch" class="clear-search-btn" style="display: none;">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path stroke="currentColor" stroke-width="2" fill="none" d="M18 6L6 18M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="preset-category-filter" id="presetCategoryFilter">
+                    <!-- Category buttons will be generated dynamically -->
+                </div>
+
+                <!-- Presets Grid -->
+                <div class="presets-grid" id="presetsGrid">
+                    <!-- Presets will be generated dynamically -->
+                </div>
+
+                <!-- Actions -->
+                <div class="preset-actions">
+                    <button id="saveCustomPreset" class="secondary-button small">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <path stroke="currentColor" stroke-width="2" fill="none" d="M17 21v-8H7v8M7 3v5h8"/>
+                        </svg>
+                        Save Current as Preset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 3. STYLE GROUP (Sub-groups) ===== -->
+    <div class="v13-section-group">
+        <div class="v13-group-header">
+            <div class="v13-group-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+            </div>
+            <h2 class="v13-group-title">🎨 Style</h2>
+            <button class="reset-button" id="resetSettings" title="Reset to defaults">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path stroke="currentColor" stroke-width="2" fill="none" d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
+                </svg>
+            </button>
+        </div>
+        <div class="v13-group-content">
+
+            <!-- Sub-group 1: Typography (Expanded by default) -->
+            <div class="v13-sub-group expanded">
+                <div class="v13-sub-header">
+                    <svg class="v13-sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                    </svg>
+                    <h3 class="v13-sub-title">Typography</h3>
+                    <svg class="v13-sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="v13-sub-content">
+                    <!-- Font Family -->
+                    <div class="style-group">
+                        <label class="form-label">Font Family</label>
+                        <select id="fontSelect" class="select-input">
+                            <option value="Inter, sans-serif" selected>Inter</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Open Sans, sans-serif">Open Sans</option>
+                            <option value="Montserrat, sans-serif">Montserrat</option>
+                            <option value="Poppins, sans-serif">Poppins</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="Times New Roman, serif">Times New Roman</option>
+                        </select>
+                    </div>
+
+                    <!-- Font Size -->
+                    <div class="style-group">
+                        <label class="form-label">Font Size</label>
+                        <div class="font-size-controls">
+                            <div class="range-group">
+                                <label for="mainFontSize">Main Text</label>
+                                <input type="range" id="mainFontSize" min="12" max="120" value="48" class="range-input">
+                                <span class="range-value" id="mainFontSizeValue">48px</span>
                             </div>
-                            <div class="section-content">
-                                <!-- Knowledge Mode Toggle -->
-                                <div class="knowledge-mode-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px; border-radius: 12px; margin-bottom: 16px;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                                                <path d="M2 17l10 5 10-5"/>
-                                                <path d="M2 12l10 5 10-5"/>
-                                            </svg>
-                                            <h3 style="color: white; margin: 0; font-size: 16px; font-weight: 600;">🎓 Knowledge Batch Mode</h3>
-                                        </div>
-                                        <label style="display: flex; align-items: center; cursor: pointer;">
-                                            <input type="checkbox" id="knowledgeModeCheckbox" style="width: 20px; height: 20px; cursor: pointer;">
-                                        </label>
-                                    </div>
-                                    <div id="knowledgeModeInfo" style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.5; display: none;">
-                                        ✨ <strong>Mỗi dòng = 1 ảnh!</strong> Nhập mỗi câu tri thức trên một dòng riêng biệt.<br>
-                                        💡 Sử dụng <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">\n</code> để xuống dòng trong cùng 1 ảnh.<br>
-                                        📊 Hệ thống sẽ tự động tạo ảnh cho từng dòng tri thức.
-                                    </div>
-                                    <div id="knowledgeStats" style="color: white; font-size: 13px; margin-top: 8px; padding: 8px 12px; background: rgba(255,255,255,0.15); border-radius: 6px; display: none;">
-                                        <strong>📋 Preview:</strong> <span id="knowledgeLineCount">0</span> dòng → <span id="knowledgeImageCount">0</span> ảnh sẽ được tạo
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <div class="markdown-editor">
-                                        <div class="editor-tabs">
-                                            <button class="editor-tab active" data-tab="edit">✏️ Edit</button>
-                                            <button class="editor-tab" data-tab="preview">👁️ Preview</button>
-                                        </div>
-                                        <div class="editor-content">
-                                            <textarea id="textInput" class="text-input markdown-textarea v7-emoji-support" placeholder="🎓 Knowledge Mode: Mỗi dòng (Enter) = 1 ảnh riêng&#10;💡 Dùng \n để xuống dòng trong cùng 1 ảnh&#10;&#10;Ví dụ:&#10;**Tri thức 1:** Dòng này sẽ là ảnh 1&#10;**Tri thức 2:** Dòng này sẽ là ảnh 2\nCó thể xuống dòng với \n&#10;&#10;Markdown: **Bold** *Italic* `Code` ==Highlight== 🎉" rows="8"></textarea>
-                                            <div id="markdownPreview" class="markdown-preview-panel" style="display: none;">
-                                                <div class="preview-content">Your preview will appear here...</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="markdown-hints">
-                                        <span class="hint-badge">**bold**</span>
-                                        <span class="hint-badge">*italic*</span>
-                                        <span class="hint-badge">`code`</span>
-                                        <span class="hint-badge">~~strike~~</span>
-                                        <span class="hint-badge">==highlight==</span>
-                                    </div>
-                                    <div class="button-group">
-                                        <button id="insertFooterText" class="helper-button primary">Add footer text</button>
-                                        <button id="insertLineBreak" class="helper-button">Soft break (\n)</button>
-                                        <button id="insertKnowledgeTemplate" class="helper-button" style="display: none;">📚 Insert Template</button>
-                                        <button id="openFindReplace" class="helper-button">🔍 Find & Replace</button>
-                                    </div>
-                                </div>
+                            <div class="range-group">
+                                <label for="subFontSize">Subtitle</label>
+                                <input type="range" id="subFontSize" min="8" max="80" value="32" class="range-input">
+                                <span class="range-value" id="subFontSizeValue">32px</span>
                             </div>
-                        </section>
+                        </div>
+                    </div>
 
-                        <!-- Advanced Positioning Section (V9.0) - HIDDEN FOR SIMPLICITY -->
-                        <section class="panel-section v9-positioning-section" id="advancedPositioningSection" style="display: none;">
-                            <div class="v9-positioning-header">
-                                <div class="v9-positioning-title">
-                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 5v14M5 12h14"/>
-                                        <circle cx="12" cy="12" r="10"/>
-                                    </svg>
-                                    <span>Căn Chỉnh Nội Dung</span>
-                                </div>
-                                <span class="v9-positioning-badge">New in 9.0</span>
+                    <!-- Font Weight -->
+                    <div class="style-group">
+                        <label class="form-label">Font Weight</label>
+                        <select id="fontWeightSelect" class="select-input">
+                            <option value="400">Normal</option>
+                            <option value="bold">Bold</option>
+                            <option value="800">Extra Bold</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-group 2: Colors & Effects (Expanded by default) -->
+            <div class="v13-sub-group expanded">
+                <div class="v13-sub-header">
+                    <svg class="v13-sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    <h3 class="v13-sub-title">Colors & Effects</h3>
+                    <svg class="v13-sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="v13-sub-content">
+                    <!-- Text Colors -->
+                    <div class="style-group">
+                        <label class="form-label">Text Colors</label>
+                        <div class="color-grid">
+                            <div class="color-input-group">
+                                <label for="colorPicker">Main Text</label>
+                                <input type="color" id="colorPicker" value="#FFFFFF" class="color-picker">
                             </div>
-
-                            <!-- Free Mode Toggle -->
-                            <div class="v9-free-mode-toggle">
-                                <label class="v9-toggle-label">
-                                    <div class="v9-toggle-switch">
-                                        <input type="checkbox" id="freePosMode">
-                                        <span class="v9-toggle-slider"></span>
-                                    </div>
-                                    <span>Bật chế độ căn chỉnh tự do</span>
-                                </label>
+                            <div class="color-input-group">
+                                <label for="subColorPicker">Subtitle</label>
+                                <input type="color" id="subColorPicker" value="#FFFFFF" class="color-picker">
                             </div>
+                        </div>
+                    </div>
 
-                            <!-- Advanced Positioning Controls (Hidden by default) -->
-                            <div id="advancedPositioningControls" class="v9-position-controls">
-                                <!-- Text Layer Tabs -->
-                                <div class="v9-text-layers">
-                                    <button class="v9-layer-tab active" data-layer="main" id="mainLayerTab">Main Text</button>
-                                    <button class="v9-layer-tab" data-layer="subtitle" id="subtitleLayerTab">Subtitle</button>
-                                </div>
+                    <!-- Text Effects -->
+                    <div class="style-group">
+                        <label class="form-label">Effects</label>
+                        <div class="text-effects-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="textBorderCheckbox" class="checkbox">
+                                <span class="checkbox-text">Border</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="textShadowCheckbox" class="checkbox" checked>
+                                <span class="checkbox-text">Shadow</span>
+                            </label>
+                        </div>
 
-                                <!-- Main Text Positioning -->
-                                <div id="mainPosControls" class="v9-layer-controls">
-                                    <div class="v9-pos-grid">
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Vị trí X</span>
-                                                <span class="v9-pos-value" id="mainXPosValue">50%</span>
-                                            </div>
-                                            <input type="range" id="mainXPos" class="v9-pos-slider" min="0" max="100" value="50" step="1">
-                                        </div>
+                        <!-- Border Width -->
+                        <div class="effect-sub-control" id="borderWidthControl" style="display: none;">
+                            <label for="borderWidth">Border Width</label>
+                            <input type="range" id="borderWidth" min="0.5" max="5" step="0.5" value="2" class="range-input">
+                            <span class="range-value" id="borderWidthValue">2px</span>
+                        </div>
 
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Vị trí Y</span>
-                                                <span class="v9-pos-value" id="mainYPosValue">85%</span>
-                                            </div>
-                                            <input type="range" id="mainYPos" class="v9-pos-slider" min="0" max="100" value="85" step="1">
-                                        </div>
+                        <!-- Shadow -->
+                        <div class="effect-sub-control" id="shadowControl" style="display: block;">
+                            <label for="shadowBlur">Shadow Blur</label>
+                            <input type="range" id="shadowBlur" min="0" max="20" value="4" class="range-input">
+                            <span class="range-value" id="shadowBlurValue">4px</span>
+                        </div>
+                    </div>
 
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Điều chỉnh X</span>
-                                                <span class="v9-pos-value" id="mainOffsetXValue">0px</span>
-                                            </div>
-                                            <input type="range" id="mainOffsetX" class="v9-pos-slider" min="-200" max="200" value="0" step="5">
-                                        </div>
-
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Điều chỉnh Y</span>
-                                                <span class="v9-pos-value" id="mainOffsetYValue">0px</span>
-                                            </div>
-                                            <input type="range" id="mainOffsetY" class="v9-pos-slider" min="-200" max="200" value="0" step="5">
-                                        </div>
-                                    </div>
-
-                                    <!-- Quick Presets for Main -->
-                                    <div class="v9-quick-presets">
-                                        <div class="v9-quick-preset-title">
-                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                            </svg>
-                                            Vị trí nhanh
-                                        </div>
-                                        <div class="v9-preset-grid">
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-left" data-target="main">Trên trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-center" data-target="main">Trên giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-right" data-target="main">Trên phải</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-left" data-target="main">Giữa trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-center" data-target="main">Chính giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-right" data-target="main">Giữa phải</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-left" data-target="main">Dưới trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-center" data-target="main">Dưới giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-right" data-target="main">Dưới phải</button>
-                                        </div>
-                                    </div>
-
-                                    <button class="v9-reset-pos-btn" id="resetMainPos">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
-                                        </svg>
-                                        Đặt lại vị trí mặc định
-                                    </button>
-                                </div>
-
-                                <!-- Subtitle Positioning (Hidden by default) -->
-                                <div id="subtitlePosControls" class="v9-layer-controls" style="display: none;">
-                                    <div class="v9-pos-grid">
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Vị trí X</span>
-                                                <span class="v9-pos-value" id="subXPosValue">50%</span>
-                                            </div>
-                                            <input type="range" id="subXPos" class="v9-pos-slider" min="0" max="100" value="50" step="1">
-                                        </div>
-
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Vị trí Y</span>
-                                                <span class="v9-pos-value" id="subYPosValue">92%</span>
-                                            </div>
-                                            <input type="range" id="subYPos" class="v9-pos-slider" min="0" max="100" value="92" step="1">
-                                        </div>
-
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Điều chỉnh X</span>
-                                                <span class="v9-pos-value" id="subOffsetXValue">0px</span>
-                                            </div>
-                                            <input type="range" id="subOffsetX" class="v9-pos-slider" min="-200" max="200" value="0" step="5">
-                                        </div>
-
-                                        <div class="v9-pos-group">
-                                            <div class="v9-pos-label">
-                                                <span>Điều chỉnh Y</span>
-                                                <span class="v9-pos-value" id="subOffsetYValue">0px</span>
-                                            </div>
-                                            <input type="range" id="subOffsetY" class="v9-pos-slider" min="-200" max="200" value="0" step="5">
-                                        </div>
-                                    </div>
-
-                                    <!-- Quick Presets for Subtitle -->
-                                    <div class="v9-quick-presets">
-                                        <div class="v9-quick-preset-title">
-                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                            </svg>
-                                            Vị trí nhanh
-                                        </div>
-                                        <div class="v9-preset-grid">
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-left" data-target="subtitle">Trên trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-center" data-target="subtitle">Trên giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="top-right" data-target="subtitle">Trên phải</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-left" data-target="subtitle">Giữa trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-center" data-target="subtitle">Chính giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="middle-right" data-target="subtitle">Giữa phải</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-left" data-target="subtitle">Dưới trái</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-center" data-target="subtitle">Dưới giữa</button>
-                                            <button class="v9-quick-pos-btn quick-pos-btn" data-position="bottom-right" data-target="subtitle">Dưới phải</button>
-                                        </div>
-                                    </div>
-
-                                    <button class="v9-reset-pos-btn" id="resetSubPos">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
-                                        </svg>
-                                        Đặt lại vị trí mặc định
-                                    </button>
-                                </div>
-
-                                <!-- Grid Toggle -->
-                                <div class="v9-grid-toggle">
-                                    <label>
-                                        <input type="checkbox" id="showGrid">
-                                        <span>Hiển thị lưới hỗ trợ</span>
-                                    </label>
-                                </div>
-
-                                <!-- Info Panel -->
-                                <div class="v9-position-info">
-                                    <strong>💡 Mẹo:</strong> Sử dụng vị trí % để căn chỉnh tổng thể, sau đó dùng điều chỉnh pixel để tinh chỉnh chính xác.
-                                </div>
+                    <!-- Subtitle Background -->
+                    <div class="style-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="subtitleBgCheckbox" class="checkbox">
+                            <span class="checkbox-text">Subtitle background</span>
+                        </label>
+                        <div class="bg-controls" id="bgControls" style="display: none;">
+                            <div class="color-input-group">
+                                <label for="bgColorPicker">Color</label>
+                                <input type="color" id="bgColorPicker" value="#faf9f5" class="color-picker">
                             </div>
-                        </section>
-
-                        <!-- Upload Section -->
-                        <section class="panel-section active" id="uploadSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8L12 3 7 8M12 3v12" />
-                                </svg>
-                                <h2 class="section-title">Upload Images</h2>
+                            <div class="range-group">
+                                <label for="bgOpacity">Opacity</label>
+                                <input type="range" id="bgOpacity" min="0" max="100" value="28" class="range-input">
+                                <span class="range-value">28%</span>
                             </div>
-                            <div class="section-content">
-                                <div class="upload-area" id="uploadArea">
-                                    <input type="file" id="imageLoader" class="file-input" multiple accept="image/*">
-                                    <div class="upload-content">
-                                        <svg class="upload-icon" viewBox="0 0 24 24">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 15V3M12 3l-4 4M12 3l4 4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
-                                        </svg>
-                                        <p class="upload-text">Drop images here or click to browse</p>
-                                        <p class="upload-hint">Support: JPG, PNG, GIF, WebP • Or press Ctrl+V to paste</p>
-                                    </div>
-                                </div>
-                                <div class="button-group">
-                                    <button id="pasteFromClipboard" class="helper-button">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                        </svg>
-                                        Paste from Clipboard
-                                    </button>
-                                    <button id="clearAllImages" class="helper-button secondary" style="display:none;">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                                        </svg>
-                                        Clear All
-                                    </button>
-                                </div>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="repeatBackgroundCheckbox" class="checkbox">
-                                    <span class="checkbox-text">Repeat text for each image</span>
-                                </label>
-                            </div>
-                        </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Solid Color Background Section (V7.0) -->
-                        <section class="panel-section active" id="solidBackgroundSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                                    <path stroke="currentColor" stroke-width="2" d="M3 12h18"/>
-                                </svg>
-                                <h2 class="section-title">Solid Color Background 🎨</h2>
-                                <span class="v7-badge v7-badge-success">New!</span>
-                            </div>
-                            <div class="section-content">
-                                <!-- Content will be generated by solidBackground.js -->
-                            </div>
-                        </section>
-
-                        <!-- Browse Images from Folder Section -->
-                        <section class="panel-section active" id="folderImagesSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
-                                </svg>
-                                <h2 class="section-title">Browse Images from Folder</h2>
-                                <button class="info-button" title="Select images from the images/ folder">
-                                    <svg viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
-                                        <path stroke="currentColor" stroke-width="2" d="M12 16v-4M12 8h.01" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="section-content">
-                                <div class="folder-actions">
-                                    <button id="randomImage1Btn" class="helper-button primary">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M21 16V8a2 2 0 00-2-2h-5l-2-3H5a2 2 0 00-2 2v11a2 2 0 002 2h11"/>
-                                            <circle cx="17" cy="17" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                                        </svg>
-                                        Random 1 Image
-                                    </button>
-                                    <button id="randomImage3Btn" class="helper-button">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                                        </svg>
-                                        Random 3 Images
-                                    </button>
-                                    <button id="selectAllFolderBtn" class="helper-button secondary">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M9 11l3 3L22 4"/>
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-                                        </svg>
-                                        Select All
-                                    </button>
-                                </div>
-                                <div id="folderImagesContainer" class="folder-images-container">
-                                    <div class="loading-message">
-                                        <svg class="spinner" viewBox="0 0 24 24" width="32" height="32">
-                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" opacity="0.25"/>
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2a10 10 0 0110 10" opacity="0.75"/>
-                                        </svg>
-                                        <p>Loading images...</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Preset Templates Section -->
-                        <section class="panel-section active v91-collapsible-section collapsed" id="presetsSection">
-                            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                </svg>
-                                <h2 class="section-title">Preset Templates <span id="presetCount" class="preset-count"></span></h2>
-                            </div>
-                            <div class="section-content">
-                                <!-- Search Bar -->
-                                <div class="preset-search-bar">
-                                    <div class="search-input-wrapper">
-                                        <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18">
-                                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
-                                            <path stroke="currentColor" stroke-width="2" d="M21 21l-4.35-4.35"/>
-                                        </svg>
-                                        <input type="text" id="presetSearch" class="search-input" placeholder="Search presets by name, tag or description..." />
-                                        <button id="clearPresetSearch" class="clear-search-btn" style="display: none;">
-                                            <svg viewBox="0 0 24 24" width="16" height="16">
-                                                <path stroke="currentColor" stroke-width="2" fill="none" d="M18 6L6 18M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Category Filter -->
-                                <div class="preset-category-filter" id="presetCategoryFilter">
-                                    <!-- Category buttons will be generated dynamically -->
-                                </div>
-
-                                <!-- Presets Grid -->
-                                <div class="presets-grid" id="presetsGrid">
-                                    <!-- Presets will be generated dynamically -->
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="preset-actions">
-                                    <button id="saveCustomPreset" class="secondary-button small">
-                                        <svg viewBox="0 0 24 24" width="16" height="16">
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                                            <path stroke="currentColor" stroke-width="2" fill="none" d="M17 21v-8H7v8M7 3v5h8"/>
-                                        </svg>
-                                        Save Current as Preset
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Style Section -->
-                        <section class="panel-section active" id="styleSection">
-                            <div class="section-header">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                </svg>
-                                <h2 class="section-title">Style Settings</h2>
-                                <button class="reset-button" id="resetSettings" title="Reset to defaults">
-                                    <svg viewBox="0 0 24 24" width="18" height="18">
-                                        <path stroke="currentColor" stroke-width="2" fill="none" d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="section-content">
-                                <!-- Font Family -->
-                                <div class="style-group">
-                                    <label class="form-label">Font Family</label>
-                                    <select id="fontSelect" class="select-input">
-                                        <option value="Inter, sans-serif" selected>Inter</option>
-                                        <option value="Roboto, sans-serif">Roboto</option>
-                                        <option value="Open Sans, sans-serif">Open Sans</option>
-                                        <option value="Montserrat, sans-serif">Montserrat</option>
-                                        <option value="Poppins, sans-serif">Poppins</option>
-                                        <option value="Arial, sans-serif">Arial</option>
-                                        <option value="Georgia, serif">Georgia</option>
-                                        <option value="Times New Roman, serif">Times New Roman</option>
-                                    </select>
-                                </div>
-
-                                <!-- Font Size -->
-                                <div class="style-group">
-                                    <label class="form-label">Font Size</label>
-                                    <div class="font-size-controls">
-                                        <div class="range-group">
-                                            <label for="mainFontSize">Main Text</label>
-                                            <input type="range" id="mainFontSize" min="12" max="120" value="48" class="range-input">
-                                            <span class="range-value" id="mainFontSizeValue">48px</span>
-                                        </div>
-                                        <div class="range-group">
-                                            <label for="subFontSize">Subtitle</label>
-                                            <input type="range" id="subFontSize" min="8" max="80" value="32" class="range-input">
-                                            <span class="range-value" id="subFontSizeValue">32px</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Font Effects - SIMPLIFIED -->
-                                <div class="style-group">
-                                    <label class="form-label">Font Style</label>
-                                    <div class="text-effects-grid">
-                                        <div class="effect-control">
-                                            <label for="fontWeightSelect">Weight</label>
-                                            <select id="fontWeightSelect" class="select-input small">
-                                                <option value="400">Normal</option>
-                                                <option value="bold">Bold</option>
-                                                <option value="800">Extra Bold</option>
-                                            </select>
-                                        </div>
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" id="textBorderCheckbox" class="checkbox">
-                                            <span class="checkbox-text">Border</span>
-                                        </label>
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" id="textShadowCheckbox" class="checkbox" checked>
-                                            <span class="checkbox-text">Shadow</span>
-                                        </label>
-                                    </div>
-
-                                    <!-- Border Width -->
-                                    <div class="effect-sub-control" id="borderWidthControl" style="display: none;">
-                                        <label for="borderWidth">Border Width</label>
-                                        <input type="range" id="borderWidth" min="0.5" max="5" step="0.5" value="2" class="range-input">
-                                        <span class="range-value" id="borderWidthValue">2px</span>
-                                    </div>
-
-                                    <!-- Shadow -->
-                                    <div class="effect-sub-control" id="shadowControl" style="display: block;">
-                                        <label for="shadowBlur">Shadow Blur</label>
-                                        <input type="range" id="shadowBlur" min="0" max="20" value="4" class="range-input">
-                                        <span class="range-value" id="shadowBlurValue">4px</span>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden controls for backward compatibility -->
-                                <div style="display: none;">
-                                    <select id="fontStyleSelect"><option value="normal">Normal</option></select>
-                                    <input type="checkbox" id="textUnderlineCheckbox">
-                                </div>
-
-                                <!-- Colors - SIMPLIFIED: Solid only -->
-                                <div class="style-group">
-                                    <label class="form-label">Text Colors</label>
-                                    <div class="color-grid">
-                                        <div class="color-input-group">
-                                            <label for="colorPicker">Main Text</label>
-                                            <input type="color" id="colorPicker" value="#FFFFFF" class="color-picker">
-                                        </div>
-                                        <div class="color-input-group">
-                                            <label for="subColorPicker">Subtitle</label>
-                                            <input type="color" id="subColorPicker" value="#FFFFFF" class="color-picker">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden gradient controls for backward compatibility -->
-                                <div style="display: none;">
-                                    <input type="radio" name="colorMode" value="solid" checked>
-                                    <input type="radio" name="colorMode" value="gradient">
-                                    <input type="color" id="gradientColor1" value="#FF6B6B">
-                                    <input type="color" id="gradientColor2" value="#4ECDC4">
-                                    <input type="range" id="gradientAngle" min="0" max="360" value="45">
-                                </div>
-
-                                <!-- Text Alignment -->
-                                <div class="style-group">
-                                    <label class="form-label">Text Alignment</label>
-                                    <div class="alignment-buttons">
-                                        <button type="button" class="align-btn" data-align="left" title="Align Left">
-                                            <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                                        </button>
-                                        <button type="button" class="align-btn active" data-align="center" title="Align Center">
-                                            <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                                        </button>
-                                        <button type="button" class="align-btn" data-align="right" title="Align Right">
-                                            <svg viewBox="0 0 24 24"><path d="M3 6h18M9 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Position -->
-                                <div class="style-group">
-                                    <label class="form-label">Text Position</label>
-                                    <select id="positionPicker" class="select-input">
-                                        <option value="top">Top</option>
-                                        <option value="upper-middle">Upper Middle</option>
-                                        <option value="middle">Middle</option>
-                                        <option value="lower-middle">Lower Middle</option>
-                                        <option value="bottom" selected>Bottom</option>
-                                    </select>
-                                </div>
-
-                                <!-- Advanced Text Controls - SIMPLIFIED: Line Height + Rotation -->
-                                <div class="style-group">
-                                    <label class="form-label">Text Spacing & Rotation</label>
-
-                                    <!-- Line Height -->
-                                    <div class="range-group">
-                                        <label for="lineHeight">Line Height</label>
-                                        <input type="range" id="lineHeight" min="0.8" max="3" value="2" step="0.1" class="range-input">
-                                        <span class="range-value" id="lineHeightValue">2.0</span>
-                                    </div>
-
-                                    <!-- Text Rotation -->
-                                    <div class="range-group">
-                                        <label for="textRotation">Text Rotation</label>
-                                        <input type="range" id="textRotation" min="-15" max="15" value="0" step="0.5" class="range-input">
-                                        <span class="range-value" id="textRotationValue">0°</span>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden Advanced Controls (kept for backward compatibility) -->
-                                <div style="display: none;">
-                                    <input type="range" id="textOpacity" min="0" max="100" value="100">
-                                    <input type="range" id="letterSpacing" min="-5" max="20" value="0" step="0.5">
-                                    <select id="textTransform"><option value="none">None</option></select>
-                                    <input type="checkbox" id="textGlowCheckbox">
-                                    <input type="color" id="glowColor" value="#FFD700">
-                                    <input type="range" id="glowIntensity" min="5" max="50" value="20">
-                                    <div id="glowControl"></div>
-                                </div>
-
-                                <!-- Background -->
-                                <div class="style-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="subtitleBgCheckbox" class="checkbox">
-                                        <span class="checkbox-text">Subtitle background</span>
-                                    </label>
-                                    <div class="bg-controls" id="bgControls" style="display: none;">
-                                        <div class="color-input-group">
-                                            <label for="bgColorPicker">Color</label>
-                                            <input type="color" id="bgColorPicker" value="#faf9f5" class="color-picker">
-                                        </div>
-                                        <div class="range-group">
-                                            <label for="bgOpacity">Opacity</label>
-                                            <input type="range" id="bgOpacity" min="0" max="100" value="28" class="range-input">
-                                            <span class="range-value">28%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Image Filters Section - SIMPLIFIED: Collapsed by default -->
-                        <section class="panel-section collapsed" id="filtersSection">
-                            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                                </svg>
-                                <h2 class="section-title">Image Filters (Optional)</h2>
-                                <button class="reset-button" id="resetFilters" title="Reset filters" onclick="event.stopPropagation();">
-                                    <svg viewBox="0 0 24 24" width="18" height="18">
-                                        <path stroke="currentColor" stroke-width="2" fill="none" d="M3 12a9 9 0 0113.8-7.6M21 12a9 9 0 01-13.8 7.6M3 4v4h4M21 20v-4h-4"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="section-content">
-                                <div class="style-group">
-                                    <!-- Only essential filters -->
-                                    <div class="range-group">
-                                        <label for="filterBrightness">Brightness</label>
-                                        <input type="range" id="filterBrightness" min="0" max="200" value="100" class="range-input">
-                                        <span class="range-value" id="filterBrightnessValue">100%</span>
-                                    </div>
-                                    <div class="range-group">
-                                        <label for="filterContrast">Contrast</label>
-                                        <input type="range" id="filterContrast" min="0" max="200" value="100" class="range-input">
-                                        <span class="range-value" id="filterContrastValue">100%</span>
-                                    </div>
-                                    <div class="range-group">
-                                        <label for="filterBlur">Blur</label>
-                                        <input type="range" id="filterBlur" min="0" max="10" value="0" step="0.1" class="range-input">
-                                        <span class="range-value" id="filterBlurValue">0px</span>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden filters for backward compatibility -->
-                                <div style="display: none;">
-                                    <input type="range" id="filterSaturation" min="0" max="200" value="100">
-                                    <input type="range" id="filterHue" min="0" max="360" value="0">
-                                    <input type="range" id="filterGrayscale" min="0" max="100" value="0">
-                                    <input type="range" id="filterSepia" min="0" max="100" value="0">
-                                    <input type="range" id="filterInvert" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Export & Credit Section - SIMPLIFIED & MERGED -->
-                        <section class="panel-section active" id="exportSection">
-                            <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
-                                <svg class="section-icon" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                                </svg>
-                                <h2 class="section-title">📝 Footer & Image Numbering</h2>
-                            </div>
-                            <div class="section-content">
-                                <!-- Image Numbering -->
-                                <div class="style-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="imageNumberingCheckbox" class="checkbox">
-                                        <span class="checkbox-text">Add image numbers</span>
-                                    </label>
-
-                                    <div id="numberingOptions" class="numbering-options" style="display: none; margin-top: 12px;">
-                                        <label class="checkbox-label" style="margin-left: 24px;">
-                                            <input type="checkbox" id="skipFirstPageCheckbox" class="checkbox">
-                                            <span class="checkbox-text">Skip first image</span>
-                                        </label>
-
-                                        <div class="numbering-settings" style="margin-left: 24px; margin-top: 12px;">
-                                            <div class="form-group">
-                                                <label class="form-label">Position</label>
-                                                <select id="numberPosition" class="select-input">
-                                                    <option value="top-right">Top Right</option>
-                                                    <option value="top-left">Top Left</option>
-                                                    <option value="bottom-right" selected>Bottom Right</option>
-                                                    <option value="bottom-left">Bottom Left</option>
-                                                </select>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="form-label">Size</label>
-                                                <input type="range" id="numberSize" min="20" max="100" value="48" step="4" class="range-input">
-                                                <span class="range-value" id="numberSizeValue">48px</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Image Footer -->
-                                <div class="style-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="footerCheckbox" class="checkbox">
-                                        <span class="checkbox-text">Add footer</span>
-                                    </label>
-
-                                    <div id="footerOptions" class="footer-options" style="display: none; margin-top: 12px;">
-                                        <!-- Footer Type -->
-                                        <div class="footer-type-selector">
-                                            <label class="radio-option">
-                                                <input type="radio" name="footerType" value="text" checked>
-                                                <span>Text</span>
-                                            </label>
-                                            <label class="radio-option">
-                                                <input type="radio" name="footerType" value="logo">
-                                                <span>Logo</span>
-                                            </label>
-                                        </div>
-
-                                        <!-- Footer Text Options -->
-                                        <div id="footerTextOptions" class="footer-content-options">
-                                            <div class="form-group">
-                                                <label class="form-label">Footer Text</label>
-                                                <input type="text" id="footerText" class="text-input" placeholder="e.g., LuyenAI.vn" value="">
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="form-label">Color</label>
-                                                <div style="display: flex; gap: 8px; align-items: center;">
-                                                    <input type="color" id="footerColor" class="color-picker" value="#ffffff">
-                                                    <input type="text" id="footerColorHex" class="text-input" value="#ffffff" style="flex: 1; font-size: 13px;">
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="form-label">Size</label>
-                                                <input type="range" id="footerSize" min="12" max="48" value="24" step="2" class="range-input">
-                                                <span class="range-value" id="footerSizeValue">24px</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Footer Logo Options -->
-                                        <div id="footerLogoOptions" class="footer-content-options" style="display: none;">
-                                            <div class="form-group">
-                                                <label class="form-label">Logo Image</label>
-                                                <input type="file" id="footerLogo" accept="image/*" class="file-input" style="display: block; width: 100%; font-size: 13px;">
-                                                <div id="footerLogoPreview" style="margin-top: 8px; display: none;">
-                                                    <img id="footerLogoImg" style="max-width: 100px; max-height: 50px; border-radius: 4px;">
-                                                    <button id="clearFooterLogo" class="helper-button" style="margin-top: 4px; font-size: 12px;">Clear</button>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label class="form-label">Logo Height</label>
-                                                <input type="range" id="footerLogoHeight" min="20" max="100" value="40" step="5" class="range-input">
-                                                <span class="range-value" id="footerLogoHeightValue">40px</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Footer Position -->
-                                        <div class="form-group">
-                                            <label class="form-label">Position</label>
-                                            <select id="footerPosition" class="select-input">
-                                                <option value="bottom-left">Bottom Left</option>
-                                                <option value="bottom-center" selected>Bottom Center</option>
-                                                <option value="bottom-right">Bottom Right</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Export format hidden, auto-selected -->
-                                <div style="display: none;">
-                                    <select id="exportFormat">
-                                        <option value="png">PNG</option>
-                                        <option value="jpeg" selected>JPEG</option>
-                                        <option value="webp">WebP</option>
-                                    </select>
-                                    <input type="range" id="exportQuality" min="1" max="100" value="92">
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Action Button -->
-                        <div class="action-section">
-                            <button id="addTextButton" class="primary-button" disabled>
-                                <svg viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-width="2" fill="none" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                                Add Text to Images
+            <!-- Sub-group 3: Layout (Collapsed by default) -->
+            <div class="v13-sub-group collapsed">
+                <div class="v13-sub-header">
+                    <svg class="v13-sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <line x1="15" y1="3" x2="15" y2="21"/>
+                    </svg>
+                    <h3 class="v13-sub-title">Layout</h3>
+                    <svg class="v13-sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="v13-sub-content">
+                    <!-- Text Alignment -->
+                    <div class="style-group">
+                        <label class="form-label">Text Alignment</label>
+                        <div class="alignment-buttons">
+                            <button type="button" class="align-btn" data-align="left" title="Align Left">
+                                <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                            </button>
+                            <button type="button" class="align-btn active" data-align="center" title="Align Center">
+                                <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                            </button>
+                            <button type="button" class="align-btn" data-align="right" title="Align Right">
+                                <svg viewBox="0 0 24 24"><path d="M3 6h18M9 12h12M3 18h18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
                             </button>
                         </div>
-                    </aside>
+                    </div>
+
+                    <!-- Position -->
+                    <div class="style-group">
+                        <label class="form-label">Text Position</label>
+                        <select id="positionPicker" class="select-input">
+                            <option value="top">Top</option>
+                            <option value="upper-middle">Upper Middle</option>
+                            <option value="middle">Middle</option>
+                            <option value="lower-middle">Lower Middle</option>
+                            <option value="bottom" selected>Bottom</option>
+                        </select>
+                    </div>
+
+                    <!-- Line Height -->
+                    <div class="range-group">
+                        <label for="lineHeight">Line Height</label>
+                        <input type="range" id="lineHeight" min="0.8" max="3" value="2" step="0.1" class="range-input">
+                        <span class="range-value" id="lineHeightValue">2.0</span>
+                    </div>
+
+                    <!-- Text Rotation -->
+                    <div class="range-group">
+                        <label for="textRotation">Text Rotation</label>
+                        <input type="range" id="textRotation" min="-15" max="15" value="0" step="0.5" class="range-input">
+                        <span class="range-value" id="textRotationValue">0°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-group 4: Filters (Collapsed by default) -->
+            <div class="v13-sub-group collapsed">
+                <div class="v13-sub-header">
+                    <svg class="v13-sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    <h3 class="v13-sub-title">Image Filters</h3>
+                    <svg class="v13-sub-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+                <div class="v13-sub-content">
+                    <div class="range-group">
+                        <label for="filterBrightness">Brightness</label>
+                        <input type="range" id="filterBrightness" min="0" max="200" value="100" class="range-input">
+                        <span class="range-value" id="filterBrightnessValue">100%</span>
+                    </div>
+                    <div class="range-group">
+                        <label for="filterContrast">Contrast</label>
+                        <input type="range" id="filterContrast" min="0" max="200" value="100" class="range-input">
+                        <span class="range-value" id="filterContrastValue">100%</span>
+                    </div>
+                    <div class="range-group">
+                        <label for="filterBlur">Blur</label>
+                        <input type="range" id="filterBlur" min="0" max="10" value="0" step="0.1" class="range-input">
+                        <span class="range-value" id="filterBlurValue">0px</span>
+                    </div>
+                    <button class="secondary-button small" id="resetFilters">Reset Filters</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== 4. OUTPUT GROUP (Collapsed by default) ===== -->
+    <div class="v13-section-group collapsed">
+        <div class="v13-group-header" style="cursor: pointer;" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="v13-group-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+            </div>
+            <h2 class="v13-group-title">📦 Output</h2>
+            <span class="v13-group-badge">Optional</span>
+        </div>
+        <div class="v13-group-content" style="display: none;">
+            <!-- Image Numbering -->
+            <div class="style-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="imageNumberingCheckbox" class="checkbox">
+                    <span class="checkbox-text">Add image numbers</span>
+                </label>
+
+                <div id="numberingOptions" class="numbering-options" style="display: none; margin-top: 12px;">
+                    <label class="checkbox-label" style="margin-left: 24px;">
+                        <input type="checkbox" id="skipFirstPageCheckbox" class="checkbox">
+                        <span class="checkbox-text">Skip first image</span>
+                    </label>
+
+                    <div class="numbering-settings" style="margin-left: 24px; margin-top: 12px;">
+                        <div class="form-group">
+                            <label class="form-label">Position</label>
+                            <select id="numberPosition" class="select-input">
+                                <option value="top-right">Top Right</option>
+                                <option value="top-left">Top Left</option>
+                                <option value="bottom-right" selected>Bottom Right</option>
+                                <option value="bottom-left">Bottom Left</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Size</label>
+                            <input type="range" id="numberSize" min="20" max="100" value="48" step="4" class="range-input">
+                            <span class="range-value" id="numberSizeValue">48px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Footer -->
+            <div class="style-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="footerCheckbox" class="checkbox">
+                    <span class="checkbox-text">Add footer</span>
+                </label>
+
+                <div id="footerOptions" class="footer-options" style="display: none; margin-top: 12px;">
+                    <!-- Footer Type -->
+                    <div class="footer-type-selector">
+                        <label class="radio-option">
+                            <input type="radio" name="footerType" value="text" checked>
+                            <span>Text</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="footerType" value="logo">
+                            <span>Logo</span>
+                        </label>
+                    </div>
+
+                    <!-- Footer Text Options -->
+                    <div id="footerTextOptions" class="footer-content-options">
+                        <div class="form-group">
+                            <label class="form-label">Footer Text</label>
+                            <input type="text" id="footerText" class="text-input" placeholder="e.g., LuyenAI.vn" value="">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Color</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="color" id="footerColor" class="color-picker" value="#ffffff">
+                                <input type="text" id="footerColorHex" class="text-input" value="#ffffff" style="flex: 1; font-size: 13px;">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Size</label>
+                            <input type="range" id="footerSize" min="12" max="48" value="24" step="2" class="range-input">
+                            <span class="range-value" id="footerSizeValue">24px</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Logo Options -->
+                    <div id="footerLogoOptions" class="footer-content-options" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Logo Image</label>
+                            <input type="file" id="footerLogo" accept="image/*" class="file-input" style="display: block; width: 100%; font-size: 13px;">
+                            <div id="footerLogoPreview" style="margin-top: 8px; display: none;">
+                                <img id="footerLogoImg" style="max-width: 100px; max-height: 50px; border-radius: 4px;">
+                                <button id="clearFooterLogo" class="helper-button" style="margin-top: 4px; font-size: 12px;">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Logo Height</label>
+                            <input type="range" id="footerLogoHeight" min="20" max="100" value="40" step="5" class="range-input">
+                            <span class="range-value" id="footerLogoHeightValue">40px</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Position -->
+                    <div class="form-group">
+                        <label class="form-label">Position</label>
+                        <select id="footerPosition" class="select-input">
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-center" selected>Bottom Center</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ACTION BUTTON ===== -->
+    <div class="action-section" style="margin-top: 24px;">
+        <button id="addTextButton" class="v13-action-button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Add Text to Images
+        </button>
+    </div>
+
+    <!-- Hidden fields for backward compatibility -->
+    <div style="display: none;">
+        <select id="fontStyleSelect"><option value="normal">Normal</option></select>
+        <input type="checkbox" id="textUnderlineCheckbox">
+        <input type="radio" name="colorMode" value="solid" checked>
+        <input type="radio" name="colorMode" value="gradient">
+        <input type="color" id="gradientColor1" value="#FF6B6B">
+        <input type="color" id="gradientColor2" value="#4ECDC4">
+        <input type="range" id="gradientAngle" min="0" max="360" value="45">
+        <input type="range" id="textOpacity" min="0" max="100" value="100">
+        <input type="range" id="letterSpacing" min="-5" max="20" value="0" step="0.5">
+        <select id="textTransform"><option value="none">None</option></select>
+        <input type="checkbox" id="textGlowCheckbox">
+        <input type="color" id="glowColor" value="#FFD700">
+        <input type="range" id="glowIntensity" min="5" max="50" value="20">
+        <div id="glowControl"></div>
+        <input type="range" id="filterSaturation" min="0" max="200" value="100">
+        <input type="range" id="filterHue" min="0" max="360" value="0">
+        <input type="range" id="filterGrayscale" min="0" max="100" value="0">
+        <input type="range" id="filterSepia" min="0" max="100" value="0">
+        <input type="range" id="filterInvert" min="0" max="100" value="0">
+        <select id="exportFormat">
+            <option value="png">PNG</option>
+            <option value="jpeg" selected>JPEG</option>
+            <option value="webp">WebP</option>
+        </select>
+        <input type="range" id="exportQuality" min="1" max="100" value="92">
+    </div>
+
+    <!-- Advanced Positioning Section (V9.0) - Keep for compatibility -->
+    <section class="panel-section v9-positioning-section v13-hidden" id="advancedPositioningSection" style="display: none;">
+        <!-- Content kept for backward compatibility but hidden -->
+    </section>
+
+</aside>
 
                     <!-- Preview Panel -->
                     <section class="preview-panel">
