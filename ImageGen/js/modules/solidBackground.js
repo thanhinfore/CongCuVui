@@ -55,10 +55,22 @@ export class SolidBackgroundGenerator {
     }
 
     setupUI() {
-        const container = document.getElementById('solidBackgroundSection');
-        if (!container) return;
+        // V13: Use new container ID
+        const container = document.getElementById('solidBackgroundContent');
+        if (!container) {
+            // Fallback to old structure
+            const oldContainer = document.getElementById('solidBackgroundSection');
+            if (!oldContainer) return;
+            const contentDiv = oldContainer.querySelector('.section-content') || oldContainer;
+            this.renderUI(contentDiv);
+            return;
+        }
 
-        const contentDiv = container.querySelector('.section-content') || container;
+        this.renderUI(container);
+    }
+
+    renderUI(contentDiv) {
+        if (!contentDiv) return;
 
         contentDiv.innerHTML = `
             <div class="v7-solid-bg-controls">
