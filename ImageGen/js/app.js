@@ -242,12 +242,29 @@ class ImageTextApp {
             }
         };
 
+        // V14: Enhanced error handling with user notification
         window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
+            console.error('[V14 Error Handler] Global error:', event.error);
+
+            // Show user-friendly error message
+            this.showErrorNotification('An unexpected error occurred. Please refresh the page if the issue persists.');
+
+            // Prevent default error handling in production
+            if (window.location.hostname !== 'localhost') {
+                event.preventDefault();
+            }
         });
 
         window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
+            console.error('[V14 Error Handler] Unhandled promise rejection:', event.reason);
+
+            // Show user-friendly error message
+            this.showErrorNotification('An operation failed. Please try again.');
+
+            // Prevent default in production
+            if (window.location.hostname !== 'localhost') {
+                event.preventDefault();
+            }
         });
     }
 
@@ -924,6 +941,11 @@ class ImageTextApp {
 
     showError(message) {
         this.showNotification(message, 'error');
+    }
+
+    // V14: Alias for error notifications
+    showErrorNotification(message) {
+        this.showError(message);
     }
 
     updateKnowledgeStats() {

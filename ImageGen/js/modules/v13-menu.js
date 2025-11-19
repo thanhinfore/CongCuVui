@@ -1,6 +1,7 @@
 /**
  * V13 Menu System - Tab & Sub-group Management
  * Handles tab navigation and collapsible sub-groups
+ * V14: Enhanced with proper cleanup to prevent memory leaks
  */
 
 export class V13Menu {
@@ -9,6 +10,9 @@ export class V13Menu {
         this.tabPanels = document.querySelectorAll('.v13-tab-panel');
         this.subGroups = document.querySelectorAll('.v13-sub-group');
         this.outputGroup = document.querySelector('.v13-section-group.collapsed');
+
+        // V14: Store observer reference for cleanup
+        this.observer = null;
 
         this.init();
     }
@@ -119,8 +123,8 @@ export class V13Menu {
         // Initial state
         toggleOutput();
 
-        // Observer for class changes
-        const observer = new MutationObserver((mutations) => {
+        // V14: Observer for class changes (store reference for cleanup)
+        this.observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
                     toggleOutput();
@@ -128,7 +132,7 @@ export class V13Menu {
             });
         });
 
-        observer.observe(this.outputGroup, { attributes: true });
+        this.observer.observe(this.outputGroup, { attributes: true });
     }
 
     /**
@@ -202,6 +206,23 @@ export class V13Menu {
             const content = this.outputGroup.querySelector('.v13-group-content');
             if (content) content.style.display = 'none';
         }
+    }
+
+    /**
+     * V14: Cleanup method to prevent memory leaks
+     * Call this when disposing the menu system
+     */
+    destroy() {
+        // Disconnect observer
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+            console.log('V13 Menu: Observer disconnected');
+        }
+
+        // Remove event listeners (if needed for full cleanup)
+        // Note: Event listeners on DOM elements are automatically garbage collected
+        // when the elements are removed, but we keep this for explicit cleanup
     }
 }
 

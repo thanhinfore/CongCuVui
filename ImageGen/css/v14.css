@@ -1,0 +1,340 @@
+/* ===================================================
+   Knowledge Visualizer v14 - Secure & Optimized
+   Release Date: 2025-11-18
+   Theme: Security, Performance, & Reliability
+   =================================================== */
+
+/* Version Badge Enhancement */
+.version-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    animation: v14-badge-pulse 3s ease-in-out infinite;
+}
+
+@keyframes v14-badge-pulse {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+    }
+}
+
+/* Security Indicators */
+.v14-secure-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 12px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.v14-secure-indicator::before {
+    content: "🔒";
+    font-size: 12px;
+}
+
+/* Performance Optimizations */
+.v14-optimized {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Error Boundary Styles */
+.v14-error-boundary {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.v14-error-boundary h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.v14-error-boundary p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.95;
+}
+
+.v14-error-boundary button {
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.v14-error-boundary button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Sanitized Content Container */
+.v14-safe-content {
+    /* Container for sanitized HTML content */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Loading States with Security Check */
+.v14-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.v14-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: v14-spin 0.8s linear infinite;
+}
+
+@keyframes v14-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Memory Leak Prevention */
+.v14-cleanup-on-destroy {
+    /* Marker class for components that need cleanup */
+}
+
+/* Enhanced Focus Indicators for Accessibility */
+.v14-focus-visible:focus-visible {
+    outline: 3px solid #667eea;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* Performance Monitoring Badge (Dev Mode) */
+.v14-perf-monitor {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #10b981;
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    display: none; /* Hidden by default, shown in dev mode */
+}
+
+.v14-perf-monitor.active {
+    display: block;
+}
+
+.v14-perf-monitor .perf-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 4px 0;
+}
+
+.v14-perf-monitor .perf-label {
+    color: #94a3b8;
+}
+
+.v14-perf-monitor .perf-value {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.v14-perf-monitor .perf-value.warning {
+    color: #f59e0b;
+}
+
+.v14-perf-monitor .perf-value.critical {
+    color: #ef4444;
+}
+
+/* Toast Notifications Enhancement */
+.v14-toast {
+    animation: v14-toast-slide-in 0.3s ease-out;
+}
+
+.v14-toast.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.v14-toast.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.v14-toast.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.v14-toast.info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+@keyframes v14-toast-slide-in {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Validation Error States */
+.v14-input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.v14-error-message {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.v14-error-message::before {
+    content: "⚠️";
+    font-size: 14px;
+}
+
+/* Secure Upload Zone */
+.v14-secure-upload {
+    position: relative;
+}
+
+.v14-secure-upload::after {
+    content: "🔒 Secure Upload";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Code Quality Indicators */
+.v14-deprecated {
+    opacity: 0.6;
+    position: relative;
+}
+
+.v14-deprecated::before {
+    content: "⚠️ Deprecated";
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 10px;
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+/* Improved Accessibility */
+.v14-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Dark Mode Enhancements */
+@media (prefers-color-scheme: dark) {
+    .v14-error-boundary {
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
+
+    .v14-perf-monitor {
+        background: rgba(15, 23, 42, 0.95);
+    }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .v14-perf-monitor {
+        bottom: 10px;
+        right: 10px;
+        font-size: 10px;
+        padding: 8px 12px;
+    }
+
+    .version-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+}
+
+/* Print Optimizations */
+@media print {
+    .v14-perf-monitor,
+    .v14-secure-indicator {
+        display: none !important;
+    }
+}
+
+/* Performance: Reduce Motion for Users */
+@media (prefers-reduced-motion: reduce) {
+    .v14-toast,
+    .version-badge {
+        animation: none;
+    }
+}
+
+/* Security: Prevent Text Selection in Sensitive Areas */
+.v14-no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Feature: Clipboard Protection */
+.v14-clipboard-protected {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.v14-clipboard-protected::selection {
+    background: transparent;
+}
