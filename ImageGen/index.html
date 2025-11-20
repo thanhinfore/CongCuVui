@@ -378,6 +378,15 @@
                             <option value="800">Extra Bold</option>
                         </select>
                     </div>
+
+                    <!-- Font Style -->
+                    <div class="style-group">
+                        <label class="form-label">Font Style</label>
+                        <select id="fontStyleSelect" class="select-input">
+                            <option value="normal" selected>Normal</option>
+                            <option value="italic">Italic</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -461,8 +470,8 @@
                 </div>
             </div>
 
-            <!-- Sub-group 3: Layout (Collapsed by default) -->
-            <div class="v13-sub-group collapsed">
+            <!-- Sub-group 3: Layout (Expanded by default for easy access to Text Rotation) -->
+            <div class="v13-sub-group expanded">
                 <div class="v13-sub-header">
                     <svg class="v13-sub-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -684,7 +693,6 @@
 
     <!-- Hidden fields for backward compatibility -->
     <div style="display: none;">
-        <select id="fontStyleSelect"><option value="normal">Normal</option></select>
         <input type="checkbox" id="textUnderlineCheckbox">
         <input type="radio" name="colorMode" value="solid" checked>
         <input type="radio" name="colorMode" value="gradient">
