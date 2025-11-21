@@ -43,7 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EmailConfig.cs" />
+    <Compile Include="EmailSender.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="MaillistReader.cs" />
+    <Compile Include="ProgressTracker.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Recipient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
