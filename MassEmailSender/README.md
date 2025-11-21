@@ -13,6 +13,17 @@ Chương trình gửi email hàng loạt với tính năng rate limiting, retry 
 - **Auto Subject Extraction**: Tự động lấy nội dung thẻ `<h1>` làm subject email
 - **Subject Personalization**: Cá nhân hóa subject với tên người nhận (hỗ trợ placeholder {Name})
 
+### 🛡️ Anti-Spam Features (NEW!)
+
+- **Plain Text + HTML**: Gửi cả 2 versions để tăng deliverability score
+- **Unique Message-ID**: Mỗi email có Message-ID riêng biệt
+- **Reply-To Header**: Thiết lập địa chỉ reply-to chính xác
+- **List-Unsubscribe**: RFC 2369 compliant unsubscribe header
+- **Randomized Delays**: Delay ngẫu nhiên ±20% để tự nhiên hơn
+- **Unsubscribe Link**: Tự động thêm link hủy đăng ký trong email
+- **Normal Priority**: Không dùng high priority để tránh spam flag
+- **Professional Headers**: X-Mailer và các headers chuẩn
+
 ## Cấu trúc file
 
 ```
@@ -83,6 +94,14 @@ SmtpPassword = "infore282811"
 // Email From
 FromEmail = "noreply@luyenai.vn"
 FromName = "Thầy Hiệu trưởng Luyện AI"
+ReplyToEmail = "support@luyenai.vn"  // Địa chỉ reply-to
+ReplyToName = "Hỗ trợ Luyện AI"
+
+// Anti-Spam Settings
+UnsubscribeUrl = "https://luyenai.vn/unsubscribe?email={Email}"
+AddUnsubscribeHeader = true          // Thêm List-Unsubscribe header
+IncludePlainTextVersion = true       // Gửi cả plain text version
+RandomizeDelays = true               // Randomize delays ±20%
 
 // Subject Configuration
 UseH1AsSubject = true               // Tự động lấy subject từ thẻ <h1>
@@ -187,6 +206,126 @@ user1@example.com	Nguyễn Văn A
 ### Kịch bản 3: Không có thẻ <h1>
 
 Nếu không có thẻ `<h1>` trong content.txt, chương trình sẽ sử dụng `Subject` trong `EmailConfig.cs`.
+
+## 🛡️ Anti-Spam Best Practices
+
+Chương trình đã tích hợp nhiều tính năng để tránh spam filter. Dưới đây là những gì đã được implement:
+
+### 1. Email Headers Tự Động
+
+**Message-ID**: Mỗi email có unique Message-ID theo format:
+```
+<emailhash.timestamp.random@luyenai.vn>
+```
+
+**Reply-To**: Email tự động có Reply-To header để người nhận có thể trả lời:
+```
+Reply-To: Hỗ trợ Luyện AI <support@luyenai.vn>
+```
+
+**List-Unsubscribe**: Chuẩn RFC 2369 cho phép người dùng unsubscribe dễ dàng:
+```
+List-Unsubscribe: <https://luyenai.vn/unsubscribe?email=...>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+```
+
+### 2. Multi-Part Email (Plain Text + HTML)
+
+Email được gửi với CẢ 2 versions:
+- **Plain Text**: Convert từ HTML, loại bỏ tags
+- **HTML**: Version đẹp với styling
+
+Điều này tăng đáng kể deliverability score!
+
+### 3. Randomized Delays
+
+Thay vì delay cố định (1000ms), delay được randomize ±20%:
+- Email 1: 850ms
+- Email 2: 1150ms
+- Email 3: 920ms
+
+Pattern tự nhiên hơn → không bị detect là bot!
+
+### 4. Unsubscribe Link
+
+Template tự động có unsubscribe link trong footer:
+```html
+<a href="https://luyenai.vn/unsubscribe?email={Email}">
+    hủy đăng ký tại đây
+</a>
+```
+
+Link này cũng được thêm vào email header (List-Unsubscribe).
+
+### 5. Sender Best Practices
+
+✅ **Đã làm**:
+- Consistent From address (noreply@luyenai.vn)
+- Valid Reply-To (support@luyenai.vn)
+- Normal priority (không dùng High)
+- Professional X-Mailer header
+
+⚠️ **BẠN CẦN LÀM** (phía server):
+- **SPF Record**: Thêm TXT record cho domain:
+  ```
+  v=spf1 mx a ip4:YOUR_SERVER_IP ~all
+  ```
+
+- **DKIM**: Cấu hình DKIM signing cho mail server
+
+- **DMARC**: Thêm DMARC policy:
+  ```
+  v=DMARC1; p=quarantine; rua=mailto:postmaster@luyenai.vn
+  ```
+
+- **Reverse DNS (PTR)**: Đảm bảo server IP có PTR record đúng
+
+### 6. Content Best Practices
+
+✅ **Nên làm**:
+- Có cả text và image (balanced ratio)
+- Subject rõ ràng, không spam words ("FREE!!!", "URGENT!!!")
+- Có physical address trong footer
+- Có unsubscribe link rõ ràng
+- Personalize với tên người nhận
+
+❌ **Tránh**:
+- ALL CAPS trong subject
+- Quá nhiều dấu chấm than (!!!)
+- Spam words: "click here", "make money", "free money"
+- Quá nhiều links trong 1 email
+- Gửi attachments lớn
+- Shortlinks (bit.ly, tinyurl)
+
+### 7. Warm-up Email Server
+
+Khi gửi lần đầu với server mới, nên **warm-up**:
+
+**Ngày 1**: 50 emails
+**Ngày 2**: 100 emails
+**Ngày 3**: 200 emails
+**Ngày 4**: 500 emails
+**Ngày 5**: 1,000 emails
+**Ngày 6+**: Full speed
+
+Điều chỉnh trong code bằng cách giới hạn recipients:
+```csharp
+// Trong Program.cs, giới hạn số email đầu tiên
+List<Recipient> todayRecipients = pendingRecipients.Take(50).ToList();
+```
+
+### 8. Monitor Deliverability
+
+Theo dõi các metrics:
+- **Bounce Rate**: Nên < 2%
+- **Complaint Rate**: Nên < 0.1%
+- **Open Rate**: Thường 15-25%
+- **Click Rate**: Thường 2-5%
+
+Tools để test:
+- [Mail-Tester.com](https://www.mail-tester.com) - Test spam score
+- [MXToolbox](https://mxtoolbox.com) - Check DNS records
+- [Google Postmaster Tools](https://postmaster.google.com) - Monitor Gmail deliverability
 
 ## Lưu ý quan trọng
 

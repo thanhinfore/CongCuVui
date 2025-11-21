@@ -1,120 +1,85 @@
-﻿<!DOCTYPE html>
-<html lang="vi">
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Khai giảng lớp học Tạo Video AI Bán Hàng A-Z</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.6;
-            color: #222222;
-        }
-        .email-container {
-            max-width: 720px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            padding: 24px 20px 32px 20px;
-            box-sizing: border-box;
-        }
-        h1 {
-            font-size: 22px;
-            margin: 0 0 16px 0;
-            color: #c0392b;
-            text-transform: uppercase;
-        }
-        p {
-            margin: 12px 0;
-            font-size: 15px;
-        }
-        .highlight {
-            font-weight: bold;
-        }
-        .cta-block {
-            margin: 20px 0;
-            text-align: left;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 18px;
-            font-size: 15px;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        .btn-primary {
-            background-color: #1a73e8;
-            color: #ffffff !important;
-        }
-        .btn-secondary {
-            background-color: #16a085;
-            color: #ffffff !important;
-        }
-        a {
-            color: #1a73e8;
-        }
-        .footer {
-            margin-top: 24px;
-            font-size: 13px;
-            color: #777777;
-        }
-        @media only screen and (max-width: 600px) {
-            .email-container {
-                padding: 16px 14px 24px 14px;
-            }
-        }
-    </style>
+    <title>Email từ Luyện AI</title>
 </head>
-<body>
-    <div class="email-container">
-        <h1>Khai giảng lớp học Tạo Video AI Bán Hàng A-Z (AI Video Affiliate)</h1>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td style="padding: 20px 0;">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 0 30px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">
+                                Xin chào {Name}, chào mừng đến với Luyện AI
+                            </h1>
+                        </td>
+                    </tr>
 
-        <p><span class="highlight">Tối nay</span>, chương trình <span class="highlight">Luyện AI</span> trân trọng mời {name} tham dự lớp học đặc biệt về ứng dụng trí tuệ nhân tạo trong bán hàng trực tuyến.</p>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px 30px 40px 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #333333; font-size: 16px; line-height: 1.6;">
+                                        <p style="margin: 0 0 20px 0;">Xin chào <strong>{Name}</strong>,</p>
 
-        <p>Chuyên gia <span class="highlight">Trần Đức Chung</span>, người có hơn 10 năm thực chiến thương mại điện tử xuyên biên giới và nhiều kinh nghiệm ứng dụng AI vào vận hành kinh doanh, sẽ trực tiếp hướng dẫn cách tạo <span class="highlight">video AI bán hàng từ A đến Z</span>, giúp mọi người nắm bắt cơ hội gia tăng thu nhập với AI hiện đại.</p>
+                                        <p style="margin: 0 0 20px 0;">
+                                            Chúng tôi rất vui được gửi đến bạn thông tin quan trọng này.
+                                        </p>
 
-        <p>Anh Chung là thành viên <span class="highlight">CLB CAIO</span> của Luyện AI, am hiểu sâu sắc cách kết hợp công nghệ và chiến lược để giúp người bán hàng tiếp cận thị trường quốc tế qua các nền tảng mạng xã hội và thương mại điện tử toàn cầu.</p>
+                                        <p style="margin: 0 0 20px 0;">
+                                            Đây là email mẫu từ hệ thống Mass Email Sender.
+                                            Bạn có thể tùy chỉnh nội dung này theo ý muốn.
+                                        </p>
 
-        <p>Lớp học dài hạn và buổi khai giảng được thiết kế <span class="highlight">dành riêng cho các học viên Premium</span>. Đây là cơ hội để nắm bắt kỹ thuật mới, tối ưu quy trình bán hàng, và mở rộng thị trường ra thế giới thông qua các công cụ AI hiện đại.</p>
+                                        <div style="text-align: center; margin: 30px 0;">
+                                            <a href="https://luyenai.vn"
+                                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                      color: #ffffff;
+                                                      padding: 15px 40px;
+                                                      text-decoration: none;
+                                                      border-radius: 5px;
+                                                      font-weight: bold;
+                                                      display: inline-block;">
+                                                Truy cập Luyện AI
+                                            </a>
+                                        </div>
 
-        <p>Trân trọng kính mời {name} tham gia. Nếu không tham dự được buổi khai giảng, {name} vẫn có thể xem lại video được ghi hình, tham gia các buổi giảng tiếp theo và sinh hoạt mỗi ngày cùng cộng đồng học viên của lớp.</p>
+                                        <p style="margin: 20px 0 0 0;">
+                                            Trân trọng,<br>
+                                            <strong>Đội ngũ Luyện AI</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-        <div class="cta-block">
-            <p><span class="highlight">Thời gian:</span> 21h tối nay</p>
-            <p><span class="highlight">Hình thức:</span> Học online qua Google Meet</p>
-            <p><span class="highlight">Link phòng học:</span><br>
-                <a href="https://meet.google.com/hyb-rsuv-gsv" target="_blank">
-                    https://meet.google.com/hyb-rsuv-gsv
-                </a>
-            </p>
-        </div>
-
-        <div class="cta-block">
-            <p><span class="highlight">Trở thành học viên Premium để tham gia lớp học dài hạn trên Luyện AI:</span></p>
-            <p>Để trở thành học viên Premium của chương trình Luyện AI và tham gia lớp học này, xin mời {name} đăng ký tại website Luyện AI theo mã giới thiệu của anh Trần Đức Chung:</p>
-            <p>
-                <a class="btn btn-secondary" href="https://luyenai.vn/?ref=90460229" target="_blank">
-                    Đăng ký Luyện AI Premium theo mã của anh Trần Đức Chung
-                </a>
-            </p>
-            <p>Nếu link nút bấm không hiển thị, {name} có thể truy cập trực tiếp tại địa chỉ sau:<br>
-                <a href="https://luyenai.vn/?ref=90460229" target="_blank">
-                    https://luyenai.vn/?ref=90460229
-                </a>
-            </p>
-        </div>
-
-        <p>Rất mong được đón {name} trong buổi học tối nay.</p>
-
-        <p>Trân trọng,</p>
-        <p><span class="highlight">Chương trình Luyện AI</span></p>
-
-        <div class="footer">
-            <p>Lưu ý: Email này được gửi đến {name} vì {name} là thành viên của LuyenAI.vn, nếu tài khoản Premium của {name} đã hết hạn sử dụng, {name} có thể vào cộng đồng nhờ các thành viên khác cấp lại qua Học bổng 33</p>
-        </div>
-    </div>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f8f8; padding: 30px 30px; text-align: center;">
+                            <p style="color: #666666; font-size: 14px; margin: 0 0 10px 0;">
+                                Email này được gửi đến: {Email}
+                            </p>
+                            <p style="color: #999999; font-size: 12px; margin: 0 0 10px 0;">
+                                Nếu bạn không muốn nhận email này nữa,
+                                <a href="https://luyenai.vn/unsubscribe?email={Email}" style="color: #667eea; text-decoration: underline;">
+                                    hủy đăng ký tại đây
+                                </a>
+                            </p>
+                            <p style="color: #999999; font-size: 12px; margin: 0;">
+                                © 2024 Luyện AI. All rights reserved.<br>
+                                Địa chỉ: Hà Nội, Việt Nam
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
