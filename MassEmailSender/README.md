@@ -10,6 +10,8 @@ Chương trình gửi email hàng loạt với tính năng rate limiting, retry 
 - **Progress Tracking**: Theo dõi tiến độ realtime với ước tính thời gian còn lại
 - **Error Logging**: Log chi tiết các lỗi phát sinh
 - **Template Personalization**: Tự động thay thế {Name} và {Email} trong nội dung email
+- **Auto Subject Extraction**: Tự động lấy nội dung thẻ `<h1>` làm subject email
+- **Subject Personalization**: Cá nhân hóa subject với tên người nhận (hỗ trợ placeholder {Name})
 
 ## Cấu trúc file
 
@@ -50,16 +52,24 @@ Tạo file HTML chứa nội dung email. Bạn có thể sử dụng các placeh
 - `{Name}` hoặc `{name}`: Sẽ được thay thế bằng tên người nhận
 - `{Email}` hoặc `{email}`: Sẽ được thay thế bằng email người nhận
 
+**Quan trọng**: Nội dung trong thẻ `<h1>` sẽ tự động được sử dụng làm **subject** của email!
+
 Ví dụ:
 ```html
 <!DOCTYPE html>
 <html>
 <body>
-    <h1>Xin chào {Name}</h1>
+    <!-- Nội dung trong h1 sẽ là subject: "Xin chào Lê Công Thành, chào mừng đến với Luyện AI" -->
+    <h1>Xin chào {Name}, chào mừng đến với Luyện AI</h1>
     <p>Email này được gửi đến: {Email}</p>
 </body>
 </html>
 ```
+
+**Personalization trong Subject**:
+- Subject sẽ được lấy từ thẻ `<h1>` đầu tiên trong HTML
+- Placeholder `{Name}` trong `<h1>` sẽ được thay thế bằng tên thật của người nhận
+- Ví dụ: "Xin chào {Name}" → "Xin chào Lê Công Thành"
 
 ### 3. Cấu hình (trong EmailConfig.cs)
 
@@ -74,8 +84,10 @@ SmtpPassword = "infore282811"
 FromEmail = "noreply@luyenai.vn"
 FromName = "Thầy Hiệu trưởng Luyện AI"
 
-// Subject
-Subject = "Thông báo từ Luyện AI"
+// Subject Configuration
+UseH1AsSubject = true               // Tự động lấy subject từ thẻ <h1>
+Subject = "Thông báo từ Luyện AI"  // Subject mặc định nếu không có <h1>
+PersonalizeSubject = true           // Cá nhân hóa subject với {Name}
 
 // Rate Limiting
 DelayBetweenEmails = 1000          // 1 giây giữa mỗi email
@@ -86,6 +98,12 @@ DelayBetweenBatches = 5000         // 5 giây giữa các batch
 MaxRetries = 3                      // Retry tối đa 3 lần
 RetryDelay = 5000                   // 5 giây giữa các retry
 ```
+
+**Giải thích Subject Configuration**:
+- `UseH1AsSubject = true`: Tự động extract nội dung thẻ `<h1>` làm subject
+- `UseH1AsSubject = false`: Dùng `Subject` cố định cho tất cả email
+- `PersonalizeSubject = true`: Thay thế `{Name}` trong subject bằng tên người nhận
+- `PersonalizeSubject = false`: Giữ nguyên subject, không personalize
 
 ### 4. Chạy chương trình
 
@@ -137,6 +155,38 @@ Với cấu hình mặc định:
 **Khuyến nghị**:
 - Để gửi nhanh hơn, giảm `DelayBetweenEmails` xuống 500ms
 - Với 150,000 emails và delay 500ms: ~21.5 giờ
+
+## Ví dụ Subject Personalization
+
+### Kịch bản 1: Subject với tên người nhận
+
+**File content.txt**:
+```html
+<h1>Xin chào {Name}, chào mừng đến với Luyện AI</h1>
+```
+
+**File maillist.txt**:
+```
+admin@orm.vn	Lê Công Thành
+user1@example.com	Nguyễn Văn A
+```
+
+**Kết quả**:
+- Email đến admin@orm.vn có subject: "Xin chào Lê Công Thành, chào mừng đến với Luyện AI"
+- Email đến user1@example.com có subject: "Xin chào Nguyễn Văn A, chào mừng đến với Luyện AI"
+
+### Kịch bản 2: Subject không có placeholder
+
+**File content.txt**:
+```html
+<h1>Thông báo quan trọng từ Luyện AI</h1>
+```
+
+**Kết quả**: Tất cả email đều có subject: "Thông báo quan trọng từ Luyện AI"
+
+### Kịch bản 3: Không có thẻ <h1>
+
+Nếu không có thẻ `<h1>` trong content.txt, chương trình sẽ sử dụng `Subject` trong `EmailConfig.cs`.
 
 ## Lưu ý quan trọng
 

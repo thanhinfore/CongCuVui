@@ -20,7 +20,14 @@ namespace MassEmailSender
         public string FromName { get; set; } = "Thầy Hiệu trưởng Luyện AI";
 
         // Email Subject
+        // Nếu UseH1AsSubject = true, subject sẽ được lấy từ thẻ <h1> trong content.txt
+        // Nếu không tìm thấy <h1>, sẽ dùng Subject bên dưới
+        public bool UseH1AsSubject { get; set; } = true;
         public string Subject { get; set; } = "Thông báo từ Luyện AI";
+
+        // Personalize subject với tên người nhận
+        // Ví dụ: "Xin chào {Name}, đây là thông báo quan trọng"
+        public bool PersonalizeSubject { get; set; } = true;
 
         // Rate Limiting (để tránh quá tải server)
         // Với 150k emails, delay 2s = ~83 giờ = ~3.5 ngày

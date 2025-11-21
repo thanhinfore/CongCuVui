@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace MassEmailSender
@@ -15,6 +16,7 @@ namespace MassEmailSender
         private EmailConfig _config;
         private Logger _logger;
         private string _htmlContent;
+        private string _baseSubject;
 
         public EmailSender(EmailConfig config, Logger logger)
         {
@@ -23,6 +25,9 @@ namespace MassEmailSender
 
             // Đọc HTML content từ file
             LoadHtmlContent();
+
+            // Extract subject từ <h1> nếu được cấu hình
+            ExtractBaseSubject();
         }
 
         /// <summary>
@@ -46,6 +51,88 @@ namespace MassEmailSender
         }
 
         /// <summary>
+        /// Extract base subject từ <h1> hoặc sử dụng default
+        /// </summary>
+        private void ExtractBaseSubject()
+        {
+            if (_config.UseH1AsSubject)
+            {
+                string h1Content = ExtractH1Content(_htmlContent);
+                if (!string.IsNullOrWhiteSpace(h1Content))
+                {
+                    _baseSubject = h1Content;
+                    _logger.Log($"Sử dụng subject từ thẻ <h1>: {_baseSubject}");
+                }
+                else
+                {
+                    _baseSubject = _config.Subject;
+                    _logger.Log($"Không tìm thấy thẻ <h1>, sử dụng subject mặc định: {_baseSubject}");
+                }
+            }
+            else
+            {
+                _baseSubject = _config.Subject;
+                _logger.Log($"Sử dụng subject mặc định: {_baseSubject}");
+            }
+        }
+
+        /// <summary>
+        /// Extract nội dung từ thẻ <h1> trong HTML
+        /// </summary>
+        private string ExtractH1Content(string html)
+        {
+            try
+            {
+                // Regex để tìm nội dung trong thẻ <h1>...</h1>
+                // Hỗ trợ cả <h1 style="...">content</h1>
+                Match match = Regex.Match(html, @"<h1[^>]*>(.*?)</h1>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                if (match.Success)
+                {
+                    string content = match.Groups[1].Value;
+
+                    // Remove HTML tags bên trong (nếu có)
+                    content = Regex.Replace(content, @"<[^>]+>", "");
+
+                    // Decode HTML entities
+                    content = System.Net.WebUtility.HtmlDecode(content);
+
+                    // Trim whitespace
+                    content = content.Trim();
+
+                    return content;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"Lỗi khi extract <h1>: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Personalize subject với thông tin người nhận
+        /// </summary>
+        private string PersonalizeSubject(Recipient recipient)
+        {
+            if (!_config.PersonalizeSubject)
+            {
+                return _baseSubject;
+            }
+
+            string subject = _baseSubject;
+
+            // Thay thế các placeholder
+            subject = subject.Replace("{Name}", recipient.Name);
+            subject = subject.Replace("{name}", recipient.Name);
+            subject = subject.Replace("{Email}", recipient.Email);
+            subject = subject.Replace("{email}", recipient.Email);
+
+            return subject;
+        }
+
+        /// <summary>
         /// Gửi email cho một người nhận với retry logic
         /// </summary>
         public bool SendEmail(Recipient recipient)
@@ -56,14 +143,15 @@ namespace MassEmailSender
             {
                 try
                 {
-                    // Personalize content
+                    // Personalize content và subject
                     string personalizedContent = PersonalizeContent(recipient);
+                    string personalizedSubject = PersonalizeSubject(recipient);
 
                     // Tạo email message
                     MailMessage msg = new MailMessage();
                     msg.To.Add(recipient.Email);
                     msg.From = new MailAddress(_config.FromEmail, _config.FromName);
-                    msg.Subject = _config.Subject;
+                    msg.Subject = personalizedSubject;
                     msg.Body = personalizedContent;
                     msg.IsBodyHtml = true;
                     msg.BodyEncoding = Encoding.UTF8;
