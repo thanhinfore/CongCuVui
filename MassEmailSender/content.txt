@@ -113,7 +113,7 @@
         <p><span class="highlight">Chương trình Luyện AI</span></p>
 
         <div class="footer">
-            <p>Lưu ý: Email này được gửi đến anh chị vì anh chị có quan tâm đến các hoạt động của Luyện AI và cộng đồng học AI thực chiến.</p>
+            <p>Lưu ý: Email này được gửi đến anh chị vì anh chị là thành viên của LuyenAI.vn, nếu tài khoản Premium của anh chị đã hết hạn sử dụng, anh chị có thể vào cộng đồng nhờ các thành viên khác cấp lại qua Học bổng 33</p>
         </div>
     </div>
 </body>
