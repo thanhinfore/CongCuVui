@@ -18,6 +18,14 @@ namespace MassEmailSender
         // Email From
         public string FromEmail { get; set; } = "noreply@luyenai.vn";
         public string FromName { get; set; } = "Thầy Hiệu trưởng Luyện AI";
+        public string ReplyToEmail { get; set; } = "support@luyenai.vn"; // Reply-To address
+        public string ReplyToName { get; set; } = "Hỗ trợ Luyện AI";
+
+        // Anti-Spam Settings
+        public string UnsubscribeUrl { get; set; } = "https://luyenai.vn/unsubscribe?email={Email}";
+        public bool AddUnsubscribeHeader { get; set; } = true;
+        public bool IncludePlainTextVersion { get; set; } = true; // Thêm plain text version
+        public bool RandomizeDelays { get; set; } = true; // Randomize delays để tự nhiên hơn
 
         // Email Subject
         // Nếu UseH1AsSubject = true, subject sẽ được lấy từ thẻ <h1> trong content.txt
