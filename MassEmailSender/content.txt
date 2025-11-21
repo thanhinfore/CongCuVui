@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Khai giảng lớp học Tạo Video AI Bán Hàng A-Z</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #222222;
+        }
+        .email-container {
+            max-width: 720px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 24px 20px 32px 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 22px;
+            margin: 0 0 16px 0;
+            color: #c0392b;
+            text-transform: uppercase;
+        }
+        p {
+            margin: 12px 0;
+            font-size: 15px;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .cta-block {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            font-size: 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            color: #ffffff !important;
+        }
+        .btn-secondary {
+            background-color: #16a085;
+            color: #ffffff !important;
+        }
+        a {
+            color: #1a73e8;
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #777777;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                padding: 16px 14px 24px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <h1>Khai giảng lớp học Tạo Video AI Bán Hàng A-Z (AI Video Affiliate)</h1>
+
+        <p><span class="highlight">Tối nay</span>, chương trình <span class="highlight">Luyện AI</span> trân trọng mời anh chị tham dự lớp học đặc biệt về ứng dụng trí tuệ nhân tạo trong bán hàng trực tuyến.</p>
+
+        <p>Chuyên gia <span class="highlight">Trần Đức Chung</span>, người có hơn 10 năm thực chiến thương mại điện tử xuyên biên giới và nhiều kinh nghiệm ứng dụng AI vào vận hành kinh doanh, sẽ trực tiếp hướng dẫn cách tạo <span class="highlight">video AI bán hàng từ A đến Z</span>, giúp mọi người nắm bắt cơ hội gia tăng thu nhập với AI hiện đại.</p>
+
+        <p>Anh Chung là thành viên <span class="highlight">CLB CAIO</span> của Luyện AI, am hiểu sâu sắc cách kết hợp công nghệ và chiến lược để giúp người bán hàng tiếp cận thị trường quốc tế qua các nền tảng mạng xã hội và thương mại điện tử toàn cầu.</p>
+
+        <p>Lớp học dài hạn và buổi khai giảng được thiết kế <span class="highlight">dành riêng cho các học viên Premium</span>. Đây là cơ hội để nắm bắt kỹ thuật mới, tối ưu quy trình bán hàng, và mở rộng thị trường ra thế giới thông qua các công cụ AI hiện đại.</p>
+
+        <p>Trân trọng kính mời anh chị em tham gia. Nếu không tham dự được buổi khai giảng, anh chị em vẫn có thể xem lại video được ghi hình, tham gia các buổi giảng tiếp theo và sinh hoạt mỗi ngày cùng cộng đồng học viên của lớp.</p>
+
+        <div class="cta-block">
+            <p><span class="highlight">Thời gian:</span> 21h tối nay</p>
+            <p><span class="highlight">Hình thức:</span> Học online qua Google Meet</p>
+            <p><span class="highlight">Link phòng học:</span><br>
+                <a href="https://meet.google.com/hyb-rsuv-gsv" target="_blank">
+                    https://meet.google.com/hyb-rsuv-gsv
+                </a>
+            </p>
+        </div>
+
+        <div class="cta-block">
+            <p><span class="highlight">Trở thành học viên Premium để tham gia lớp học dài hạn trên Luyện AI:</span></p>
+            <p>Để trở thành học viên Premium của chương trình Luyện AI và tham gia lớp học này, xin mời anh chị đăng ký tại website Luyện AI theo mã giới thiệu của anh Trần Đức Chung:</p>
+            <p>
+                <a class="btn btn-secondary" href="https://luyenai.vn/?ref=90460229" target="_blank">
+                    Đăng ký Luyện AI Premium theo mã của anh Trần Đức Chung
+                </a>
+            </p>
+            <p>Nếu link nút bấm không hiển thị, anh chị có thể truy cập trực tiếp tại địa chỉ sau:<br>
+                <a href="https://luyenai.vn/?ref=90460229" target="_blank">
+                    https://luyenai.vn/?ref=90460229
+                </a>
+            </p>
+        </div>
+
+        <p>Rất mong được đón anh chị em trong buổi học tối nay.</p>
+
+        <p>Trân trọng,</p>
+        <p><span class="highlight">Chương trình Luyện AI</span></p>
+
+        <div class="footer">
+            <p>Lưu ý: Email này được gửi đến anh chị vì anh chị có quan tâm đến các hoạt động của Luyện AI và cộng đồng học AI thực chiến.</p>
+        </div>
+    </div>
+</body>
+</html>
