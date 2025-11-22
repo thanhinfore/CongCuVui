@@ -1,6 +1,14 @@
 // ========================================
-// Radial Bar Chart Engine - CIRCULAR RACING VISUALIZATION v1.0
+// Radial Bar Chart Engine - CIRCULAR RACING VISUALIZATION v2.0
 // Beautiful polar bar chart with animated racing bars radiating from center
+// 🚀 v2.0 ENHANCEMENTS: Premium circular visualization
+//    - Motion blur on rotating bars
+//    - Advanced particle system with rotation & decay
+//    - Conic gradient effect simulation
+//    - Enhanced center circle with 4-layer glow
+//    - Dynamic light positioning for realistic depth
+//    - Elastic & bounce easing for playful animations
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class RadialBarChartEngine {

@@ -1,7 +1,15 @@
 // ========================================
-// Stream Graph Engine Module - v11.0 Graphics Excellence
+// Stream Graph Engine Module - v12.0 FLOW MASTERY EDITION
 // FLOW VISUALIZATION: Enhanced gradients, smooth curves, and depth effects
 // Premium graphics with multi-layer shadows and beautiful color blending
+//
+// 🚀 v12.0 ENHANCEMENTS: Fluid dynamics visualization
+//    - Smooth Bezier curves (linear → catmull-rom splines)
+//    - 3-layer stream glow/bloom effects
+//    - Particle emissions on stream value changes
+//    - Motion blur for flowing animations
+//    - Enhanced stream gradients with depth
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class StreamGraphEngine {
