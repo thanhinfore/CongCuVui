@@ -182,7 +182,7 @@ function initDefaultData() {
         y: 0,
         size: 25,
         color: getColorByDistance(0),
-        type: 'social' // Default type
+        category: 'social' // Node category (family/social)
     });
     state.selectedForExport = new Set();
     saveData();
@@ -334,10 +334,10 @@ function switchTab(tab) {
             graph.setNodeAttribute(node, 'hidden', false);
         });
     } else {
-        // Show only nodes of selected type
+        // Show only nodes of selected category
         graph.forEachNode((node) => {
-            const nodeType = graph.getNodeAttribute(node, 'type') || 'social';
-            graph.setNodeAttribute(node, 'hidden', nodeType !== tab);
+            const nodeCategory = graph.getNodeAttribute(node, 'category') || 'social';
+            graph.setNodeAttribute(node, 'hidden', nodeCategory !== tab);
         });
     }
 
@@ -425,7 +425,7 @@ function openModal(nodeId, mode = 'EDIT') {
         const attr = graph.getNodeAttributes(nodeId);
         ui.title.innerText = attr.label;
         ui.inpLabel.value = attr.label;
-        ui.inpType.value = attr.type || 'social';
+        ui.inpType.value = attr.category || 'social';
         if (ui.toggleSelection) ui.toggleSelection.checked = state.selectedForExport.has(nodeId);
         ui.btnSave.innerHTML = '<i class="fas fa-save"></i> Lưu';
 
@@ -651,7 +651,7 @@ ui.btnSave.addEventListener('click', () => {
 
         graph.addNode(newId, {
             label: label,
-            type: type,
+            category: type,
             distance: 0,
             size: 15,
             color: '#999',
@@ -674,7 +674,7 @@ ui.btnSave.addEventListener('click', () => {
         if (state.selectedNode) {
             graph.setNodeAttribute(state.selectedNode, 'label', label);
             if (state.selectedNode !== 'center') {
-                graph.setNodeAttribute(state.selectedNode, 'type', type);
+                graph.setNodeAttribute(state.selectedNode, 'category', type);
             }
             if (shouldSelect) {
                 state.selectedForExport.add(state.selectedNode);
