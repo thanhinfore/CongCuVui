@@ -93,7 +93,7 @@ function calculateDistancesFromCenter() {
 }
 
 // ✨ Apply colors based on distance from center
-function applyColorsByDistance() {
+function applyColorsByDistance(showNotification = true) {
     const distances = calculateDistancesFromCenter();
 
     graph.forEachNode((node) => {
@@ -104,7 +104,9 @@ function applyColorsByDistance() {
     });
 
     renderer.refresh();
-    showToast('Đã cập nhật màu sắc theo khoảng cách!', 'success');
+    if (showNotification) {
+        showToast('Đã cập nhật màu sắc theo khoảng cách!', 'success');
+    }
 }
 
 // ==========================================
@@ -868,7 +870,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ==========================================
 
 if (!loadData()) initDefaultData();
-applyColorsByDistance();
 updateSelectionUI();
 updateAutosaveBadge();
 
@@ -878,6 +879,9 @@ renderer = new Sigma(graph, container, {
     defaultEdgeType: 'line',
     edgeProgramClasses: {},
 });
+
+// Apply colors after renderer is ready (silent init)
+applyColorsByDistance(false);
 
 setupDragAndDrop();
 setupClickHandlers();
