@@ -26,6 +26,7 @@ let state = {
     mode: 'NORMAL',
     draggedNode: null,  // Node đang được kéo
     isDragging: false,  // Cờ kiểm tra đang kéo
+    hoveredTarget: null, // Node đang được rê chuột qua trong lúc kéo
     selectedForExport: new Set(),
     lastSaved: null
 };
@@ -268,6 +269,18 @@ renderer.on('clickStage', () => {
 const camera = renderer.getCamera();
 const captor = renderer.getMouseCaptor();
 
+// Theo dõi node đang được hover khi kéo để bắt thả chính xác hơn
+renderer.on('enterNode', (e) => {
+    if (state.isDragging && state.draggedNode !== e.node) {
+        state.hoveredTarget = e.node;
+    }
+});
+renderer.on('leaveNode', (e) => {
+    if (state.hoveredTarget === e.node) {
+        state.hoveredTarget = null;
+    }
+});
+
 // Khi bắt đầu nhấn chuột vào node
 renderer.on('downNode', (e) => {
     state.isDragging = true;
@@ -299,21 +312,24 @@ captor.on('mouseup', () => {
 
         // KIỂM TRA VA CHẠM (COLLISION DETECT)
         // Duyệt qua tất cả các node khác để xem node A có đang đè lên ai không
-        let targetNode = null;
-        const threshold = 5; // Khoảng cách coi như là chạm (đơn vị graph)
+        let targetNode = state.hoveredTarget;
+        const threshold = 8; // Khoảng cách coi như là chạm (đơn vị graph)
 
-        graph.forEachNode((nodeB, attrB) => {
-            if (nodeA !== nodeB) {
-                const dx = posA.x - attrB.x;
-                const dy = posA.y - attrB.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+        if (!targetNode) {
+            graph.forEachNode((nodeB, attrB) => {
+                if (nodeA !== nodeB) {
+                    const dx = posA.x - attrB.x;
+                    const dy = posA.y - attrB.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // Nếu khoảng cách đủ gần -> Coi như thả vào nodeB
-                if (dist < (attrB.size / 3 + threshold)) {
-                    targetNode = nodeB;
+                    // Nếu khoảng cách đủ gần -> Coi như thả vào nodeB
+                    const hoverRadius = (attrB.size || 10) + threshold;
+                    if (dist < hoverRadius) {
+                        targetNode = nodeB;
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Nếu thả vào một node khác -> Hỏi nối
         if (targetNode) {
@@ -337,6 +353,7 @@ captor.on('mouseup', () => {
 
     state.isDragging = false;
     state.draggedNode = null;
+    state.hoveredTarget = null;
     camera.enable(); // Bật lại di chuyển bản đồ
 });
 
