@@ -89,22 +89,21 @@ export class ChatManager {
 
     /**
      * Build prompt from conversation history
+     * Using simple format like GemmaLabelling (no special tokens)
      */
     buildPrompt(userMessage) {
         const settings = this.settingsManager.getSettings();
         const systemPrompt = settings.systemPrompt || 'Bạn là trợ lý AI thông minh và hữu ích.';
 
-        // Format conversation for Gemma 3 model
-        // Note: Gemma 3 doesn't officially support <start_of_turn>system tag
-        // We inject system prompt into the first user message instead
+        // Simple prompt format without <start_of_turn> tags (following GemmaLabelling)
+        // Gemma 3 270M works better with plain text prompts
         let prompt = '';
 
-        // Add conversation history (last 10 messages for context)
-        const recentMessages = this.messages.slice(-10);
+        // Add system prompt as context
+        prompt += `${systemPrompt}\n\n`;
 
-        // Check if this is the first message in conversation
-        const isFirstMessage = recentMessages.length === 0 ||
-            (recentMessages.length === 1 && recentMessages[0].content === userMessage);
+        // Add conversation history (last 5 messages for context)
+        const recentMessages = this.messages.slice(-10);
 
         for (const msg of recentMessages) {
             // Skip if this is the current user message (it will be added separately)
@@ -113,21 +112,14 @@ export class ChatManager {
             }
 
             if (msg.role === 'user') {
-                prompt += `<start_of_turn>user\n${msg.content}<end_of_turn>\n`;
+                prompt += `User: ${msg.content}\n`;
             } else if (msg.role === 'assistant') {
-                prompt += `<start_of_turn>model\n${msg.content}<end_of_turn>\n`;
+                prompt += `Assistant: ${msg.content}\n`;
             }
         }
 
         // Add current user message
-        // For first message, prepend system prompt as context
-        if (isFirstMessage) {
-            prompt += `<start_of_turn>user\n${systemPrompt}\n\n${userMessage}<end_of_turn>\n`;
-        } else {
-            prompt += `<start_of_turn>user\n${userMessage}<end_of_turn>\n`;
-        }
-
-        prompt += `<start_of_turn>model\n`;
+        prompt += `User: ${userMessage}\nAssistant:`;
 
         return prompt;
     }

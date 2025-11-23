@@ -29,35 +29,18 @@ function sendMessage(type, data, id = null) {
 }
 
 /**
- * Detect best available device (WebGPU or WASM)
+ * Detect device - Using WASM for Gemma 3 270M stability
+ * (WebGPU causes <unused42> token issues with this model)
  */
 async function detectDevice() {
-    try {
-        // Check for WebGPU support
-        if ('gpu' in navigator) {
-            const adapter = await navigator.gpu?.requestAdapter();
-            if (adapter) {
-                deviceType = 'webgpu';
-                dtypeConfig = 'fp16'; // FP16 is faster on GPU and sufficient for Gemma 270M
-                sendMessage('deviceInfo', {
-                    device: 'WebGPU',
-                    dtype: 'fp16',
-                    message: 'Phát hiện WebGPU! Sử dụng GPU để tăng tốc đáng kể.'
-                });
-                return;
-            }
-        }
-    } catch (error) {
-        console.warn('WebGPU not available:', error);
-    }
-
-    // Fallback to WASM
+    // Force WASM for Gemma 3 270M following GemmaLabelling approach
     deviceType = 'wasm';
-    dtypeConfig = 'fp32'; // WASM works better with fp32
+    dtypeConfig = 'fp32';
+
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
         dtype: 'fp32',
-        message: 'Sử dụng WASM (CPU). Cân nhắc dùng Chrome/Edge mới nhất để hỗ trợ WebGPU.'
+        message: 'Sử dụng WASM cho Gemma 3 270M (tối ưu cho trình duyệt).'
     });
 }
 
@@ -76,14 +59,15 @@ async function initialize(modelId) {
         await detectDevice();
 
         sendMessage('loading', {
-            message: `Đang tải mô hình Gemma với ${deviceType === 'webgpu' ? 'GPU' : 'CPU'}...`,
+            message: 'Đang tải mô hình Gemma 3 270M với WASM...',
             progress: 10
         });
 
-        // Create text generation pipeline with auto-detected device and dtype
+        // Create text generation pipeline with WASM (following GemmaLabelling approach)
+        // WebGPU has issues with Gemma 3 270M, use WASM for stability
         generator = await pipeline('text-generation', modelId, {
-            device: deviceType,  // Auto-detected: 'webgpu' or 'wasm'
-            dtype: dtypeConfig,  // Auto-selected: 'fp16' for GPU, 'fp32' for CPU
+            device: 'wasm',      // Force WASM (WebGPU causes <unused42> tokens)
+            dtype: 'fp32',       // FP32 for WASM
             progress_callback: (progress) => {
                 if (progress.status === 'downloading') {
                     const percent = progress.progress ? Math.round(progress.progress) : 0;
@@ -148,21 +132,18 @@ async function generate(id, prompt, options) {
             max_new_tokens = 512
         } = options;
 
-        // Generate text with optimized parameters
+        // Generate text with parameters matching GemmaLabelling (proven to work)
         const generationStart = performance.now();
         const output = await generator(prompt, {
             max_new_tokens,
             temperature,
             top_p,
-            top_k: 50,                    // Limit sampling to top 50 tokens for better quality
-            repetition_penalty: 1.15,     // Prevent repetitive responses (higher than GemmaLabelling's 1.1 for chat)
+            top_k: 10,                    // Lower top_k like GemmaLabelling (was 50)
+            repetition_penalty: 1.1,      // Match GemmaLabelling's value
             do_sample: temperature > 0,
             return_full_text: false,
-            // Tokenizer special tokens
             pad_token_id: generator.tokenizer?.pad_token_id,
             eos_token_id: generator.tokenizer?.eos_token_id,
-            // Try to skip special tokens during generation
-            skip_special_tokens: true,
         });
 
         if (shouldStop) {
@@ -206,9 +187,8 @@ async function generate(id, prompt, options) {
                 accumulated
             }, id);
 
-            // Adaptive delay: shorter for GPU (faster), longer for CPU
-            // Also adaptive to word length for more natural streaming
-            const baseDelay = deviceType === 'webgpu' ? 8 : 15; // GPU much faster
+            // WASM delay for smooth streaming
+            const baseDelay = 15; // WASM (CPU) timing
             const wordLengthDelay = Math.min(word.length * 0.5, 5); // Max 5ms extra
             const delay = baseDelay + wordLengthDelay;
 
