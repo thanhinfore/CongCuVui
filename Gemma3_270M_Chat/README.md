@@ -88,7 +88,7 @@ Hướng dẫn chung cho AI về cách trả lời (role, style, format)
 ## 🔧 Công nghệ sử dụng
 
 - **Frontend**: Vanilla JavaScript (ES6 Modules)
-- **AI Model**: Gemma 2 2B IT via Transformers.js (@xenova/transformers)
+- **AI Model**: Gemma 3 270M IT via Transformers.js (@huggingface/transformers)
 - **Storage**: IndexedDB API
 - **Workers**: Web Workers API
 - **Styling**: CSS3 với CSS Variables, Flexbox, Grid
