@@ -65,6 +65,121 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include=".claude\skills\.gitignore" />
+    <Content Include=".claude\skills\algorithmic-art\LICENSE.txt" />
+    <Content Include=".claude\skills\algorithmic-art\templates\generator_template.js" />
+    <Content Include=".claude\skills\algorithmic-art\templates\viewer.html" />
+    <Content Include=".claude\skills\brand-guidelines\LICENSE.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\ArsenalSC-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BigShoulders-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Boldonse-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BricolageGrotesque-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\CrimsonPro-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\DMMono-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\EricaOne-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\GeistMono-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Gloock-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexMono-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSans-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Italiana-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\JetBrainsMono-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Jura-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\LibreBaskerville-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Lora-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\NationalPark-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\NothingYouCouldDo-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Outfit-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\PixelifySans-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\PoiretOne-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\RedHatMono-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Silkscreen-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\SmoochSans-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Tektur-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\WorkSans-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\YoungSerif-OFL.txt" />
+    <Content Include=".claude\skills\canvas-design\LICENSE.txt" />
+    <Content Include=".claude\skills\document-skills\docx\LICENSE.txt" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\pack.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\unpack.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validate.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validation\base.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validation\docx.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validation\pptx.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validation\redlining.py" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml\scripts\validation\__init__.py" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\document.py" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\templates\comments.xml" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\templates\commentsExtended.xml" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\templates\commentsExtensible.xml" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\templates\commentsIds.xml" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\templates\people.xml" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\utilities.py" />
+    <Content Include=".claude\skills\document-skills\docx\scripts\__init__.py" />
+    <Content Include=".claude\skills\document-skills\pdf\LICENSE.txt" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\check_bounding_boxes.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\check_bounding_boxes_test.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\check_fillable_fields.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\convert_pdf_to_images.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\create_validation_image.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\extract_form_field_info.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\fill_fillable_fields.py" />
+    <Content Include=".claude\skills\document-skills\pdf\scripts\fill_pdf_form_with_annotations.py" />
+    <Content Include=".claude\skills\document-skills\pptx\LICENSE.txt" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\pack.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\unpack.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validate.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validation\base.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validation\docx.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validation\pptx.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validation\redlining.py" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml\scripts\validation\__init__.py" />
+    <Content Include=".claude\skills\document-skills\pptx\scripts\html2pptx.js" />
+    <Content Include=".claude\skills\document-skills\pptx\scripts\inventory.py" />
+    <Content Include=".claude\skills\document-skills\pptx\scripts\rearrange.py" />
+    <Content Include=".claude\skills\document-skills\pptx\scripts\replace.py" />
+    <Content Include=".claude\skills\document-skills\pptx\scripts\thumbnail.py" />
+    <Content Include=".claude\skills\document-skills\xlsx\LICENSE.txt" />
+    <Content Include=".claude\skills\document-skills\xlsx\recalc.py" />
+    <Content Include=".claude\skills\frontend-design\LICENSE.txt" />
+    <Content Include=".claude\skills\internal-comms\LICENSE.txt" />
+    <Content Include=".claude\skills\mcp-builder\LICENSE.txt" />
+    <Content Include=".claude\skills\mcp-builder\scripts\connections.py" />
+    <Content Include=".claude\skills\mcp-builder\scripts\evaluation.py" />
+    <Content Include=".claude\skills\mcp-builder\scripts\example_evaluation.xml" />
+    <Content Include=".claude\skills\mcp-builder\scripts\requirements.txt" />
+    <Content Include=".claude\skills\skill-creator\LICENSE.txt" />
+    <Content Include=".claude\skills\skill-creator\scripts\init_skill.py" />
+    <Content Include=".claude\skills\skill-creator\scripts\package_skill.py" />
+    <Content Include=".claude\skills\skill-creator\scripts\quick_validate.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\color_palettes.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\easing.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\frame_composer.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\gif_builder.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\typography.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\validators.py" />
+    <Content Include=".claude\skills\slack-gif-creator\core\visual_effects.py" />
+    <Content Include=".claude\skills\slack-gif-creator\LICENSE.txt" />
+    <Content Include=".claude\skills\slack-gif-creator\requirements.txt" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\bounce.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\explode.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\fade.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\flip.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\kaleidoscope.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\morph.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\move.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\pulse.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\shake.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\slide.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\spin.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\wiggle.py" />
+    <Content Include=".claude\skills\slack-gif-creator\templates\zoom.py" />
+    <Content Include=".claude\skills\theme-factory\LICENSE.txt" />
+    <Content Include=".claude\skills\web-artifacts-builder\LICENSE.txt" />
+    <Content Include=".claude\skills\webapp-testing\examples\console_logging.py" />
+    <Content Include=".claude\skills\webapp-testing\examples\element_discovery.py" />
+    <Content Include=".claude\skills\webapp-testing\examples\static_html_automation.py" />
+    <Content Include=".claude\skills\webapp-testing\LICENSE.txt" />
+    <Content Include=".claude\skills\webapp-testing\scripts\with_server.py" />
     <Content Include="css\chat.css" />
     <Content Include="css\main.css" />
     <Content Include="index.html" />
@@ -82,6 +197,344 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="README.md" />
+    <Content Include=".claude\skills\.claude-plugin\marketplace.json" />
+    <Content Include=".claude\skills\agent_skills_spec.md" />
+    <Content Include=".claude\skills\algorithmic-art\SKILL.md" />
+    <Content Include=".claude\skills\brand-guidelines\SKILL.md" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\ArsenalSC-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BigShoulders-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BigShoulders-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Boldonse-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BricolageGrotesque-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\BricolageGrotesque-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\CrimsonPro-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\CrimsonPro-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\CrimsonPro-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\DMMono-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\EricaOne-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\GeistMono-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\GeistMono-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Gloock-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexMono-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexMono-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexSerif-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexSerif-BoldItalic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexSerif-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\IBMPlexSerif-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSans-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSans-BoldItalic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSans-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSans-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSerif-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\InstrumentSerif-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Italiana-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\JetBrainsMono-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\JetBrainsMono-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Jura-Light.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Jura-Medium.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\LibreBaskerville-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Lora-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Lora-BoldItalic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Lora-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Lora-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\NationalPark-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\NationalPark-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\NothingYouCouldDo-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Outfit-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Outfit-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\PixelifySans-Medium.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\PoiretOne-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\RedHatMono-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\RedHatMono-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Silkscreen-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\SmoochSans-Medium.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Tektur-Medium.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\Tektur-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\WorkSans-Bold.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\WorkSans-BoldItalic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\WorkSans-Italic.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\WorkSans-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\canvas-fonts\YoungSerif-Regular.ttf" />
+    <Content Include=".claude\skills\canvas-design\SKILL.md" />
+    <Content Include=".claude\skills\document-skills\docx\docx-js.md" />
+    <Content Include=".claude\skills\document-skills\docx\ooxml.md" />
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ecma\fouth-edition\opc-contentTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ecma\fouth-edition\opc-coreProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ecma\fouth-edition\opc-digSig.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ecma\fouth-edition\opc-relationships.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-chart.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-chartDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-diagram.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-lockedCanvas.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-main.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-picture.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-spreadsheetDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\dml-wordprocessingDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\pml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-additionalCharacteristics.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-bibliography.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-commonSimpleTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-customXmlDataProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-customXmlSchemaProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesCustom.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesExtended.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesVariantTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-math.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\shared-relationshipReference.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\sml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\vml-main.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\vml-officeDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\vml-presentationDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\vml-spreadsheetDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\vml-wordprocessingDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\wml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ISO-IEC29500-4_2016\xml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\mce\mc.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-2010.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-2012.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-2018.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-cex-2018.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-cid-2016.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-sdtdatahash-2020.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\docx\ooxml\schemas\microsoft\wml-symex-2015.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include=".claude\skills\document-skills\docx\SKILL.md" />
+    <Content Include=".claude\skills\document-skills\pdf\forms.md" />
+    <Content Include=".claude\skills\document-skills\pdf\reference.md" />
+    <Content Include=".claude\skills\document-skills\pdf\SKILL.md" />
+    <Content Include=".claude\skills\document-skills\pptx\html2pptx.md" />
+    <Content Include=".claude\skills\document-skills\pptx\ooxml.md" />
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ecma\fouth-edition\opc-contentTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ecma\fouth-edition\opc-coreProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ecma\fouth-edition\opc-digSig.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ecma\fouth-edition\opc-relationships.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-chart.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-chartDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-diagram.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-lockedCanvas.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-main.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-picture.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-spreadsheetDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\dml-wordprocessingDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\pml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-additionalCharacteristics.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-bibliography.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-commonSimpleTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-customXmlDataProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-customXmlSchemaProperties.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesCustom.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesExtended.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-documentPropertiesVariantTypes.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-math.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\shared-relationshipReference.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\sml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\vml-main.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\vml-officeDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\vml-presentationDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\vml-spreadsheetDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\vml-wordprocessingDrawing.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\wml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\ISO-IEC29500-4_2016\xml.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\mce\mc.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-2010.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-2012.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-2018.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-cex-2018.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-cid-2016.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-sdtdatahash-2020.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include=".claude\skills\document-skills\pptx\ooxml\schemas\microsoft\wml-symex-2015.xsd">
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include=".claude\skills\document-skills\pptx\SKILL.md" />
+    <Content Include=".claude\skills\document-skills\xlsx\SKILL.md" />
+    <Content Include=".claude\skills\frontend-design\SKILL.md" />
+    <Content Include=".claude\skills\internal-comms\examples\3p-updates.md" />
+    <Content Include=".claude\skills\internal-comms\examples\company-newsletter.md" />
+    <Content Include=".claude\skills\internal-comms\examples\faq-answers.md" />
+    <Content Include=".claude\skills\internal-comms\examples\general-comms.md" />
+    <Content Include=".claude\skills\internal-comms\SKILL.md" />
+    <Content Include=".claude\skills\mcp-builder\reference\evaluation.md" />
+    <Content Include=".claude\skills\mcp-builder\reference\mcp_best_practices.md" />
+    <Content Include=".claude\skills\mcp-builder\reference\node_mcp_server.md" />
+    <Content Include=".claude\skills\mcp-builder\reference\python_mcp_server.md" />
+    <Content Include=".claude\skills\mcp-builder\SKILL.md" />
+    <Content Include=".claude\skills\README.md" />
+    <Content Include=".claude\skills\skill-creator\references\output-patterns.md" />
+    <Content Include=".claude\skills\skill-creator\references\workflows.md" />
+    <Content Include=".claude\skills\skill-creator\SKILL.md" />
+    <Content Include=".claude\skills\slack-gif-creator\SKILL.md" />
+    <Content Include=".claude\skills\template-skill\SKILL.md" />
+    <Content Include=".claude\skills\theme-factory\SKILL.md" />
+    <Content Include=".claude\skills\theme-factory\theme-showcase.pdf" />
+    <Content Include=".claude\skills\theme-factory\themes\arctic-frost.md" />
+    <Content Include=".claude\skills\theme-factory\themes\botanical-garden.md" />
+    <Content Include=".claude\skills\theme-factory\themes\desert-rose.md" />
+    <Content Include=".claude\skills\theme-factory\themes\forest-canopy.md" />
+    <Content Include=".claude\skills\theme-factory\themes\golden-hour.md" />
+    <Content Include=".claude\skills\theme-factory\themes\midnight-galaxy.md" />
+    <Content Include=".claude\skills\theme-factory\themes\modern-minimalist.md" />
+    <Content Include=".claude\skills\theme-factory\themes\ocean-depths.md" />
+    <Content Include=".claude\skills\theme-factory\themes\sunset-boulevard.md" />
+    <Content Include=".claude\skills\theme-factory\themes\tech-innovation.md" />
+    <Content Include=".claude\skills\THIRD_PARTY_NOTICES.md" />
+    <Content Include=".claude\skills\web-artifacts-builder\scripts\bundle-artifact.sh" />
+    <Content Include=".claude\skills\web-artifacts-builder\scripts\init-artifact.sh" />
+    <Content Include=".claude\skills\web-artifacts-builder\scripts\shadcn-components.tar.gz" />
+    <Content Include=".claude\skills\web-artifacts-builder\SKILL.md" />
+    <Content Include=".claude\skills\webapp-testing\SKILL.md" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
