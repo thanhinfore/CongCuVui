@@ -161,6 +161,22 @@ function loadData() {
             const data = JSON.parse(raw);
             const graphData = data.graph || data;
             graph.import(graphData);
+
+            // 🔧 Migration: Convert old 'type' attribute to 'category'
+            graph.forEachNode((node) => {
+                const attrs = graph.getNodeAttributes(node);
+                if (attrs.type !== undefined) {
+                    // Move type to category
+                    graph.setNodeAttribute(node, 'category', attrs.type);
+                    // Remove old type attribute
+                    graph.removeNodeAttribute(node, 'type');
+                }
+                // Ensure all nodes have a category
+                if (!graph.getNodeAttribute(node, 'category')) {
+                    graph.setNodeAttribute(node, 'category', 'social');
+                }
+            });
+
             if (Array.isArray(data.selection)) {
                 state.selectedForExport = new Set(data.selection);
             }
