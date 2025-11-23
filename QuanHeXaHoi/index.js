@@ -162,7 +162,7 @@ function loadData() {
             const graphData = data.graph || data;
             graph.import(graphData);
 
-            // 🔧 Migration: Convert old 'type' attribute to 'category'
+            // 🔧 Migration: Convert old 'type' attribute to 'category' for nodes
             graph.forEachNode((node) => {
                 const attrs = graph.getNodeAttributes(node);
                 if (attrs.type !== undefined) {
@@ -174,6 +174,21 @@ function loadData() {
                 // Ensure all nodes have a category
                 if (!graph.getNodeAttribute(node, 'category')) {
                     graph.setNodeAttribute(node, 'category', 'social');
+                }
+            });
+
+            // 🔧 Migration: Convert old 'type' attribute to 'relationship' for edges
+            graph.forEachEdge((edge) => {
+                const attrs = graph.getEdgeAttributes(edge);
+                if (attrs.type !== undefined) {
+                    // Move type to relationship
+                    graph.setEdgeAttribute(edge, 'relationship', attrs.type);
+                    // Remove old type attribute
+                    graph.removeEdgeAttribute(edge, 'type');
+                }
+                // Ensure all edges have a relationship
+                if (!graph.getEdgeAttribute(edge, 'relationship')) {
+                    graph.setEdgeAttribute(edge, 'relationship', 'other');
                 }
             });
 
@@ -465,7 +480,7 @@ function openEdgeModal(edge) {
 
     document.getElementById('edge-modal-title').innerText = `${sourceLabel} ↔ ${targetLabel}`;
 
-    const edgeType = graph.getEdgeAttribute(edge, 'type') || 'other';
+    const edgeType = graph.getEdgeAttribute(edge, 'relationship') || 'other';
     ui.edgeType.value = edgeType;
 }
 
@@ -595,7 +610,14 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
     setTimeout(() => dialog.classList.add('show'), 10);
 
     document.getElementById('link-confirm').addEventListener('click', () => {
-        graph.addEdge(nodeA, nodeB, { type: 'other', color: EDGE_TYPES.other.color });
+        // Check if edge already exists
+        if (graph.hasEdge(nodeA, nodeB) || graph.hasEdge(nodeB, nodeA)) {
+            showToast(`Đã có mối quan hệ giữa "${labelA}" và "${labelB}"!`, 'warning');
+            removeDialog();
+            return;
+        }
+
+        graph.addEdge(nodeA, nodeB, { relationship: 'other', color: EDGE_TYPES.other.color });
         graph.setNodeAttribute(nodeA, 'x', posA.x + 12);
         graph.setNodeAttribute(nodeA, 'y', posA.y + 8);
         applyColorsByDistance(); // Update colors after new connection
@@ -677,7 +699,7 @@ ui.btnSave.addEventListener('click', () => {
 
         if (state.parentNode) {
             graph.addEdge(state.parentNode, newId, {
-                type: type === 'family' ? 'family' : 'other',
+                relationship: type === 'family' ? 'family' : 'other',
                 color: type === 'family' ? EDGE_TYPES.family.color : EDGE_TYPES.other.color
             });
         }
@@ -711,7 +733,7 @@ document.getElementById('btn-save-edge').addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const edgeType = ui.edgeType.value;
-    graph.setEdgeAttribute(state.selectedEdge, 'type', edgeType);
+    graph.setEdgeAttribute(state.selectedEdge, 'relationship', edgeType);
     graph.setEdgeAttribute(state.selectedEdge, 'color', EDGE_TYPES[edgeType].color);
 
     saveData();
