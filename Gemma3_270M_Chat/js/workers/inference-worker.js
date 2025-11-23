@@ -158,9 +158,11 @@ async function generate(id, prompt, options) {
             repetition_penalty: 1.15,     // Prevent repetitive responses (higher than GemmaLabelling's 1.1 for chat)
             do_sample: temperature > 0,
             return_full_text: false,
-            // Tokenizer special tokens (if available)
+            // Tokenizer special tokens
             pad_token_id: generator.tokenizer?.pad_token_id,
             eos_token_id: generator.tokenizer?.eos_token_id,
+            // Try to skip special tokens during generation
+            skip_special_tokens: true,
         });
 
         if (shouldStop) {
@@ -180,12 +182,11 @@ async function generate(id, prompt, options) {
         // Clean up the response (remove prompt if included)
         generatedText = generatedText.replace(prompt, '').trim();
 
-        // Remove any special tokens
+        // Remove all special tokens (including <unused42>, <start_of_turn>, etc.)
+        // Pattern matches any token in angle brackets like <token_name> or <unused42>
         generatedText = generatedText
-            .replace(/<start_of_turn>/g, '')
-            .replace(/<end_of_turn>/g, '')
-            .replace(/<start_of_text>/g, '')
-            .replace(/<end_of_text>/g, '')
+            .replace(/<[^>]+>/g, '')  // Remove all <...> tokens
+            .replace(/\s+/g, ' ')      // Normalize whitespace
             .trim();
 
         // Send token by token (optimized streaming for better UX and performance)
