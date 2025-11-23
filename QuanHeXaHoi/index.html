@@ -13,9 +13,13 @@
         <div class="brand">SocialGraph v1.0</div>
         <div class="tools">
             <button id="btn-export" title="Tải dữ liệu về máy"><i class="fas fa-download"></i> Xuất File</button>
+            <button id="btn-export-selected" title="Xuất nhóm đang chọn"><i class="fas fa-list-check"></i> Xuất nhóm</button>
             <button id="btn-import-trigger" title="Mở file từ máy"><i class="fas fa-upload"></i> Nhập File</button>
+            <button id="btn-capture" title="Chụp ảnh PNG"><i class="fas fa-camera"></i> Chụp ảnh</button>
+            <button id="btn-clear-selection" title="Bỏ chọn tất cả" class="ghost"><i class="fas fa-eraser"></i> Bỏ chọn</button>
             <button id="btn-reset-data" title="Xóa toàn bộ làm lại" style="background:#f44336"><i class="fas fa-trash"></i> Reset</button>
             <input type="file" id="file-input" style="display: none" accept=".json">
+            <span id="autosave-status">Tự lưu đang bật</span>
         </div>
     </div>
 
@@ -25,7 +29,12 @@
         <strong><i class="fas fa-info-circle"></i> Hướng dẫn:</strong><br>
         - Click vào người để Sửa/Thêm quan hệ.<br>
         - Dữ liệu tự động lưu vào trình duyệt.<br>
-        - Dùng nút "Xuất File" để chia sẻ.
+        - Chọn checkbox trong hộp thoại để thêm vào nhóm xuất.<br>
+        - Dùng nút "Xuất nhóm" hoặc "Chụp ảnh" để chia sẻ.
+    </div>
+
+    <div id="selection-panel">
+        <i class="fas fa-circle-check"></i> <span id="selection-count">Chưa chọn người để xuất</span>
     </div>
 
     <div id="linking-alert">
@@ -54,6 +63,11 @@
                 <option value="5">Lớp 5: Người quen</option>
                 <option value="6">Lớp 6: Người lạ từng gặp</option>
             </select>
+
+            <div class="selection-row">
+                <input type="checkbox" id="toggle-selection" checked>
+                <label for="toggle-selection">Đưa người này vào nhóm export/ảnh</label>
+            </div>
         </div>
 
         <div class="modal-footer">

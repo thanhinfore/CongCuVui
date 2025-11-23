@@ -62,6 +62,30 @@ body, html {
             background: #1976D2;
         }
 
+    .tools button.ghost {
+        background: #fff;
+        border: 1px dashed #bbb;
+        color: #555;
+    }
+
+        .tools button.ghost:hover {
+            background: #f0f0f0;
+        }
+
+#autosave-status {
+    margin-left: 12px;
+    font-size: 12px;
+    color: #2e7d32;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #e8f5e9;
+}
+
+    #autosave-status.flash {
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
+        transition: box-shadow 0.7s ease;
+    }
+
 /* GUIDE & ALERTS */
 #guide {
     position: absolute;
@@ -74,6 +98,21 @@ body, html {
     line-height: 1.6;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     pointer-events: none;
+}
+
+#selection-panel {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    background: rgba(33,150,243,0.1);
+    color: #0d47a1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 #linking-alert {
@@ -175,6 +214,19 @@ body, html {
             outline: none;
             border-color: #2196F3;
         }
+
+.selection-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: -5px;
+    margin-bottom: 10px;
+}
+
+    .selection-row label {
+        margin: 0;
+        font-weight: 500;
+    }
 
 .modal-footer {
     padding: 0 20px 20px;
