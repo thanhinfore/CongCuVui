@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassSurvey", "ClassSurvey\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassEmailSender", "MassEmailSender\MassEmailSender.csproj", "{B7DB6B59-2A11-4DE6-97FA-2C2AC6233C20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuanHeXaHoi", "QuanHeXaHoi\QuanHeXaHoi.csproj", "{A4344690-885B-4FF2-8700-B60033DE70CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,10 @@ Global
 		{B7DB6B59-2A11-4DE6-97FA-2C2AC6233C20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7DB6B59-2A11-4DE6-97FA-2C2AC6233C20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7DB6B59-2A11-4DE6-97FA-2C2AC6233C20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4344690-885B-4FF2-8700-B60033DE70CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4344690-885B-4FF2-8700-B60033DE70CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4344690-885B-4FF2-8700-B60033DE70CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4344690-885B-4FF2-8700-B60033DE70CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

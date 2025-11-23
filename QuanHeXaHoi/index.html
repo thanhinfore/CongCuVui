@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ đồ Quan hệ Xã hội (Pro Version)</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="toolbar">
+        <div class="brand">SocialGraph v1.0</div>
+        <div class="tools">
+            <button id="btn-export" title="Tải dữ liệu về máy"><i class="fas fa-download"></i> Xuất File</button>
+            <button id="btn-import-trigger" title="Mở file từ máy"><i class="fas fa-upload"></i> Nhập File</button>
+            <button id="btn-reset-data" title="Xóa toàn bộ làm lại" style="background:#f44336"><i class="fas fa-trash"></i> Reset</button>
+            <input type="file" id="file-input" style="display: none" accept=".json">
+        </div>
+    </div>
+
+    <div id="container"></div>
+
+    <div id="guide">
+        <strong><i class="fas fa-info-circle"></i> Hướng dẫn:</strong><br>
+        - Click vào người để Sửa/Thêm quan hệ.<br>
+        - Dữ liệu tự động lưu vào trình duyệt.<br>
+        - Dùng nút "Xuất File" để chia sẻ.
+    </div>
+
+    <div id="linking-alert">
+        <i class="fas fa-link"></i> Đang chọn người để kết nối... (Click vào người tiếp theo)
+        <br><small>(Click vào đây để hủy)</small>
+    </div>
+
+    <div id="overlay"></div>
+
+    <div id="modal">
+        <div class="modal-header">
+            <h3 id="modal-title">Thông tin</h3>
+            <span class="close-modal" id="btn-x-close">&times;</span>
+        </div>
+
+        <div class="modal-body">
+            <label>Tên hiển thị:</label>
+            <input type="text" id="inp-label" placeholder="Nhập tên (VD: Bố, Vợ, Bạn thân...)">
+
+            <label>Lớp quan hệ:</label>
+            <select id="inp-layer">
+                <option value="1">Lớp 1: Gia đình / Ruột thịt</option>
+                <option value="2">Lớp 2: Bạn thân / Tri kỷ</option>
+                <option value="3">Lớp 3: Đồng nghiệp / Bạn bè</option>
+                <option value="4">Lớp 4: Xã giao / Đối tác</option>
+                <option value="5">Lớp 5: Người quen</option>
+                <option value="6">Lớp 6: Người lạ từng gặp</option>
+            </select>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-primary" id="btn-save"><i class="fas fa-save"></i> Lưu lại</button>
+
+            <div id="edit-actions" class="action-group">
+                <hr>
+                <button class="btn-action" id="btn-add-child"><i class="fas fa-user-plus"></i> Tạo người mới từ đây</button>
+                <button class="btn-warning" id="btn-start-link"><i class="fas fa-link"></i> Nối với người có sẵn...</button>
+                <button class="btn-danger" id="btn-delete"><i class="fas fa-trash-alt"></i> Xóa người này</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>
