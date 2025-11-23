@@ -7,6 +7,7 @@ import Sigma from 'https://cdn.skypack.dev/sigma';
 
 const CONTAINER_ID = 'container';
 const STORAGE_KEY = 'social_graph_v1_data';
+const AUTOSAVE_BADGE = document.getElementById('autosave-status');
 
 // Helper: Màu sắc & Kích thước
 const getLayerColor = (layer) => {
@@ -19,13 +20,27 @@ const getLayerSize = (layer) => layer === 0 ? 25 : Math.max(5, 20 - (layer * 2.2
 let graph = new Graph();
 let renderer = null;
 
+let state = {
+    selectedNode: null,
+    parentNode: null,   // Node cha khi tạo mới (nếu có)
+    mode: 'NORMAL',
+    draggedNode: null,  // Node đang được kéo
+    isDragging: false,  // Cờ kiểm tra đang kéo
+    selectedForExport: new Set(),
+    lastSaved: null
+};
+
 // ==========================================
 // PHẦN 2: QUẢN LÝ LƯU TRỮ
 // ==========================================
 
 function saveData() {
-    const data = graph.export();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const payload = {
+        graph: graph.export(),
+        selection: Array.from(state.selectedForExport)
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    updateAutosaveBadge();
 }
 
 function loadData() {
@@ -33,7 +48,11 @@ function loadData() {
     if (raw) {
         try {
             const data = JSON.parse(raw);
-            graph.import(data);
+            const graphData = data.graph || data;
+            graph.import(graphData);
+            if (Array.isArray(data.selection)) {
+                state.selectedForExport = new Set(data.selection);
+            }
             return true;
         } catch (e) {
             console.error("Lỗi dữ liệu save:", e);
@@ -46,6 +65,7 @@ function loadData() {
 function initDefaultData() {
     graph.clear();
     graph.addNode('center', { label: "TÔI", layer: 0, x: 0, y: 0, size: 25, color: getLayerColor(0) });
+    state.selectedForExport = new Set();
     saveData();
 }
 
@@ -59,6 +79,38 @@ function downloadJSON() {
     a.click();
 }
 
+function downloadSelectedJSON() {
+    if (!state.selectedForExport.size) {
+        alert("Bạn chưa chọn người nào để xuất.");
+        return;
+    }
+
+    const exportData = graph.export();
+    const selectedSet = new Set(state.selectedForExport);
+    const filtered = {
+        attributes: exportData.attributes || {},
+        options: exportData.options || {},
+        nodes: exportData.nodes.filter(n => selectedSet.has(n.key)),
+        edges: exportData.edges.filter(e => selectedSet.has(e.source) && selectedSet.has(e.target))
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filtered, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = "social_graph_selected_" + Date.now() + ".json";
+    a.click();
+}
+
+async function captureGraphImage() {
+    const container = document.getElementById(CONTAINER_ID);
+    const { default: html2canvas } = await import('https://cdn.skypack.dev/html2canvas');
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = `social_graph_${Date.now()}.png`;
+    link.click();
+}
+
 function uploadJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -69,6 +121,8 @@ function uploadJSON(event) {
             graph.clear();
             graph.import(data);
             arrangeNodes();
+            state.selectedForExport = new Set();
+            updateSelectionUI();
             saveData();
             alert("Đã nhập dữ liệu thành công!");
         } catch (err) {
@@ -116,6 +170,8 @@ function arrangeNodes() {
 // Khởi chạy
 if (!loadData()) initDefaultData();
 arrangeNodes();
+updateSelectionUI();
+updateAutosaveBadge();
 
 const container = document.getElementById(CONTAINER_ID);
 renderer = new Sigma(graph, container);
@@ -124,14 +180,6 @@ renderer = new Sigma(graph, container);
 // PHẦN 4: UI & STATE
 // ==========================================
 
-let state = {
-    selectedNode: null,
-    parentNode: null,   // Node cha khi tạo mới (nếu có)
-    mode: 'NORMAL',
-    draggedNode: null,  // Node đang được kéo
-    isDragging: false   // Cờ kiểm tra đang kéo
-};
-
 const ui = {
     modal: document.getElementById('modal'),
     overlay: document.getElementById('overlay'),
@@ -139,8 +187,29 @@ const ui = {
     inpLayer: document.getElementById('inp-layer'),
     title: document.getElementById('modal-title'),
     editActions: document.getElementById('edit-actions'),
-    btnSave: document.getElementById('btn-save')
+    btnSave: document.getElementById('btn-save'),
+    toggleSelection: document.getElementById('toggle-selection')
 };
+
+function updateAutosaveBadge() {
+    if (!AUTOSAVE_BADGE) return;
+    const now = new Date();
+    state.lastSaved = now;
+    AUTOSAVE_BADGE.innerText = `Đã lưu lúc ${now.toLocaleTimeString()}`;
+    AUTOSAVE_BADGE.classList.add('flash');
+    setTimeout(() => AUTOSAVE_BADGE.classList.remove('flash'), 700);
+}
+
+function updateSelectionUI() {
+    const count = state.selectedForExport.size;
+    const selectionText = document.getElementById('selection-count');
+    const exportBtn = document.getElementById('btn-export-selected');
+    const clearBtn = document.getElementById('btn-clear-selection');
+
+    if (selectionText) selectionText.innerText = count ? `${count} người đã chọn để xuất` : 'Chưa chọn người để xuất';
+    if (exportBtn) exportBtn.disabled = count === 0;
+    if (clearBtn) clearBtn.disabled = count === 0;
+}
 
 function closeModal() {
     ui.modal.style.display = 'none';
@@ -162,6 +231,7 @@ function openModal(nodeId, mode = 'EDIT') {
             : "Thêm người mới (Không liên kết)";
 
         ui.inpLayer.value = "1";
+        if (ui.toggleSelection) ui.toggleSelection.checked = true;
         ui.btnSave.innerHTML = '<i class="fas fa-plus"></i> Thêm Node';
         ui.editActions.style.display = 'none';
         setTimeout(() => ui.inpLabel.focus(), 100);
@@ -171,6 +241,7 @@ function openModal(nodeId, mode = 'EDIT') {
         ui.title.innerText = attr.label;
         ui.inpLabel.value = attr.label;
         ui.inpLayer.value = attr.layer || 1;
+        if (ui.toggleSelection) ui.toggleSelection.checked = state.selectedForExport.has(nodeId);
         ui.btnSave.innerHTML = '<i class="fas fa-save"></i> Lưu thay đổi';
 
         const isCenter = (nodeId === 'center');
@@ -287,6 +358,7 @@ renderer.on('clickNode', (e) => {
 ui.btnSave.addEventListener('click', () => {
     const label = ui.inpLabel.value.trim();
     const layer = parseInt(ui.inpLayer.value);
+    const shouldSelect = ui.toggleSelection ? ui.toggleSelection.checked : false;
 
     if (!label) return alert("Vui lòng nhập tên!");
 
@@ -313,6 +385,8 @@ ui.btnSave.addEventListener('click', () => {
         if (state.parentNode) {
             graph.addEdge(state.parentNode, newId);
         }
+
+        if (shouldSelect) state.selectedForExport.add(newId);
     } else {
         if (state.selectedNode) {
             graph.setNodeAttribute(state.selectedNode, 'label', label);
@@ -321,9 +395,15 @@ ui.btnSave.addEventListener('click', () => {
                 graph.setNodeAttribute(state.selectedNode, 'size', getLayerSize(layer));
                 graph.setNodeAttribute(state.selectedNode, 'color', getLayerColor(layer));
             }
+            if (shouldSelect) {
+                state.selectedForExport.add(state.selectedNode);
+            } else {
+                state.selectedForExport.delete(state.selectedNode);
+            }
         }
     }
 
+    updateSelectionUI();
     saveData();
     closeModal();
 });
@@ -342,6 +422,8 @@ document.getElementById('btn-start-link').addEventListener('click', () => {
 document.getElementById('btn-delete').addEventListener('click', () => {
     if (confirm("Xóa người này?")) {
         graph.dropNode(state.selectedNode);
+        state.selectedForExport.delete(state.selectedNode);
+        updateSelectionUI();
         saveData();
         closeModal();
     }
@@ -351,6 +433,7 @@ document.getElementById('btn-delete').addEventListener('click', () => {
 document.getElementById('btn-x-close').addEventListener('click', closeModal);
 ui.overlay.addEventListener('click', closeModal);
 document.getElementById('btn-export').addEventListener('click', downloadJSON);
+document.getElementById('btn-export-selected').addEventListener('click', downloadSelectedJSON);
 document.getElementById('btn-import-trigger').addEventListener('click', () => document.getElementById('file-input').click());
 document.getElementById('file-input').addEventListener('change', uploadJSON);
 document.getElementById('btn-reset-data').addEventListener('click', () => {
@@ -359,3 +442,9 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
         location.reload();
     }
 });
+document.getElementById('btn-clear-selection').addEventListener('click', () => {
+    state.selectedForExport = new Set();
+    updateSelectionUI();
+    saveData();
+});
+document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
