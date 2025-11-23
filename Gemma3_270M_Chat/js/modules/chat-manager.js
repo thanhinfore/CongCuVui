@@ -94,12 +94,18 @@ export class ChatManager {
         const settings = this.settingsManager.getSettings();
         const systemPrompt = settings.systemPrompt || 'Bạn là trợ lý AI thông minh và hữu ích.';
 
-        // Format conversation for Gemma model
-        let prompt = `<start_of_turn>system\n${systemPrompt}<end_of_turn>\n`;
+        // Format conversation for Gemma 3 model
+        // Note: Gemma 3 doesn't officially support <start_of_turn>system tag
+        // We inject system prompt into the first user message instead
+        let prompt = '';
 
         // Add conversation history (last 10 messages for context)
-        // Exclude the last message if it's from user (to avoid duplication)
         const recentMessages = this.messages.slice(-10);
+
+        // Check if this is the first message in conversation
+        const isFirstMessage = recentMessages.length === 0 ||
+            (recentMessages.length === 1 && recentMessages[0].content === userMessage);
+
         for (const msg of recentMessages) {
             // Skip if this is the current user message (it will be added separately)
             if (msg.role === 'user' && msg.content === userMessage) {
@@ -114,7 +120,13 @@ export class ChatManager {
         }
 
         // Add current user message
-        prompt += `<start_of_turn>user\n${userMessage}<end_of_turn>\n`;
+        // For first message, prepend system prompt as context
+        if (isFirstMessage) {
+            prompt += `<start_of_turn>user\n${systemPrompt}\n\n${userMessage}<end_of_turn>\n`;
+        } else {
+            prompt += `<start_of_turn>user\n${userMessage}<end_of_turn>\n`;
+        }
+
         prompt += `<start_of_turn>model\n`;
 
         return prompt;
