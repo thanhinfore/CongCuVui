@@ -3,6 +3,8 @@
  * Handles data persistence using IndexedDB
  */
 
+import { ModelCache } from './model-cache.js';
+
 export class StorageManager {
     constructor() {
         this.dbName = 'GemmaChat';
@@ -13,12 +15,16 @@ export class StorageManager {
             settings: 'settings',
             sessions: 'sessions'
         };
+        this.modelCache = new ModelCache();
     }
 
     /**
-     * Initialize IndexedDB
+     * Initialize IndexedDB and model cache
      */
     async initialize() {
+        // Initialize model cache
+        await this.modelCache.initialize();
+
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -286,17 +292,26 @@ export class StorageManager {
     }
 
     /**
-     * Get storage usage
+     * Get storage usage including model cache
      */
     async getStorageUsage() {
         if (navigator.storage && navigator.storage.estimate) {
             const estimate = await navigator.storage.estimate();
+
+            // Get detailed cache info
+            const modelCacheInfo = await this.modelCache.getCacheSize();
+            const cachedFiles = await this.modelCache.getAllCachedFiles();
+
             return {
                 usage: estimate.usage,
                 quota: estimate.quota,
                 usageInMB: (estimate.usage / (1024 * 1024)).toFixed(2),
                 quotaInMB: (estimate.quota / (1024 * 1024)).toFixed(2),
-                percentUsed: ((estimate.usage / estimate.quota) * 100).toFixed(2)
+                percentUsed: ((estimate.usage / estimate.quota) * 100).toFixed(2),
+                modelCache: {
+                    fileCount: cachedFiles.length,
+                    info: modelCacheInfo
+                }
             };
         }
 
@@ -304,9 +319,37 @@ export class StorageManager {
     }
 
     /**
-     * Clear all data
+     * Clear model cache
      */
-    async clearAllData() {
+    async clearModelCache() {
+        try {
+            await this.modelCache.clearCache();
+            console.log('Model cache cleared successfully');
+            return true;
+        } catch (error) {
+            console.error('Error clearing model cache:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Check if model is cached
+     */
+    async isModelCached(modelId) {
+        return await this.modelCache.isModelCached(modelId);
+    }
+
+    /**
+     * Get cached model files info
+     */
+    async getCachedModelFiles() {
+        return await this.modelCache.getAllCachedFiles();
+    }
+
+    /**
+     * Clear all data (excluding model cache by default)
+     */
+    async clearAllData(includeModelCache = false) {
         if (!this.db) {
             console.warn('Database not initialized');
             return;
@@ -314,7 +357,7 @@ export class StorageManager {
 
         const stores = [this.stores.chatHistory, this.stores.settings, this.stores.sessions];
 
-        return Promise.all(
+        await Promise.all(
             stores.map(storeName => {
                 return new Promise((resolve, reject) => {
                     const transaction = this.db.transaction([storeName], 'readwrite');
@@ -326,6 +369,11 @@ export class StorageManager {
                 });
             })
         );
+
+        // Optionally clear model cache
+        if (includeModelCache) {
+            await this.clearModelCache();
+        }
     }
 
     /**
@@ -371,13 +419,18 @@ export class StorageManager {
     }
 
     /**
-     * Close database connection
+     * Close database connections
      */
     close() {
         if (this.db) {
             this.db.close();
             this.db = null;
             console.log('Database closed');
+        }
+
+        // Close model cache database
+        if (this.modelCache) {
+            this.modelCache.close();
         }
     }
 }

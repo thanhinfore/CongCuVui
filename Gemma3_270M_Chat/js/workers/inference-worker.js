@@ -6,9 +6,16 @@
 // Import Transformers.js using ES modules (requires worker to be loaded with type: 'module')
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.0';
 
+// Import model cache for persistent caching
+import { ModelCache } from '../modules/model-cache.js';
+
 // Configure transformers.js
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+
+// Initialize model cache
+const cache = new ModelCache();
+let cacheInitialized = false;
 
 let generator = null;
 let isLoading = false;
@@ -45,6 +52,33 @@ async function detectDevice() {
 }
 
 /**
+ * Initialize cache system
+ */
+async function initializeCache() {
+    if (cacheInitialized) return;
+
+    try {
+        await cache.initialize();
+        cacheInitialized = true;
+
+        // Override global fetch to use cache
+        const originalFetch = self.fetch;
+        self.fetch = async (url, options) => {
+            // Only cache model files from Hugging Face
+            if (typeof url === 'string' && url.includes('huggingface.co')) {
+                return await cache.fetchWithCache(url, options);
+            }
+            return originalFetch(url, options);
+        };
+
+        console.log('✓ Model caching enabled');
+    } catch (error) {
+        console.error('Error initializing cache:', error);
+        // Continue without cache if it fails
+    }
+}
+
+/**
  * Initialize and load the model
  */
 async function initialize(modelId) {
@@ -55,11 +89,23 @@ async function initialize(modelId) {
     try {
         isLoading = true;
 
+        // Initialize cache first
+        await initializeCache();
+
+        // Check if model is already cached
+        const isCached = await cache.isModelCached(modelId);
+        if (isCached) {
+            sendMessage('loading', {
+                message: 'Đang tải mô hình từ cache local...',
+                progress: 5
+            });
+        }
+
         // Detect best device first (WebGPU or WASM)
         await detectDevice();
 
         sendMessage('loading', {
-            message: 'Đang tải mô hình Gemma 3 270M với WASM...',
+            message: isCached ? 'Đang nạp mô hình từ cache...' : 'Đang tải mô hình Gemma 3 270M với WASM...',
             progress: 10
         });
 
