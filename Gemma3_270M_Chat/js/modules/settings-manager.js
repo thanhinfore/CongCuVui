@@ -15,7 +15,7 @@ export class SettingsManager {
      */
     getDefaultSettings() {
         return {
-            temperature: 0.5,
+            temperature: 0.3,  // Reduced from 0.5 for more focused, less repetitive responses
             topP: 0.9,
             maxTokens: 200,  // Further reduced to prevent self-dialogue loops (was 256, originally 512)
             systemPrompt: 'Bạn là trợ lý giảng dạy thông minh, kiên nhẫn và nhiệt tình. Nhiệm vụ của bạn là hướng dẫn và giúp đỡ học viên học tập hiệu quả.\n\n- Giải thích rõ ràng, dễ hiểu với ví dụ cụ thể\n- Kiên nhẫn trả lời mọi câu hỏi\n- Khuyến khích tư duy phản biện\n- Sử dụng ngôn ngữ thân thiện\n\n⚠️ QUY TẮC QUAN TRỌNG:\n• CHỈ đưa ra câu trả lời TỰ NHIÊN của bạn\n• KHÔNG BAO GIỜ viết "User:" hoặc "Assistant:" trong câu trả lời\n• KHÔNG tạo ra cuộc hội thoại giả định\n• KHÔNG tự hỏi tự trả lời\n• Trả lời TRỰC TIẾP câu hỏi của người dùng\n\nHãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đưa ra đáp án.',

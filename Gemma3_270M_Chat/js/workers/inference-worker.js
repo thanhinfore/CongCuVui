@@ -204,14 +204,14 @@ async function generate(id, prompt, options) {
             max_new_tokens = 512
         } = options;
 
-        // Generate text with parameters matching GemmaLabelling (proven to work)
+        // Generate text with optimized parameters to prevent repetition and poor output
         const generationStart = performance.now();
         const output = await generator(prompt, {
             max_new_tokens,
             temperature,
             top_p,
-            top_k: 10,                    // Lower top_k like GemmaLabelling (was 50)
-            repetition_penalty: 1.1,      // Match GemmaLabelling's value
+            top_k: 40,                    // Increased from 10 for more diverse output
+            repetition_penalty: 1.3,      // Increased from 1.1 to strongly penalize repetition
             do_sample: temperature > 0,
             return_full_text: false,
             pad_token_id: generator.tokenizer?.pad_token_id,
@@ -241,6 +241,14 @@ async function generate(id, prompt, options) {
         // while still getting clean output. WebGPU is significantly faster than WASM!
         generatedText = generatedText
             .replace(/<[^>]+>/g, '')  // Remove all <...> tokens
+            .trim();
+
+        // ADDITIONAL FIX: Remove sequences of repeated characters (like "---" or "===" or "...")
+        // The model sometimes generates these as filler or when confused
+        // Keep only the first occurrence of 3+ repeated chars
+        generatedText = generatedText
+            .replace(/([^\w\s])\1{3,}/g, '')  // Remove 4+ repeated non-alphanumeric chars
+            .replace(/(\s+-{2,}\s+)+/g, ' ')  // Remove sequences like " -- -- -- "
             .trim();
 
         // CRITICAL FIX: Stop at ANY occurrence of "User:" or repeated "Assistant:" to prevent self-dialogue loops
