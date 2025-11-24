@@ -75,9 +75,22 @@ class GemmaChatApp {
                 this.uiController.updatePerformanceStats(perfData);
             });
 
+            // Check cache status before loading
+            const isCached = await this.storageManager.isModelCached('onnx-community/gemma-3-270m-it-ONNX');
+            if (isCached) {
+                console.log('✓ Model đã có trong cache - sẽ tải nhanh hơn!');
+            }
+
             // Load the model
             console.log('Loading Gemma model...');
             await this.modelLoader.loadModel();
+
+            // Log cache info after loading
+            const cacheInfo = await this.storageManager.getStorageUsage();
+            if (cacheInfo && cacheInfo.modelCache) {
+                console.log(`📦 Model cache: ${cacheInfo.modelCache.fileCount} files cached`);
+                console.log(`💾 Storage used: ${cacheInfo.usageInMB}MB / ${cacheInfo.quotaInMB}MB (${cacheInfo.percentUsed}%)`);
+            }
 
             console.log('Gemma Chat App initialized successfully!');
 
