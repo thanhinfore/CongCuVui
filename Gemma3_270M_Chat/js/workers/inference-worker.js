@@ -215,34 +215,75 @@ async function generate(id, prompt, options) {
             .replace(/<[^>]+>/g, '')  // Remove all <...> tokens
             .trim();
 
-        // CRITICAL FIX: Stop at first occurrence of "User:" or repeated "Assistant:" to prevent self-dialogue loops
+        // CRITICAL FIX: Stop at ANY occurrence of "User:" or repeated "Assistant:" to prevent self-dialogue loops
         // The model sometimes continues generating "User: ... Assistant: ..." patterns
         // We need to truncate BEFORE normalizing whitespace (so we can detect newlines)
+        // AGGRESSIVE APPROACH: Match ANY "User:" or "Assistant:" with word boundaries
         const stopPatterns = [
-            /[.!?]\s+User:/i,     // Sentence end followed by "User:" (e.g., "text. User:")
-            /\n\s*User:/i,        // Newline followed by "User:"
-            /\s{2,}User:/i,       // Multiple spaces followed by "User:"
-            /\n\s*Assistant:/i,   // Newline followed by "Assistant:" (repeated assistant turn)
+            /\bUser:\s/i,          // ANY "User:" with word boundary (most aggressive)
+            /\bAssistant:\s/i,     // ANY repeated "Assistant:" with word boundary
+            /[.!?]\s+User:/i,      // Sentence end followed by "User:" (backup pattern)
+            /\n\s*User:/i,         // Newline followed by "User:" (backup pattern)
+            /\n\s*Assistant:/i,    // Newline followed by "Assistant:" (backup pattern)
         ];
 
         for (const pattern of stopPatterns) {
             const match = generatedText.search(pattern);
             if (match !== -1) {
-                // For patterns starting with punctuation ([.!?]), keep the punctuation
-                // Otherwise just truncate at the match position
-                if (pattern.source.startsWith('[.!?]') && match < generatedText.length) {
-                    // Keep up to and including the punctuation mark
-                    generatedText = generatedText.substring(0, match + 1).trim();
+                // Truncate at the match position, but preserve complete sentences when possible
+                let truncateAt = match;
+
+                // If we matched mid-sentence, try to find the last sentence ending before the match
+                const textBeforeMatch = generatedText.substring(0, match);
+                const lastSentenceEnd = Math.max(
+                    textBeforeMatch.lastIndexOf('.'),
+                    textBeforeMatch.lastIndexOf('!'),
+                    textBeforeMatch.lastIndexOf('?')
+                );
+
+                // If we found a sentence ending within 50 chars before the match, truncate there
+                // Otherwise, truncate at the match position
+                if (lastSentenceEnd !== -1 && (match - lastSentenceEnd) < 50) {
+                    truncateAt = lastSentenceEnd + 1;
                 } else {
-                    // For other patterns, truncate at match position
-                    generatedText = generatedText.substring(0, match).trim();
+                    truncateAt = match;
                 }
+
+                generatedText = generatedText.substring(0, truncateAt).trim();
                 break;  // Stop at first match
             }
         }
 
         // NOW normalize whitespace after truncation
         generatedText = generatedText.replace(/\s+/g, ' ').trim();
+
+        // FINAL SAFETY CHECK: If "User:" or "Assistant:" still appears, do aggressive truncation
+        // This is a last resort to prevent any self-dialogue from reaching the user
+        if (/\b(User|Assistant):/i.test(generatedText)) {
+            // Find the position and truncate more aggressively
+            const match = generatedText.search(/\b(User|Assistant):/i);
+            if (match !== -1) {
+                // Truncate at the last sentence before this match
+                const textBefore = generatedText.substring(0, match);
+                const lastPunctuation = Math.max(
+                    textBefore.lastIndexOf('.'),
+                    textBefore.lastIndexOf('!'),
+                    textBefore.lastIndexOf('?')
+                );
+
+                if (lastPunctuation !== -1) {
+                    generatedText = generatedText.substring(0, lastPunctuation + 1).trim();
+                } else {
+                    // No sentence ending found, truncate at match position
+                    generatedText = generatedText.substring(0, match).trim();
+                }
+            }
+        }
+
+        // If we ended up with empty text after all truncations, provide a fallback
+        if (!generatedText || generatedText.length < 10) {
+            generatedText = "Xin lỗi, tôi cần bạn nói rõ hơn về câu hỏi của bạn.";
+        }
 
         // Send token by token (optimized streaming for better UX and performance)
         const words = generatedText.split(' ');
