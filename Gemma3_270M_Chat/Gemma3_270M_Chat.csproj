@@ -69,6 +69,7 @@
     <Content Include=".claude\skills\algorithmic-art\LICENSE.txt" />
     <Content Include=".claude\skills\algorithmic-art\templates\generator_template.js" />
     <Content Include=".claude\skills\algorithmic-art\templates\viewer.html" />
+    <Content Include=".claude\skills\artifacts-builder\LICENSE.txt" />
     <Content Include=".claude\skills\brand-guidelines\LICENSE.txt" />
     <Content Include=".claude\skills\canvas-design\canvas-fonts\ArsenalSC-OFL.txt" />
     <Content Include=".claude\skills\canvas-design\canvas-fonts\BigShoulders-OFL.txt" />
@@ -258,6 +259,15 @@
     <Content Include=".claude\skills\canvas-design\SKILL.md" />
     <Content Include=".claude\skills\document-skills\docx\docx-js.md" />
     <Content Include=".claude\skills\document-skills\docx\ooxml.md" />
+    <Content Include=".claude\skills\artifacts-builder\scripts\bundle-artifact.sh" />
+    <Content Include=".claude\skills\artifacts-builder\scripts\init-artifact.sh" />
+    <Content Include=".claude\skills\artifacts-builder\scripts\shadcn-components.tar.gz" />
+    <Content Include=".claude\skills\artifacts-builder\SKILL.md" />
+    <Content Include=".claude\skills\changelog-generator\SKILL.md" />
+    <Content Include=".claude\skills\competitive-ads-extractor\SKILL.md" />
+    <Content Include=".claude\skills\content-research-writer\SKILL.md" />
+    <Content Include=".claude\skills\CONTRIBUTING.md" />
+    <Content Include=".claude\skills\developer-growth-analysis\SKILL.md" />
     <None Include=".claude\skills\document-skills\docx\ooxml\schemas\ecma\fouth-edition\opc-contentTypes.xsd">
       <SubType>Designer</SubType>
     </None>
@@ -535,6 +545,15 @@
     <Content Include=".claude\skills\web-artifacts-builder\scripts\shadcn-components.tar.gz" />
     <Content Include=".claude\skills\web-artifacts-builder\SKILL.md" />
     <Content Include=".claude\skills\webapp-testing\SKILL.md" />
+    <Content Include=".claude\skills\domain-name-brainstormer\SKILL.md" />
+    <Content Include=".claude\skills\file-organizer\SKILL.md" />
+    <Content Include=".claude\skills\image-enhancer\SKILL.md" />
+    <Content Include=".claude\skills\invoice-organizer\SKILL.md" />
+    <Content Include=".claude\skills\lead-research-assistant\SKILL.md" />
+    <Content Include=".claude\skills\meeting-insights-analyzer\SKILL.md" />
+    <Content Include=".claude\skills\raffle-winner-picker\SKILL.md" />
+    <Content Include=".claude\skills\skill-share\SKILL.md" />
+    <Content Include=".claude\skills\video-downloader\SKILL.md" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
