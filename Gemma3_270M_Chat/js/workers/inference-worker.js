@@ -216,6 +216,23 @@ async function generate(id, prompt, options) {
             .replace(/\s+/g, ' ')      // Normalize whitespace
             .trim();
 
+        // CRITICAL FIX: Stop at first occurrence of "User:" or repeated "Assistant:" to prevent self-dialogue loops
+        // The model sometimes continues generating "User: ... Assistant: ..." patterns
+        // We need to truncate at the first sign of a new conversation turn
+        const stopPatterns = [
+            /\n\s*User:/i,        // Newline followed by "User:"
+            /\s{2,}User:/i,       // Multiple spaces followed by "User:"
+            /\n\s*Assistant:/i,   // Newline followed by "Assistant:" (repeated assistant turn)
+        ];
+
+        for (const pattern of stopPatterns) {
+            const match = generatedText.search(pattern);
+            if (match !== -1) {
+                generatedText = generatedText.substring(0, match).trim();
+                break;  // Stop at first match
+            }
+        }
+
         // Send token by token (optimized streaming for better UX and performance)
         const words = generatedText.split(' ');
         let accumulated = '';
