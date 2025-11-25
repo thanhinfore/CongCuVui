@@ -233,23 +233,35 @@ async function generate(id, prompt, options) {
             max_new_tokens = 256
         } = options;
 
-        // Extract user message for building messages array
-        const userMessageMatch = prompt.match(/### Người dùng:\n([^\n#]+)/s);
-        const userMessage = userMessageMatch ? userMessageMatch[1].trim() : prompt.split('\n').filter(l => l.trim()).pop() || '';
+        // Parse the prompt to extract conversation history
+        // The prompt format is:
+        // ### Hướng dẫn:\n{system}\n\n
+        // ### Người dùng:\n{msg}\n\n### Trợ lý:\n{msg}\n\n
+        // ### Người dùng:\n{current}\n\n### Trợ lý:\n
+
+        const messages = [];
 
         // Extract system prompt
         const systemMatch = prompt.match(/### Hướng dẫn:\n([^\n#]+)/s);
         const systemPrompt = systemMatch ? systemMatch[1].trim() : 'Bạn là Gemma, trợ lý AI thông minh.';
+        messages.push({ role: 'system', content: systemPrompt });
 
-        // Build messages array - OFFICIAL FORMAT for Gemma 3
-        // Reference: https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX
-        const messages = [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage }
-        ];
+        // Extract all user/assistant turns from the prompt
+        const turnPattern = /### (Người dùng|Trợ lý):\n([^#]+?)(?=\n\n###|\n\n$|$)/g;
+        let match;
+        while ((match = turnPattern.exec(prompt)) !== null) {
+            const role = match[1] === 'Người dùng' ? 'user' : 'assistant';
+            const content = match[2].trim();
+            if (content) {
+                messages.push({ role, content });
+            }
+        }
+
+        // Get the last user message for fallback detection
+        const userMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
 
         console.log('📝 User message:', userMessage);
-        console.log('📨 Messages:', JSON.stringify(messages));
+        console.log('📨 Messages:', JSON.stringify(messages, null, 2));
 
         // Generate with streaming callback
         const generationStart = performance.now();
