@@ -3,65 +3,96 @@ import Sigma from 'https://cdn.skypack.dev/sigma';
 import forceAtlas2 from 'https://cdn.skypack.dev/graphology-layout-forceatlas2';
 
 // ==========================================
-// PHẦN 1: CẤU HÌNH & DỮ LIỆU
+// PHẦN 1: CẤU HÌNH & CONSTANTS
 // ==========================================
 
 const CONTAINER_ID = 'container';
-const STORAGE_KEY = 'social_graph_v2_data';
+const STORAGE_KEY = 'social_graph_v3_data';
 const AUTOSAVE_BADGE = document.getElementById('autosave-status');
 
-// ==========================================
-// CONSTANTS - Thay thế magic numbers
-// ==========================================
+// Node size configuration
 const NODE_SIZES = {
-    CENTER: 25,          // Kích thước node trung tâm "TÔI"
-    MIN: 8,              // Kích thước tối thiểu
-    BASE: 22,            // Kích thước cơ sở
-    REDUCTION_FACTOR: 2.5 // Hệ số giảm theo khoảng cách
+    CENTER: 30,
+    MIN: 10,
+    BASE: 24,
+    REDUCTION_FACTOR: 2
 };
 
+// Force layout configuration
 const FORCE_LAYOUT_CONFIG = {
-    ITERATIONS: 100,     // Số lần lặp
-    FRAME_RATE: 16,      // ~60fps
+    ITERATIONS: 100,
+    FRAME_RATE: 16,
     GRAVITY: 0.05,
     SCALING_RATIO: 10,
     SLOW_DOWN: 1
 };
 
+// Drag configuration
 const DRAG_CONFIG = {
-    MOVE_THRESHOLD: 0.5, // Ngưỡng nhận diện kéo
-    MIN_DURATION: 100,   // Thời gian tối thiểu để tính là kéo (ms)
-    LINK_OFFSET: { x: 12, y: 8 } // Offset sau khi nối
+    MOVE_THRESHOLD: 0.5,
+    MIN_DURATION: 100,
+    LINK_OFFSET: { x: 15, y: 10 }
 };
 
+// Distance colors (from center)
 const DISTANCE_COLORS = [
-    '#222',      // 0: Center (Tôi)
-    '#E53935',   // 1: Rất gần
-    '#D81B60',   // 2: Gần
-    '#8E24AA',   // 3: Trung bình
-    '#5E35B1',   // 4: Xa
-    '#3949AB',   // 5: Rất xa
-    '#1E88E5'    // 6+: Cực xa
+    '#1a1a2e',   // 0: Center (TÔI) - dark
+    '#E53935',   // 1: Very close
+    '#D81B60',   // 2: Close
+    '#8E24AA',   // 3: Medium
+    '#5E35B1',   // 4: Far
+    '#3949AB',   // 5: Very far
+    '#1E88E5',   // 6+: Distant
+    '#00ACC1'    // 7+
 ];
 
-// ✨ NEW: Edge relationship types
+// Edge relationship types with colors
 const EDGE_TYPES = {
-    family: { label: 'Họ hàng', color: '#E53935' },
+    family: { label: 'Gia đình', color: '#E53935' },
     spouse: { label: 'Vợ/Chồng', color: '#D81B60' },
     friend: { label: 'Bạn bè', color: '#3949AB' },
     colleague: { label: 'Đồng nghiệp', color: '#1E88E5' },
     mentor: { label: 'Thầy/Trò', color: '#8E24AA' },
     partner: { label: 'Đối tác', color: '#00ACC1' },
-    other: { label: 'Khác', color: '#999' }
+    other: { label: 'Khác', color: '#757575' }
 };
 
-// ✨ NEW: Node types for tabs
-const NODE_TYPES = {
-    family: 'Họ hàng',
-    social: 'Xã hội'
+// Default layers
+const DEFAULT_LAYERS = [
+    { id: 'family', name: 'Gia đình', color: '#E53935', icon: 'fa-home' },
+    { id: 'work', name: 'Công việc', color: '#1E88E5', icon: 'fa-briefcase' },
+    { id: 'friends', name: 'Bạn bè', color: '#4CAF50', icon: 'fa-users' },
+    { id: 'others', name: 'Khác', color: '#9E9E9E', icon: 'fa-ellipsis-h' }
+];
+
+// ==========================================
+// PHẦN 2: STATE & INITIALIZATION
+// ==========================================
+
+let graph = new Graph();
+let renderer = null;
+
+let state = {
+    selectedNode: null,
+    selectedEdge: null,
+    parentNode: null,
+    mode: 'NORMAL',
+    draggedNode: null,
+    isDragging: false,
+    dragStartTime: 0,
+    dragStartPos: null,
+    hasMoved: false,
+    lastSaved: null,
+    currentLayer: 'all',
+    forceRunning: false,
+    editingLayerId: null,
+    layers: [...DEFAULT_LAYERS]
 };
 
-// Helper: Màu sắc & Kích thước theo KHOẢNG CÁCH từ center
+// ==========================================
+// PHẦN 3: HELPER FUNCTIONS
+// ==========================================
+
 const getColorByDistance = (distance) => {
     return DISTANCE_COLORS[Math.min(distance, DISTANCE_COLORS.length - 1)] || '#999';
 };
@@ -71,31 +102,7 @@ const getSizeByDistance = (distance) => {
     return Math.max(NODE_SIZES.MIN, NODE_SIZES.BASE - (distance * NODE_SIZES.REDUCTION_FACTOR));
 };
 
-// Khởi tạo đồ thị
-let graph = new Graph();
-let renderer = null;
-let forceLayout = null;
-
-let state = {
-    selectedNode: null,
-    selectedEdge: null,     // ✨ NEW: Selected edge
-    parentNode: null,
-    mode: 'NORMAL',
-    draggedNode: null,
-    isDragging: false,
-    dragStartTime: 0,
-    dragStartPos: null,
-    hasMoved: false,
-    selectedForExport: new Set(),
-    lastSaved: null,
-    currentTab: 'all',      // ✨ NEW: Current tab (all/family/social)
-    forceRunning: false     // ✨ NEW: Force layout running status
-};
-
-// ==========================================
-// ✨ BREADTH-FIRST SEARCH: Tính khoảng cách từ center
-// ==========================================
-
+// BFS to calculate distances from center
 function calculateDistancesFromCenter() {
     const distances = new Map();
     const queue = ['center'];
@@ -105,7 +112,6 @@ function calculateDistancesFromCenter() {
         const current = queue.shift();
         const currentDist = distances.get(current);
 
-        // Duyệt tất cả neighbors
         graph.forEachNeighbor(current, (neighbor) => {
             if (!distances.has(neighbor)) {
                 distances.set(neighbor, currentDist + 1);
@@ -117,7 +123,7 @@ function calculateDistancesFromCenter() {
     return distances;
 }
 
-// ✨ Apply colors based on distance from center
+// Apply colors based on distance
 function applyColorsByDistance(showNotification = true) {
     const distances = calculateDistancesFromCenter();
 
@@ -135,7 +141,7 @@ function applyColorsByDistance(showNotification = true) {
 }
 
 // ==========================================
-// ✨ TOAST NOTIFICATION SYSTEM
+// PHẦN 4: TOAST NOTIFICATION SYSTEM
 // ==========================================
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -167,13 +173,15 @@ function showToast(message, type = 'info', duration = 3000) {
 }
 
 // ==========================================
-// PHẦN 2: QUẢN LÝ LƯU TRỮ
+// PHẦN 5: STORAGE MANAGEMENT
 // ==========================================
 
 function saveData() {
     const payload = {
+        version: '3.0',
         graph: graph.export(),
-        selection: Array.from(state.selectedForExport)
+        layers: state.layers,
+        savedAt: new Date().toISOString()
     };
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -188,57 +196,142 @@ function saveData() {
 }
 
 function loadData() {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // Try v3 format first
+    let raw = localStorage.getItem(STORAGE_KEY);
+
+    // Fallback to v2 format for migration
+    if (!raw) {
+        raw = localStorage.getItem('social_graph_v2_data');
+        if (raw) {
+            // Migrate from v2
+            try {
+                const v2Data = JSON.parse(raw);
+                const graphData = v2Data.graph || v2Data;
+                graph.import(graphData);
+                migrateFromV2();
+                showToast('Đã nâng cấp dữ liệu từ v2 lên v3!', 'success');
+                saveData();
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+    }
+
     if (raw) {
         try {
             const data = JSON.parse(raw);
+
+            // Load layers
+            if (data.layers && Array.isArray(data.layers)) {
+                state.layers = data.layers;
+            }
+
+            // Load graph
             const graphData = data.graph || data;
             graph.import(graphData);
 
-            // 🔧 Migration: Convert old 'type' attribute to 'category' for nodes
-            graph.forEachNode((node) => {
-                const attrs = graph.getNodeAttributes(node);
-                if (attrs.type !== undefined) {
-                    // Move type to category
-                    graph.setNodeAttribute(node, 'category', attrs.type);
-                    // Remove old type attribute
-                    graph.removeNodeAttribute(node, 'type');
-                }
-                // Ensure all nodes have a category
-                if (!graph.getNodeAttribute(node, 'category')) {
-                    graph.setNodeAttribute(node, 'category', 'social');
-                }
-            });
+            // Ensure all nodes have required attributes
+            ensureNodeAttributes();
 
-            // 🔧 Migration: Convert old 'type' attribute to 'relationship' for edges
-            graph.forEachEdge((edge) => {
-                const attrs = graph.getEdgeAttributes(edge);
-                if (attrs.type !== undefined) {
-                    // Move type to relationship
-                    graph.setEdgeAttribute(edge, 'relationship', attrs.type);
-                    // Remove old type attribute
-                    graph.removeEdgeAttribute(edge, 'type');
-                }
-                // Ensure all edges have a relationship
-                if (!graph.getEdgeAttribute(edge, 'relationship')) {
-                    graph.setEdgeAttribute(edge, 'relationship', 'other');
-                }
-            });
-
-            if (Array.isArray(data.selection)) {
-                state.selectedForExport = new Set(data.selection);
-            }
             return true;
         } catch (e) {
-            // Silent fail - data corrupted
             return false;
         }
     }
     return false;
 }
 
+function migrateFromV2() {
+    // Migrate node attributes
+    graph.forEachNode((node) => {
+        const attrs = graph.getNodeAttributes(node);
+
+        // Convert 'category' to 'layer'
+        if (attrs.category) {
+            graph.setNodeAttribute(node, 'layer', attrs.category === 'family' ? 'family' : 'others');
+            graph.removeNodeAttribute(node, 'category');
+        }
+
+        // Convert 'type' to 'layer'
+        if (attrs.type !== undefined) {
+            graph.setNodeAttribute(node, 'layer', attrs.type === 'family' ? 'family' : 'others');
+            graph.removeNodeAttribute(node, 'type');
+        }
+
+        // Initialize contact fields
+        if (!attrs.contact) {
+            graph.setNodeAttribute(node, 'contact', {
+                email: '',
+                phone: '',
+                address: '',
+                company: '',
+                position: '',
+                facebook: '',
+                social: '',
+                birthday: '',
+                notes: ''
+            });
+        }
+    });
+
+    // Migrate edge attributes
+    graph.forEachEdge((edge) => {
+        const attrs = graph.getEdgeAttributes(edge);
+
+        // Add label if not exists
+        if (!attrs.label) {
+            graph.setEdgeAttribute(edge, 'label', '');
+        }
+
+        // Convert 'type' to 'relationship'
+        if (attrs.type !== undefined && !attrs.relationship) {
+            graph.setEdgeAttribute(edge, 'relationship', attrs.type);
+            graph.removeEdgeAttribute(edge, 'type');
+        }
+    });
+}
+
+function ensureNodeAttributes() {
+    graph.forEachNode((node) => {
+        const attrs = graph.getNodeAttributes(node);
+
+        if (!attrs.layer) {
+            graph.setNodeAttribute(node, 'layer', 'others');
+        }
+
+        if (!attrs.contact) {
+            graph.setNodeAttribute(node, 'contact', {
+                email: '',
+                phone: '',
+                address: '',
+                company: '',
+                position: '',
+                facebook: '',
+                social: '',
+                birthday: '',
+                notes: ''
+            });
+        }
+    });
+
+    graph.forEachEdge((edge) => {
+        const attrs = graph.getEdgeAttributes(edge);
+
+        if (!attrs.label) {
+            graph.setEdgeAttribute(edge, 'label', '');
+        }
+
+        if (!attrs.relationship) {
+            graph.setEdgeAttribute(edge, 'relationship', 'other');
+        }
+    });
+}
+
 function initDefaultData() {
     graph.clear();
+    state.layers = [...DEFAULT_LAYERS];
+
     graph.addNode('center', {
         label: "TÔI",
         distance: 0,
@@ -246,44 +339,37 @@ function initDefaultData() {
         y: 0,
         size: NODE_SIZES.CENTER,
         color: getColorByDistance(0),
-        category: 'social' // Node category (family/social)
+        layer: 'family',
+        contact: {
+            email: '',
+            phone: '',
+            address: '',
+            company: '',
+            position: '',
+            facebook: '',
+            social: '',
+            birthday: '',
+            notes: 'Đây là bạn - trung tâm của sơ đồ quan hệ'
+        }
     });
-    state.selectedForExport = new Set();
+
     saveData();
 }
 
 // Export functions
 function downloadJSON() {
-    const data = graph.export();
+    const data = {
+        version: '3.0',
+        exportedAt: new Date().toISOString(),
+        layers: state.layers,
+        graph: graph.export()
+    };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.href = dataStr;
-    a.download = "social_graph_" + Date.now() + ".json";
+    a.download = "social_graph_v3_" + Date.now() + ".json";
     a.click();
     showToast('Đã xuất file JSON thành công!', 'success');
-}
-
-function downloadSelectedJSON() {
-    if (!state.selectedForExport.size) {
-        showToast('Bạn chưa chọn người nào để xuất', 'warning');
-        return;
-    }
-
-    const exportData = graph.export();
-    const selectedSet = new Set(state.selectedForExport);
-    const filtered = {
-        attributes: exportData.attributes || {},
-        options: exportData.options || {},
-        nodes: exportData.nodes.filter(n => selectedSet.has(n.key)),
-        edges: exportData.edges.filter(e => selectedSet.has(e.source) && selectedSet.has(e.target))
-    };
-
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filtered, null, 2));
-    const a = document.createElement('a');
-    a.href = dataStr;
-    a.download = "social_graph_selected_" + Date.now() + ".json";
-    a.click();
-    showToast(`Đã xuất ${state.selectedForExport.size} người thành công!`, 'success');
 }
 
 async function captureGraphImage() {
@@ -293,7 +379,7 @@ async function captureGraphImage() {
     const canvas = await html2canvas(container, { scale: 2, useCORS: true });
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/png');
-    link.download = `social_graph_${Date.now()}.png`;
+    link.download = `social_graph_v3_${Date.now()}.png`;
     link.click();
     showToast('Đã lưu ảnh thành công!', 'success');
 }
@@ -306,10 +392,20 @@ function uploadJSON(event) {
         try {
             const data = JSON.parse(e.target.result);
             graph.clear();
-            graph.import(data);
-            applyColorsByDistance();
-            state.selectedForExport = new Set();
-            updateSelectionUI();
+
+            // Load layers if present
+            if (data.layers && Array.isArray(data.layers)) {
+                state.layers = data.layers;
+                renderLayerFilters();
+                renderLayersList();
+            }
+
+            // Load graph
+            const graphData = data.graph || data;
+            graph.import(graphData);
+            ensureNodeAttributes();
+            applyColorsByDistance(false);
+            updateNodeCount();
             saveData();
             showToast('Đã nhập dữ liệu thành công!', 'success');
         } catch (err) {
@@ -320,92 +416,204 @@ function uploadJSON(event) {
 }
 
 // ==========================================
-// ✨ FORCE-DIRECTED LAYOUT
+// PHẦN 6: LAYERS MANAGEMENT
 // ==========================================
 
-function startForceLayout() {
-    if (state.forceRunning) {
-        stopForceLayout();
+function renderLayerFilters() {
+    const container = document.getElementById('layer-filters');
+
+    // Clear and keep "All" button
+    container.innerHTML = `
+        <button class="layer-btn ${state.currentLayer === 'all' ? 'active' : ''}" data-layer="all">
+            <i class="fas fa-globe"></i> Tất cả
+        </button>
+    `;
+
+    // Add layer buttons
+    state.layers.forEach(layer => {
+        const btn = document.createElement('button');
+        btn.className = `layer-btn ${state.currentLayer === layer.id ? 'active' : ''}`;
+        btn.dataset.layer = layer.id;
+        btn.style.setProperty('--layer-color', layer.color);
+        btn.innerHTML = `<i class="fas ${layer.icon || 'fa-folder'}"></i> ${layer.name}`;
+        container.appendChild(btn);
+    });
+
+    // Add click handlers
+    container.querySelectorAll('.layer-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchLayer(btn.dataset.layer));
+    });
+
+    // Update layer select in modal
+    updateLayerSelect();
+}
+
+function updateLayerSelect() {
+    const select = document.getElementById('inp-layer');
+    if (!select) return;
+
+    select.innerHTML = state.layers.map(layer =>
+        `<option value="${layer.id}">${layer.name}</option>`
+    ).join('');
+}
+
+function renderLayersList() {
+    const container = document.getElementById('layers-list');
+    if (!container) return;
+
+    container.innerHTML = state.layers.map(layer => {
+        const nodeCount = countNodesInLayer(layer.id);
+        return `
+            <div class="layer-item" data-layer-id="${layer.id}">
+                <div class="layer-color" style="background: ${layer.color};"></div>
+                <div class="layer-info">
+                    <span class="layer-name">${layer.name}</span>
+                    <span class="layer-count">${nodeCount} người</span>
+                </div>
+                <div class="layer-actions">
+                    <button class="btn-icon btn-edit-layer" data-layer-id="${layer.id}" title="Chỉnh sửa">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Add click handlers
+    container.querySelectorAll('.btn-edit-layer').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openLayerModal(btn.dataset.layerId);
+        });
+    });
+}
+
+function countNodesInLayer(layerId) {
+    let count = 0;
+    graph.forEachNode((node) => {
+        if (graph.getNodeAttribute(node, 'layer') === layerId) {
+            count++;
+        }
+    });
+    return count;
+}
+
+function addLayer() {
+    const nameInput = document.getElementById('new-layer-name');
+    const colorInput = document.getElementById('new-layer-color');
+
+    const name = nameInput.value.trim();
+    if (!name) {
+        showToast('Vui lòng nhập tên layer', 'warning');
         return;
     }
 
-    state.forceRunning = true;
-    const btn = document.getElementById('btn-force-layout');
-    btn.innerHTML = '<i class="fas fa-stop"></i> Dừng Force';
-    btn.style.background = '#f44336';
+    const id = 'layer_' + Date.now();
+    const color = colorInput.value;
 
-    showToast('Đang chạy Force Layout...', 'info', 2000);
+    state.layers.push({
+        id,
+        name,
+        color,
+        icon: 'fa-folder'
+    });
 
-    // Configure ForceAtlas2 using constants
-    const settings = {
-        iterations: FORCE_LAYOUT_CONFIG.ITERATIONS,
-        settings: {
-            barnesHutOptimize: true,
-            strongGravityMode: true,
-            gravity: FORCE_LAYOUT_CONFIG.GRAVITY,
-            scalingRatio: FORCE_LAYOUT_CONFIG.SCALING_RATIO,
-            slowDown: FORCE_LAYOUT_CONFIG.SLOW_DOWN
-        }
-    };
+    nameInput.value = '';
+    colorInput.value = '#667eea';
 
-    // Run iterations
-    let iteration = 0;
-    const interval = setInterval(() => {
-        if (!state.forceRunning || iteration >= settings.iterations) {
-            stopForceLayout();
-            clearInterval(interval);
-            return;
-        }
-
-        forceAtlas2.assign(graph, { iterations: 1, ...settings.settings });
-        renderer.refresh();
-        iteration++;
-
-        // Update progress
-        const progress = Math.round((iteration / settings.iterations) * 100);
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${progress}%`;
-    }, FORCE_LAYOUT_CONFIG.FRAME_RATE);
-}
-
-function stopForceLayout() {
-    state.forceRunning = false;
-    const btn = document.getElementById('btn-force-layout');
-    btn.innerHTML = '<i class="fas fa-project-diagram"></i> Force Layout';
-    btn.style.background = '#2196F3';
+    renderLayerFilters();
+    renderLayersList();
     saveData();
-    showToast('Force Layout hoàn tất!', 'success');
+    showToast(`Đã thêm layer "${name}"`, 'success');
 }
 
-// ==========================================
-// ✨ TAB FILTERING
-// ==========================================
+function openLayerModal(layerId) {
+    const layer = state.layers.find(l => l.id === layerId);
+    if (!layer) return;
 
-function switchTab(tab) {
-    state.currentTab = tab;
+    state.editingLayerId = layerId;
+    document.getElementById('edit-layer-name').value = layer.name;
+    document.getElementById('edit-layer-color').value = layer.color;
 
-    // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.tab === tab) {
-            btn.classList.add('active');
+    document.getElementById('layer-modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function closeLayerModal() {
+    document.getElementById('layer-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    state.editingLayerId = null;
+}
+
+function saveLayer() {
+    if (!state.editingLayerId) return;
+
+    const layer = state.layers.find(l => l.id === state.editingLayerId);
+    if (!layer) return;
+
+    layer.name = document.getElementById('edit-layer-name').value.trim();
+    layer.color = document.getElementById('edit-layer-color').value;
+
+    renderLayerFilters();
+    renderLayersList();
+    saveData();
+    closeLayerModal();
+    showToast('Đã lưu layer', 'success');
+}
+
+function deleteLayer() {
+    if (!state.editingLayerId) return;
+
+    // Don't allow deleting if it's the last layer
+    if (state.layers.length <= 1) {
+        showToast('Không thể xóa layer cuối cùng', 'warning');
+        return;
+    }
+
+    // Move nodes to 'others' layer or first available layer
+    const targetLayer = state.layers.find(l => l.id !== state.editingLayerId)?.id || 'others';
+
+    graph.forEachNode((node) => {
+        if (graph.getNodeAttribute(node, 'layer') === state.editingLayerId) {
+            graph.setNodeAttribute(node, 'layer', targetLayer);
         }
     });
 
-    // Filter and display nodes
-    if (tab === 'all') {
-        // Show all nodes
+    state.layers = state.layers.filter(l => l.id !== state.editingLayerId);
+
+    if (state.currentLayer === state.editingLayerId) {
+        state.currentLayer = 'all';
+    }
+
+    renderLayerFilters();
+    renderLayersList();
+    saveData();
+    closeLayerModal();
+    renderer.refresh();
+    showToast('Đã xóa layer', 'success');
+}
+
+function switchLayer(layerId) {
+    state.currentLayer = layerId;
+
+    // Update button states
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.layer === layerId);
+    });
+
+    // Filter nodes
+    if (layerId === 'all') {
         graph.forEachNode((node) => {
             graph.setNodeAttribute(node, 'hidden', false);
         });
     } else {
-        // Show only nodes of selected category
         graph.forEachNode((node) => {
-            const nodeCategory = graph.getNodeAttribute(node, 'category') || 'social';
-            graph.setNodeAttribute(node, 'hidden', nodeCategory !== tab);
+            const nodeLayer = graph.getNodeAttribute(node, 'layer');
+            graph.setNodeAttribute(node, 'hidden', nodeLayer !== layerId);
         });
     }
 
-    // Hide edges if both source and target are hidden
+    // Hide edges where either node is hidden
     graph.forEachEdge((edge) => {
         const source = graph.source(edge);
         const target = graph.target(edge);
@@ -417,21 +625,36 @@ function switchTab(tab) {
     renderer.refresh();
 }
 
+function toggleLayersPanel() {
+    const panel = document.getElementById('layers-panel');
+    panel.classList.toggle('hidden');
+}
+
 // ==========================================
-// PHẦN 3: UI & STATE
+// PHẦN 7: UI & MODALS
 // ==========================================
 
 const ui = {
     modal: document.getElementById('modal'),
-    edgeModal: document.getElementById('edge-modal'),  // ✨ NEW: Edge modal
+    edgeModal: document.getElementById('edge-modal'),
+    layerModal: document.getElementById('layer-modal'),
     overlay: document.getElementById('overlay'),
     inpLabel: document.getElementById('inp-label'),
-    inpType: document.getElementById('inp-type'),      // ✨ NEW: Node type input
+    inpLayer: document.getElementById('inp-layer'),
+    inpEmail: document.getElementById('inp-email'),
+    inpPhone: document.getElementById('inp-phone'),
+    inpAddress: document.getElementById('inp-address'),
+    inpCompany: document.getElementById('inp-company'),
+    inpPosition: document.getElementById('inp-position'),
+    inpFacebook: document.getElementById('inp-facebook'),
+    inpSocial: document.getElementById('inp-social'),
+    inpBirthday: document.getElementById('inp-birthday'),
+    inpNotes: document.getElementById('inp-notes'),
     title: document.getElementById('modal-title'),
     editActions: document.getElementById('edit-actions'),
     btnSave: document.getElementById('btn-save'),
-    toggleSelection: document.getElementById('toggle-selection'),
-    edgeType: document.getElementById('edge-type')     // ✨ NEW: Edge type select
+    edgeType: document.getElementById('edge-type'),
+    edgeLabel: document.getElementById('edge-label')
 };
 
 function updateAutosaveBadge() {
@@ -443,24 +666,34 @@ function updateAutosaveBadge() {
     setTimeout(() => AUTOSAVE_BADGE.classList.remove('flash'), 700);
 }
 
-function updateSelectionUI() {
-    const count = state.selectedForExport.size;
-    const selectionText = document.getElementById('selection-count');
-    const exportBtn = document.getElementById('btn-export-selected');
-    const clearBtn = document.getElementById('btn-clear-selection');
-
-    if (selectionText) selectionText.innerText = count ? `${count} người đã chọn` : 'Chưa chọn';
-    if (exportBtn) exportBtn.disabled = count === 0;
-    if (clearBtn) clearBtn.disabled = count === 0;
+function updateNodeCount() {
+    const count = graph.order;
+    const nodeCountEl = document.getElementById('node-count');
+    if (nodeCountEl) {
+        nodeCountEl.innerText = `${count} người`;
+    }
 }
 
 function closeModal() {
     ui.modal.style.display = 'none';
     ui.overlay.style.display = 'none';
-    ui.inpLabel.value = '';
+    clearModalForm();
     state.mode = 'NORMAL';
     state.selectedNode = null;
     state.parentNode = null;
+}
+
+function clearModalForm() {
+    ui.inpLabel.value = '';
+    if (ui.inpEmail) ui.inpEmail.value = '';
+    if (ui.inpPhone) ui.inpPhone.value = '';
+    if (ui.inpAddress) ui.inpAddress.value = '';
+    if (ui.inpCompany) ui.inpCompany.value = '';
+    if (ui.inpPosition) ui.inpPosition.value = '';
+    if (ui.inpFacebook) ui.inpFacebook.value = '';
+    if (ui.inpSocial) ui.inpSocial.value = '';
+    if (ui.inpBirthday) ui.inpBirthday.value = '';
+    if (ui.inpNotes) ui.inpNotes.value = '';
 }
 
 function closeEdgeModal() {
@@ -479,28 +712,37 @@ function openModal(nodeId, mode = 'EDIT') {
             ? `Thêm từ: ${graph.getNodeAttribute(state.parentNode, 'label')}`
             : "Thêm người mới";
 
-        ui.inpType.value = "social";
-        if (ui.toggleSelection) ui.toggleSelection.checked = true;
+        clearModalForm();
+        if (ui.inpLayer) ui.inpLayer.value = state.layers[0]?.id || 'others';
         ui.btnSave.innerHTML = '<i class="fas fa-plus"></i> Thêm';
         ui.editActions.style.display = 'none';
         setTimeout(() => ui.inpLabel.focus(), 100);
     } else {
         state.selectedNode = nodeId;
         const attr = graph.getNodeAttributes(nodeId);
+        const contact = attr.contact || {};
+
         ui.title.innerText = attr.label;
         ui.inpLabel.value = attr.label;
-        ui.inpType.value = attr.category || 'social';
-        if (ui.toggleSelection) ui.toggleSelection.checked = state.selectedForExport.has(nodeId);
+        if (ui.inpLayer) ui.inpLayer.value = attr.layer || 'others';
+        if (ui.inpEmail) ui.inpEmail.value = contact.email || '';
+        if (ui.inpPhone) ui.inpPhone.value = contact.phone || '';
+        if (ui.inpAddress) ui.inpAddress.value = contact.address || '';
+        if (ui.inpCompany) ui.inpCompany.value = contact.company || '';
+        if (ui.inpPosition) ui.inpPosition.value = contact.position || '';
+        if (ui.inpFacebook) ui.inpFacebook.value = contact.facebook || '';
+        if (ui.inpSocial) ui.inpSocial.value = contact.social || '';
+        if (ui.inpBirthday) ui.inpBirthday.value = contact.birthday || '';
+        if (ui.inpNotes) ui.inpNotes.value = contact.notes || '';
+
         ui.btnSave.innerHTML = '<i class="fas fa-save"></i> Lưu';
 
         const isCenter = (nodeId === 'center');
         document.getElementById('btn-delete').style.display = isCenter ? 'none' : 'block';
-        ui.inpType.disabled = isCenter;
         ui.editActions.style.display = 'block';
     }
 }
 
-// ✨ NEW: Open Edge Modal
 function openEdgeModal(edge) {
     state.selectedEdge = edge;
     ui.overlay.style.display = 'block';
@@ -513,15 +755,70 @@ function openEdgeModal(edge) {
 
     document.getElementById('edge-modal-title').innerText = `${sourceLabel} ↔ ${targetLabel}`;
 
-    const edgeType = graph.getEdgeAttribute(edge, 'relationship') || 'other';
-    ui.edgeType.value = edgeType;
+    const edgeRelationship = graph.getEdgeAttribute(edge, 'relationship') || 'other';
+    const edgeLabel = graph.getEdgeAttribute(edge, 'label') || '';
+
+    ui.edgeType.value = edgeRelationship;
+    ui.edgeLabel.value = edgeLabel;
 }
 
 // ==========================================
-// ✨ DRAG & DROP LOGIC
+// PHẦN 8: FORCE LAYOUT
 // ==========================================
 
-const camera = renderer ? renderer.getCamera() : null;
+function startForceLayout() {
+    if (state.forceRunning) {
+        stopForceLayout();
+        return;
+    }
+
+    state.forceRunning = true;
+    const btn = document.getElementById('btn-force-layout');
+    btn.innerHTML = '<i class="fas fa-stop"></i> Dừng';
+    btn.style.background = '#f44336';
+
+    showToast('Đang chạy Force Layout...', 'info', 2000);
+
+    const settings = {
+        iterations: FORCE_LAYOUT_CONFIG.ITERATIONS,
+        settings: {
+            barnesHutOptimize: true,
+            strongGravityMode: true,
+            gravity: FORCE_LAYOUT_CONFIG.GRAVITY,
+            scalingRatio: FORCE_LAYOUT_CONFIG.SCALING_RATIO,
+            slowDown: FORCE_LAYOUT_CONFIG.SLOW_DOWN
+        }
+    };
+
+    let iteration = 0;
+    const interval = setInterval(() => {
+        if (!state.forceRunning || iteration >= settings.iterations) {
+            stopForceLayout();
+            clearInterval(interval);
+            return;
+        }
+
+        forceAtlas2.assign(graph, { iterations: 1, ...settings.settings });
+        renderer.refresh();
+        iteration++;
+
+        const progress = Math.round((iteration / settings.iterations) * 100);
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${progress}%`;
+    }, FORCE_LAYOUT_CONFIG.FRAME_RATE);
+}
+
+function stopForceLayout() {
+    state.forceRunning = false;
+    const btn = document.getElementById('btn-force-layout');
+    btn.innerHTML = '<i class="fas fa-project-diagram"></i> Force Layout';
+    btn.style.background = '#2196F3';
+    saveData();
+    showToast('Force Layout hoàn tất!', 'success');
+}
+
+// ==========================================
+// PHẦN 9: DRAG & DROP
+// ==========================================
 
 function setupDragAndDrop() {
     const captor = renderer.getMouseCaptor();
@@ -591,13 +888,13 @@ function checkAndLinkNodes(nodeA, posA) {
     const sizeA = posA.size || 10;
 
     graph.forEachNode((nodeB, attrB) => {
-        if (nodeA !== nodeB) {
+        if (nodeA !== nodeB && !attrB.hidden) {
             const dx = posA.x - attrB.x;
             const dy = posA.y - attrB.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const sizeB = attrB.size || 10;
-            const threshold = (sizeA + sizeB) / 2 + 3;
+            const threshold = (sizeA + sizeB) / 2 + 5;
 
             if (dist < threshold && dist < minDist) {
                 targetNode = nodeB;
@@ -628,6 +925,10 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
             </div>
             <h3>Kết nối quan hệ?</h3>
             <p>Kết nối <strong>"${labelA}"</strong> với <strong>"${labelB}"</strong>?</p>
+            <div class="link-label-input">
+                <label>Nhãn quan hệ (tùy chọn):</label>
+                <input type="text" id="quick-edge-label" placeholder="VD: Bố, Mẹ, Vợ, Bạn...">
+            </div>
             <div class="link-actions">
                 <button class="btn-cancel" id="link-cancel">
                     <i class="fas fa-times"></i> Không
@@ -643,17 +944,23 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
     setTimeout(() => dialog.classList.add('show'), 10);
 
     document.getElementById('link-confirm').addEventListener('click', () => {
-        // Check if edge already exists
         if (graph.hasEdge(nodeA, nodeB) || graph.hasEdge(nodeB, nodeA)) {
-            showToast(`Đã có mối quan hệ giữa "${labelA}" và "${labelB}"!`, 'warning');
+            showToast(`Đã có mối quan hệ!`, 'warning');
             removeDialog();
             return;
         }
 
-        graph.addEdge(nodeA, nodeB, { relationship: 'other', color: EDGE_TYPES.other.color });
+        const edgeLabel = document.getElementById('quick-edge-label').value.trim();
+
+        graph.addEdge(nodeA, nodeB, {
+            relationship: 'other',
+            color: EDGE_TYPES.other.color,
+            label: edgeLabel
+        });
         graph.setNodeAttribute(nodeA, 'x', posA.x + DRAG_CONFIG.LINK_OFFSET.x);
         graph.setNodeAttribute(nodeA, 'y', posA.y + DRAG_CONFIG.LINK_OFFSET.y);
-        applyColorsByDistance(); // Update colors after new connection
+        applyColorsByDistance(false);
+        updateNodeCount();
         saveData();
         showToast(`Đã kết nối "${labelA}" với "${labelB}"!`, 'success');
         removeDialog();
@@ -668,7 +975,7 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
 }
 
 // ==========================================
-// ✨ CLICK HANDLING
+// PHẦN 10: CLICK HANDLERS
 // ==========================================
 
 function setupClickHandlers() {
@@ -687,7 +994,6 @@ function setupClickHandlers() {
         }, 150);
     });
 
-    // ✨ NEW: Click on Edge
     renderer.on('clickEdge', (e) => {
         if (!state.isDragging) {
             openEdgeModal(e.edge);
@@ -696,18 +1002,30 @@ function setupClickHandlers() {
 }
 
 // ==========================================
-// PHẦN 4: BUTTON HANDLERS
+// PHẦN 11: BUTTON HANDLERS
 // ==========================================
 
+// Save Node
 ui.btnSave.addEventListener('click', () => {
     const label = ui.inpLabel.value.trim();
-    const type = ui.inpType.value;
-    const shouldSelect = ui.toggleSelection ? ui.toggleSelection.checked : false;
+    const layer = ui.inpLayer?.value || 'others';
 
     if (!label) {
         showToast('Vui lòng nhập tên!', 'warning');
         return;
     }
+
+    const contact = {
+        email: ui.inpEmail?.value.trim() || '',
+        phone: ui.inpPhone?.value.trim() || '',
+        address: ui.inpAddress?.value.trim() || '',
+        company: ui.inpCompany?.value.trim() || '',
+        position: ui.inpPosition?.value.trim() || '',
+        facebook: ui.inpFacebook?.value.trim() || '',
+        social: ui.inpSocial?.value.trim() || '',
+        birthday: ui.inpBirthday?.value || '',
+        notes: ui.inpNotes?.value.trim() || ''
+    };
 
     if (state.mode === 'ADD') {
         const newId = 'n_' + Date.now();
@@ -716,65 +1034,66 @@ ui.btnSave.addEventListener('click', () => {
 
         if (state.parentNode) {
             const pAttr = graph.getNodeAttributes(state.parentNode);
-            initX = pAttr.x + 5;
-            initY = pAttr.y + 5;
+            initX = pAttr.x + 8;
+            initY = pAttr.y + 8;
         }
 
         graph.addNode(newId, {
             label: label,
-            category: type,
+            layer: layer,
             distance: 0,
             size: 15,
             color: '#999',
             x: initX,
-            y: initY
+            y: initY,
+            contact: contact
         });
 
         if (state.parentNode) {
             graph.addEdge(state.parentNode, newId, {
-                relationship: type === 'family' ? 'family' : 'other',
-                color: type === 'family' ? EDGE_TYPES.family.color : EDGE_TYPES.other.color
+                relationship: layer === 'family' ? 'family' : 'other',
+                color: layer === 'family' ? EDGE_TYPES.family.color : EDGE_TYPES.other.color,
+                label: ''
             });
         }
 
-        if (shouldSelect) state.selectedForExport.add(newId);
-
-        applyColorsByDistance();
+        applyColorsByDistance(false);
+        updateNodeCount();
         showToast(`Đã thêm "${label}"!`, 'success');
     } else {
         if (state.selectedNode) {
             graph.setNodeAttribute(state.selectedNode, 'label', label);
             if (state.selectedNode !== 'center') {
-                graph.setNodeAttribute(state.selectedNode, 'category', type);
+                graph.setNodeAttribute(state.selectedNode, 'layer', layer);
             }
-            if (shouldSelect) {
-                state.selectedForExport.add(state.selectedNode);
-            } else {
-                state.selectedForExport.delete(state.selectedNode);
-            }
+            graph.setNodeAttribute(state.selectedNode, 'contact', contact);
             showToast('Đã cập nhật!', 'success');
         }
     }
 
-    updateSelectionUI();
     saveData();
     closeModal();
+    renderer.refresh();
 });
 
-// ✨ NEW: Save Edge Type
+// Save Edge
 document.getElementById('btn-save-edge').addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const edgeType = ui.edgeType.value;
+    const edgeLabel = ui.edgeLabel.value.trim();
+
     graph.setEdgeAttribute(state.selectedEdge, 'relationship', edgeType);
     graph.setEdgeAttribute(state.selectedEdge, 'color', EDGE_TYPES[edgeType].color);
+    graph.setEdgeAttribute(state.selectedEdge, 'label', edgeLabel);
 
     saveData();
     closeEdgeModal();
-    showToast(`Đã cập nhật loại quan hệ!`, 'success');
+    renderer.refresh();
+    showToast(`Đã cập nhật mối quan hệ!`, 'success');
 });
 
-// ✨ NEW: Delete Edge
+// Delete Edge
 document.getElementById('btn-delete-edge').addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
@@ -806,7 +1125,7 @@ document.getElementById('btn-delete-edge').addEventListener('click', () => {
 
     document.getElementById('delete-edge-confirm').addEventListener('click', () => {
         graph.dropEdge(state.selectedEdge);
-        applyColorsByDistance();
+        applyColorsByDistance(false);
         saveData();
         closeEdgeModal();
         showToast('Đã xóa mối quan hệ!', 'success');
@@ -821,17 +1140,25 @@ document.getElementById('btn-delete-edge').addEventListener('click', () => {
     }
 });
 
+// Preset buttons for relationship labels
+document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        ui.edgeLabel.value = btn.dataset.label;
+    });
+});
+
+// Add child node
 document.getElementById('btn-add-child').addEventListener('click', () => {
     state.parentNode = state.selectedNode;
     openModal(null, 'ADD');
 });
 
-document.getElementById('btn-start-link').addEventListener('click', () => {
-    showToast('Mẹo: Kéo thả node đè lên node khác để nối nhanh!', 'info', 4000);
-    closeModal();
-});
-
+// Delete node
 document.getElementById('btn-delete').addEventListener('click', () => {
+    if (!state.selectedNode || state.selectedNode === 'center') return;
+
+    const label = graph.getNodeAttribute(state.selectedNode, 'label');
+
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'link-confirmation';
     confirmDialog.innerHTML = `
@@ -840,7 +1167,7 @@ document.getElementById('btn-delete').addEventListener('click', () => {
                 <i class="fas fa-trash-alt"></i>
             </div>
             <h3>Xác nhận xóa</h3>
-            <p>Xóa người này?</p>
+            <p>Xóa <strong>"${label}"</strong> và tất cả mối quan hệ liên quan?</p>
             <div class="link-actions">
                 <button class="btn-cancel" id="delete-cancel">Hủy</button>
                 <button class="btn-confirm danger" id="delete-confirm">
@@ -855,9 +1182,8 @@ document.getElementById('btn-delete').addEventListener('click', () => {
 
     document.getElementById('delete-confirm').addEventListener('click', () => {
         graph.dropNode(state.selectedNode);
-        state.selectedForExport.delete(state.selectedNode);
-        applyColorsByDistance();
-        updateSelectionUI();
+        applyColorsByDistance(false);
+        updateNodeCount();
         saveData();
         closeModal();
         showToast('Đã xóa!', 'success');
@@ -872,19 +1198,33 @@ document.getElementById('btn-delete').addEventListener('click', () => {
     }
 });
 
-// Other UI events
+// Close modals
 document.getElementById('btn-x-close').addEventListener('click', closeModal);
 document.getElementById('btn-x-close-edge').addEventListener('click', closeEdgeModal);
+document.getElementById('btn-x-close-layer').addEventListener('click', closeLayerModal);
+document.getElementById('close-layers-panel').addEventListener('click', toggleLayersPanel);
+
 ui.overlay.addEventListener('click', () => {
     closeModal();
     closeEdgeModal();
+    closeLayerModal();
 });
 
+// Toolbar buttons
 document.getElementById('btn-export').addEventListener('click', downloadJSON);
-document.getElementById('btn-export-selected').addEventListener('click', downloadSelectedJSON);
 document.getElementById('btn-import-trigger').addEventListener('click', () => document.getElementById('file-input').click());
 document.getElementById('file-input').addEventListener('change', uploadJSON);
+document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
+document.getElementById('btn-force-layout').addEventListener('click', startForceLayout);
+document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
+document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
 
+// Layer management
+document.getElementById('btn-add-layer').addEventListener('click', addLayer);
+document.getElementById('btn-save-layer').addEventListener('click', saveLayer);
+document.getElementById('btn-delete-layer').addEventListener('click', deleteLayer);
+
+// Reset data
 document.getElementById('btn-reset-data').addEventListener('click', () => {
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'link-confirmation';
@@ -894,7 +1234,7 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <h3>Reset toàn bộ?</h3>
-            <p>Tất cả dữ liệu sẽ bị xóa!</p>
+            <p>Tất cả dữ liệu sẽ bị xóa vĩnh viễn!</p>
             <div class="link-actions">
                 <button class="btn-cancel" id="reset-cancel">Hủy</button>
                 <button class="btn-confirm danger" id="reset-confirm">Reset</button>
@@ -907,6 +1247,7 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
 
     document.getElementById('reset-confirm').addEventListener('click', () => {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem('social_graph_v2_data');
         location.reload();
     });
 
@@ -916,42 +1257,25 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
     });
 });
 
-document.getElementById('btn-clear-selection').addEventListener('click', () => {
-    state.selectedForExport = new Set();
-    updateSelectionUI();
-    saveData();
-    showToast('Đã bỏ chọn tất cả!', 'info');
-});
-
-document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
-
-// ✨ NEW: Force Layout Button
-document.getElementById('btn-force-layout').addEventListener('click', startForceLayout);
-
-// ✨ NEW: Recolor Button
-document.getElementById('btn-recolor').addEventListener('click', applyColorsByDistance);
-
-// ✨ NEW: Tab buttons
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-});
-
 // ==========================================
-// INITIALIZATION
+// PHẦN 12: INITIALIZATION
 // ==========================================
 
 if (!loadData()) initDefaultData();
-updateSelectionUI();
-updateAutosaveBadge();
 
 const container = document.getElementById(CONTAINER_ID);
 renderer = new Sigma(graph, container, {
-    renderEdgeLabels: false,
+    renderEdgeLabels: true,
     defaultEdgeType: 'line',
+    edgeLabelSize: 12,
+    edgeLabelColor: { color: '#333' },
     edgeProgramClasses: {},
 });
 
-// Apply colors after renderer is ready (silent init)
+// Initialize UI
+renderLayerFilters();
+renderLayersList();
+updateNodeCount();
 applyColorsByDistance(false);
 
 setupDragAndDrop();
@@ -959,5 +1283,5 @@ setupClickHandlers();
 
 // Welcome message
 setTimeout(() => {
-    showToast('Kéo thả để nối, Click edge để sửa quan hệ!', 'info', 4000);
+    showToast('SocialGraph v3.0 - Kéo thả để nối, Click để sửa!', 'info', 4000);
 }, 500);

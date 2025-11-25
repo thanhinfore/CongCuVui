@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sơ đồ Quan hệ Xã hội v2.0</title>
+    <title>Sơ đồ Quan hệ Xã hội v3.0</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
@@ -12,38 +12,33 @@
 
     <div id="toolbar">
         <div class="brand">
-            <i class="fas fa-project-diagram"></i> SocialGraph v2.0
+            <i class="fas fa-project-diagram"></i> SocialGraph v3.0
         </div>
 
-        <!-- ✨ NEW: Tab Filters -->
-        <div class="tab-filters">
-            <button class="tab-btn active" data-tab="all">
+        <!-- Layer Filters - Dynamic -->
+        <div class="layer-filters" id="layer-filters">
+            <button class="layer-btn active" data-layer="all">
                 <i class="fas fa-globe"></i> Tất cả
             </button>
-            <button class="tab-btn" data-tab="family">
-                <i class="fas fa-home"></i> Họ hàng
-            </button>
-            <button class="tab-btn" data-tab="social">
-                <i class="fas fa-users"></i> Xã hội
-            </button>
+            <!-- Dynamic layers will be added here -->
         </div>
 
         <div class="tools">
-            <!-- ✨ NEW: Force Layout Button -->
+            <button id="btn-manage-layers" title="Quản lý các Layer" style="background: #9C27B0; color: white;">
+                <i class="fas fa-layer-group"></i> Layers
+            </button>
+
             <button id="btn-force-layout" title="Chạy Force Layout tự động sắp xếp" style="background: #2196F3; color: white;">
                 <i class="fas fa-project-diagram"></i> Force Layout
             </button>
 
-            <!-- ✨ NEW: Recolor Button -->
-            <button id="btn-recolor" title="Cập nhật màu theo khoảng cách" style="background: #9C27B0; color: white;">
+            <button id="btn-recolor" title="Cập nhật màu theo khoảng cách" style="background: #673AB7; color: white;">
                 <i class="fas fa-palette"></i> Màu theo cấp
             </button>
 
             <button id="btn-export" title="Tải dữ liệu về máy"><i class="fas fa-download"></i> Xuất File</button>
-            <button id="btn-export-selected" title="Xuất nhóm đang chọn"><i class="fas fa-list-check"></i> Xuất nhóm</button>
             <button id="btn-import-trigger" title="Mở file từ máy"><i class="fas fa-upload"></i> Nhập File</button>
             <button id="btn-capture" title="Chụp ảnh PNG"><i class="fas fa-camera"></i> Chụp ảnh</button>
-            <button id="btn-clear-selection" title="Bỏ chọn tất cả" class="ghost"><i class="fas fa-eraser"></i> Bỏ chọn</button>
             <button id="btn-reset-data" title="Xóa toàn bộ làm lại" style="background:#f44336; color: white;"><i class="fas fa-trash"></i> Reset</button>
             <input type="file" id="file-input" style="display: none" accept=".json">
             <span id="autosave-status">Tự lưu đang bật</span>
@@ -52,43 +47,112 @@
 
     <div id="container"></div>
 
+    <!-- Layers Panel (Sidebar) -->
+    <div id="layers-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3><i class="fas fa-layer-group"></i> Quản lý Layers</h3>
+            <span class="close-panel" id="close-layers-panel">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div class="add-layer-form">
+                <input type="text" id="new-layer-name" placeholder="Tên layer mới (VD: Đồng nghiệp)">
+                <input type="color" id="new-layer-color" value="#667eea" title="Màu layer">
+                <button id="btn-add-layer" class="btn-small btn-primary">
+                    <i class="fas fa-plus"></i> Thêm
+                </button>
+            </div>
+            <div class="layers-list" id="layers-list">
+                <!-- Dynamic layers will be rendered here -->
+            </div>
+            <div class="layer-hint">
+                <i class="fas fa-info-circle"></i>
+                Layers giúp phân loại và lọc các mối quan hệ theo nhóm tùy chỉnh.
+            </div>
+        </div>
+    </div>
+
     <div id="guide">
-        <strong><i class="fas fa-info-circle"></i> Hướng dẫn:</strong><br>
+        <strong><i class="fas fa-info-circle"></i> Hướng dẫn v3.0:</strong><br>
         - <strong>Click nền</strong> để thêm người mới<br>
-        - <strong>Click node</strong> để sửa/xem<br>
-        - <strong>Click cạnh</strong> để sửa loại quan hệ ✨<br>
+        - <strong>Click node</strong> để xem/sửa thông tin<br>
+        - <strong>Click cạnh</strong> để sửa loại quan hệ<br>
         - <strong>Kéo thả</strong> node đè lên nhau để nối<br>
-        - Màu sắc theo khoảng cách từ "TÔI" ✨<br>
-        - Checkbox để đánh dấu export
+        - Màu sắc theo khoảng cách từ "TÔI"<br>
+        - Cạnh hiển thị nhãn quan hệ
     </div>
 
     <div id="selection-panel">
-        <i class="fas fa-circle-check"></i> <span id="selection-count">Chưa chọn</span>
+        <i class="fas fa-users"></i> <span id="node-count">0 người</span>
     </div>
 
     <div id="overlay"></div>
 
-    <!-- Node Modal -->
+    <!-- Node Modal (Contact Form) -->
     <div id="modal">
         <div class="modal-header">
-            <h3 id="modal-title">Thông tin</h3>
+            <h3 id="modal-title">Thông tin cá nhân</h3>
             <span class="close-modal" id="btn-x-close">&times;</span>
         </div>
 
-        <div class="modal-body">
-            <label>Tên hiển thị:</label>
-            <input type="text" id="inp-label" placeholder="Nhập tên (VD: Bố, Vợ, Bạn thân...)">
+        <div class="modal-body modal-scrollable">
+            <!-- Basic Info -->
+            <div class="form-section">
+                <h4><i class="fas fa-user"></i> Thông tin cơ bản</h4>
 
-            <!-- ✨ NEW: Node Type -->
-            <label>Phân loại:</label>
-            <select id="inp-type">
-                <option value="family">Họ hàng</option>
-                <option value="social">Xã hội</option>
-            </select>
+                <label>Tên hiển thị: <span class="required">*</span></label>
+                <input type="text" id="inp-label" placeholder="VD: Nguyễn Văn A, Bố, Mẹ...">
 
-            <div class="selection-row">
-                <input type="checkbox" id="toggle-selection" checked>
-                <label for="toggle-selection">Đưa vào nhóm export/ảnh</label>
+                <label>Layer (Nhóm):</label>
+                <select id="inp-layer">
+                    <!-- Dynamic layers will be added here -->
+                </select>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="form-section">
+                <h4><i class="fas fa-address-card"></i> Thông tin liên hệ</h4>
+
+                <label>Email:</label>
+                <input type="email" id="inp-email" placeholder="email@example.com">
+
+                <label>Điện thoại:</label>
+                <input type="tel" id="inp-phone" placeholder="0901234567">
+
+                <label>Địa chỉ:</label>
+                <input type="text" id="inp-address" placeholder="Địa chỉ...">
+            </div>
+
+            <!-- Work Info -->
+            <div class="form-section">
+                <h4><i class="fas fa-briefcase"></i> Công việc</h4>
+
+                <label>Công ty/Tổ chức:</label>
+                <input type="text" id="inp-company" placeholder="Tên công ty...">
+
+                <label>Chức vụ:</label>
+                <input type="text" id="inp-position" placeholder="Chức vụ...">
+            </div>
+
+            <!-- Social -->
+            <div class="form-section">
+                <h4><i class="fas fa-share-alt"></i> Mạng xã hội</h4>
+
+                <label>Facebook:</label>
+                <input type="url" id="inp-facebook" placeholder="https://facebook.com/...">
+
+                <label>Zalo/Khác:</label>
+                <input type="text" id="inp-social" placeholder="Link hoặc username...">
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <h4><i class="fas fa-sticky-note"></i> Ghi chú</h4>
+
+                <label>Ngày sinh:</label>
+                <input type="date" id="inp-birthday">
+
+                <label>Ghi chú:</label>
+                <textarea id="inp-notes" rows="3" placeholder="Thông tin thêm..."></textarea>
             </div>
         </div>
 
@@ -98,33 +162,55 @@
             <div id="edit-actions" class="action-group">
                 <hr>
                 <button class="btn-action" id="btn-add-child"><i class="fas fa-user-plus"></i> Tạo người mới từ đây</button>
-                <button class="btn-warning" id="btn-start-link"><i class="fas fa-link"></i> Nối với người có sẵn</button>
                 <button class="btn-danger" id="btn-delete"><i class="fas fa-trash-alt"></i> Xóa người này</button>
             </div>
         </div>
     </div>
 
-    <!-- ✨ NEW: Edge Modal -->
+    <!-- Edge Modal (Relationship) -->
     <div id="edge-modal">
         <div class="modal-header">
-            <h3 id="edge-modal-title">Loại quan hệ</h3>
+            <h3 id="edge-modal-title">Mối quan hệ</h3>
             <span class="close-modal" id="btn-x-close-edge">&times;</span>
         </div>
 
         <div class="modal-body">
-            <label>Loại mối quan hệ:</label>
+            <label>Nhãn quan hệ:</label>
+            <input type="text" id="edge-label" placeholder="VD: Bố, Mẹ, Vợ, Con trai, Bạn thân...">
+
+            <label>Loại quan hệ:</label>
             <select id="edge-type">
-                <option value="family">Họ hàng</option>
-                <option value="spouse">Vợ/Chồng</option>
+                <option value="family">Gia đình / Họ hàng</option>
+                <option value="spouse">Vợ / Chồng</option>
                 <option value="friend">Bạn bè</option>
                 <option value="colleague">Đồng nghiệp</option>
-                <option value="mentor">Thầy/Trò</option>
+                <option value="mentor">Thầy / Trò</option>
                 <option value="partner">Đối tác</option>
                 <option value="other">Khác</option>
             </select>
 
+            <div class="relationship-presets">
+                <p><i class="fas fa-magic"></i> Chọn nhanh:</p>
+                <div class="preset-buttons">
+                    <button type="button" class="preset-btn" data-label="Bố">Bố</button>
+                    <button type="button" class="preset-btn" data-label="Mẹ">Mẹ</button>
+                    <button type="button" class="preset-btn" data-label="Vợ">Vợ</button>
+                    <button type="button" class="preset-btn" data-label="Chồng">Chồng</button>
+                    <button type="button" class="preset-btn" data-label="Con trai">Con trai</button>
+                    <button type="button" class="preset-btn" data-label="Con gái">Con gái</button>
+                    <button type="button" class="preset-btn" data-label="Anh">Anh</button>
+                    <button type="button" class="preset-btn" data-label="Chị">Chị</button>
+                    <button type="button" class="preset-btn" data-label="Em">Em</button>
+                    <button type="button" class="preset-btn" data-label="Ông">Ông</button>
+                    <button type="button" class="preset-btn" data-label="Bà">Bà</button>
+                    <button type="button" class="preset-btn" data-label="Bạn">Bạn</button>
+                    <button type="button" class="preset-btn" data-label="Đồng nghiệp">Đồng nghiệp</button>
+                    <button type="button" class="preset-btn" data-label="">Trống</button>
+                </div>
+            </div>
+
             <div class="edge-legend">
-                <div class="legend-item" style="color: #E53935;"><i class="fas fa-circle"></i> Họ hàng</div>
+                <div class="legend-item" style="color: #E53935;"><i class="fas fa-circle"></i> Gia đình</div>
                 <div class="legend-item" style="color: #D81B60;"><i class="fas fa-circle"></i> Vợ/Chồng</div>
                 <div class="legend-item" style="color: #3949AB;"><i class="fas fa-circle"></i> Bạn bè</div>
                 <div class="legend-item" style="color: #1E88E5;"><i class="fas fa-circle"></i> Đồng nghiệp</div>
@@ -136,7 +222,25 @@
 
         <div class="modal-footer">
             <button class="btn-primary" id="btn-save-edge"><i class="fas fa-save"></i> Lưu</button>
-            <button class="btn-danger" id="btn-delete-edge"><i class="fas fa-unlink"></i> Xóa mối quan hệ</button>
+            <button class="btn-danger" id="btn-delete-edge"><i class="fas fa-unlink"></i> Xóa kết nối</button>
+        </div>
+    </div>
+
+    <!-- Layer Edit Modal -->
+    <div id="layer-modal" class="small-modal">
+        <div class="modal-header">
+            <h3>Chỉnh sửa Layer</h3>
+            <span class="close-modal" id="btn-x-close-layer">&times;</span>
+        </div>
+        <div class="modal-body">
+            <label>Tên layer:</label>
+            <input type="text" id="edit-layer-name" placeholder="Tên layer">
+            <label>Màu:</label>
+            <input type="color" id="edit-layer-color" value="#667eea">
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" id="btn-save-layer"><i class="fas fa-save"></i> Lưu</button>
+            <button class="btn-danger" id="btn-delete-layer"><i class="fas fa-trash"></i> Xóa Layer</button>
         </div>
     </div>
 
