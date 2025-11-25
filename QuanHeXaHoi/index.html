@@ -136,9 +136,14 @@
                 <i class="fas fa-database"></i>
                 <span id="storage-status">IndexedDB</span>
             </div>
-            <button class="btn-help" id="btn-help" title="Trợ giúp">
-                <i class="fas fa-question-circle"></i>
-            </button>
+            <div class="footer-actions">
+                <button class="btn-icon theme-toggle" id="btn-theme-toggle" title="Dark/Light mode">
+                    <i class="fas fa-sun" id="theme-icon"></i>
+                </button>
+                <button class="btn-help" id="btn-help" title="Trợ giúp">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -303,6 +308,31 @@
 
     <!-- Toast Container -->
     <div id="toast-container"></div>
+
+    <!-- Node Hover Quick Actions (Phase 4) -->
+    <div id="node-hover-panel" class="node-hover-panel hidden">
+        <div class="hover-panel-header">
+            <div class="hover-avatar" id="hover-avatar">?</div>
+            <div class="hover-info">
+                <div class="hover-name" id="hover-name">Name</div>
+                <div class="hover-meta" id="hover-meta">Tag</div>
+            </div>
+        </div>
+        <div class="hover-panel-actions">
+            <button class="hover-action" id="hover-view" title="Xem chi tiết">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="hover-action" id="hover-edit" title="Chỉnh sửa">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="hover-action" id="hover-connect" title="Tạo kết nối">
+                <i class="fas fa-link"></i>
+            </button>
+            <button class="hover-action hover-action-danger" id="hover-delete" title="Xóa">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
 
     <!-- ==========================================
          MODALS (Giữ nguyên từ v4)
@@ -720,6 +750,67 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Welcome/Onboarding Modal (Phase 6) -->
+    <div id="welcome-modal" class="welcome-modal hidden">
+        <div class="welcome-content">
+            <div class="welcome-header">
+                <div class="welcome-logo">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h1>Chào mừng đến với Contact Map</h1>
+                <p class="welcome-subtitle">Xây dựng bản đồ mối quan hệ của riêng bạn</p>
+            </div>
+
+            <div class="welcome-features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Quản lý quan hệ</h3>
+                        <p>Lưu trữ và tổ chức tất cả các mối quan hệ một cách trực quan</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Kết nối thông minh</h3>
+                        <p>Tạo và theo dõi các mối liên hệ giữa mọi người</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>100% Riêng tư</h3>
+                        <p>Dữ liệu lưu trữ trên máy bạn, không upload lên server</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="welcome-actions">
+                <button class="btn btn-primary btn-large" id="btn-start-fresh">
+                    <i class="fas fa-play"></i> Bắt đầu mới
+                </button>
+                <button class="btn btn-secondary btn-large" id="btn-import-data">
+                    <i class="fas fa-file-import"></i> Nhập dữ liệu có sẵn
+                </button>
+            </div>
+
+            <div class="welcome-tips">
+                <p><i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Click <strong>+</strong> để thêm người mới, hoặc hover vào node để xem quick actions</p>
+            </div>
+
+            <label class="welcome-checkbox">
+                <input type="checkbox" id="dont-show-again">
+                <span>Không hiện lại lần sau</span>
+            </label>
         </div>
     </div>
 

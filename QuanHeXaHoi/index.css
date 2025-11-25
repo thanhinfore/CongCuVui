@@ -37,6 +37,105 @@
     --transition: 0.2s ease;
 }
 
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Colors - same accents */
+    --primary: #8ab4f8;
+    --primary-dark: #aecbfa;
+    --primary-light: #1a3a5c;
+    --secondary: #81c995;
+    --warning: #fdd663;
+    --danger: #f28b82;
+
+    /* Neutrals - inverted */
+    --bg: #1f1f1f;
+    --surface: #2d2d2d;
+    --text: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --text-muted: #6e7275;
+    --border: #3c4043;
+    --divider: #3c4043;
+
+    /* Shadows - darker */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 8px 16px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark theme specific overrides */
+[data-theme="dark"] #container {
+    background: #1a1a1a;
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--primary);
+    color: #1f1f1f;
+}
+
+[data-theme="dark"] .btn-danger {
+    background: var(--danger);
+    color: #1f1f1f;
+}
+
+[data-theme="dark"] .hover-action-danger:hover {
+    background: rgba(242, 139, 130, 0.2);
+}
+
+/* Dark theme - Buttons */
+[data-theme="dark"] .btn-secondary {
+    background: var(--divider);
+}
+
+[data-theme="dark"] .btn-danger {
+    background: rgba(242, 139, 130, 0.2);
+}
+
+/* Dark theme - Form inputs */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Dark theme - Modals */
+[data-theme="dark"] #modal,
+[data-theme="dark"] #edge-modal,
+[data-theme="dark"] #layer-modal,
+[data-theme="dark"] .modal-v4 {
+    background: var(--surface);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--divider);
+}
+
+/* Dark theme - Edge labels */
+[data-theme="dark"] .edge-legend .legend-item {
+    opacity: 0.9;
+}
+
+/* Dark theme - Preset buttons */
+[data-theme="dark"] .preset-btn {
+    background: var(--divider);
+    color: var(--text);
+}
+
+[data-theme="dark"] .preset-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
 /* ==========================================
    RESET & BASE
    ========================================== */
@@ -240,6 +339,15 @@ input, select, textarea {
 .search-result-item .meta {
     font-size: 12px;
     color: var(--text-muted);
+}
+
+/* Selected state for keyboard navigation */
+.search-result-item.selected {
+    background: var(--primary-light);
+}
+
+.search-result-item.selected .name {
+    color: var(--primary);
 }
 
 /* ==========================================
@@ -610,6 +718,33 @@ input, select, textarea {
 
 .btn-help:hover {
     background: var(--divider);
+}
+
+.footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+}
+
+.theme-toggle:hover {
+    background: var(--divider);
+    color: var(--warning);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    color: var(--primary);
 }
 
 /* ==========================================
@@ -1118,6 +1253,105 @@ input, select, textarea {
 #mini-map-canvas {
     width: 100%;
     height: 100%;
+}
+
+/* ==========================================
+   NODE HOVER PANEL (Quick Actions)
+   ========================================== */
+.node-hover-panel {
+    position: fixed;
+    z-index: 1100;
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    min-width: 200px;
+    max-width: 280px;
+    overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: auto;
+}
+
+.node-hover-panel.hidden {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+}
+
+.hover-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.hover-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.hover-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.hover-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hover-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.hover-panel-actions {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    gap: 4px;
+}
+
+.hover-action {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    transition: all var(--transition);
+}
+
+.hover-action:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.hover-action:active {
+    transform: scale(0.92);
+}
+
+.hover-action-danger:hover {
+    background: var(--danger-light, #ffebee);
+    color: var(--danger);
 }
 
 /* ==========================================
@@ -2209,4 +2443,206 @@ input, select, textarea {
 ::selection {
     background: var(--primary-light);
     color: var(--primary-dark);
+}
+
+/* ==========================================
+   WELCOME MODAL (Phase 6)
+   ========================================== */
+.welcome-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    animation: fadeIn 0.3s ease;
+}
+
+.welcome-modal.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.welcome-content {
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    max-width: 520px;
+    width: 90%;
+    padding: 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.welcome-header {
+    margin-bottom: 32px;
+}
+
+.welcome-logo {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 36px;
+    color: white;
+    box-shadow: 0 8px 24px rgba(66, 133, 244, 0.3);
+}
+
+.welcome-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 8px;
+}
+
+.welcome-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.welcome-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    text-align: left;
+    padding: 12px;
+    border-radius: var(--border-radius);
+    background: var(--bg);
+}
+
+.feature-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.feature-text h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px;
+}
+
+.feature-text p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.welcome-actions .btn {
+    flex: 1;
+}
+
+.btn-large {
+    padding: 14px 24px;
+    font-size: 15px;
+}
+
+.welcome-tips {
+    padding: 12px 16px;
+    background: var(--warning);
+    background: linear-gradient(135deg, rgba(251, 188, 5, 0.15), rgba(251, 188, 5, 0.05));
+    border-radius: var(--border-radius);
+    margin-bottom: 16px;
+}
+
+.welcome-tips p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.welcome-tips i {
+    color: var(--warning);
+}
+
+.welcome-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.welcome-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+}
+
+/* Dark theme for welcome modal */
+[data-theme="dark"] .feature-item {
+    background: var(--divider);
+}
+
+[data-theme="dark"] .welcome-tips {
+    background: rgba(253, 214, 99, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .welcome-content {
+        padding: 24px;
+    }
+
+    .welcome-actions {
+        flex-direction: column;
+    }
+
+    .welcome-logo {
+        width: 64px;
+        height: 64px;
+        font-size: 28px;
+    }
+
+    .welcome-header h1 {
+        font-size: 20px;
+    }
 }
