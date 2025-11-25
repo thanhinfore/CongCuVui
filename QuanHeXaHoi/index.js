@@ -4333,7 +4333,7 @@ function setupClickHandlers() {
 // ==========================================
 
 // Save Node
-ui.btnSave.addEventListener('click', () => {
+ui.btnSave?.addEventListener('click', () => {
     const label = ui.inpLabel.value.trim();
     const layer = ui.inpLayer?.value || 'others';
 
@@ -4405,7 +4405,7 @@ ui.btnSave.addEventListener('click', () => {
 });
 
 // Save Edge
-document.getElementById('btn-save-edge').addEventListener('click', () => {
+document.getElementById('btn-save-edge')?.addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const edgeType = ui.edgeType.value;
@@ -4422,7 +4422,7 @@ document.getElementById('btn-save-edge').addEventListener('click', () => {
 });
 
 // Delete Edge
-document.getElementById('btn-delete-edge').addEventListener('click', () => {
+document.getElementById('btn-delete-edge')?.addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const source = graph.source(state.selectedEdge);
@@ -4476,13 +4476,13 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 // Add child node
-document.getElementById('btn-add-child').addEventListener('click', () => {
+document.getElementById('btn-add-child')?.addEventListener('click', () => {
     state.parentNode = state.selectedNode;
     openModal(null, 'ADD');
 });
 
 // Delete node
-document.getElementById('btn-delete').addEventListener('click', () => {
+document.getElementById('btn-delete')?.addEventListener('click', () => {
     if (!state.selectedNode || state.selectedNode === 'center') return;
 
     const label = graph.getNodeAttribute(state.selectedNode, 'label');
@@ -4526,41 +4526,47 @@ document.getElementById('btn-delete').addEventListener('click', () => {
     }
 });
 
-// Close modals
-document.getElementById('btn-x-close').addEventListener('click', closeModal);
-document.getElementById('btn-x-close-edge').addEventListener('click', closeEdgeModal);
-document.getElementById('btn-x-close-layer').addEventListener('click', closeLayerModal);
-document.getElementById('close-layers-panel').addEventListener('click', toggleLayersPanel);
-document.getElementById('close-detail-panel').addEventListener('click', closeDetailPanel);
+// Close modals (v5.0: add null checks for changed IDs)
+document.getElementById('btn-x-close')?.addEventListener('click', closeModal);
+document.getElementById('btn-x-close-edge')?.addEventListener('click', closeEdgeModal);
+document.getElementById('btn-x-close-layer')?.addEventListener('click', closeLayerModal);
+document.getElementById('close-layers-panel')?.addEventListener('click', toggleLayersPanel);
+document.getElementById('close-detail-panel')?.addEventListener('click', closeDetailPanel);
 
-// Edit from detail panel
-document.getElementById('btn-edit-from-detail').addEventListener('click', () => {
+// Edit from detail panel (v5.0: button moved to detail-quick-actions)
+document.getElementById('btn-edit-from-detail')?.addEventListener('click', () => {
+    if (state.detailNode) {
+        openModal(state.detailNode, 'EDIT');
+    }
+});
+// v5.0: Quick action edit button
+document.getElementById('btn-edit')?.addEventListener('click', () => {
     if (state.detailNode) {
         openModal(state.detailNode, 'EDIT');
     }
 });
 
-ui.overlay.addEventListener('click', () => {
+ui.overlay?.addEventListener('click', () => {
     closeModal();
     closeEdgeModal();
     closeLayerModal();
 });
 
-// Toolbar buttons
-document.getElementById('btn-export').addEventListener('click', openExportModal);
-document.getElementById('btn-import-trigger').addEventListener('click', openImportModal);
-document.getElementById('btn-import-vcf').addEventListener('click', () => document.getElementById('vcf-input').click());
-document.getElementById('vcf-input').addEventListener('change', uploadVCF);
-document.getElementById('file-input').addEventListener('change', uploadJSON);
-document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
-document.getElementById('btn-force-layout').addEventListener('click', () => {
+// Toolbar buttons (v5.0: add null checks - some buttons moved to sidebar)
+document.getElementById('btn-export')?.addEventListener('click', openExportModal);
+document.getElementById('btn-import-trigger')?.addEventListener('click', openImportModal);
+document.getElementById('btn-import-vcf')?.addEventListener('click', () => document.getElementById('vcf-input')?.click());
+document.getElementById('vcf-input')?.addEventListener('change', uploadVCF);
+document.getElementById('file-input')?.addEventListener('change', uploadJSON);
+document.getElementById('btn-capture')?.addEventListener('click', captureGraphImage);
+document.getElementById('btn-force-layout')?.addEventListener('click', () => {
     if (state.forceRunning) {
         stopForceLayout();
     } else {
         openLayoutModal();
     }
 });
-document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
+document.getElementById('btn-recolor')?.addEventListener('click', () => applyColorsByDistance(true));
 
 // Layout Modal handlers
 document.getElementById('btn-x-close-layout')?.addEventListener('click', closeLayoutModal);
@@ -4571,7 +4577,7 @@ document.querySelectorAll('.layout-option').forEach(option => {
         startForceLayout(layoutType);
     });
 });
-document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
+document.getElementById('btn-manage-layers')?.addEventListener('click', toggleLayersPanel);
 
 // Classification Mode handlers (v4.1)
 document.getElementById('btn-quick-classify')?.addEventListener('click', enterClassificationMode);
@@ -4633,13 +4639,13 @@ document.getElementById('btn-select-encrypted')?.addEventListener('click', () =>
 });
 document.getElementById('btn-decrypt')?.addEventListener('click', decryptAndImport);
 
-// Layer management
-document.getElementById('btn-add-layer').addEventListener('click', addLayer);
-document.getElementById('btn-save-layer').addEventListener('click', saveLayer);
-document.getElementById('btn-delete-layer').addEventListener('click', deleteLayer);
+// Layer management (v5.0: add null checks)
+document.getElementById('btn-add-layer')?.addEventListener('click', addLayer);
+document.getElementById('btn-save-layer')?.addEventListener('click', saveLayer);
+document.getElementById('btn-delete-layer')?.addEventListener('click', deleteLayer);
 
 // Reset data
-document.getElementById('btn-reset-data').addEventListener('click', () => {
+document.getElementById('btn-reset-data')?.addEventListener('click', () => {
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'link-confirmation';
     confirmDialog.innerHTML = `
