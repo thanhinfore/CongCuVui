@@ -7,7 +7,7 @@ import forceAtlas2 from 'https://cdn.skypack.dev/graphology-layout-forceatlas2';
 // ==========================================
 
 const CONTAINER_ID = 'container';
-const STORAGE_KEY = 'social_graph_v3_data';
+const STORAGE_KEY = 'social_graph_v3_data'; // Keep v3 for backwards compatibility
 const AUTOSAVE_BADGE = document.getElementById('autosave-status');
 
 // Node size configuration
@@ -86,7 +86,10 @@ let state = {
     currentLayer: 'all',
     forceRunning: false,
     editingLayerId: null,
-    layers: [...DEFAULT_LAYERS]
+    layers: [...DEFAULT_LAYERS],
+    hoveredNode: null,
+    detailNode: null,
+    lastClickTime: 0
 };
 
 // ==========================================
@@ -100,6 +103,29 @@ const getColorByDistance = (distance) => {
 const getSizeByDistance = (distance) => {
     if (distance === 0) return NODE_SIZES.CENTER;
     return Math.max(NODE_SIZES.MIN, NODE_SIZES.BASE - (distance * NODE_SIZES.REDUCTION_FACTOR));
+};
+
+// Get initials from name (e.g., "Nguyễn Văn A" -> "NA")
+const getInitials = (name) => {
+    if (!name) return '?';
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) {
+        return words[0].substring(0, 2).toUpperCase();
+    }
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+};
+
+// Get layer by ID
+const getLayerById = (layerId) => {
+    return state.layers.find(l => l.id === layerId) || { name: 'Khác', color: '#9E9E9E' };
+};
+
+// Format date for display
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 // BFS to calculate distances from center
@@ -178,7 +204,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
 function saveData() {
     const payload = {
-        version: '3.0',
+        version: '3.1',
         graph: graph.export(),
         layers: state.layers,
         savedAt: new Date().toISOString()
@@ -359,7 +385,7 @@ function initDefaultData() {
 // Export functions
 function downloadJSON() {
     const data = {
-        version: '3.0',
+        version: '3.1',
         exportedAt: new Date().toISOString(),
         layers: state.layers,
         graph: graph.export()
@@ -367,7 +393,7 @@ function downloadJSON() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.href = dataStr;
-    a.download = "social_graph_v3_" + Date.now() + ".json";
+    a.download = "social_graph_v31_" + Date.now() + ".json";
     a.click();
     showToast('Đã xuất file JSON thành công!', 'success');
 }
@@ -379,7 +405,7 @@ async function captureGraphImage() {
     const canvas = await html2canvas(container, { scale: 2, useCORS: true });
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/png');
-    link.download = `social_graph_v3_${Date.now()}.png`;
+    link.download = `social_graph_v31_${Date.now()}.png`;
     link.click();
     showToast('Đã lưu ảnh thành công!', 'success');
 }
@@ -672,6 +698,8 @@ function updateNodeCount() {
     if (nodeCountEl) {
         nodeCountEl.innerText = `${count} người`;
     }
+    // Also update statistics
+    updateStatistics();
 }
 
 function closeModal() {
@@ -975,7 +1003,377 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
 }
 
 // ==========================================
-// PHẦN 10: CLICK HANDLERS
+// PHẦN 10: TOOLTIP FUNCTIONS
+// ==========================================
+
+function showNodeTooltip(nodeId, mouseX, mouseY) {
+    const tooltip = document.getElementById('node-tooltip');
+    if (!tooltip || !nodeId) return;
+
+    const attrs = graph.getNodeAttributes(nodeId);
+    const contact = attrs.contact || {};
+    const layer = getLayerById(attrs.layer);
+
+    // Update tooltip content
+    document.getElementById('tooltip-avatar').textContent = getInitials(attrs.label);
+    document.getElementById('tooltip-name').textContent = attrs.label;
+    document.getElementById('tooltip-layer').querySelector('span').textContent = layer.name;
+    document.getElementById('tooltip-phone').querySelector('span').textContent = contact.phone || '-';
+    document.getElementById('tooltip-email').querySelector('span').textContent = contact.email || '-';
+    document.getElementById('tooltip-company').querySelector('span').textContent = contact.company || '-';
+
+    // Position tooltip
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let left = mouseX + 15;
+    let top = mouseY + 15;
+
+    // Adjust if tooltip goes off screen
+    if (left + 280 > viewportWidth) {
+        left = mouseX - 280 - 15;
+    }
+    if (top + 200 > viewportHeight) {
+        top = mouseY - 200 - 15;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+
+    // Show tooltip
+    tooltip.classList.remove('tooltip-hidden');
+    tooltip.classList.add('tooltip-visible');
+}
+
+function hideNodeTooltip() {
+    const tooltip = document.getElementById('node-tooltip');
+    if (tooltip) {
+        tooltip.classList.remove('tooltip-visible');
+        tooltip.classList.add('tooltip-hidden');
+    }
+}
+
+// ==========================================
+// PHẦN 11: SEARCH FUNCTIONS
+// ==========================================
+
+function setupSearch() {
+    const searchInput = document.getElementById('search-input');
+    const searchClear = document.getElementById('search-clear');
+    const searchResults = document.getElementById('search-results');
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+
+        // Toggle clear button
+        searchClear.classList.toggle('visible', query.length > 0);
+
+        if (query.length < 1) {
+            searchResults.classList.remove('visible');
+            return;
+        }
+
+        // Search nodes
+        const results = [];
+        graph.forEachNode((nodeId, attrs) => {
+            const label = (attrs.label || '').toLowerCase();
+            const contact = attrs.contact || {};
+            const searchFields = [
+                label,
+                contact.phone || '',
+                contact.email || '',
+                contact.company || ''
+            ].join(' ').toLowerCase();
+
+            if (searchFields.includes(query)) {
+                results.push({ nodeId, attrs });
+            }
+        });
+
+        // Render results
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="search-no-results">Không tìm thấy kết quả</div>';
+        } else {
+            searchResults.innerHTML = results.slice(0, 10).map(({ nodeId, attrs }) => {
+                const contact = attrs.contact || {};
+                const layer = getLayerById(attrs.layer);
+                const detail = contact.company || contact.phone || layer.name;
+                return `
+                    <div class="search-result-item" data-node-id="${nodeId}">
+                        <div class="search-result-avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
+                        <div class="search-result-info">
+                            <div class="search-result-name">${attrs.label}</div>
+                            <div class="search-result-detail">${detail}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const nodeId = item.dataset.nodeId;
+                    focusOnNode(nodeId);
+                    openDetailPanel(nodeId);
+                    searchResults.classList.remove('visible');
+                    searchInput.value = '';
+                    searchClear.classList.remove('visible');
+                });
+            });
+        }
+
+        searchResults.classList.add('visible');
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.remove('visible');
+        searchResults.classList.remove('visible');
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search-container')) {
+            searchResults.classList.remove('visible');
+        }
+    });
+}
+
+function focusOnNode(nodeId) {
+    if (!graph.hasNode(nodeId)) return;
+
+    const attrs = graph.getNodeAttributes(nodeId);
+    const camera = renderer.getCamera();
+
+    camera.animate({
+        x: attrs.x,
+        y: attrs.y,
+        ratio: 0.5
+    }, { duration: 500 });
+
+    // Highlight the node briefly
+    graph.setNodeAttribute(nodeId, 'highlighted', true);
+    setTimeout(() => {
+        graph.removeNodeAttribute(nodeId, 'highlighted');
+        renderer.refresh();
+    }, 2000);
+
+    renderer.refresh();
+}
+
+// ==========================================
+// PHẦN 12: STATISTICS FUNCTIONS
+// ==========================================
+
+function updateStatistics() {
+    const totalNodes = graph.order;
+    const totalEdges = graph.size;
+    const totalLayers = state.layers.length;
+
+    document.getElementById('stat-total').textContent = totalNodes;
+    document.getElementById('stat-connections').textContent = totalEdges;
+    document.getElementById('stat-layers').textContent = totalLayers;
+}
+
+// ==========================================
+// PHẦN 13: DETAIL PANEL FUNCTIONS
+// ==========================================
+
+function openDetailPanel(nodeId) {
+    if (!graph.hasNode(nodeId)) return;
+
+    state.detailNode = nodeId;
+    const panel = document.getElementById('detail-panel');
+    const attrs = graph.getNodeAttributes(nodeId);
+    const contact = attrs.contact || {};
+    const layer = getLayerById(attrs.layer);
+
+    // Update header
+    document.getElementById('detail-avatar').textContent = getInitials(attrs.label);
+    document.getElementById('detail-avatar').style.background = layer.color;
+    document.getElementById('detail-name').textContent = attrs.label;
+    document.getElementById('detail-layer-badge').textContent = layer.name;
+    document.getElementById('detail-layer-badge').style.background = layer.color;
+
+    // Update stats
+    const distance = attrs.distance !== undefined ? attrs.distance : '-';
+    const connections = graph.degree(nodeId);
+    document.getElementById('detail-distance').textContent = distance === 0 ? 'Trung tâm' : distance;
+    document.getElementById('detail-connections').textContent = connections;
+
+    // Update contact info
+    updateDetailField('detail-phone', contact.phone);
+    updateDetailField('detail-email', contact.email);
+    updateDetailField('detail-address', contact.address);
+    updateDetailField('detail-company', contact.company);
+    updateDetailField('detail-position', contact.position);
+
+    // Update social links
+    const fbField = document.getElementById('detail-facebook');
+    if (contact.facebook) {
+        fbField.querySelector('a').href = contact.facebook;
+        fbField.querySelector('a').textContent = 'Facebook';
+        fbField.style.display = 'flex';
+    } else {
+        fbField.querySelector('a').textContent = '-';
+        fbField.querySelector('a').href = '#';
+    }
+    updateDetailField('detail-social', contact.social);
+
+    // Update notes
+    document.getElementById('detail-birthday').querySelector('span').textContent = formatDate(contact.birthday);
+    document.getElementById('detail-notes').querySelector('p').textContent = contact.notes || '-';
+
+    // Update relationships
+    updateRelationshipList(nodeId);
+
+    // Show panel
+    panel.classList.remove('hidden');
+}
+
+function updateDetailField(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.querySelector('span').textContent = value || '-';
+    }
+}
+
+function updateRelationshipList(nodeId) {
+    const listContainer = document.getElementById('relationship-list');
+    if (!listContainer) return;
+
+    const relationships = [];
+    graph.forEachNeighbor(nodeId, (neighborId, neighborAttrs) => {
+        // Get edge between nodes
+        let edgeLabel = '';
+        let edgeColor = '#667eea';
+
+        graph.forEachEdge(nodeId, (edge, edgeAttrs, source, target) => {
+            if (source === neighborId || target === neighborId) {
+                edgeLabel = edgeAttrs.label || '';
+                edgeColor = edgeAttrs.color || '#667eea';
+            }
+        });
+
+        const layer = getLayerById(neighborAttrs.layer);
+        relationships.push({
+            nodeId: neighborId,
+            name: neighborAttrs.label,
+            label: edgeLabel,
+            color: layer.color
+        });
+    });
+
+    if (relationships.length === 0) {
+        listContainer.innerHTML = '<div class="no-relationships">Chưa có kết nối</div>';
+    } else {
+        listContainer.innerHTML = relationships.map(rel => `
+            <div class="relationship-item" data-node-id="${rel.nodeId}">
+                <div class="relationship-avatar" style="background: ${rel.color};">${getInitials(rel.name)}</div>
+                <div class="relationship-info">
+                    <div class="relationship-name">${rel.name}</div>
+                    <div class="relationship-label">${rel.label || 'Quan hệ'}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        listContainer.querySelectorAll('.relationship-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const targetNodeId = item.dataset.nodeId;
+                focusOnNode(targetNodeId);
+                openDetailPanel(targetNodeId);
+            });
+        });
+    }
+}
+
+function closeDetailPanel() {
+    const panel = document.getElementById('detail-panel');
+    panel.classList.add('hidden');
+    state.detailNode = null;
+}
+
+// ==========================================
+// PHẦN 14: ZOOM CONTROLS
+// ==========================================
+
+function setupZoomControls() {
+    const zoomIn = document.getElementById('btn-zoom-in');
+    const zoomOut = document.getElementById('btn-zoom-out');
+    const zoomReset = document.getElementById('btn-zoom-reset');
+    const centerGraph = document.getElementById('btn-center-graph');
+
+    if (zoomIn) {
+        zoomIn.addEventListener('click', () => {
+            const camera = renderer.getCamera();
+            camera.animatedZoom({ duration: 300 });
+        });
+    }
+
+    if (zoomOut) {
+        zoomOut.addEventListener('click', () => {
+            const camera = renderer.getCamera();
+            camera.animatedUnzoom({ duration: 300 });
+        });
+    }
+
+    if (zoomReset) {
+        zoomReset.addEventListener('click', () => {
+            const camera = renderer.getCamera();
+            camera.animate({ ratio: 1 }, { duration: 300 });
+        });
+    }
+
+    if (centerGraph) {
+        centerGraph.addEventListener('click', () => {
+            // Center on the "center" node (TÔI)
+            if (graph.hasNode('center')) {
+                focusOnNode('center');
+            } else {
+                // Reset camera to center
+                const camera = renderer.getCamera();
+                camera.animate({ x: 0, y: 0, ratio: 1 }, { duration: 300 });
+            }
+        });
+    }
+}
+
+// ==========================================
+// PHẦN 15: COPY FUNCTIONS
+// ==========================================
+
+function setupCopyButtons() {
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!state.detailNode) return;
+
+            const copyType = btn.dataset.copy;
+            const attrs = graph.getNodeAttributes(state.detailNode);
+            const contact = attrs.contact || {};
+
+            let textToCopy = '';
+            if (copyType === 'phone') textToCopy = contact.phone || '';
+            if (copyType === 'email') textToCopy = contact.email || '';
+
+            if (textToCopy) {
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    showToast('Đã copy!', 'success', 1500);
+                } catch (err) {
+                    showToast('Không thể copy', 'error');
+                }
+            }
+        });
+    });
+}
+
+// ==========================================
+// PHẦN 16: CLICK HANDLERS
 // ==========================================
 
 function setupClickHandlers() {
@@ -987,9 +1385,19 @@ function setupClickHandlers() {
     });
 
     renderer.on('clickNode', (e) => {
+        const now = Date.now();
+        const isDoubleClick = (now - state.lastClickTime) < 300;
+        state.lastClickTime = now;
+
         setTimeout(() => {
             if (!state.isDragging && !state.hasMoved) {
-                openModal(e.node, 'EDIT');
+                if (isDoubleClick) {
+                    // Double click - open edit modal
+                    openModal(e.node, 'EDIT');
+                } else {
+                    // Single click - open detail panel
+                    openDetailPanel(e.node);
+                }
             }
         }, 150);
     });
@@ -998,6 +1406,19 @@ function setupClickHandlers() {
         if (!state.isDragging) {
             openEdgeModal(e.edge);
         }
+    });
+
+    // Hover events for tooltip
+    renderer.on('enterNode', (e) => {
+        state.hoveredNode = e.node;
+        const mousePosition = renderer.viewportToFramedGraph(e.event);
+        const screenCoords = renderer.framedGraphToViewport(mousePosition);
+        showNodeTooltip(e.node, e.event.clientX, e.event.clientY);
+    });
+
+    renderer.on('leaveNode', () => {
+        state.hoveredNode = null;
+        hideNodeTooltip();
     });
 }
 
@@ -1203,6 +1624,14 @@ document.getElementById('btn-x-close').addEventListener('click', closeModal);
 document.getElementById('btn-x-close-edge').addEventListener('click', closeEdgeModal);
 document.getElementById('btn-x-close-layer').addEventListener('click', closeLayerModal);
 document.getElementById('close-layers-panel').addEventListener('click', toggleLayersPanel);
+document.getElementById('close-detail-panel').addEventListener('click', closeDetailPanel);
+
+// Edit from detail panel
+document.getElementById('btn-edit-from-detail').addEventListener('click', () => {
+    if (state.detailNode) {
+        openModal(state.detailNode, 'EDIT');
+    }
+});
 
 ui.overlay.addEventListener('click', () => {
     closeModal();
@@ -1258,7 +1687,7 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
 });
 
 // ==========================================
-// PHẦN 12: INITIALIZATION
+// PHẦN 17: INITIALIZATION
 // ==========================================
 
 if (!loadData()) initDefaultData();
@@ -1270,18 +1699,49 @@ renderer = new Sigma(graph, container, {
     edgeLabelSize: 12,
     edgeLabelColor: { color: '#333' },
     edgeProgramClasses: {},
+    labelRenderedSizeThreshold: 8,
+    labelDensity: 0.07,
+    labelGridCellSize: 60,
+    labelFont: 'Segoe UI, sans-serif',
+    nodeReducer: (node, data) => {
+        const res = { ...data };
+        if (state.hoveredNode === node || data.highlighted) {
+            res.highlighted = true;
+            res.zIndex = 1;
+        }
+        return res;
+    },
+    edgeReducer: (edge, data) => {
+        const res = { ...data };
+        if (state.hoveredNode) {
+            const source = graph.source(edge);
+            const target = graph.target(edge);
+            if (source === state.hoveredNode || target === state.hoveredNode) {
+                res.highlighted = true;
+                res.size = 3;
+            } else {
+                res.hidden = true;
+            }
+        }
+        return res;
+    }
 });
 
 // Initialize UI
 renderLayerFilters();
 renderLayersList();
 updateNodeCount();
+updateStatistics();
 applyColorsByDistance(false);
 
+// Setup new features
 setupDragAndDrop();
 setupClickHandlers();
+setupSearch();
+setupZoomControls();
+setupCopyButtons();
 
 // Welcome message
 setTimeout(() => {
-    showToast('SocialGraph v3.0 - Kéo thả để nối, Click để sửa!', 'info', 4000);
+    showToast('SocialGraph v3.1 - Hover để xem nhanh, Click để xem chi tiết!', 'info', 4000);
 }, 500);
