@@ -1,6 +1,7 @@
 import Graph from 'https://cdn.skypack.dev/graphology';
 import Sigma from 'https://cdn.skypack.dev/sigma';
 // Note: ForceAtlas2 replaced with custom Radial Layout in v3.2
+// v4.0: Added IndexedDB, VCF Parser, Encryption, Merge Engine
 
 // ==========================================
 // PHẦN 1: CẤU HÌNH & CONSTANTS
@@ -8,7 +9,10 @@ import Sigma from 'https://cdn.skypack.dev/sigma';
 
 const CONTAINER_ID = 'container';
 const STORAGE_KEY = 'social_graph_v3_data'; // Keep v3 for backwards compatibility
+const INDEXEDDB_NAME = 'SocialGraphDB';
+const INDEXEDDB_VERSION = 1;
 const AUTOSAVE_BADGE = document.getElementById('autosave-status');
+const STORAGE_STATUS = document.getElementById('storage-status');
 
 // Node size configuration
 const NODE_SIZES = {
@@ -88,8 +92,512 @@ let state = {
     layers: [...DEFAULT_LAYERS],
     hoveredNode: null,
     detailNode: null,
-    lastClickTime: 0
+    lastClickTime: 0,
+    // v4.0 additions
+    useIndexedDB: false,
+    db: null,
+    vcfContacts: [],
+    vcfSelected: new Set(),
+    pendingImportData: null,
+    mergeConflicts: [],
+    encryptedFileData: null
 };
+
+// ==========================================
+// PHẦN 2B: INDEXEDDB STORAGE (v4.0)
+// ==========================================
+
+async function initIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(INDEXEDDB_NAME, INDEXEDDB_VERSION);
+
+        request.onerror = () => {
+            console.warn('IndexedDB not available, using localStorage');
+            state.useIndexedDB = false;
+            updateStorageStatus('localStorage');
+            resolve(false);
+        };
+
+        request.onsuccess = (event) => {
+            state.db = event.target.result;
+            state.useIndexedDB = true;
+            updateStorageStatus('IndexedDB');
+            resolve(true);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+
+            // Create object stores
+            if (!db.objectStoreNames.contains('graph')) {
+                db.createObjectStore('graph', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('layers')) {
+                db.createObjectStore('layers', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('metadata')) {
+                db.createObjectStore('metadata', { keyPath: 'key' });
+            }
+        };
+    });
+}
+
+function updateStorageStatus(type) {
+    if (STORAGE_STATUS) {
+        STORAGE_STATUS.textContent = type;
+        STORAGE_STATUS.title = type === 'IndexedDB'
+            ? 'Sử dụng IndexedDB - hỗ trợ 10k+ contacts'
+            : 'Sử dụng localStorage - giới hạn ~5MB';
+    }
+}
+
+async function saveToIndexedDB() {
+    if (!state.db) return false;
+
+    return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(['graph', 'layers', 'metadata'], 'readwrite');
+
+        // Save graph data
+        const graphStore = transaction.objectStore('graph');
+        graphStore.clear();
+        const graphData = graph.export();
+        graphStore.put({ id: 'main', data: graphData });
+
+        // Save layers
+        const layersStore = transaction.objectStore('layers');
+        layersStore.clear();
+        state.layers.forEach((layer, index) => {
+            layersStore.put({ ...layer, id: layer.id || `layer_${index}` });
+        });
+
+        // Save metadata
+        const metaStore = transaction.objectStore('metadata');
+        metaStore.put({ key: 'version', value: '4.0' });
+        metaStore.put({ key: 'savedAt', value: new Date().toISOString() });
+
+        transaction.oncomplete = () => resolve(true);
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+async function loadFromIndexedDB() {
+    if (!state.db) return false;
+
+    return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(['graph', 'layers'], 'readonly');
+
+        const graphStore = transaction.objectStore('graph');
+        const graphRequest = graphStore.get('main');
+
+        const layersStore = transaction.objectStore('layers');
+        const layersRequest = layersStore.getAll();
+
+        transaction.oncomplete = () => {
+            if (graphRequest.result?.data) {
+                graph.import(graphRequest.result.data);
+
+                if (layersRequest.result?.length > 0) {
+                    state.layers = layersRequest.result;
+                }
+
+                ensureNodeAttributes();
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        };
+
+        transaction.onerror = () => reject(transaction.error);
+    });
+}
+
+// ==========================================
+// PHẦN 2C: VCF PARSER (v4.0)
+// ==========================================
+
+function parseVCF(vcfText) {
+    const contacts = [];
+    const vcards = vcfText.split(/(?=BEGIN:VCARD)/i).filter(v => v.trim());
+
+    vcards.forEach(vcard => {
+        const contact = parseVCard(vcard);
+        if (contact && contact.name) {
+            contacts.push(contact);
+        }
+    });
+
+    return contacts;
+}
+
+function parseVCard(vcardText) {
+    const lines = vcardText.split(/\r?\n/);
+    const contact = {
+        name: '',
+        phones: [],
+        emails: [],
+        addresses: [],
+        company: '',
+        position: '',
+        birthday: '',
+        notes: '',
+        groups: []
+    };
+
+    let currentField = null;
+    let currentValue = '';
+
+    lines.forEach(line => {
+        // Handle line folding (lines starting with space/tab are continuations)
+        if (line.startsWith(' ') || line.startsWith('\t')) {
+            currentValue += line.substring(1);
+            return;
+        }
+
+        // Process previous field if exists
+        if (currentField) {
+            processVCardField(contact, currentField, currentValue);
+        }
+
+        // Parse new field
+        const colonIndex = line.indexOf(':');
+        if (colonIndex > 0) {
+            currentField = line.substring(0, colonIndex);
+            currentValue = line.substring(colonIndex + 1);
+        }
+    });
+
+    // Process last field
+    if (currentField) {
+        processVCardField(contact, currentField, currentValue);
+    }
+
+    return contact;
+}
+
+function processVCardField(contact, field, value) {
+    // Decode quoted-printable if needed
+    if (field.includes('ENCODING=QUOTED-PRINTABLE')) {
+        value = decodeQuotedPrintable(value);
+    }
+
+    // Remove parameters to get base field name
+    const baseField = field.split(';')[0].toUpperCase();
+    const params = field.toUpperCase();
+
+    switch (baseField) {
+        case 'FN': // Formatted Name
+            contact.name = decodeVCardValue(value);
+            break;
+
+        case 'N': // Structured Name (fallback)
+            if (!contact.name) {
+                const parts = value.split(';').map(p => decodeVCardValue(p));
+                // N: Last;First;Middle;Prefix;Suffix
+                const [last, first, middle] = parts;
+                contact.name = [first, middle, last].filter(Boolean).join(' ').trim();
+            }
+            break;
+
+        case 'TEL': // Phone
+            const phoneValue = value.replace(/[^\d+\-\s]/g, '').trim();
+            if (phoneValue) {
+                let phoneType = 'OTHER';
+                if (params.includes('CELL') || params.includes('MOBILE')) phoneType = 'MOBILE';
+                else if (params.includes('HOME')) phoneType = 'HOME';
+                else if (params.includes('WORK')) phoneType = 'WORK';
+
+                contact.phones.push({ type: phoneType, number: phoneValue });
+            }
+            break;
+
+        case 'EMAIL':
+            const emailValue = decodeVCardValue(value);
+            if (emailValue && emailValue.includes('@')) {
+                let emailType = 'OTHER';
+                if (params.includes('HOME')) emailType = 'HOME';
+                else if (params.includes('WORK')) emailType = 'WORK';
+
+                contact.emails.push({ type: emailType, email: emailValue });
+            }
+            break;
+
+        case 'ADR': // Address
+            const addrParts = value.split(';').map(p => decodeVCardValue(p));
+            // ADR: PO Box;Ext;Street;City;State;ZIP;Country
+            const addrStr = addrParts.filter(Boolean).join(', ').trim();
+            if (addrStr) {
+                contact.addresses.push(addrStr);
+            }
+            break;
+
+        case 'ORG': // Organization
+            contact.company = decodeVCardValue(value.split(';')[0]);
+            break;
+
+        case 'TITLE': // Job Title
+            contact.position = decodeVCardValue(value);
+            break;
+
+        case 'BDAY': // Birthday
+            contact.birthday = formatBirthday(value);
+            break;
+
+        case 'NOTE':
+            contact.notes = decodeVCardValue(value);
+            break;
+
+        case 'CATEGORIES':
+        case 'X-ABGROUPS':
+            contact.groups = value.split(',').map(g => decodeVCardValue(g).trim());
+            break;
+    }
+}
+
+function decodeVCardValue(value) {
+    if (!value) return '';
+    // Decode escaped characters
+    return value
+        .replace(/\\n/gi, '\n')
+        .replace(/\\,/g, ',')
+        .replace(/\\;/g, ';')
+        .replace(/\\\\/g, '\\')
+        .trim();
+}
+
+function decodeQuotedPrintable(str) {
+    return str.replace(/=([0-9A-F]{2})/gi, (match, hex) => {
+        return String.fromCharCode(parseInt(hex, 16));
+    });
+}
+
+function formatBirthday(value) {
+    // Handle various date formats: YYYYMMDD, YYYY-MM-DD, --MMDD
+    if (!value) return '';
+
+    value = value.replace(/[^\d-]/g, '');
+
+    if (value.startsWith('--')) {
+        // Only month-day
+        const month = value.substring(2, 4);
+        const day = value.substring(4, 6);
+        return `--${month}-${day}`;
+    }
+
+    if (value.length === 8) {
+        // YYYYMMDD
+        return `${value.substring(0,4)}-${value.substring(4,6)}-${value.substring(6,8)}`;
+    }
+
+    return value;
+}
+
+// ==========================================
+// PHẦN 2D: ENCRYPTION MODULE (v4.0)
+// ==========================================
+
+async function deriveKey(password, salt) {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+    );
+
+    return crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: salt,
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+async function encryptData(data, password) {
+    const encoder = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    const key = await deriveKey(password, salt);
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        encoder.encode(JSON.stringify(data))
+    );
+
+    // Combine salt + iv + encrypted data
+    const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.length);
+    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+    return combined;
+}
+
+async function decryptData(encryptedData, password) {
+    const salt = encryptedData.slice(0, 16);
+    const iv = encryptedData.slice(16, 28);
+    const data = encryptedData.slice(28);
+
+    const key = await deriveKey(password, salt);
+
+    try {
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            data
+        );
+
+        const decoder = new TextDecoder();
+        return JSON.parse(decoder.decode(decrypted));
+    } catch (e) {
+        throw new Error('Mật khẩu không đúng hoặc file bị hỏng');
+    }
+}
+
+function checkPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+    if (score <= 1) return 'weak';
+    if (score <= 2) return 'fair';
+    if (score <= 3) return 'good';
+    return 'strong';
+}
+
+// ==========================================
+// PHẦN 2E: PRIVACY MASKING (v4.0)
+// ==========================================
+
+function maskPhone(phone) {
+    if (!phone || phone.length < 6) return phone;
+    const len = phone.length;
+    return phone.substring(0, 3) + '****' + phone.substring(len - 3);
+}
+
+function maskEmail(email) {
+    if (!email || !email.includes('@')) return email;
+    const [local, domain] = email.split('@');
+    const maskedLocal = local.substring(0, 3) + '***';
+    return maskedLocal + '@' + domain;
+}
+
+function applyPrivacyMasking(data, options) {
+    const masked = JSON.parse(JSON.stringify(data));
+
+    if (masked.graph?.nodes) {
+        masked.graph.nodes.forEach(node => {
+            if (node.attributes?.contact) {
+                const contact = node.attributes.contact;
+
+                if (options.maskPhone && contact.phone) {
+                    contact.phone = maskPhone(contact.phone);
+                }
+                if (options.maskEmail && contact.email) {
+                    contact.email = maskEmail(contact.email);
+                }
+                if (options.maskAddress && contact.address) {
+                    contact.address = '[Đã ẩn]';
+                }
+                if (options.maskNotes) {
+                    contact.notes = '';
+                }
+            }
+        });
+    }
+
+    return masked;
+}
+
+// ==========================================
+// PHẦN 2F: MERGE ENGINE (v4.0)
+// ==========================================
+
+function findDuplicates(newNodes, existingNodes) {
+    const duplicates = [];
+    const newItems = [];
+
+    newNodes.forEach(newNode => {
+        const existing = existingNodes.find(ex => {
+            // Match by name (normalized)
+            const nameMatch = normalizeString(ex.attributes?.label) ===
+                             normalizeString(newNode.attributes?.label);
+
+            // Match by phone
+            const phoneMatch = ex.attributes?.contact?.phone &&
+                              newNode.attributes?.contact?.phone &&
+                              normalizePhone(ex.attributes.contact.phone) ===
+                              normalizePhone(newNode.attributes.contact.phone);
+
+            // Match by email
+            const emailMatch = ex.attributes?.contact?.email &&
+                              newNode.attributes?.contact?.email &&
+                              ex.attributes.contact.email.toLowerCase() ===
+                              newNode.attributes.contact.email.toLowerCase();
+
+            return nameMatch || phoneMatch || emailMatch;
+        });
+
+        if (existing) {
+            duplicates.push({ existing, new: newNode });
+        } else {
+            newItems.push(newNode);
+        }
+    });
+
+    return { duplicates, newItems };
+}
+
+function normalizeString(str) {
+    if (!str) return '';
+    return str.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
+        .trim();
+}
+
+function normalizePhone(phone) {
+    if (!phone) return '';
+    return phone.replace(/[^\d]/g, '');
+}
+
+function mergeContacts(existing, newContact, strategy) {
+    if (strategy === 'skip') {
+        return existing;
+    }
+
+    if (strategy === 'overwrite') {
+        return { ...newContact, key: existing.key };
+    }
+
+    // merge-fields: Keep existing values, fill empty with new
+    const merged = { ...existing };
+
+    if (merged.attributes?.contact && newContact.attributes?.contact) {
+        const existingContact = merged.attributes.contact;
+        const newContactInfo = newContact.attributes.contact;
+
+        Object.keys(newContactInfo).forEach(key => {
+            if (!existingContact[key] && newContactInfo[key]) {
+                existingContact[key] = newContactInfo[key];
+            }
+        });
+    }
+
+    return merged;
+}
 
 // ==========================================
 // PHẦN 3: HELPER FUNCTIONS
@@ -201,13 +709,26 @@ function showToast(message, type = 'info', duration = 3000) {
 // PHẦN 5: STORAGE MANAGEMENT
 // ==========================================
 
-function saveData() {
+async function saveData() {
     const payload = {
-        version: '3.2',
+        version: '4.0',
         graph: graph.export(),
         layers: state.layers,
         savedAt: new Date().toISOString()
     };
+
+    // Try IndexedDB first
+    if (state.useIndexedDB && state.db) {
+        try {
+            await saveToIndexedDB();
+            updateAutosaveBadge();
+            return;
+        } catch (e) {
+            console.warn('IndexedDB save failed, falling back to localStorage:', e);
+        }
+    }
+
+    // Fallback to localStorage
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
         updateAutosaveBadge();
@@ -220,8 +741,20 @@ function saveData() {
     }
 }
 
-function loadData() {
-    // Try v3 format first
+async function loadData() {
+    // Try IndexedDB first
+    if (state.useIndexedDB && state.db) {
+        try {
+            const loaded = await loadFromIndexedDB();
+            if (loaded) {
+                return true;
+            }
+        } catch (e) {
+            console.warn('IndexedDB load failed:', e);
+        }
+    }
+
+    // Try v3/v4 format from localStorage
     let raw = localStorage.getItem(STORAGE_KEY);
 
     // Fallback to v2 format for migration
@@ -234,7 +767,7 @@ function loadData() {
                 const graphData = v2Data.graph || v2Data;
                 graph.import(graphData);
                 migrateFromV2();
-                showToast('Đã nâng cấp dữ liệu từ v2 lên v3!', 'success');
+                showToast('Đã nâng cấp dữ liệu từ v2 lên v4!', 'success');
                 saveData();
                 return true;
             } catch (e) {
@@ -392,20 +925,133 @@ function initDefaultData() {
     saveData();
 }
 
-// Export functions
-function downloadJSON() {
-    const data = {
-        version: '3.2',
+// Export functions (v4.0)
+function openExportModal() {
+    const modal = document.getElementById('export-modal');
+    const overlay = document.getElementById('overlay');
+
+    // Populate layer checkboxes
+    const layerCheckboxes = document.getElementById('export-layers');
+    layerCheckboxes.innerHTML = state.layers.map(layer => `
+        <label class="checkbox-item">
+            <input type="checkbox" class="export-layer-cb" value="${layer.id}" checked>
+            <span style="color: ${layer.color}">${layer.name}</span>
+        </label>
+    `).join('');
+
+    modal.style.display = 'block';
+    overlay.style.display = 'block';
+}
+
+function closeExportModal() {
+    document.getElementById('export-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
+function getExportData() {
+    const exportAll = document.getElementById('export-all').checked;
+    const selectedLayers = exportAll
+        ? state.layers.map(l => l.id)
+        : Array.from(document.querySelectorAll('.export-layer-cb:checked')).map(cb => cb.value);
+
+    // Filter graph data by selected layers
+    const graphData = graph.export();
+
+    if (!exportAll) {
+        graphData.nodes = graphData.nodes.filter(node =>
+            node.key === 'center' || selectedLayers.includes(node.attributes?.layer)
+        );
+
+        const nodeKeys = new Set(graphData.nodes.map(n => n.key));
+        graphData.edges = graphData.edges.filter(edge =>
+            nodeKeys.has(edge.source) && nodeKeys.has(edge.target)
+        );
+    }
+
+    return {
+        version: '4.0',
         exportedAt: new Date().toISOString(),
-        layers: state.layers,
-        graph: graph.export()
+        layers: state.layers.filter(l => selectedLayers.includes(l.id)),
+        graph: graphData
     };
+}
+
+function downloadJSON() {
+    let data = getExportData();
+
+    // Apply privacy masking if selected
+    const options = {
+        maskPhone: document.getElementById('mask-phone')?.checked,
+        maskEmail: document.getElementById('mask-email')?.checked,
+        maskAddress: document.getElementById('mask-address')?.checked,
+        maskNotes: document.getElementById('mask-notes')?.checked
+    };
+
+    if (options.maskPhone || options.maskEmail || options.maskAddress || options.maskNotes) {
+        data = applyPrivacyMasking(data, options);
+    }
+
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.href = dataStr;
-    a.download = "social_graph_v32_" + Date.now() + ".json";
+    a.download = "social_graph_v4_" + Date.now() + ".json";
     a.click();
+
+    closeExportModal();
     showToast('Đã xuất file JSON thành công!', 'success');
+}
+
+async function downloadEncrypted() {
+    const password = document.getElementById('export-password').value;
+    const confirm = document.getElementById('export-password-confirm').value;
+
+    if (!password) {
+        showToast('Vui lòng nhập mật khẩu!', 'warning');
+        return;
+    }
+
+    if (password !== confirm) {
+        showToast('Mật khẩu xác nhận không khớp!', 'warning');
+        return;
+    }
+
+    if (password.length < 6) {
+        showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'warning');
+        return;
+    }
+
+    try {
+        let data = getExportData();
+
+        // Apply privacy masking if selected
+        const options = {
+            maskPhone: document.getElementById('mask-phone')?.checked,
+            maskEmail: document.getElementById('mask-email')?.checked,
+            maskAddress: document.getElementById('mask-address')?.checked,
+            maskNotes: document.getElementById('mask-notes')?.checked
+        };
+
+        if (options.maskPhone || options.maskEmail || options.maskAddress || options.maskNotes) {
+            data = applyPrivacyMasking(data, options);
+        }
+
+        showToast('Đang mã hóa...', 'info', 2000);
+        const encrypted = await encryptData(data, password);
+
+        // Download as .sgraph file
+        const blob = new Blob([encrypted], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "social_graph_encrypted_" + Date.now() + ".sgraph";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        closeExportModal();
+        showToast('Đã xuất file mã hóa thành công!', 'success');
+    } catch (e) {
+        showToast('Lỗi khi mã hóa: ' + e.message, 'error');
+    }
 }
 
 async function captureGraphImage() {
@@ -423,32 +1069,413 @@ async function captureGraphImage() {
 function uploadJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
+
+    const importMode = document.querySelector('input[name="import-mode"]:checked')?.value || 'replace';
+
     const reader = new FileReader();
     reader.onload = function (e) {
         try {
             const data = JSON.parse(e.target.result);
-            graph.clear();
 
-            // Load layers if present
-            if (data.layers && Array.isArray(data.layers)) {
-                state.layers = data.layers;
-                renderLayerFilters();
-                renderLayersList();
+            if (importMode === 'merge') {
+                // Store for merge process
+                state.pendingImportData = data;
+                performMergeAnalysis(data);
+            } else {
+                // Replace mode
+                graph.clear();
+
+                // Load layers if present
+                if (data.layers && Array.isArray(data.layers)) {
+                    state.layers = data.layers;
+                    renderLayerFilters();
+                    renderLayersList();
+                }
+
+                // Load graph
+                const graphData = data.graph || data;
+                graph.import(graphData);
+                ensureNodeAttributes();
+                applyColorsByDistance(false);
+                updateNodeCount();
+                saveData();
+
+                closeImportModal();
+                showToast('Đã nhập dữ liệu thành công!', 'success');
             }
-
-            // Load graph
-            const graphData = data.graph || data;
-            graph.import(graphData);
-            ensureNodeAttributes();
-            applyColorsByDistance(false);
-            updateNodeCount();
-            saveData();
-            showToast('Đã nhập dữ liệu thành công!', 'success');
         } catch (err) {
             showToast('File không hợp lệ!', 'error');
         }
     };
     reader.readAsText(file);
+    event.target.value = ''; // Reset input
+}
+
+// Import Modal Functions (v4.0)
+function openImportModal() {
+    const modal = document.getElementById('import-modal');
+    document.getElementById('overlay').style.display = 'block';
+    modal.style.display = 'block';
+
+    // Reset state
+    state.pendingImportData = null;
+    state.vcfContacts = [];
+    state.vcfSelected.clear();
+    document.getElementById('btn-confirm-import').disabled = true;
+}
+
+function closeImportModal() {
+    document.getElementById('import-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
+function switchImportTab(tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === tabId);
+    });
+}
+
+// VCF Import Functions (v4.0)
+function uploadVCF(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const contacts = parseVCF(e.target.result);
+        if (contacts.length === 0) {
+            showToast('Không tìm thấy contacts trong file VCF!', 'warning');
+            return;
+        }
+
+        state.vcfContacts = contacts;
+        state.vcfSelected = new Set(contacts.map((_, i) => i)); // Select all by default
+        openVCFModal();
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+}
+
+function openVCFModal() {
+    closeImportModal();
+
+    const modal = document.getElementById('vcf-modal');
+    document.getElementById('overlay').style.display = 'block';
+    modal.style.display = 'block';
+
+    // Update target layer select
+    const layerSelect = document.getElementById('vcf-target-layer');
+    layerSelect.innerHTML = state.layers.map(l =>
+        `<option value="${l.id}">${l.name}</option>`
+    ).join('');
+
+    renderVCFContacts();
+    updateVCFStats();
+}
+
+function closeVCFModal() {
+    document.getElementById('vcf-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+
+function renderVCFContacts(filterText = '') {
+    const list = document.getElementById('vcf-contacts-list');
+    const filter = filterText.toLowerCase();
+
+    const html = state.vcfContacts
+        .map((contact, index) => {
+            if (filter && !contact.name.toLowerCase().includes(filter)) {
+                return '';
+            }
+
+            const isSelected = state.vcfSelected.has(index);
+            const phone = contact.phones[0]?.number || '';
+            const email = contact.emails[0]?.email || '';
+            const detail = contact.company || phone || email;
+
+            return `
+                <div class="vcf-contact-item ${isSelected ? 'selected' : ''}" data-index="${index}">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} data-index="${index}">
+                    <div class="vcf-contact-avatar">${getInitials(contact.name)}</div>
+                    <div class="vcf-contact-info">
+                        <div class="vcf-contact-name">${contact.name}</div>
+                        <div class="vcf-contact-detail">${detail}</div>
+                        ${contact.phones.length > 1 ? `
+                            <div class="vcf-contact-phones">
+                                ${contact.phones.map(p => `<span class="vcf-phone-badge">${p.type}: ${p.number}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        })
+        .join('');
+
+    list.innerHTML = html || '<div class="no-results">Không tìm thấy kết quả</div>';
+
+    // Add click handlers
+    list.querySelectorAll('.vcf-contact-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.type !== 'checkbox') {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+            }
+            toggleVCFSelection(parseInt(item.dataset.index));
+        });
+    });
+}
+
+function toggleVCFSelection(index) {
+    if (state.vcfSelected.has(index)) {
+        state.vcfSelected.delete(index);
+    } else {
+        state.vcfSelected.add(index);
+    }
+    updateVCFStats();
+}
+
+function selectAllVCF() {
+    state.vcfContacts.forEach((_, i) => state.vcfSelected.add(i));
+    renderVCFContacts(document.getElementById('vcf-search')?.value || '');
+    updateVCFStats();
+}
+
+function deselectAllVCF() {
+    state.vcfSelected.clear();
+    renderVCFContacts(document.getElementById('vcf-search')?.value || '');
+    updateVCFStats();
+}
+
+function updateVCFStats() {
+    document.getElementById('vcf-total').textContent = state.vcfContacts.length;
+    document.getElementById('vcf-selected').textContent = state.vcfSelected.size;
+}
+
+function importSelectedVCF() {
+    if (state.vcfSelected.size === 0) {
+        showToast('Vui lòng chọn ít nhất một contact!', 'warning');
+        return;
+    }
+
+    const targetLayer = document.getElementById('vcf-target-layer').value;
+    let imported = 0;
+
+    state.vcfSelected.forEach(index => {
+        const contact = state.vcfContacts[index];
+        const nodeId = 'vcf_' + Date.now() + '_' + index;
+
+        // Random position around center
+        const angle = Math.random() * 2 * Math.PI;
+        const radius = 50 + Math.random() * 150;
+
+        graph.addNode(nodeId, {
+            label: contact.name,
+            layer: targetLayer,
+            distance: 0,
+            size: 15,
+            color: '#999',
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+            contact: {
+                email: contact.emails[0]?.email || '',
+                phone: contact.phones[0]?.number || '',
+                address: contact.addresses[0] || '',
+                company: contact.company || '',
+                position: contact.position || '',
+                facebook: '',
+                social: '',
+                birthday: contact.birthday || '',
+                notes: contact.notes || ''
+            }
+        });
+
+        imported++;
+    });
+
+    applyColorsByDistance(false);
+    updateNodeCount();
+    saveData();
+    closeVCFModal();
+    showToast(`Đã import ${imported} contacts!`, 'success');
+}
+
+// Merge Functions (v4.0)
+function performMergeAnalysis(data) {
+    const newNodes = data.graph?.nodes || [];
+    const existingNodes = graph.export().nodes;
+
+    const { duplicates, newItems } = findDuplicates(newNodes, existingNodes);
+
+    state.mergeConflicts = duplicates;
+
+    // Update merge stats
+    document.getElementById('merge-new').textContent = newItems.length;
+    document.getElementById('merge-duplicate').textContent = duplicates.length;
+    document.getElementById('merge-update').textContent = duplicates.length;
+
+    // Render conflicts
+    const conflictsEl = document.getElementById('merge-conflicts');
+    conflictsEl.innerHTML = duplicates.slice(0, 20).map(d => `
+        <div class="conflict-item">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="conflict-info">
+                <div class="conflict-name">${d.new.attributes?.label || 'Không tên'}</div>
+                <div class="conflict-detail">Trùng với: ${d.existing.attributes?.label || ''}</div>
+            </div>
+        </div>
+    `).join('');
+
+    if (duplicates.length > 20) {
+        conflictsEl.innerHTML += `<div class="conflict-item"><i class="fas fa-ellipsis-h"></i><div class="conflict-info">...và ${duplicates.length - 20} mục khác</div></div>`;
+    }
+
+    // Show merge modal
+    closeImportModal();
+    document.getElementById('merge-modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+
+function closeMergeModal() {
+    document.getElementById('merge-modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    state.pendingImportData = null;
+    state.mergeConflicts = [];
+}
+
+function confirmMerge() {
+    if (!state.pendingImportData) return;
+
+    const strategy = document.querySelector('input[name="merge-strategy"]:checked')?.value || 'skip';
+    const data = state.pendingImportData;
+    const newNodes = data.graph?.nodes || [];
+    const existingNodes = graph.export().nodes;
+
+    const { duplicates, newItems } = findDuplicates(newNodes, existingNodes);
+
+    // Add new items
+    newItems.forEach(node => {
+        if (!graph.hasNode(node.key) && node.key !== 'center') {
+            const angle = Math.random() * 2 * Math.PI;
+            const radius = 50 + Math.random() * 150;
+
+            graph.addNode(node.key, {
+                ...node.attributes,
+                x: node.attributes?.x || radius * Math.cos(angle),
+                y: node.attributes?.y || radius * Math.sin(angle)
+            });
+        }
+    });
+
+    // Handle duplicates based on strategy
+    duplicates.forEach(({ existing, new: newNode }) => {
+        if (strategy === 'skip') {
+            // Do nothing
+        } else if (strategy === 'overwrite') {
+            if (graph.hasNode(existing.key)) {
+                graph.setNodeAttributes(existing.key, newNode.attributes);
+            }
+        } else if (strategy === 'merge-fields') {
+            if (graph.hasNode(existing.key)) {
+                const currentAttrs = graph.getNodeAttributes(existing.key);
+                const merged = mergeContacts(
+                    { attributes: currentAttrs },
+                    newNode,
+                    'merge-fields'
+                );
+                graph.setNodeAttributes(existing.key, merged.attributes);
+            }
+        }
+    });
+
+    // Add new edges
+    const newEdges = data.graph?.edges || [];
+    newEdges.forEach(edge => {
+        if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
+            if (!graph.hasEdge(edge.source, edge.target) && !graph.hasEdge(edge.target, edge.source)) {
+                graph.addEdge(edge.source, edge.target, edge.attributes || { size: 2 });
+            }
+        }
+    });
+
+    // Merge layers
+    if (data.layers && Array.isArray(data.layers)) {
+        data.layers.forEach(newLayer => {
+            if (!state.layers.find(l => l.id === newLayer.id)) {
+                state.layers.push(newLayer);
+            }
+        });
+        renderLayerFilters();
+        renderLayersList();
+    }
+
+    ensureNodeAttributes();
+    applyColorsByDistance(false);
+    updateNodeCount();
+    saveData();
+
+    closeMergeModal();
+    showToast(`Đã gộp dữ liệu: ${newItems.length} mới, ${duplicates.length} xử lý trùng!`, 'success');
+}
+
+// Encrypted file import (v4.0)
+async function uploadEncrypted(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        state.encryptedFileData = new Uint8Array(e.target.result);
+        document.getElementById('decrypt-section').style.display = 'block';
+        document.getElementById('encrypted-drop-zone').style.display = 'none';
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = ''; // Reset input
+}
+
+async function decryptAndImport() {
+    const password = document.getElementById('decrypt-password').value;
+    if (!password) {
+        showToast('Vui lòng nhập mật khẩu!', 'warning');
+        return;
+    }
+
+    if (!state.encryptedFileData) {
+        showToast('Không có file để giải mã!', 'error');
+        return;
+    }
+
+    try {
+        showToast('Đang giải mã...', 'info', 2000);
+        const data = await decryptData(state.encryptedFileData, password);
+
+        // Import decrypted data
+        graph.clear();
+
+        if (data.layers && Array.isArray(data.layers)) {
+            state.layers = data.layers;
+            renderLayerFilters();
+            renderLayersList();
+        }
+
+        const graphData = data.graph || data;
+        graph.import(graphData);
+        ensureNodeAttributes();
+        applyColorsByDistance(false);
+        updateNodeCount();
+        saveData();
+
+        closeImportModal();
+        state.encryptedFileData = null;
+        showToast('Đã giải mã và nhập dữ liệu thành công!', 'success');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 // ==========================================
@@ -1778,13 +2805,62 @@ ui.overlay.addEventListener('click', () => {
 });
 
 // Toolbar buttons
-document.getElementById('btn-export').addEventListener('click', downloadJSON);
-document.getElementById('btn-import-trigger').addEventListener('click', () => document.getElementById('file-input').click());
+document.getElementById('btn-export').addEventListener('click', openExportModal);
+document.getElementById('btn-import-trigger').addEventListener('click', openImportModal);
+document.getElementById('btn-import-vcf').addEventListener('click', () => document.getElementById('vcf-input').click());
+document.getElementById('vcf-input').addEventListener('change', uploadVCF);
 document.getElementById('file-input').addEventListener('change', uploadJSON);
 document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
 document.getElementById('btn-force-layout').addEventListener('click', startForceLayout);
 document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
 document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
+
+// Export Modal handlers (v4.0)
+document.getElementById('btn-x-close-export')?.addEventListener('click', closeExportModal);
+document.getElementById('btn-export-json')?.addEventListener('click', downloadJSON);
+document.getElementById('btn-export-encrypted')?.addEventListener('click', downloadEncrypted);
+document.getElementById('enable-encryption')?.addEventListener('change', (e) => {
+    document.getElementById('export-password-fields').style.display = e.target.checked ? 'block' : 'none';
+});
+document.getElementById('export-password')?.addEventListener('input', (e) => {
+    const strength = checkPasswordStrength(e.target.value);
+    const strengthEl = document.getElementById('password-strength');
+    strengthEl.className = 'password-strength ' + strength;
+});
+
+// Import Modal handlers (v4.0)
+document.getElementById('btn-x-close-import')?.addEventListener('click', closeImportModal);
+document.getElementById('btn-cancel-import')?.addEventListener('click', closeImportModal);
+document.getElementById('btn-select-json')?.addEventListener('click', () => document.getElementById('file-input').click());
+document.getElementById('btn-select-vcf')?.addEventListener('click', () => document.getElementById('vcf-input').click());
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchImportTab(btn.dataset.tab));
+});
+
+// VCF Modal handlers (v4.0)
+document.getElementById('btn-x-close-vcf')?.addEventListener('click', closeVCFModal);
+document.getElementById('btn-cancel-vcf')?.addEventListener('click', closeVCFModal);
+document.getElementById('btn-import-vcf-confirm')?.addEventListener('click', importSelectedVCF);
+document.getElementById('vcf-select-all')?.addEventListener('click', selectAllVCF);
+document.getElementById('vcf-deselect-all')?.addEventListener('click', deselectAllVCF);
+document.getElementById('vcf-search')?.addEventListener('input', (e) => {
+    renderVCFContacts(e.target.value);
+});
+
+// Merge Modal handlers (v4.0)
+document.getElementById('btn-x-close-merge')?.addEventListener('click', closeMergeModal);
+document.getElementById('btn-cancel-merge')?.addEventListener('click', closeMergeModal);
+document.getElementById('btn-confirm-merge')?.addEventListener('click', confirmMerge);
+
+// Encrypted file handlers (v4.0)
+document.getElementById('btn-select-encrypted')?.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.sgraph';
+    input.onchange = uploadEncrypted;
+    input.click();
+});
+document.getElementById('btn-decrypt')?.addEventListener('click', decryptAndImport);
 
 // Layer management
 document.getElementById('btn-add-layer').addEventListener('click', addLayer);
@@ -1828,7 +2904,17 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
 // PHẦN 17: INITIALIZATION
 // ==========================================
 
-if (!loadData()) initDefaultData();
+// Initialize storage and load data
+async function initApp() {
+    // Try to initialize IndexedDB
+    await initIndexedDB();
+
+    // Load data
+    const loaded = await loadData();
+    if (!loaded) {
+        initDefaultData();
+    }
+}
 
 const container = document.getElementById(CONTAINER_ID);
 renderer = new Sigma(graph, container, {
@@ -1873,21 +2959,25 @@ renderer = new Sigma(graph, container, {
     }
 });
 
-// Initialize UI
-renderLayerFilters();
-renderLayersList();
-updateNodeCount();
-updateStatistics();
-applyColorsByDistance(false);
+// Initialize application
+initApp().then(() => {
+    // Initialize UI after data is loaded
+    renderLayerFilters();
+    renderLayersList();
+    updateNodeCount();
+    updateStatistics();
+    applyColorsByDistance(false);
 
-// Setup new features
-setupDragAndDrop();
-setupClickHandlers();
-setupSearch();
-setupZoomControls();
-setupCopyButtons();
+    // Setup new features
+    setupDragAndDrop();
+    setupClickHandlers();
+    setupSearch();
+    setupZoomControls();
+    setupCopyButtons();
 
-// Welcome message
-setTimeout(() => {
-    showToast('SocialGraph v3.2 - Force Layout xếp vòng tròn!', 'info', 4000);
-}, 500);
+    // Welcome message
+    setTimeout(() => {
+        const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
+        showToast(`SocialGraph v4.0 - VCF Import, Encryption, ${storageType}!`, 'info', 4000);
+    }, 500);
+});
