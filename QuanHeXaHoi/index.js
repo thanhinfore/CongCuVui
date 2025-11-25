@@ -3169,23 +3169,83 @@ function applySearchFilter(nodeIds) {
     showToast(`Đang hiển thị ${nodeIds.length} node khớp với tìm kiếm`, 'info');
 }
 
-// Connect all filtered nodes to center (TÔI)
-function connectFilteredNodesToCenter() {
+// Toggle hub selector dropdown
+function toggleHubSelectorDropdown() {
+    const dropdown = document.getElementById('hub-selector-dropdown');
+    if (!dropdown) return;
+
+    const isHidden = dropdown.classList.contains('hidden');
+
+    if (isHidden) {
+        // Render the list of filtered nodes
+        renderHubDropdownList();
+        dropdown.classList.remove('hidden');
+    } else {
+        dropdown.classList.add('hidden');
+    }
+}
+
+// Close hub selector dropdown
+function closeHubSelectorDropdown() {
+    const dropdown = document.getElementById('hub-selector-dropdown');
+    if (dropdown) {
+        dropdown.classList.add('hidden');
+    }
+}
+
+// Render list of filtered nodes in the hub dropdown
+function renderHubDropdownList() {
+    const list = document.getElementById('hub-dropdown-list');
+    if (!list || !state.searchFilteredNodes) return;
+
+    const filteredNodes = Array.from(state.searchFilteredNodes);
+
+    // Build list items
+    list.innerHTML = filteredNodes.map(nodeId => {
+        const attrs = graph.getNodeAttributes(nodeId);
+        const label = attrs.label || nodeId;
+        const layer = getLayerById(attrs.layer);
+        const connections = graph.degree(nodeId);
+
+        return `
+            <div class="hub-dropdown-item" data-node-id="${nodeId}">
+                <div class="hub-item-avatar" style="background: ${layer.color}">${getInitials(label)}</div>
+                <div class="hub-item-info">
+                    <div class="hub-item-name">${label}</div>
+                    <div class="hub-item-detail">${connections} kết nối</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Add click handlers
+    list.querySelectorAll('.hub-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const hubNodeId = item.dataset.nodeId;
+            connectFilteredNodesToHub(hubNodeId);
+            closeHubSelectorDropdown();
+        });
+    });
+}
+
+// Connect all filtered nodes to selected hub
+function connectFilteredNodesToHub(hubNodeId) {
     if (!state.searchFilterActive || !state.searchFilteredNodes) {
         showToast('Chưa có node nào được lọc!', 'warning');
         return;
     }
 
     const filteredNodes = Array.from(state.searchFilteredNodes);
+    const hubLabel = graph.getNodeAttribute(hubNodeId, 'label') || hubNodeId;
     let newConnections = 0;
 
     filteredNodes.forEach(nodeId => {
-        // Skip center node itself
-        if (nodeId === 'center') return;
+        // Skip hub node itself
+        if (nodeId === hubNodeId) return;
 
         // Check if edge already exists
-        if (!graph.hasEdge('center', nodeId) && !graph.hasEdge(nodeId, 'center')) {
-            graph.addEdge('center', nodeId, {
+        if (!graph.hasEdge(hubNodeId, nodeId) && !graph.hasEdge(nodeId, hubNodeId)) {
+            graph.addEdge(hubNodeId, nodeId, {
                 relationship: 'other',
                 color: EDGE_TYPES.other.color,
                 label: '',
@@ -3198,9 +3258,9 @@ function connectFilteredNodesToCenter() {
     if (newConnections > 0) {
         applyColorsByDistance(false);
         saveData();
-        showToast(`Đã kết nối ${newConnections} người với TÔI`, 'success');
+        showToast(`Đã kết nối ${newConnections} người với "${hubLabel}"`, 'success');
     } else {
-        showToast('Tất cả đã được kết nối với TÔI!', 'info');
+        showToast(`Tất cả đã được kết nối với "${hubLabel}"!`, 'info');
     }
 
     if (renderer) renderer.refresh();
@@ -3332,16 +3392,22 @@ function setupSearch() {
         });
     }
 
-    // Connect filtered nodes to center button handler
-    const connectFilteredBtn = document.getElementById('connect-filtered-btn');
-    if (connectFilteredBtn) {
-        connectFilteredBtn.addEventListener('click', connectFilteredNodesToCenter);
+    // Hub selector button handler
+    const openHubSelectorBtn = document.getElementById('open-hub-selector-btn');
+    if (openHubSelectorBtn) {
+        openHubSelectorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleHubSelectorDropdown();
+        });
     }
 
-    // Close results when clicking outside
+    // Close results and hub dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#search-container')) {
             searchResults.classList.remove('visible');
+        }
+        if (!e.target.closest('.hub-selector-wrapper')) {
+            closeHubSelectorDropdown();
         }
     });
 }
