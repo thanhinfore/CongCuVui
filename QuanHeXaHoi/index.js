@@ -3539,6 +3539,9 @@ function setupDragAndDrop() {
     const captor = renderer.getMouseCaptor();
 
     renderer.on('downNode', (e) => {
+        // Hide hover panel when starting drag
+        hideHoverPanel(true);
+
         state.isDragging = true;
         state.draggedNode = e.node;
         state.dragStartTime = Date.now();
@@ -3738,55 +3741,230 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
 }
 
 // ==========================================
-// PHẦN 10: TOOLTIP FUNCTIONS
+// PHẦN 10: NODE HOVER PANEL (Quick Actions - Phase 4)
 // ==========================================
 
-function showNodeTooltip(nodeId, mouseX, mouseY) {
-    const tooltip = document.getElementById('node-tooltip');
-    if (!tooltip || !nodeId) return;
+let hoverPanelTimeout = null;
+let currentHoveredNodeId = null;
 
+function showHoverPanel(nodeId, mouseX, mouseY) {
+    const panel = document.getElementById('node-hover-panel');
+    if (!panel || !nodeId) return;
+
+    // Clear any pending hide timeout
+    if (hoverPanelTimeout) {
+        clearTimeout(hoverPanelTimeout);
+        hoverPanelTimeout = null;
+    }
+
+    currentHoveredNodeId = nodeId;
     const attrs = graph.getNodeAttributes(nodeId);
     const contact = attrs.contact || {};
     const layer = getLayerById(attrs.layer);
 
-    // Update tooltip content
-    document.getElementById('tooltip-avatar').textContent = getInitials(attrs.label);
-    document.getElementById('tooltip-name').textContent = attrs.label;
-    document.getElementById('tooltip-layer').querySelector('span').textContent = layer.name;
-    document.getElementById('tooltip-phone').querySelector('span').textContent = contact.phone || '-';
-    document.getElementById('tooltip-email').querySelector('span').textContent = contact.email || '-';
-    document.getElementById('tooltip-company').querySelector('span').textContent = contact.company || '-';
+    // Update panel content
+    const avatarEl = document.getElementById('hover-avatar');
+    const nameEl = document.getElementById('hover-name');
+    const metaEl = document.getElementById('hover-meta');
 
-    // Position tooltip
-    const tooltipRect = tooltip.getBoundingClientRect();
+    if (avatarEl) {
+        avatarEl.textContent = getInitials(attrs.label);
+        avatarEl.style.background = layer.color;
+    }
+    if (nameEl) nameEl.textContent = attrs.label;
+    if (metaEl) {
+        const company = contact.company ? contact.company : '';
+        metaEl.textContent = company || layer.name;
+    }
+
+    // Position panel near mouse but ensure it stays in viewport
+    const panelWidth = 240;
+    const panelHeight = 130;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    let left = mouseX + 15;
-    let top = mouseY + 15;
+    let left = mouseX + 20;
+    let top = mouseY - 30;
 
-    // Adjust if tooltip goes off screen
-    if (left + 280 > viewportWidth) {
-        left = mouseX - 280 - 15;
+    // Adjust if panel goes off screen
+    if (left + panelWidth > viewportWidth - 20) {
+        left = mouseX - panelWidth - 20;
     }
-    if (top + 200 > viewportHeight) {
-        top = mouseY - 200 - 15;
+    if (top + panelHeight > viewportHeight - 20) {
+        top = viewportHeight - panelHeight - 20;
+    }
+    if (top < 80) {
+        top = 80; // Below top bar
     }
 
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
+    panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
 
-    // Show tooltip
-    tooltip.classList.remove('tooltip-hidden');
-    tooltip.classList.add('tooltip-visible');
+    // Show panel
+    panel.classList.remove('hidden');
+}
+
+function hideHoverPanel(immediate = false) {
+    if (immediate) {
+        const panel = document.getElementById('node-hover-panel');
+        if (panel) panel.classList.add('hidden');
+        currentHoveredNodeId = null;
+        return;
+    }
+
+    // Delay hiding so user can move mouse to panel
+    hoverPanelTimeout = setTimeout(() => {
+        const panel = document.getElementById('node-hover-panel');
+        if (panel) panel.classList.add('hidden');
+        currentHoveredNodeId = null;
+    }, 200);
+}
+
+function setupHoverPanelEvents() {
+    const panel = document.getElementById('node-hover-panel');
+    if (!panel) return;
+
+    // ESC key cancels connection mode
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && connectionState.isConnecting) {
+            cancelConnection();
+            showToast('Đã hủy tạo kết nối', 'info');
+        }
+    });
+
+    // Keep panel visible when mouse enters it
+    panel.addEventListener('mouseenter', () => {
+        if (hoverPanelTimeout) {
+            clearTimeout(hoverPanelTimeout);
+            hoverPanelTimeout = null;
+        }
+    });
+
+    // Hide panel when mouse leaves it
+    panel.addEventListener('mouseleave', () => {
+        hideHoverPanel();
+    });
+
+    // Quick action handlers
+    document.getElementById('hover-view')?.addEventListener('click', () => {
+        if (currentHoveredNodeId) {
+            openDetailPanel(currentHoveredNodeId);
+            hideHoverPanel(true);
+        }
+    });
+
+    document.getElementById('hover-edit')?.addEventListener('click', () => {
+        if (currentHoveredNodeId) {
+            editNode(currentHoveredNodeId);
+            hideHoverPanel(true);
+        }
+    });
+
+    document.getElementById('hover-connect')?.addEventListener('click', () => {
+        if (currentHoveredNodeId && !connectionState.isConnecting) {
+            startConnection(currentHoveredNodeId);
+            hideHoverPanel(true);
+            showToast('Chọn người muốn kết nối', 'info');
+        }
+    });
+
+    document.getElementById('hover-delete')?.addEventListener('click', () => {
+        if (currentHoveredNodeId) {
+            const nodeId = currentHoveredNodeId;
+            const attrs = graph.getNodeAttributes(nodeId);
+            if (confirm(`Xóa "${attrs.label}"? Hành động này không thể hoàn tác.`)) {
+                deleteNode(nodeId);
+                hideHoverPanel(true);
+            }
+        }
+    });
+}
+
+// Helper functions for hover panel actions
+function editNode(nodeId) {
+    openModal(nodeId, 'EDIT');
+}
+
+function deleteNode(nodeId) {
+    if (!graph.hasNode(nodeId)) return;
+
+    // Remove all edges connected to this node
+    graph.forEachEdge(nodeId, (edge) => {
+        graph.dropEdge(edge);
+    });
+
+    // Remove the node
+    graph.dropNode(nodeId);
+
+    // Update UI
+    applyColorsByDistance(false);
+    updateNodeCount();
+    saveGraph();
+    showToast('Đã xóa người này', 'success');
+}
+
+// Connection state for quick connect
+const connectionState = {
+    isConnecting: false,
+    sourceNode: null
+};
+
+function startConnection(sourceNodeId) {
+    connectionState.isConnecting = true;
+    connectionState.sourceNode = sourceNodeId;
+
+    // Highlight the source node
+    graph.setNodeAttribute(sourceNodeId, 'highlighted', true);
+    renderer.refresh();
+
+    // Change cursor
+    document.getElementById('container').style.cursor = 'crosshair';
+}
+
+function completeConnection(targetNodeId) {
+    if (!connectionState.isConnecting || !connectionState.sourceNode) return;
+    if (connectionState.sourceNode === targetNodeId) {
+        cancelConnection();
+        return;
+    }
+
+    const sourceId = connectionState.sourceNode;
+
+    // Check if edge already exists
+    if (!graph.hasEdge(sourceId, targetNodeId) && !graph.hasEdge(targetNodeId, sourceId)) {
+        graph.addEdge(sourceId, targetNodeId, {
+            relationship: 'other',
+            color: EDGE_TYPES.other.color,
+            label: '',
+            size: 2
+        });
+        saveGraph();
+        showToast('Đã tạo kết nối', 'success');
+    } else {
+        showToast('Kết nối đã tồn tại', 'warning');
+    }
+
+    cancelConnection();
+}
+
+function cancelConnection() {
+    if (connectionState.sourceNode) {
+        graph.setNodeAttribute(connectionState.sourceNode, 'highlighted', false);
+    }
+    connectionState.isConnecting = false;
+    connectionState.sourceNode = null;
+
+    document.getElementById('container').style.cursor = 'default';
+    renderer.refresh();
+}
+
+// Legacy compatibility
+function showNodeTooltip(nodeId, mouseX, mouseY) {
+    showHoverPanel(nodeId, mouseX, mouseY);
 }
 
 function hideNodeTooltip() {
-    const tooltip = document.getElementById('node-tooltip');
-    if (tooltip) {
-        tooltip.classList.remove('tooltip-visible');
-        tooltip.classList.add('tooltip-hidden');
-    }
+    hideHoverPanel();
 }
 
 // ==========================================
@@ -4413,6 +4591,13 @@ function setupCopyButtons() {
 
 function setupClickHandlers() {
     renderer.on('clickStage', () => {
+        // Cancel connection mode on stage click
+        if (connectionState.isConnecting) {
+            cancelConnection();
+            showToast('Đã hủy tạo kết nối', 'info');
+            return;
+        }
+
         // Click on empty canvas - just deselect/clear state (no longer opens add modal)
         if (!state.hasMoved && !state.isDragging) {
             state.selectedNode = null;
@@ -4421,6 +4606,15 @@ function setupClickHandlers() {
     });
 
     renderer.on('clickNode', (e) => {
+        // Hide hover panel on click
+        hideHoverPanel(true);
+
+        // Handle connection mode
+        if (connectionState.isConnecting) {
+            completeConnection(e.node);
+            return;
+        }
+
         const now = Date.now();
         const isDoubleClick = (now - state.lastClickTime) < 300;
         state.lastClickTime = now;
@@ -5044,6 +5238,9 @@ initApp().then(() => {
 
     // v5.0: Setup new UI handlers
     setupV5UI();
+
+    // Phase 4: Setup hover panel events
+    setupHoverPanelEvents();
 
     // Welcome message
     setTimeout(() => {

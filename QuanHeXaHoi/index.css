@@ -1130,6 +1130,105 @@ input, select, textarea {
 }
 
 /* ==========================================
+   NODE HOVER PANEL (Quick Actions)
+   ========================================== */
+.node-hover-panel {
+    position: fixed;
+    z-index: 1100;
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    min-width: 200px;
+    max-width: 280px;
+    overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: auto;
+}
+
+.node-hover-panel.hidden {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+}
+
+.hover-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.hover-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.hover-info {
+    flex: 1;
+    overflow: hidden;
+}
+
+.hover-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hover-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.hover-panel-actions {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px;
+    gap: 4px;
+}
+
+.hover-action {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+    transition: all var(--transition);
+}
+
+.hover-action:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.hover-action:active {
+    transform: scale(0.92);
+}
+
+.hover-action-danger:hover {
+    background: var(--danger-light, #ffebee);
+    color: var(--danger);
+}
+
+/* ==========================================
    TOAST NOTIFICATIONS
    ========================================== */
 #toast-container {
