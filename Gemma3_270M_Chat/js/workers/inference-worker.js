@@ -38,7 +38,7 @@ function sendMessage(type, data, id = null) {
 /**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
- * Using q4f16 (4-bit quantized weights + fp16 compute) for max speed
+ * Using q4 (4-bit quantization) for speed
  */
 async function detectDevice() {
     // Try to detect WebGPU support
@@ -50,15 +50,13 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                // Use q4f16 for maximum speed on WebGPU
-                // q4 weights with fp16 compute - fastest option
-                // Note: fp16 alone causes <unused> tokens, but q4f16 should work
-                dtypeConfig = 'q4f16';
+                // Use q4 for speed - 4-bit quantization is faster than fp32
+                dtypeConfig = 'q4';
 
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'q4f16',
-                    message: '⚡ Sử dụng WebGPU (GPU) với q4f16 - Tốc độ tối đa!'
+                    dtype: 'q4',
+                    message: '⚡ Sử dụng WebGPU (GPU) với q4 - Tốc độ cao!'
                 });
                 return;
             }
@@ -69,7 +67,7 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
-    dtypeConfig = 'q4';  // Use q4 for WASM (fastest)
+    dtypeConfig = 'q4';
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
