@@ -2605,6 +2605,7 @@ async function decryptAndImport() {
 
 function renderLayerFilters() {
     const container = document.getElementById('layer-filters');
+    if (!container) return;  // v5.0: Element may not exist in new UI
 
     // Clear and keep "All" button
     container.innerHTML = `
@@ -2909,8 +2910,8 @@ function updateNodeCount() {
 }
 
 function closeModal() {
-    ui.modal.style.display = 'none';
-    ui.overlay.style.display = 'none';
+    if (ui.modal) ui.modal.style.display = 'none';
+    if (ui.overlay) ui.overlay.style.display = 'none';
     clearModalForm();
     state.mode = 'NORMAL';
     state.selectedNode = null;
@@ -2918,7 +2919,7 @@ function closeModal() {
 }
 
 function clearModalForm() {
-    ui.inpLabel.value = '';
+    if (ui.inpLabel) ui.inpLabel.value = '';
     if (ui.inpEmail) ui.inpEmail.value = '';
     if (ui.inpPhone) ui.inpPhone.value = '';
     if (ui.inpAddress) ui.inpAddress.value = '';
@@ -2931,33 +2932,33 @@ function clearModalForm() {
 }
 
 function closeEdgeModal() {
-    ui.edgeModal.style.display = 'none';
-    ui.overlay.style.display = 'none';
+    if (ui.edgeModal) ui.edgeModal.style.display = 'none';
+    if (ui.overlay) ui.overlay.style.display = 'none';
     state.selectedEdge = null;
 }
 
 function openModal(nodeId, mode = 'EDIT') {
     state.mode = mode;
-    ui.overlay.style.display = 'block';
-    ui.modal.style.display = 'block';
+    if (ui.overlay) ui.overlay.style.display = 'block';
+    if (ui.modal) ui.modal.style.display = 'block';
 
     if (mode === 'ADD') {
-        ui.title.innerText = state.parentNode
+        if (ui.title) ui.title.innerText = state.parentNode
             ? `Thêm từ: ${graph.getNodeAttribute(state.parentNode, 'label')}`
             : "Thêm người mới";
 
         clearModalForm();
         if (ui.inpLayer) ui.inpLayer.value = state.layers[0]?.id || 'others';
-        ui.btnSave.innerHTML = '<i class="fas fa-plus"></i> Thêm';
-        ui.editActions.style.display = 'none';
-        setTimeout(() => ui.inpLabel.focus(), 100);
+        if (ui.btnSave) ui.btnSave.innerHTML = '<i class="fas fa-plus"></i> Thêm';
+        if (ui.editActions) ui.editActions.style.display = 'none';
+        setTimeout(() => ui.inpLabel?.focus(), 100);
     } else {
         state.selectedNode = nodeId;
         const attr = graph.getNodeAttributes(nodeId);
         const contact = attr.contact || {};
 
-        ui.title.innerText = attr.label;
-        ui.inpLabel.value = attr.label;
+        if (ui.title) ui.title.innerText = attr.label;
+        if (ui.inpLabel) ui.inpLabel.value = attr.label;
         if (ui.inpLayer) ui.inpLayer.value = attr.layer || 'others';
         if (ui.inpEmail) ui.inpEmail.value = contact.email || '';
         if (ui.inpPhone) ui.inpPhone.value = contact.phone || '';
@@ -2969,31 +2970,33 @@ function openModal(nodeId, mode = 'EDIT') {
         if (ui.inpBirthday) ui.inpBirthday.value = contact.birthday || '';
         if (ui.inpNotes) ui.inpNotes.value = contact.notes || '';
 
-        ui.btnSave.innerHTML = '<i class="fas fa-save"></i> Lưu';
+        if (ui.btnSave) ui.btnSave.innerHTML = '<i class="fas fa-save"></i> Lưu';
 
         const isCenter = (nodeId === 'center');
-        document.getElementById('btn-delete').style.display = isCenter ? 'none' : 'block';
-        ui.editActions.style.display = 'block';
+        const deleteBtn = document.getElementById('btn-delete');
+        if (deleteBtn) deleteBtn.style.display = isCenter ? 'none' : 'block';
+        if (ui.editActions) ui.editActions.style.display = 'block';
     }
 }
 
 function openEdgeModal(edge) {
     state.selectedEdge = edge;
-    ui.overlay.style.display = 'block';
-    ui.edgeModal.style.display = 'block';
+    if (ui.overlay) ui.overlay.style.display = 'block';
+    if (ui.edgeModal) ui.edgeModal.style.display = 'block';
 
     const source = graph.source(edge);
     const target = graph.target(edge);
     const sourceLabel = graph.getNodeAttribute(source, 'label');
     const targetLabel = graph.getNodeAttribute(target, 'label');
 
-    document.getElementById('edge-modal-title').innerText = `${sourceLabel} ↔ ${targetLabel}`;
+    const edgeTitle = document.getElementById('edge-modal-title');
+    if (edgeTitle) edgeTitle.innerText = `${sourceLabel} ↔ ${targetLabel}`;
 
     const edgeRelationship = graph.getEdgeAttribute(edge, 'relationship') || 'other';
-    const edgeLabel = graph.getEdgeAttribute(edge, 'label') || '';
+    const edgeLabelVal = graph.getEdgeAttribute(edge, 'label') || '';
 
-    ui.edgeType.value = edgeRelationship;
-    ui.edgeLabel.value = edgeLabel;
+    if (ui.edgeType) ui.edgeType.value = edgeRelationship;
+    if (ui.edgeLabel) ui.edgeLabel.value = edgeLabelVal;
 }
 
 // ==========================================
