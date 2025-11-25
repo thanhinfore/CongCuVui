@@ -351,6 +351,17 @@ function ensureNodeAttributes() {
         if (!attrs.relationship) {
             graph.setEdgeAttribute(edge, 'relationship', 'other');
         }
+
+        // Ensure edges have size for visibility
+        if (!attrs.size || attrs.size < 1) {
+            graph.setEdgeAttribute(edge, 'size', 2);
+        }
+
+        // Ensure edges have color
+        if (!attrs.color) {
+            const rel = attrs.relationship || 'other';
+            graph.setEdgeAttribute(edge, 'color', EDGE_TYPES[rel]?.color || '#999');
+        }
     });
 }
 
@@ -983,7 +994,8 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
         graph.addEdge(nodeA, nodeB, {
             relationship: 'other',
             color: EDGE_TYPES.other.color,
-            label: edgeLabel
+            label: edgeLabel,
+            size: 2
         });
         graph.setNodeAttribute(nodeA, 'x', posA.x + DRAG_CONFIG.LINK_OFFSET.x);
         graph.setNodeAttribute(nodeA, 'y', posA.y + DRAG_CONFIG.LINK_OFFSET.y);
@@ -1474,7 +1486,8 @@ ui.btnSave.addEventListener('click', () => {
             graph.addEdge(state.parentNode, newId, {
                 relationship: layer === 'family' ? 'family' : 'other',
                 color: layer === 'family' ? EDGE_TYPES.family.color : EDGE_TYPES.other.color,
-                label: ''
+                label: '',
+                size: 2
             });
         }
 
@@ -1696,13 +1709,14 @@ const container = document.getElementById(CONTAINER_ID);
 renderer = new Sigma(graph, container, {
     renderEdgeLabels: true,
     defaultEdgeType: 'line',
-    edgeLabelSize: 12,
+    edgeLabelSize: 11,
     edgeLabelColor: { color: '#333' },
     edgeProgramClasses: {},
-    labelRenderedSizeThreshold: 8,
-    labelDensity: 0.07,
+    labelRenderedSizeThreshold: 6,
+    labelDensity: 0.1,
     labelGridCellSize: 60,
     labelFont: 'Segoe UI, sans-serif',
+    defaultEdgeColor: '#999',
     nodeReducer: (node, data) => {
         const res = { ...data };
         if (state.hoveredNode === node || data.highlighted) {
@@ -1713,14 +1727,21 @@ renderer = new Sigma(graph, container, {
     },
     edgeReducer: (edge, data) => {
         const res = { ...data };
+        // Ensure edges always have minimum size
+        if (!res.size || res.size < 1.5) {
+            res.size = 1.5;
+        }
+        // When hovering a node, highlight connected edges
         if (state.hoveredNode) {
             const source = graph.source(edge);
             const target = graph.target(edge);
             if (source === state.hoveredNode || target === state.hoveredNode) {
                 res.highlighted = true;
                 res.size = 3;
+                res.zIndex = 1;
             } else {
-                res.hidden = true;
+                // Dim other edges instead of hiding
+                res.color = '#e0e0e0';
             }
         }
         return res;
