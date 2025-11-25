@@ -10,6 +10,40 @@ const CONTAINER_ID = 'container';
 const STORAGE_KEY = 'social_graph_v2_data';
 const AUTOSAVE_BADGE = document.getElementById('autosave-status');
 
+// ==========================================
+// CONSTANTS - Thay thế magic numbers
+// ==========================================
+const NODE_SIZES = {
+    CENTER: 25,          // Kích thước node trung tâm "TÔI"
+    MIN: 8,              // Kích thước tối thiểu
+    BASE: 22,            // Kích thước cơ sở
+    REDUCTION_FACTOR: 2.5 // Hệ số giảm theo khoảng cách
+};
+
+const FORCE_LAYOUT_CONFIG = {
+    ITERATIONS: 100,     // Số lần lặp
+    FRAME_RATE: 16,      // ~60fps
+    GRAVITY: 0.05,
+    SCALING_RATIO: 10,
+    SLOW_DOWN: 1
+};
+
+const DRAG_CONFIG = {
+    MOVE_THRESHOLD: 0.5, // Ngưỡng nhận diện kéo
+    MIN_DURATION: 100,   // Thời gian tối thiểu để tính là kéo (ms)
+    LINK_OFFSET: { x: 12, y: 8 } // Offset sau khi nối
+};
+
+const DISTANCE_COLORS = [
+    '#222',      // 0: Center (Tôi)
+    '#E53935',   // 1: Rất gần
+    '#D81B60',   // 2: Gần
+    '#8E24AA',   // 3: Trung bình
+    '#5E35B1',   // 4: Xa
+    '#3949AB',   // 5: Rất xa
+    '#1E88E5'    // 6+: Cực xa
+];
+
 // ✨ NEW: Edge relationship types
 const EDGE_TYPES = {
     family: { label: 'Họ hàng', color: '#E53935' },
@@ -29,21 +63,12 @@ const NODE_TYPES = {
 
 // Helper: Màu sắc & Kích thước theo KHOẢNG CÁCH từ center
 const getColorByDistance = (distance) => {
-    const colors = [
-        '#222',      // 0: Center (Tôi)
-        '#E53935',   // 1: Rất gần
-        '#D81B60',   // 2: Gần
-        '#8E24AA',   // 3: Trung bình
-        '#5E35B1',   // 4: Xa
-        '#3949AB',   // 5: Rất xa
-        '#1E88E5'    // 6+: Cực xa
-    ];
-    return colors[Math.min(distance, colors.length - 1)] || '#999';
+    return DISTANCE_COLORS[Math.min(distance, DISTANCE_COLORS.length - 1)] || '#999';
 };
 
 const getSizeByDistance = (distance) => {
-    if (distance === 0) return 25; // Center node
-    return Math.max(8, 22 - (distance * 2.5));
+    if (distance === 0) return NODE_SIZES.CENTER;
+    return Math.max(NODE_SIZES.MIN, NODE_SIZES.BASE - (distance * NODE_SIZES.REDUCTION_FACTOR));
 };
 
 // Khởi tạo đồ thị
@@ -150,8 +175,16 @@ function saveData() {
         graph: graph.export(),
         selection: Array.from(state.selectedForExport)
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-    updateAutosaveBadge();
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        updateAutosaveBadge();
+    } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            showToast('Dung lượng lưu trữ đã đầy! Hãy xuất dữ liệu để backup.', 'warning', 5000);
+        } else {
+            showToast('Lỗi khi lưu dữ liệu!', 'error');
+        }
+    }
 }
 
 function loadData() {
@@ -197,7 +230,7 @@ function loadData() {
             }
             return true;
         } catch (e) {
-            console.error("Lỗi dữ liệu save:", e);
+            // Silent fail - data corrupted
             return false;
         }
     }
@@ -211,7 +244,7 @@ function initDefaultData() {
         distance: 0,
         x: 0,
         y: 0,
-        size: 25,
+        size: NODE_SIZES.CENTER,
         color: getColorByDistance(0),
         category: 'social' // Node category (family/social)
     });
@@ -303,15 +336,15 @@ function startForceLayout() {
 
     showToast('Đang chạy Force Layout...', 'info', 2000);
 
-    // Configure ForceAtlas2
+    // Configure ForceAtlas2 using constants
     const settings = {
-        iterations: 100,
+        iterations: FORCE_LAYOUT_CONFIG.ITERATIONS,
         settings: {
             barnesHutOptimize: true,
             strongGravityMode: true,
-            gravity: 0.05,
-            scalingRatio: 10,
-            slowDown: 1
+            gravity: FORCE_LAYOUT_CONFIG.GRAVITY,
+            scalingRatio: FORCE_LAYOUT_CONFIG.SCALING_RATIO,
+            slowDown: FORCE_LAYOUT_CONFIG.SLOW_DOWN
         }
     };
 
@@ -331,7 +364,7 @@ function startForceLayout() {
         // Update progress
         const progress = Math.round((iteration / settings.iterations) * 100);
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${progress}%`;
-    }, 16); // ~60fps
+    }, FORCE_LAYOUT_CONFIG.FRAME_RATE);
 }
 
 function stopForceLayout() {
@@ -514,7 +547,7 @@ function setupDragAndDrop() {
         const dx = Math.abs(pos.x - state.dragStartPos.x);
         const dy = Math.abs(pos.y - state.dragStartPos.y);
 
-        if (dx > 0.5 || dy > 0.5) {
+        if (dx > DRAG_CONFIG.MOVE_THRESHOLD || dy > DRAG_CONFIG.MOVE_THRESHOLD) {
             state.hasMoved = true;
         }
 
@@ -535,7 +568,7 @@ function setupDragAndDrop() {
 
             if (state.hasMoved) {
                 const dragDuration = Date.now() - state.dragStartTime;
-                if (dragDuration > 100) {
+                if (dragDuration > DRAG_CONFIG.MIN_DURATION) {
                     checkAndLinkNodes(nodeA, posA);
                 }
             }
@@ -618,8 +651,8 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
         }
 
         graph.addEdge(nodeA, nodeB, { relationship: 'other', color: EDGE_TYPES.other.color });
-        graph.setNodeAttribute(nodeA, 'x', posA.x + 12);
-        graph.setNodeAttribute(nodeA, 'y', posA.y + 8);
+        graph.setNodeAttribute(nodeA, 'x', posA.x + DRAG_CONFIG.LINK_OFFSET.x);
+        graph.setNodeAttribute(nodeA, 'y', posA.y + DRAG_CONFIG.LINK_OFFSET.y);
         applyColorsByDistance(); // Update colors after new connection
         saveData();
         showToast(`Đã kết nối "${labelA}" với "${labelB}"!`, 'success');
