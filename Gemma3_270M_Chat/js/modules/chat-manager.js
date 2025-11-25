@@ -89,41 +89,38 @@ export class ChatManager {
 
     /**
      * Build prompt from conversation history
-     * Using Gemma 3 official chat template with special tokens
+     * Using simple format for ONNX model compatibility
      */
     buildPrompt(userMessage) {
         const settings = this.settingsManager.getSettings();
         const systemPrompt = settings.systemPrompt || 'Bạn là trợ lý AI thông minh và hữu ích.';
 
-        // Gemma 3 uses specific chat template format:
-        // <bos><start_of_turn>user\n{message}<end_of_turn>\n<start_of_turn>model\n
-        let prompt = '<bos>';
+        // Simple prompt format for better ONNX compatibility
+        // The ONNX model may not properly handle special tokens
+        let prompt = '';
 
-        // Add system prompt as first user turn if provided
+        // Add system instruction
         if (systemPrompt && systemPrompt.trim()) {
-            prompt += `<start_of_turn>user\n${systemPrompt}<end_of_turn>\n`;
-            prompt += `<start_of_turn>model\nĐã hiểu. Tôi sẽ tuân theo hướng dẫn này.<end_of_turn>\n`;
+            prompt += `### Hướng dẫn:\n${systemPrompt}\n\n`;
         }
 
-        // Add conversation history (last 6 messages for context - 3 turns)
-        const recentMessages = this.messages.slice(-6);
+        // Add conversation history (last 4 messages for context)
+        const recentMessages = this.messages.slice(-4);
 
         for (const msg of recentMessages) {
-            // Skip if this is the current user message (it will be added separately)
             if (msg.role === 'user' && msg.content === userMessage) {
                 continue;
             }
 
             if (msg.role === 'user') {
-                prompt += `<start_of_turn>user\n${msg.content}<end_of_turn>\n`;
+                prompt += `### Người dùng:\n${msg.content}\n\n`;
             } else if (msg.role === 'assistant') {
-                prompt += `<start_of_turn>model\n${msg.content}<end_of_turn>\n`;
+                prompt += `### Trợ lý:\n${msg.content}\n\n`;
             }
         }
 
-        // Add current user message and start model turn
-        prompt += `<start_of_turn>user\n${userMessage}<end_of_turn>\n`;
-        prompt += `<start_of_turn>model\n`;
+        // Add current user message
+        prompt += `### Người dùng:\n${userMessage}\n\n### Trợ lý:\n`;
 
         return prompt;
     }

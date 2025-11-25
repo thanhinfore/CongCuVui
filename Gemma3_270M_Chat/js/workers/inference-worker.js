@@ -231,8 +231,8 @@ async function generate(id, prompt, options) {
         } = options;
 
         // Extract user message for fallback detection
-        const userMessageMatch = prompt.match(/<start_of_turn>user\n([^<]+)<end_of_turn>\n<start_of_turn>model\n$/s);
-        const userMessage = userMessageMatch ? userMessageMatch[1].trim() : prompt.replace(/<[^>]+>/g, '').trim();
+        const userMessageMatch = prompt.match(/### Người dùng:\n([^\n#]+)/s);
+        const userMessage = userMessageMatch ? userMessageMatch[1].trim() : prompt.split('\n').filter(l => l.trim()).pop() || '';
 
         console.log('📝 User message:', userMessage);
         console.log('📨 Prompt length:', prompt.length);
