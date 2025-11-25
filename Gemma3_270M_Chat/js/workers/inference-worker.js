@@ -198,10 +198,10 @@ function cleanGeneratedText(text) {
         .replace(/<unused\d+>/g, '')
         .replace(/<[^>]+>/g, '');
 
-    // Clean up formatting
+    // Clean up formatting - preserve single spaces
     cleaned = cleaned
-        .replace(/\n{3,}/g, '\n\n')  // Max 2 newlines
-        .replace(/\s+/g, ' ')         // Normalize spaces
+        .replace(/\n{3,}/g, '\n\n')   // Max 2 newlines
+        .replace(/[ \t]{2,}/g, ' ')    // Multiple spaces/tabs to single space
         .trim();
 
     return cleaned;
@@ -263,11 +263,10 @@ async function generate(id, prompt, options) {
             callback_function: (text) => {
                 if (shouldStop) return;
 
-                // Clean special tokens and unused tokens
+                // Only remove special tokens, preserve whitespace
                 const cleanText = text
                     .replace(/<unused\d+>/g, '')
-                    .replace(/<[^>]+>/g, '')
-                    .trim();
+                    .replace(/<[^>]+>/g, '');
 
                 if (cleanText) {
                     fullResponse += cleanText;
@@ -282,10 +281,11 @@ async function generate(id, prompt, options) {
         });
 
         // Generate using MESSAGES ARRAY (official Gemma 3 format)
-        // Use do_sample: false for consistent output (as in official example)
         const output = await generator(messages, {
             max_new_tokens,
-            do_sample: false,  // Greedy decoding for consistency
+            temperature: 0.7,
+            top_p,
+            do_sample: true,  // Enable sampling for diverse responses
             streamer
         });
 
