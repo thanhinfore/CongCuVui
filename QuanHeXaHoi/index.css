@@ -537,8 +537,31 @@ body, html {
     font-size: 16px;
 }
 
-.btn-clear-filter {
+.btn-connect-filtered {
     margin-left: 10px;
+    padding: 6px 14px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-connect-filtered:hover {
+    background: #43A047;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.btn-clear-filter {
+    margin-left: 5px;
     padding: 6px 12px;
     background: rgba(255,255,255,0.2);
     color: white;

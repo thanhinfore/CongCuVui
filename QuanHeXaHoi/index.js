@@ -3169,6 +3169,43 @@ function applySearchFilter(nodeIds) {
     showToast(`Đang hiển thị ${nodeIds.length} node khớp với tìm kiếm`, 'info');
 }
 
+// Connect all filtered nodes to center (TÔI)
+function connectFilteredNodesToCenter() {
+    if (!state.searchFilterActive || !state.searchFilteredNodes) {
+        showToast('Chưa có node nào được lọc!', 'warning');
+        return;
+    }
+
+    const filteredNodes = Array.from(state.searchFilteredNodes);
+    let newConnections = 0;
+
+    filteredNodes.forEach(nodeId => {
+        // Skip center node itself
+        if (nodeId === 'center') return;
+
+        // Check if edge already exists
+        if (!graph.hasEdge('center', nodeId) && !graph.hasEdge(nodeId, 'center')) {
+            graph.addEdge('center', nodeId, {
+                relationship: 'other',
+                color: EDGE_TYPES.other.color,
+                label: '',
+                size: 2
+            });
+            newConnections++;
+        }
+    });
+
+    if (newConnections > 0) {
+        applyColorsByDistance(false);
+        saveData();
+        showToast(`Đã kết nối ${newConnections} người với TÔI`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối với TÔI!', 'info');
+    }
+
+    if (renderer) renderer.refresh();
+}
+
 function setupSearch() {
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
@@ -3293,6 +3330,12 @@ function setupSearch() {
             searchInput.value = '';
             searchClear.classList.remove('visible');
         });
+    }
+
+    // Connect filtered nodes to center button handler
+    const connectFilteredBtn = document.getElementById('connect-filtered-btn');
+    if (connectFilteredBtn) {
+        connectFilteredBtn.addEventListener('click', connectFilteredNodesToCenter);
     }
 
     // Close results when clicking outside
