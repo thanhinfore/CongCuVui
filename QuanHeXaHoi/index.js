@@ -1,6 +1,6 @@
 import Graph from 'https://cdn.skypack.dev/graphology';
 import Sigma from 'https://cdn.skypack.dev/sigma';
-import forceAtlas2 from 'https://cdn.skypack.dev/graphology-layout-forceatlas2';
+// Note: ForceAtlas2 replaced with custom Radial Layout in v3.2
 
 // ==========================================
 // PHẦN 1: CẤU HÌNH & CONSTANTS
@@ -18,13 +18,12 @@ const NODE_SIZES = {
     REDUCTION_FACTOR: 2
 };
 
-// Force layout configuration
-const FORCE_LAYOUT_CONFIG = {
-    ITERATIONS: 100,
-    FRAME_RATE: 16,
-    GRAVITY: 0.05,
-    SCALING_RATIO: 10,
-    SLOW_DOWN: 1
+// Radial layout configuration
+const RADIAL_LAYOUT_CONFIG = {
+    RING_SPACING: 80,         // Distance between rings
+    MIN_RADIUS: 60,           // Minimum radius for first ring
+    ANIMATION_DURATION: 50,   // Animation frame duration (ms)
+    ANIMATION_STEPS: 30       // Number of animation steps
 };
 
 // Drag configuration
@@ -204,7 +203,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
 function saveData() {
     const payload = {
-        version: '3.1',
+        version: '3.2',
         graph: graph.export(),
         layers: state.layers,
         savedAt: new Date().toISOString()
@@ -396,7 +395,7 @@ function initDefaultData() {
 // Export functions
 function downloadJSON() {
     const data = {
-        version: '3.1',
+        version: '3.2',
         exportedAt: new Date().toISOString(),
         layers: state.layers,
         graph: graph.export()
@@ -404,7 +403,7 @@ function downloadJSON() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.href = dataStr;
-    a.download = "social_graph_v31_" + Date.now() + ".json";
+    a.download = "social_graph_v32_" + Date.now() + ".json";
     a.click();
     showToast('Đã xuất file JSON thành công!', 'success');
 }
@@ -416,7 +415,7 @@ async function captureGraphImage() {
     const canvas = await html2canvas(container, { scale: 2, useCORS: true });
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/png');
-    link.download = `social_graph_v31_${Date.now()}.png`;
+    link.download = `social_graph_v32_${Date.now()}.png`;
     link.click();
     showToast('Đã lưu ảnh thành công!', 'success');
 }
@@ -802,8 +801,52 @@ function openEdgeModal(edge) {
 }
 
 // ==========================================
-// PHẦN 8: FORCE LAYOUT
+// PHẦN 8: RADIAL LAYOUT (Vòng tròn đồng tâm)
 // ==========================================
+
+function calculateRadialPositions() {
+    const distances = calculateDistancesFromCenter();
+    const positions = new Map();
+
+    // Group nodes by distance
+    const nodesByDistance = new Map();
+    graph.forEachNode((nodeId) => {
+        const dist = distances.get(nodeId) || 0;
+        if (!nodesByDistance.has(dist)) {
+            nodesByDistance.set(dist, []);
+        }
+        nodesByDistance.get(dist).push(nodeId);
+    });
+
+    // Calculate positions for each ring
+    nodesByDistance.forEach((nodes, distance) => {
+        if (distance === 0) {
+            // Center node at origin
+            nodes.forEach(nodeId => {
+                positions.set(nodeId, { x: 0, y: 0 });
+            });
+        } else {
+            // Calculate radius for this ring
+            const radius = RADIAL_LAYOUT_CONFIG.MIN_RADIUS +
+                          (distance - 1) * RADIAL_LAYOUT_CONFIG.RING_SPACING;
+
+            // Distribute nodes evenly around the circle
+            const angleStep = (2 * Math.PI) / nodes.length;
+            // Add small offset based on distance to avoid straight lines
+            const angleOffset = (distance * Math.PI) / 6;
+
+            nodes.forEach((nodeId, index) => {
+                const angle = angleOffset + index * angleStep;
+                positions.set(nodeId, {
+                    x: radius * Math.cos(angle),
+                    y: radius * Math.sin(angle)
+                });
+            });
+        }
+    });
+
+    return positions;
+}
 
 function startForceLayout() {
     if (state.forceRunning) {
@@ -816,34 +859,56 @@ function startForceLayout() {
     btn.innerHTML = '<i class="fas fa-stop"></i> Dừng';
     btn.style.background = '#f44336';
 
-    showToast('Đang chạy Force Layout...', 'info', 2000);
+    showToast('Đang sắp xếp vòng tròn...', 'info', 2000);
 
-    const settings = {
-        iterations: FORCE_LAYOUT_CONFIG.ITERATIONS,
-        settings: {
-            barnesHutOptimize: true,
-            strongGravityMode: true,
-            gravity: FORCE_LAYOUT_CONFIG.GRAVITY,
-            scalingRatio: FORCE_LAYOUT_CONFIG.SCALING_RATIO,
-            slowDown: FORCE_LAYOUT_CONFIG.SLOW_DOWN
-        }
-    };
+    // Calculate target positions
+    const targetPositions = calculateRadialPositions();
 
-    let iteration = 0;
+    // Store current positions
+    const startPositions = new Map();
+    graph.forEachNode((nodeId) => {
+        const attrs = graph.getNodeAttributes(nodeId);
+        startPositions.set(nodeId, { x: attrs.x || 0, y: attrs.y || 0 });
+    });
+
+    let step = 0;
+    const totalSteps = RADIAL_LAYOUT_CONFIG.ANIMATION_STEPS;
+
     const interval = setInterval(() => {
-        if (!state.forceRunning || iteration >= settings.iterations) {
+        if (!state.forceRunning || step >= totalSteps) {
+            // Final position update
+            targetPositions.forEach((pos, nodeId) => {
+                graph.setNodeAttribute(nodeId, 'x', pos.x);
+                graph.setNodeAttribute(nodeId, 'y', pos.y);
+            });
             stopForceLayout();
             clearInterval(interval);
             return;
         }
 
-        forceAtlas2.assign(graph, { iterations: 1, ...settings.settings });
-        renderer.refresh();
-        iteration++;
+        // Ease-out animation
+        const progress = step / totalSteps;
+        const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
 
-        const progress = Math.round((iteration / settings.iterations) * 100);
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${progress}%`;
-    }, FORCE_LAYOUT_CONFIG.FRAME_RATE);
+        // Interpolate positions
+        graph.forEachNode((nodeId) => {
+            const start = startPositions.get(nodeId);
+            const target = targetPositions.get(nodeId);
+
+            if (start && target) {
+                const x = start.x + (target.x - start.x) * easedProgress;
+                const y = start.y + (target.y - start.y) * easedProgress;
+                graph.setNodeAttribute(nodeId, 'x', x);
+                graph.setNodeAttribute(nodeId, 'y', y);
+            }
+        });
+
+        renderer.refresh();
+        step++;
+
+        const progressPercent = Math.round((step / totalSteps) * 100);
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${progressPercent}%`;
+    }, RADIAL_LAYOUT_CONFIG.ANIMATION_DURATION);
 }
 
 function stopForceLayout() {
@@ -851,8 +916,9 @@ function stopForceLayout() {
     const btn = document.getElementById('btn-force-layout');
     btn.innerHTML = '<i class="fas fa-project-diagram"></i> Force Layout';
     btn.style.background = '#2196F3';
+    renderer.refresh();
     saveData();
-    showToast('Force Layout hoàn tất!', 'success');
+    showToast('Đã sắp xếp theo vòng tròn!', 'success');
 }
 
 // ==========================================
@@ -1764,5 +1830,5 @@ setupCopyButtons();
 
 // Welcome message
 setTimeout(() => {
-    showToast('SocialGraph v3.1 - Hover để xem nhanh, Click để xem chi tiết!', 'info', 4000);
+    showToast('SocialGraph v3.2 - Force Layout xếp vòng tròn!', 'info', 4000);
 }, 500);
