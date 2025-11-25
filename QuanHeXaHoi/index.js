@@ -801,46 +801,105 @@ function openEdgeModal(edge) {
 }
 
 // ==========================================
-// PHẦN 8: RADIAL LAYOUT (Vòng tròn đồng tâm)
+// PHẦN 8: RADIAL TREE LAYOUT (Cây tỏa ra từ trung tâm)
 // ==========================================
 
-function calculateRadialPositions() {
-    const distances = calculateDistancesFromCenter();
+function calculateRadialTreePositions() {
     const positions = new Map();
 
-    // Group nodes by distance
-    const nodesByDistance = new Map();
-    graph.forEachNode((nodeId) => {
-        const dist = distances.get(nodeId) || 0;
-        if (!nodesByDistance.has(dist)) {
-            nodesByDistance.set(dist, []);
-        }
-        nodesByDistance.get(dist).push(nodeId);
+    // Place center node at origin
+    positions.set('center', { x: 0, y: 0 });
+
+    // Get direct connections to center (distance 1)
+    const directConnections = [];
+    graph.forEachNeighbor('center', (neighborId) => {
+        directConnections.push(neighborId);
     });
 
-    // Calculate positions for each ring
-    nodesByDistance.forEach((nodes, distance) => {
-        if (distance === 0) {
-            // Center node at origin
-            nodes.forEach(nodeId => {
-                positions.set(nodeId, { x: 0, y: 0 });
+    if (directConnections.length === 0) return positions;
+
+    // Calculate angle for each direct connection (branch)
+    const anglePerBranch = (2 * Math.PI) / directConnections.length;
+
+    // For each direct connection, build its subtree
+    directConnections.forEach((branchRoot, branchIndex) => {
+        const branchAngle = branchIndex * anglePerBranch - Math.PI / 2; // Start from top
+
+        // BFS to find all nodes in this branch (excluding center and other branches)
+        const branchNodes = new Map(); // nodeId -> depth in branch
+        const visited = new Set(['center', ...directConnections]);
+        const queue = [{ nodeId: branchRoot, depth: 1 }];
+
+        branchNodes.set(branchRoot, 1);
+        visited.add(branchRoot);
+
+        while (queue.length > 0) {
+            const { nodeId, depth } = queue.shift();
+
+            graph.forEachNeighbor(nodeId, (neighborId) => {
+                if (!visited.has(neighborId)) {
+                    visited.add(neighborId);
+                    branchNodes.set(neighborId, depth + 1);
+                    queue.push({ nodeId: neighborId, depth: depth + 1 });
+                }
             });
-        } else {
-            // Calculate radius for this ring
+        }
+
+        // Group nodes by depth within this branch
+        const nodesByDepth = new Map();
+        branchNodes.forEach((depth, nodeId) => {
+            if (!nodesByDepth.has(depth)) {
+                nodesByDepth.set(depth, []);
+            }
+            nodesByDepth.get(depth).push(nodeId);
+        });
+
+        // Calculate angular spread for this branch (narrower as we go out)
+        const maxDepth = Math.max(...nodesByDepth.keys());
+        const branchSpread = anglePerBranch * 0.8; // Use 80% of allocated angle
+
+        // Position nodes in this branch
+        nodesByDepth.forEach((nodes, depth) => {
             const radius = RADIAL_LAYOUT_CONFIG.MIN_RADIUS +
-                          (distance - 1) * RADIAL_LAYOUT_CONFIG.RING_SPACING;
+                          (depth - 1) * RADIAL_LAYOUT_CONFIG.RING_SPACING;
 
-            // Distribute nodes evenly around the circle
-            const angleStep = (2 * Math.PI) / nodes.length;
-            // Add small offset based on distance to avoid straight lines
-            const angleOffset = (distance * Math.PI) / 6;
-
-            nodes.forEach((nodeId, index) => {
-                const angle = angleOffset + index * angleStep;
-                positions.set(nodeId, {
+            if (nodes.length === 1) {
+                // Single node - place on branch angle
+                const angle = branchAngle;
+                positions.set(nodes[0], {
                     x: radius * Math.cos(angle),
                     y: radius * Math.sin(angle)
                 });
+            } else {
+                // Multiple nodes - spread within branch sector
+                const spreadFactor = Math.min(1, 2 / depth); // Narrow spread at deeper levels
+                const actualSpread = branchSpread * spreadFactor;
+                const startAngle = branchAngle - actualSpread / 2;
+                const angleStep = actualSpread / (nodes.length - 1 || 1);
+
+                nodes.forEach((nodeId, index) => {
+                    const angle = nodes.length === 1
+                        ? branchAngle
+                        : startAngle + index * angleStep;
+                    positions.set(nodeId, {
+                        x: radius * Math.cos(angle),
+                        y: radius * Math.sin(angle)
+                    });
+                });
+            }
+        });
+    });
+
+    // Handle orphan nodes (not connected to center at all)
+    graph.forEachNode((nodeId) => {
+        if (!positions.has(nodeId)) {
+            // Place orphans in outer ring
+            const orphanAngle = Math.random() * 2 * Math.PI;
+            const orphanRadius = RADIAL_LAYOUT_CONFIG.MIN_RADIUS +
+                                RADIAL_LAYOUT_CONFIG.RING_SPACING * 4;
+            positions.set(nodeId, {
+                x: orphanRadius * Math.cos(orphanAngle),
+                y: orphanRadius * Math.sin(orphanAngle)
             });
         }
     });
@@ -859,10 +918,10 @@ function startForceLayout() {
     btn.innerHTML = '<i class="fas fa-stop"></i> Dừng';
     btn.style.background = '#f44336';
 
-    showToast('Đang sắp xếp vòng tròn...', 'info', 2000);
+    showToast('Đang sắp xếp cây tỏa...', 'info', 2000);
 
-    // Calculate target positions
-    const targetPositions = calculateRadialPositions();
+    // Calculate target positions using radial tree
+    const targetPositions = calculateRadialTreePositions();
 
     // Store current positions
     const startPositions = new Map();
@@ -918,7 +977,7 @@ function stopForceLayout() {
     btn.style.background = '#2196F3';
     renderer.refresh();
     saveData();
-    showToast('Đã sắp xếp theo vòng tròn!', 'success');
+    showToast('Đã sắp xếp cây tỏa!', 'success');
 }
 
 // ==========================================
