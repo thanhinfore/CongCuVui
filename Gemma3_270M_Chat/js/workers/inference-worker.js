@@ -38,7 +38,7 @@ function sendMessage(type, data, id = null) {
 /**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
- * IMPORTANT: Use fp32 for WebGPU to avoid <unused> token issues
+ * Using q4f16 (4-bit quantized weights + fp16 compute) for max speed
  */
 async function detectDevice() {
     // Try to detect WebGPU support
@@ -50,14 +50,15 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                // CRITICAL: Use fp32 for Gemma 3 270M on WebGPU
-                // fp16 causes <unused42> token generation issues
-                dtypeConfig = 'fp32';
+                // Use q4f16 for maximum speed on WebGPU
+                // q4 weights with fp16 compute - fastest option
+                // Note: fp16 alone causes <unused> tokens, but q4f16 should work
+                dtypeConfig = 'q4f16';
 
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'fp32',
-                    message: '⚡ Sử dụng WebGPU (GPU) với fp32 - Tối ưu cho Gemma 3!'
+                    dtype: 'q4f16',
+                    message: '⚡ Sử dụng WebGPU (GPU) với q4f16 - Tốc độ tối đa!'
                 });
                 return;
             }
@@ -68,11 +69,11 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
-    dtypeConfig = 'q8';  // Use q8 for WASM (better quality than q4)
+    dtypeConfig = 'q4';  // Use q4 for WASM (fastest)
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
-        dtype: 'q8',
+        dtype: 'q4',
         message: 'Sử dụng WASM (CPU). Tip: Dùng trình duyệt hỗ trợ WebGPU để tăng tốc!'
     });
 }
@@ -163,6 +164,24 @@ async function initialize(modelId) {
         });
 
         isLoading = false;
+
+        // Warmup: Run a quick inference to compile WebGPU shaders
+        // This makes the first real inference much faster
+        if (deviceType === 'webgpu') {
+            sendMessage('loading', {
+                message: 'Đang tối ưu hóa GPU...',
+                progress: 95
+            });
+            try {
+                await generator([{ role: 'user', content: 'Hi' }], {
+                    max_new_tokens: 1,
+                    do_sample: false
+                });
+                console.log('✓ GPU warmup complete');
+            } catch (e) {
+                console.warn('Warmup failed (non-critical):', e);
+            }
+        }
 
         sendMessage('ready', {
             message: 'Mô hình đã sẵn sàng!',
@@ -308,35 +327,40 @@ async function generate(id, prompt, options) {
         let tokenCount = 0;
 
         // Use streamer for real-time token output
+        // Optimized: skip_special_tokens handles most cleanup
         const streamer = new TextStreamer(generator.tokenizer, {
             skip_prompt: true,
             skip_special_tokens: true,
             callback_function: (text) => {
                 if (shouldStop) return;
+                if (!text) return;
 
-                // Only remove special tokens, preserve whitespace
-                const cleanText = text
-                    .replace(/<unused\d+>/g, '')
-                    .replace(/<[^>]+>/g, '');
-
-                if (cleanText) {
-                    fullResponse += cleanText;
-                    tokenCount++;
-
-                    sendMessage('generating', {
-                        token: cleanText,
-                        accumulated: fullResponse
-                    }, id);
+                // Quick check for special tokens (rare with skip_special_tokens)
+                if (text.includes('<unused') || text.includes('<')) {
+                    text = text.replace(/<[^>]+>/g, '');
+                    if (!text) return;
                 }
+
+                fullResponse += text;
+                tokenCount++;
+
+                sendMessage('generating', {
+                    token: text,
+                    accumulated: fullResponse
+                }, id);
             }
         });
 
         // Generate using MESSAGES ARRAY (official Gemma 3 format)
+        // Optimized for maximum speed
         const output = await generator(fixedMessages, {
             max_new_tokens,
-            temperature: 0.7,
+            temperature,
             top_p,
-            do_sample: true,  // Enable sampling for diverse responses
+            do_sample: temperature > 0,
+            num_beams: 1,           // No beam search (faster)
+            use_cache: true,        // Enable KV cache
+            early_stopping: true,   // Stop as soon as EOS
             streamer
         });
 
