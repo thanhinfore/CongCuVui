@@ -205,9 +205,19 @@
     <div id="search-filter-indicator" class="search-filter-indicator hidden">
         <i class="fas fa-filter"></i>
         <span>Đang lọc: <strong class="filter-count">0</strong> node</span>
-        <button id="connect-filtered-btn" class="btn-connect-filtered" title="Kết nối tất cả với TÔI">
-            <i class="fas fa-link"></i> Kết nối với TÔI
-        </button>
+        <div class="hub-selector-wrapper">
+            <button id="open-hub-selector-btn" class="btn-connect-filtered" title="Chọn node trung tâm để kết nối">
+                <i class="fas fa-link"></i> Kết nối với...
+            </button>
+            <div id="hub-selector-dropdown" class="hub-selector-dropdown hidden">
+                <div class="hub-dropdown-header">
+                    <span>Chọn node trung tâm:</span>
+                </div>
+                <div class="hub-dropdown-list" id="hub-dropdown-list">
+                    <!-- Filtered nodes will be rendered here -->
+                </div>
+            </div>
+        </div>
         <button id="clear-filter-btn" class="btn-clear-filter" title="Bỏ lọc, hiển thị tất cả">
             <i class="fas fa-times"></i> Bỏ lọc
         </button>
