@@ -956,616 +956,6 @@ function bulkAssignSelectedNodes() {
 }
 
 // ==========================================
-// PHẦN 2H: SMART CONNECT MODULE (v4.2)
-// ==========================================
-
-let smartConnectState = {
-    isActive: false,
-    hubNode: null,           // Node trung tâm để kết nối
-    selectedNodes: new Set(), // Các node được chọn để kết nối
-    groups: [],              // Các nhóm được phát hiện
-    currentGroupType: 'company' // 'company' | 'email_domain' | 'phone_prefix'
-};
-
-// Mở panel Smart Connect
-function openSmartConnectPanel() {
-    const panel = document.getElementById('smart-connect-panel');
-    if (panel) {
-        panel.classList.remove('hidden');
-        smartConnectState.isActive = true;
-        smartConnectState.selectedNodes.clear();
-        smartConnectState.hubNode = null;
-        analyzeAndGroupContacts();
-    }
-}
-
-// Đóng panel Smart Connect
-function closeSmartConnectPanel() {
-    const panel = document.getElementById('smart-connect-panel');
-    if (panel) {
-        panel.classList.add('hidden');
-    }
-    smartConnectState.isActive = false;
-    smartConnectState.selectedNodes.clear();
-    smartConnectState.hubNode = null;
-
-    // Clear highlights
-    graph.forEachNode((nodeId, attrs) => {
-        graph.setNodeAttribute(nodeId, 'highlighted', false);
-    });
-    if (renderer) renderer.refresh();
-}
-
-// Phân tích và nhóm contacts theo tiêu chí
-function analyzeAndGroupContacts() {
-    const groups = {
-        byCompany: new Map(),
-        byEmailDomain: new Map(),
-        byPhonePrefix: new Map()
-    };
-
-    graph.forEachNode((nodeId, attrs) => {
-        if (nodeId === 'center') return;
-
-        const contact = attrs.contact || {};
-        const label = attrs.label || '';
-
-        // Group by company
-        if (contact.company && contact.company.trim()) {
-            const company = contact.company.trim().toLowerCase();
-            if (!groups.byCompany.has(company)) {
-                groups.byCompany.set(company, []);
-            }
-            groups.byCompany.get(company).push({ nodeId, label, attrs });
-        }
-
-        // Group by email domain
-        if (contact.email && contact.email.includes('@')) {
-            const domain = contact.email.split('@')[1].toLowerCase();
-            if (!groups.byEmailDomain.has(domain)) {
-                groups.byEmailDomain.set(domain, []);
-            }
-            groups.byEmailDomain.get(domain).push({ nodeId, label, attrs });
-        }
-
-        // Group by phone prefix (first 4 digits)
-        if (contact.phone) {
-            const phoneClean = contact.phone.replace(/\D/g, '');
-            if (phoneClean.length >= 4) {
-                const prefix = phoneClean.substring(0, 4);
-                if (!groups.byPhonePrefix.has(prefix)) {
-                    groups.byPhonePrefix.set(prefix, []);
-                }
-                groups.byPhonePrefix.get(prefix).push({ nodeId, label, attrs });
-            }
-        }
-    });
-
-    // Filter groups with 2+ members and sort by size
-    smartConnectState.groups = {
-        byCompany: [...groups.byCompany.entries()]
-            .filter(([_, nodes]) => nodes.length >= 2)
-            .sort((a, b) => b[1].length - a[1].length),
-        byEmailDomain: [...groups.byEmailDomain.entries()]
-            .filter(([_, nodes]) => nodes.length >= 2)
-            .sort((a, b) => b[1].length - a[1].length),
-        byPhonePrefix: [...groups.byPhonePrefix.entries()]
-            .filter(([_, nodes]) => nodes.length >= 2)
-            .sort((a, b) => b[1].length - a[1].length)
-    };
-
-    renderSmartConnectGroups();
-}
-
-// Render danh sách nhóm
-function renderSmartConnectGroups() {
-    const groupList = document.getElementById('smart-connect-groups');
-    const groupType = smartConnectState.currentGroupType;
-
-    let groups;
-    let groupLabel;
-    let icon;
-
-    switch (groupType) {
-        case 'company':
-            groups = smartConnectState.groups.byCompany;
-            groupLabel = 'Công ty';
-            icon = 'fa-building';
-            break;
-        case 'email_domain':
-            groups = smartConnectState.groups.byEmailDomain;
-            groupLabel = 'Domain Email';
-            icon = 'fa-envelope';
-            break;
-        case 'phone_prefix':
-            groups = smartConnectState.groups.byPhonePrefix;
-            groupLabel = 'Đầu số ĐT';
-            icon = 'fa-phone';
-            break;
-    }
-
-    if (!groups || groups.length === 0) {
-        groupList.innerHTML = `
-            <div class="smart-connect-empty">
-                <i class="fas fa-search"></i>
-                <p>Không tìm thấy nhóm nào theo ${groupLabel}</p>
-            </div>
-        `;
-        return;
-    }
-
-    groupList.innerHTML = groups.map(([key, nodes]) => {
-        const connectedCount = countExistingConnections(nodes.map(n => n.nodeId));
-        const totalPossible = (nodes.length * (nodes.length - 1)) / 2;
-        const percentage = totalPossible > 0 ? Math.round((connectedCount / totalPossible) * 100) : 0;
-
-        return `
-            <div class="smart-group-item" data-group-key="${key}">
-                <div class="smart-group-header">
-                    <div class="smart-group-info">
-                        <i class="fas ${icon}"></i>
-                        <span class="smart-group-name">${escapeHtml(key)}</span>
-                        <span class="smart-group-count">${nodes.length} người</span>
-                    </div>
-                    <div class="smart-group-status">
-                        <span class="connection-status ${percentage === 100 ? 'complete' : ''}">${percentage}% kết nối</span>
-                    </div>
-                </div>
-                <div class="smart-group-members">
-                    ${nodes.slice(0, 5).map(n => `<span class="member-chip">${escapeHtml(n.label)}</span>`).join('')}
-                    ${nodes.length > 5 ? `<span class="member-chip more">+${nodes.length - 5}</span>` : ''}
-                </div>
-                <div class="smart-group-actions">
-                    <button class="btn-view-group" onclick="viewGroupOnGraph('${escapeHtml(key)}', '${groupType}')">
-                        <i class="fas fa-eye"></i> Xem
-                    </button>
-                    <button class="btn-connect-group" onclick="connectAllInGroup('${escapeHtml(key)}', '${groupType}')"
-                            ${percentage === 100 ? 'disabled' : ''}>
-                        <i class="fas fa-link"></i> Kết nối tất cả
-                    </button>
-                    <button class="btn-select-hub" onclick="openHubSelector('${escapeHtml(key)}', '${groupType}')">
-                        <i class="fas fa-star"></i> Chọn Hub
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// Đếm số kết nối đã có trong nhóm
-function countExistingConnections(nodeIds) {
-    let count = 0;
-    for (let i = 0; i < nodeIds.length; i++) {
-        for (let j = i + 1; j < nodeIds.length; j++) {
-            if (graph.hasEdge(nodeIds[i], nodeIds[j]) || graph.hasEdge(nodeIds[j], nodeIds[i])) {
-                count++;
-            }
-        }
-    }
-    return count;
-}
-
-// Xem nhóm trên graph (filter + highlight)
-function viewGroupOnGraph(groupKey, groupType) {
-    let groups;
-    switch (groupType) {
-        case 'company': groups = smartConnectState.groups.byCompany; break;
-        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
-        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
-    }
-
-    const group = groups.find(([key]) => key === groupKey);
-    if (!group) return;
-
-    const nodeIds = group[1].map(n => n.nodeId);
-
-    // Apply search filter to show only this group
-    applySearchFilter(nodeIds);
-
-    // Close panel temporarily to see the graph
-    document.getElementById('smart-connect-panel').classList.add('minimized');
-
-    showToast(`Đang hiển thị ${nodeIds.length} người thuộc "${groupKey}"`, 'info');
-}
-
-// Kết nối tất cả trong nhóm với nhau
-function connectAllInGroup(groupKey, groupType) {
-    let groups;
-    switch (groupType) {
-        case 'company': groups = smartConnectState.groups.byCompany; break;
-        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
-        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
-    }
-
-    const group = groups.find(([key]) => key === groupKey);
-    if (!group) return;
-
-    const nodes = group[1];
-    const nodeIds = nodes.map(n => n.nodeId);
-
-    // Determine relationship type based on group type
-    let relationType = 'colleague';
-    if (groupType === 'company') relationType = 'colleague';
-    else if (groupType === 'email_domain') relationType = 'colleague';
-    else relationType = 'other';
-
-    let newConnections = 0;
-
-    // Connect all pairs
-    for (let i = 0; i < nodeIds.length; i++) {
-        for (let j = i + 1; j < nodeIds.length; j++) {
-            if (!graph.hasEdge(nodeIds[i], nodeIds[j]) && !graph.hasEdge(nodeIds[j], nodeIds[i])) {
-                graph.addEdge(nodeIds[i], nodeIds[j], {
-                    relationship: relationType,
-                    color: EDGE_TYPES[relationType].color,
-                    label: groupKey,
-                    size: 2
-                });
-                newConnections++;
-            }
-        }
-    }
-
-    if (newConnections > 0) {
-        applyColorsByDistance(false);
-        saveData();
-        renderSmartConnectGroups();
-        showToast(`Đã tạo ${newConnections} kết nối mới cho nhóm "${groupKey}"`, 'success');
-    } else {
-        showToast('Tất cả đã được kết nối!', 'info');
-    }
-
-    if (renderer) renderer.refresh();
-}
-
-// Mở selector để chọn hub node
-function openHubSelector(groupKey, groupType) {
-    let groups;
-    switch (groupType) {
-        case 'company': groups = smartConnectState.groups.byCompany; break;
-        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
-        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
-    }
-
-    const group = groups.find(([key]) => key === groupKey);
-    if (!group) return;
-
-    const nodes = group[1];
-
-    // Create hub selector modal
-    const modal = document.createElement('div');
-    modal.className = 'hub-selector-modal';
-    modal.innerHTML = `
-        <div class="hub-selector-content">
-            <h3><i class="fas fa-star"></i> Chọn Hub cho "${escapeHtml(groupKey)}"</h3>
-            <p class="hub-description">Hub là người trung tâm, tất cả người khác sẽ kết nối với Hub.</p>
-            <div class="hub-list">
-                ${nodes.map(n => {
-                    const layer = getLayerById(n.attrs.layer);
-                    const connections = graph.degree(n.nodeId);
-                    return `
-                        <div class="hub-option" data-node-id="${n.nodeId}">
-                            <div class="hub-avatar" style="background: ${layer.color}">${getInitials(n.label)}</div>
-                            <div class="hub-info">
-                                <div class="hub-name">${escapeHtml(n.label)}</div>
-                                <div class="hub-connections">${connections} kết nối hiện có</div>
-                            </div>
-                            <button class="btn-select-as-hub">Chọn làm Hub</button>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-            <div class="hub-actions">
-                <button class="btn-cancel-hub">Hủy</button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Event handlers
-    modal.querySelectorAll('.btn-select-as-hub').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const hubNodeId = e.target.closest('.hub-option').dataset.nodeId;
-            connectGroupToHub(groupKey, groupType, hubNodeId);
-            modal.remove();
-        });
-    });
-
-    modal.querySelector('.btn-cancel-hub').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-}
-
-// Kết nối tất cả trong nhóm với Hub
-function connectGroupToHub(groupKey, groupType, hubNodeId) {
-    let groups;
-    switch (groupType) {
-        case 'company': groups = smartConnectState.groups.byCompany; break;
-        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
-        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
-    }
-
-    const group = groups.find(([key]) => key === groupKey);
-    if (!group) return;
-
-    const nodeIds = group[1].map(n => n.nodeId).filter(id => id !== hubNodeId);
-
-    let relationType = groupType === 'company' ? 'colleague' : 'other';
-    let newConnections = 0;
-
-    nodeIds.forEach(nodeId => {
-        if (!graph.hasEdge(hubNodeId, nodeId) && !graph.hasEdge(nodeId, hubNodeId)) {
-            graph.addEdge(hubNodeId, nodeId, {
-                relationship: relationType,
-                color: EDGE_TYPES[relationType].color,
-                label: groupKey,
-                size: 2
-            });
-            newConnections++;
-        }
-    });
-
-    if (newConnections > 0) {
-        applyColorsByDistance(false);
-        saveData();
-        renderSmartConnectGroups();
-
-        const hubLabel = graph.getNodeAttribute(hubNodeId, 'label');
-        showToast(`Đã kết nối ${newConnections} người với Hub "${hubLabel}"`, 'success');
-    } else {
-        showToast('Tất cả đã được kết nối với Hub!', 'info');
-    }
-
-    if (renderer) renderer.refresh();
-}
-
-// Thay đổi loại nhóm hiển thị
-function changeGroupType(type) {
-    smartConnectState.currentGroupType = type;
-
-    // Update tab active state
-    document.querySelectorAll('.smart-connect-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.type === type);
-    });
-
-    renderSmartConnectGroups();
-}
-
-// Batch Connect Mode - Chọn nhiều node và kết nối với TÔI hoặc node khác
-function openBatchConnectMode() {
-    smartConnectState.isActive = true;
-    smartConnectState.selectedNodes.clear();
-
-    const panel = document.getElementById('batch-connect-panel');
-    if (panel) {
-        panel.classList.remove('hidden');
-        renderBatchConnectList();
-    }
-
-    showToast('Chọn các node cần kết nối, sau đó chọn đích kết nối', 'info');
-}
-
-function closeBatchConnectPanel() {
-    const panel = document.getElementById('batch-connect-panel');
-    if (panel) {
-        panel.classList.add('hidden');
-    }
-    smartConnectState.selectedNodes.clear();
-
-    // Clear highlights
-    graph.forEachNode((nodeId) => {
-        graph.setNodeAttribute(nodeId, 'highlighted', false);
-    });
-    if (renderer) renderer.refresh();
-}
-
-function renderBatchConnectList() {
-    const list = document.getElementById('batch-connect-list');
-    const searchInput = document.getElementById('batch-search-input');
-    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
-
-    const nodes = [];
-    graph.forEachNode((nodeId, attrs) => {
-        if (nodeId === 'center') return;
-
-        const label = (attrs.label || '').toLowerCase();
-        const company = (attrs.contact?.company || '').toLowerCase();
-
-        if (!searchQuery || label.includes(searchQuery) || company.includes(searchQuery)) {
-            nodes.push({ nodeId, attrs });
-        }
-    });
-
-    // Sort by label
-    nodes.sort((a, b) => (a.attrs.label || '').localeCompare(b.attrs.label || ''));
-
-    list.innerHTML = nodes.slice(0, 100).map(({ nodeId, attrs }) => {
-        const layer = getLayerById(attrs.layer);
-        const isSelected = smartConnectState.selectedNodes.has(nodeId);
-        const company = attrs.contact?.company || '';
-
-        return `
-            <div class="batch-node-item ${isSelected ? 'selected' : ''}" data-node-id="${nodeId}">
-                <input type="checkbox" ${isSelected ? 'checked' : ''}>
-                <div class="batch-node-avatar" style="background: ${layer.color}">${getInitials(attrs.label)}</div>
-                <div class="batch-node-info">
-                    <div class="batch-node-name">${escapeHtml(attrs.label)}</div>
-                    ${company ? `<div class="batch-node-company">${escapeHtml(company)}</div>` : ''}
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    if (nodes.length > 100) {
-        list.innerHTML += `<div class="batch-more">Hiển thị 100/${nodes.length}. Dùng tìm kiếm để lọc.</div>`;
-    }
-
-    // Add click handlers
-    list.querySelectorAll('.batch-node-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            if (e.target.type === 'checkbox') return;
-
-            const nodeId = item.dataset.nodeId;
-            const checkbox = item.querySelector('input[type="checkbox"]');
-
-            if (smartConnectState.selectedNodes.has(nodeId)) {
-                smartConnectState.selectedNodes.delete(nodeId);
-                item.classList.remove('selected');
-                checkbox.checked = false;
-            } else {
-                smartConnectState.selectedNodes.add(nodeId);
-                item.classList.add('selected');
-                checkbox.checked = true;
-            }
-
-            updateBatchConnectCount();
-            highlightSelectedNodes();
-        });
-
-        item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
-            const nodeId = item.dataset.nodeId;
-
-            if (e.target.checked) {
-                smartConnectState.selectedNodes.add(nodeId);
-                item.classList.add('selected');
-            } else {
-                smartConnectState.selectedNodes.delete(nodeId);
-                item.classList.remove('selected');
-            }
-
-            updateBatchConnectCount();
-            highlightSelectedNodes();
-        });
-    });
-
-    updateBatchConnectCount();
-}
-
-function updateBatchConnectCount() {
-    const countEl = document.getElementById('batch-selected-count');
-    if (countEl) {
-        countEl.textContent = smartConnectState.selectedNodes.size;
-    }
-}
-
-function highlightSelectedNodes() {
-    graph.forEachNode((nodeId) => {
-        const isSelected = smartConnectState.selectedNodes.has(nodeId);
-        graph.setNodeAttribute(nodeId, 'highlighted', isSelected);
-    });
-    if (renderer) renderer.refresh();
-}
-
-// Kết nối tất cả selected nodes với TÔI (center)
-function batchConnectToCenter() {
-    const selectedNodes = Array.from(smartConnectState.selectedNodes);
-
-    if (selectedNodes.length === 0) {
-        showToast('Chưa chọn node nào!', 'warning');
-        return;
-    }
-
-    let newConnections = 0;
-
-    selectedNodes.forEach(nodeId => {
-        if (!graph.hasEdge('center', nodeId) && !graph.hasEdge(nodeId, 'center')) {
-            graph.addEdge('center', nodeId, {
-                relationship: 'other',
-                color: EDGE_TYPES.other.color,
-                label: '',
-                size: 2
-            });
-            newConnections++;
-        }
-    });
-
-    if (newConnections > 0) {
-        applyColorsByDistance(false);
-        saveData();
-        showToast(`Đã kết nối ${newConnections} người với TÔI`, 'success');
-    } else {
-        showToast('Tất cả đã được kết nối với TÔI!', 'info');
-    }
-
-    smartConnectState.selectedNodes.clear();
-    renderBatchConnectList();
-    if (renderer) renderer.refresh();
-}
-
-// Kết nối selected nodes với nhau (all pairs)
-function batchConnectAllPairs() {
-    const selectedNodes = Array.from(smartConnectState.selectedNodes);
-
-    if (selectedNodes.length < 2) {
-        showToast('Cần chọn ít nhất 2 node!', 'warning');
-        return;
-    }
-
-    let newConnections = 0;
-
-    for (let i = 0; i < selectedNodes.length; i++) {
-        for (let j = i + 1; j < selectedNodes.length; j++) {
-            if (!graph.hasEdge(selectedNodes[i], selectedNodes[j]) &&
-                !graph.hasEdge(selectedNodes[j], selectedNodes[i])) {
-                graph.addEdge(selectedNodes[i], selectedNodes[j], {
-                    relationship: 'other',
-                    color: EDGE_TYPES.other.color,
-                    label: '',
-                    size: 2
-                });
-                newConnections++;
-            }
-        }
-    }
-
-    if (newConnections > 0) {
-        applyColorsByDistance(false);
-        saveData();
-        showToast(`Đã tạo ${newConnections} kết nối giữa ${selectedNodes.length} người`, 'success');
-    } else {
-        showToast('Tất cả đã được kết nối với nhau!', 'info');
-    }
-
-    smartConnectState.selectedNodes.clear();
-    renderBatchConnectList();
-    if (renderer) renderer.refresh();
-}
-
-// Select all visible nodes
-function batchSelectAll() {
-    const list = document.getElementById('batch-connect-list');
-    list.querySelectorAll('.batch-node-item').forEach(item => {
-        const nodeId = item.dataset.nodeId;
-        smartConnectState.selectedNodes.add(nodeId);
-        item.classList.add('selected');
-        item.querySelector('input[type="checkbox"]').checked = true;
-    });
-    updateBatchConnectCount();
-    highlightSelectedNodes();
-}
-
-// Deselect all
-function batchDeselectAll() {
-    smartConnectState.selectedNodes.clear();
-    const list = document.getElementById('batch-connect-list');
-    list.querySelectorAll('.batch-node-item').forEach(item => {
-        item.classList.remove('selected');
-        item.querySelector('input[type="checkbox"]').checked = false;
-    });
-    updateBatchConnectCount();
-    highlightSelectedNodes();
-}
-
-// Escape HTML helper
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ==========================================
 // PHẦN 3: HELPER FUNCTIONS
 // ==========================================
 
@@ -3744,8 +3134,8 @@ function clearSearchFilter() {
     state.searchFilterActive = false;
     state.searchFilteredNodes = null;
 
-    // Update filter indicator (v5.0: using new ID)
-    const filterIndicator = document.getElementById('filter-indicator');
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
     if (filterIndicator) {
         filterIndicator.classList.add('hidden');
     }
@@ -3761,11 +3151,11 @@ function applySearchFilter(nodeIds) {
     state.searchFilteredNodes = new Set(nodeIds);
     state.searchFilterActive = true;
 
-    // Update filter indicator (v5.0: using new IDs)
-    const filterIndicator = document.getElementById('filter-indicator');
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
     if (filterIndicator) {
         filterIndicator.classList.remove('hidden');
-        const countSpan = document.getElementById('filter-count');
+        const countSpan = filterIndicator.querySelector('.filter-count');
         if (countSpan) {
             countSpan.textContent = nodeIds.length;
         }
@@ -3779,9 +3169,9 @@ function applySearchFilter(nodeIds) {
     showToast(`Đang hiển thị ${nodeIds.length} node khớp với tìm kiếm`, 'info');
 }
 
-// Toggle hub selector dropdown (v5.0: using new ID)
+// Toggle hub selector dropdown
 function toggleHubSelectorDropdown() {
-    const dropdown = document.getElementById('hub-dropdown');
+    const dropdown = document.getElementById('hub-selector-dropdown');
     if (!dropdown) return;
 
     const isHidden = dropdown.classList.contains('hidden');
@@ -3795,22 +3185,22 @@ function toggleHubSelectorDropdown() {
     }
 }
 
-// Close hub selector dropdown (v5.0: using new ID)
+// Close hub selector dropdown
 function closeHubSelectorDropdown() {
-    const dropdown = document.getElementById('hub-dropdown');
+    const dropdown = document.getElementById('hub-selector-dropdown');
     if (dropdown) {
         dropdown.classList.add('hidden');
     }
 }
 
-// Render list of filtered nodes in the hub dropdown (v5.0: updated CSS classes)
+// Render list of filtered nodes in the hub dropdown
 function renderHubDropdownList() {
     const list = document.getElementById('hub-dropdown-list');
     if (!list || !state.searchFilteredNodes) return;
 
     const filteredNodes = Array.from(state.searchFilteredNodes);
 
-    // Build list items with v5.0 CSS classes
+    // Build list items
     list.innerHTML = filteredNodes.map(nodeId => {
         const attrs = graph.getNodeAttributes(nodeId);
         const label = attrs.label || nodeId;
@@ -3819,8 +3209,11 @@ function renderHubDropdownList() {
 
         return `
             <div class="hub-dropdown-item" data-node-id="${nodeId}">
-                <div class="avatar" style="background: ${layer.color}">${getInitials(label)}</div>
-                <span class="name">${label}</span>
+                <div class="hub-item-avatar" style="background: ${layer.color}">${getInitials(label)}</div>
+                <div class="hub-item-info">
+                    <div class="hub-item-name">${label}</div>
+                    <div class="hub-item-detail">${connections} kết nối</div>
+                </div>
             </div>
         `;
     }).join('');
@@ -3873,11 +3266,12 @@ function connectFilteredNodesToHub(hubNodeId) {
     if (renderer) renderer.refresh();
 }
 
-// v5.0: Updated setupSearch for Google Maps-style UI
 function setupSearch() {
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
     const searchResults = document.getElementById('search-results');
+    const filterBtn = document.getElementById('search-filter-btn');
+    const filterIndicator = document.getElementById('search-filter-indicator');
 
     if (!searchInput) return;
 
@@ -3887,13 +3281,11 @@ function setupSearch() {
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
 
-        // Toggle clear button (v5.0: using hidden class)
-        if (searchClear) {
-            searchClear.classList.toggle('hidden', query.length === 0);
-        }
+        // Toggle clear button
+        searchClear.classList.toggle('visible', query.length > 0);
 
         if (query.length < 1) {
-            searchResults.classList.remove('active');
+            searchResults.classList.remove('visible');
             currentSearchResults = [];
             return;
         }
@@ -3917,16 +3309,16 @@ function setupSearch() {
 
         currentSearchResults = results;
 
-        // Render results with v5.0 CSS classes
+        // Render results
         if (results.length === 0) {
-            searchResults.innerHTML = '<div class="search-result-item" style="justify-content:center;color:var(--text-muted);">Không tìm thấy kết quả</div>';
+            searchResults.innerHTML = '<div class="search-no-results">Không tìm thấy kết quả</div>';
         } else {
             // Filter action bar at top
             const filterBar = `
-                <div class="search-result-item" style="background: var(--primary-light); justify-content: space-between;">
-                    <span style="color: var(--primary); font-weight: 500;">${results.length} kết quả</span>
-                    <button class="btn btn-primary" id="apply-filter-btn" style="padding: 6px 12px; font-size: 12px;">
-                        <i class="fas fa-filter"></i> Lọc
+                <div class="search-filter-bar">
+                    <span class="search-result-count">${results.length} kết quả</span>
+                    <button class="search-filter-action" id="apply-filter-btn" title="Lọc hiển thị chỉ các node này">
+                        <i class="fas fa-filter"></i> Lọc ${results.length} node
                     </button>
                 </div>
             `;
@@ -3937,10 +3329,10 @@ function setupSearch() {
                 const detail = contact.company || contact.phone || layer.name;
                 return `
                     <div class="search-result-item" data-node-id="${nodeId}">
-                        <div class="avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
-                        <div class="info">
-                            <div class="name">${attrs.label}</div>
-                            <div class="meta">${detail}</div>
+                        <div class="search-result-avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
+                        <div class="search-result-info">
+                            <div class="search-result-name">${attrs.label}</div>
+                            <div class="search-result-detail">${detail}</div>
                         </div>
                     </div>
                 `;
@@ -3949,7 +3341,7 @@ function setupSearch() {
             searchResults.innerHTML = filterBar + resultItems;
 
             if (results.length > 10) {
-                searchResults.innerHTML += `<div class="search-result-item" style="justify-content:center;color:var(--text-muted);font-size:12px;">... và ${results.length - 10} kết quả khác</div>`;
+                searchResults.innerHTML += `<div class="search-more-results">... và ${results.length - 10} kết quả khác</div>`;
             }
 
             // Add filter button click handler
@@ -3959,53 +3351,51 @@ function setupSearch() {
                     e.stopPropagation();
                     const nodeIds = currentSearchResults.map(r => r.nodeId);
                     applySearchFilter(nodeIds);
-                    searchResults.classList.remove('active');
+                    searchResults.classList.remove('visible');
                 });
             }
 
             // Add click handlers for result items
-            searchResults.querySelectorAll('.search-result-item[data-node-id]').forEach(item => {
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const nodeId = item.dataset.nodeId;
                     focusOnNode(nodeId);
                     openDetailPanel(nodeId);
-                    searchResults.classList.remove('active');
+                    searchResults.classList.remove('visible');
                     searchInput.value = '';
-                    if (searchClear) searchClear.classList.add('hidden');
+                    searchClear.classList.remove('visible');
                 });
             });
         }
 
-        searchResults.classList.add('active');
+        searchResults.classList.add('visible');
     });
 
-    if (searchClear) {
-        searchClear.addEventListener('click', () => {
-            searchInput.value = '';
-            searchClear.classList.add('hidden');
-            searchResults.classList.remove('active');
-            currentSearchResults = [];
-            // Also clear filter when clearing search
-            if (state.searchFilterActive) {
-                clearSearchFilter();
-            }
-        });
-    }
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.remove('visible');
+        searchResults.classList.remove('visible');
+        currentSearchResults = [];
+        // Also clear filter when clearing search
+        if (state.searchFilterActive) {
+            clearSearchFilter();
+        }
+    });
 
-    // v5.0: Clear filter button handler (new ID)
-    const clearFilterBtn = document.getElementById('btn-clear-filter');
+    // Clear filter button handler
+    const clearFilterBtn = document.getElementById('clear-filter-btn');
     if (clearFilterBtn) {
         clearFilterBtn.addEventListener('click', () => {
             clearSearchFilter();
             searchInput.value = '';
-            if (searchClear) searchClear.classList.add('hidden');
+            searchClear.classList.remove('visible');
         });
     }
 
-    // v5.0: Hub selector button handler (new ID)
-    const connectHubBtn = document.getElementById('btn-connect-hub');
-    if (connectHubBtn) {
-        connectHubBtn.addEventListener('click', (e) => {
+    // Hub selector button handler
+    const openHubSelectorBtn = document.getElementById('open-hub-selector-btn');
+    if (openHubSelectorBtn) {
+        openHubSelectorBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleHubSelectorDropdown();
         });
@@ -4013,10 +3403,10 @@ function setupSearch() {
 
     // Close results and hub dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('#top-bar')) {
-            searchResults.classList.remove('active');
+        if (!e.target.closest('#search-container')) {
+            searchResults.classList.remove('visible');
         }
-        if (!e.target.closest('#filter-indicator')) {
+        if (!e.target.closest('.hub-selector-wrapper')) {
             closeHubSelectorDropdown();
         }
     });
@@ -4033,15 +3423,13 @@ function updateStatistics() {
 
     document.getElementById('stat-total').textContent = totalNodes;
     document.getElementById('stat-connections').textContent = totalEdges;
-    const statTags = document.getElementById('stat-tags');
-    if (statTags) statTags.textContent = totalLayers;
+    document.getElementById('stat-layers').textContent = totalLayers;
 }
 
 // ==========================================
 // PHẦN 13: DETAIL PANEL FUNCTIONS
 // ==========================================
 
-// v5.0: Updated openDetailPanel for new UI structure
 function openDetailPanel(nodeId) {
     if (!graph.hasNode(nodeId)) return;
 
@@ -4052,28 +3440,17 @@ function openDetailPanel(nodeId) {
     const layer = getLayerById(attrs.layer);
 
     // Update header
-    const avatarEl = document.getElementById('detail-avatar');
-    if (avatarEl) {
-        avatarEl.textContent = getInitials(attrs.label);
-        avatarEl.style.background = `linear-gradient(135deg, ${layer.color} 0%, ${adjustColor(layer.color, 30)} 100%)`;
-    }
-
-    const nameEl = document.getElementById('detail-name');
-    if (nameEl) nameEl.textContent = attrs.label;
-
-    // v5.0: Update tags instead of single badge
-    const tagsContainer = document.getElementById('detail-tags');
-    if (tagsContainer) {
-        tagsContainer.innerHTML = `<span class="detail-tag" style="background: ${layer.color}20; color: ${layer.color}">${layer.name}</span>`;
-    }
+    document.getElementById('detail-avatar').textContent = getInitials(attrs.label);
+    document.getElementById('detail-avatar').style.background = layer.color;
+    document.getElementById('detail-name').textContent = attrs.label;
+    document.getElementById('detail-layer-badge').textContent = layer.name;
+    document.getElementById('detail-layer-badge').style.background = layer.color;
 
     // Update stats
     const distance = attrs.distance !== undefined ? attrs.distance : '-';
     const connections = graph.degree(nodeId);
-    const distanceEl = document.getElementById('detail-distance');
-    const connectionsEl = document.getElementById('detail-connections');
-    if (distanceEl) distanceEl.textContent = distance === 0 ? 'Trung tâm' : distance;
-    if (connectionsEl) connectionsEl.textContent = connections;
+    document.getElementById('detail-distance').textContent = distance === 0 ? 'Trung tâm' : distance;
+    document.getElementById('detail-connections').textContent = connections;
 
     // Update contact info
     updateDetailField('detail-phone', contact.phone);
@@ -4084,48 +3461,25 @@ function openDetailPanel(nodeId) {
 
     // Update social links
     const fbField = document.getElementById('detail-facebook');
-    if (fbField) {
-        const fbLink = fbField.querySelector('a');
-        if (fbLink) {
-            if (contact.facebook) {
-                fbLink.href = contact.facebook;
-                fbLink.textContent = 'Facebook';
-            } else {
-                fbLink.textContent = '-';
-                fbLink.href = '#';
-            }
-        }
+    if (contact.facebook) {
+        fbField.querySelector('a').href = contact.facebook;
+        fbField.querySelector('a').textContent = 'Facebook';
+        fbField.style.display = 'flex';
+    } else {
+        fbField.querySelector('a').textContent = '-';
+        fbField.querySelector('a').href = '#';
     }
     updateDetailField('detail-social', contact.social);
 
     // Update notes
-    const birthdayEl = document.getElementById('detail-birthday');
-    if (birthdayEl) {
-        const span = birthdayEl.querySelector('span');
-        if (span) span.textContent = formatDate(contact.birthday);
-    }
-
-    const notesEl = document.getElementById('detail-notes');
-    if (notesEl) {
-        const p = notesEl.querySelector('p');
-        if (p) p.textContent = contact.notes || '-';
-    }
+    document.getElementById('detail-birthday').querySelector('span').textContent = formatDate(contact.birthday);
+    document.getElementById('detail-notes').querySelector('p').textContent = contact.notes || '-';
 
     // Update relationships
     updateRelationshipList(nodeId);
 
     // Show panel
-    if (panel) panel.classList.remove('hidden');
-}
-
-// Helper function to adjust color brightness
-function adjustColor(color, amount) {
-    const clamp = (num) => Math.min(255, Math.max(0, num));
-    const hex = color.replace('#', '');
-    const r = clamp(parseInt(hex.substr(0, 2), 16) + amount);
-    const g = clamp(parseInt(hex.substr(2, 2), 16) + amount);
-    const b = clamp(parseInt(hex.substr(4, 2), 16) + amount);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    panel.classList.remove('hidden');
 }
 
 function updateDetailField(fieldId, value) {
@@ -4135,7 +3489,6 @@ function updateDetailField(fieldId, value) {
     }
 }
 
-// v5.0: Updated for new CSS classes
 function updateRelationshipList(nodeId) {
     const listContainer = document.getElementById('relationship-list');
     if (!listContainer) return;
@@ -4163,15 +3516,14 @@ function updateRelationshipList(nodeId) {
     });
 
     if (relationships.length === 0) {
-        listContainer.innerHTML = '<div class="empty-state"><i class="fas fa-link"></i><p>Chưa có kết nối</p></div>';
+        listContainer.innerHTML = '<div class="no-relationships">Chưa có kết nối</div>';
     } else {
-        // v5.0: Using new CSS class names
         listContainer.innerHTML = relationships.map(rel => `
             <div class="relationship-item" data-node-id="${rel.nodeId}">
-                <div class="avatar" style="background: ${rel.color};">${getInitials(rel.name)}</div>
-                <div class="info">
-                    <div class="name">${rel.name}</div>
-                    <div class="relation">${rel.label || 'Quan hệ'}</div>
+                <div class="relationship-avatar" style="background: ${rel.color};">${getInitials(rel.name)}</div>
+                <div class="relationship-info">
+                    <div class="relationship-name">${rel.name}</div>
+                    <div class="relationship-label">${rel.label || 'Quan hệ'}</div>
                 </div>
             </div>
         `).join('');
@@ -4189,7 +3541,7 @@ function updateRelationshipList(nodeId) {
 
 function closeDetailPanel() {
     const panel = document.getElementById('detail-panel');
-    if (panel) panel.classList.add('hidden');
+    panel.classList.add('hidden');
     state.detailNode = null;
 }
 
@@ -4582,10 +3934,6 @@ document.getElementById('classify-filter')?.addEventListener('input', (e) => {
 });
 document.getElementById('btn-bulk-assign')?.addEventListener('click', bulkAssignSelectedNodes);
 
-// Smart Connect & Batch Connect handlers (v4.2)
-document.getElementById('btn-smart-connect')?.addEventListener('click', openSmartConnectPanel);
-document.getElementById('btn-batch-connect')?.addEventListener('click', openBatchConnectMode);
-
 // Export Modal handlers (v4.0)
 document.getElementById('btn-x-close-export')?.addEventListener('click', closeExportModal);
 document.getElementById('btn-export-json')?.addEventListener('click', downloadJSON);
@@ -4766,129 +4114,6 @@ renderer = new Sigma(graph, container, {
     }
 });
 
-// ==========================================
-// PHẦN v5.0: NEW UI HANDLERS
-// ==========================================
-
-function setupV5UI() {
-    // Menu toggle (sidebar)
-    const menuToggle = document.getElementById('menu-toggle');
-    const leftSidebar = document.getElementById('left-sidebar');
-    const sidebarClose = document.getElementById('sidebar-close');
-
-    if (menuToggle && leftSidebar) {
-        menuToggle.addEventListener('click', () => {
-            leftSidebar.classList.toggle('collapsed');
-        });
-    }
-
-    if (sidebarClose && leftSidebar) {
-        sidebarClose.addEventListener('click', () => {
-            leftSidebar.classList.add('collapsed');
-        });
-    }
-
-    // Detail panel close
-    const detailClose = document.getElementById('detail-close');
-    if (detailClose) {
-        detailClose.addEventListener('click', () => {
-            closeDetailPanel();
-        });
-    }
-
-    // FAB - Add new person
-    const fabAdd = document.getElementById('fab-add');
-    if (fabAdd) {
-        fabAdd.addEventListener('click', () => {
-            openModal(null, 'ADD');
-        });
-    }
-
-    // Map controls
-    const btnZoomIn = document.getElementById('btn-zoom-in');
-    const btnZoomOut = document.getElementById('btn-zoom-out');
-    const btnCenter = document.getElementById('btn-center');
-    const btnFit = document.getElementById('btn-fit');
-
-    if (btnZoomIn && renderer) {
-        btnZoomIn.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedZoom({ duration: 200 });
-        });
-    }
-
-    if (btnZoomOut && renderer) {
-        btnZoomOut.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedUnzoom({ duration: 200 });
-        });
-    }
-
-    if (btnCenter && renderer) {
-        btnCenter.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            // Try to focus on TÔI node (center)
-            if (graph.hasNode('me')) {
-                const attrs = graph.getNodeAttributes('me');
-                camera.animate({ x: attrs.x, y: attrs.y, ratio: 1 }, { duration: 300 });
-            } else {
-                camera.animate({ x: 0, y: 0, ratio: 1 }, { duration: 300 });
-            }
-        });
-    }
-
-    if (btnFit && renderer) {
-        btnFit.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedReset({ duration: 300 });
-        });
-    }
-
-    // Sidebar action buttons
-    const btnImport = document.getElementById('btn-import');
-    const btnExport = document.getElementById('btn-export');
-    const btnLayout = document.getElementById('btn-layout');
-    const btnSettings = document.getElementById('btn-settings');
-
-    if (btnImport) {
-        btnImport.addEventListener('click', () => {
-            // Trigger import modal
-            const importModal = document.getElementById('import-modal');
-            if (importModal) {
-                importModal.classList.remove('hidden');
-                document.getElementById('overlay')?.classList.remove('hidden');
-            }
-        });
-    }
-
-    if (btnExport) {
-        btnExport.addEventListener('click', () => {
-            // Trigger export
-            exportJSON();
-        });
-    }
-
-    if (btnLayout) {
-        btnLayout.addEventListener('click', () => {
-            // Apply radial layout
-            applyRadialLayout();
-            showToast('Đang sắp xếp lại bản đồ...', 'info');
-        });
-    }
-
-    // Add tag button
-    const btnAddTag = document.getElementById('btn-add-tag');
-    if (btnAddTag) {
-        btnAddTag.addEventListener('click', () => {
-            const layerModal = document.getElementById('layer-modal');
-            if (layerModal) {
-                layerModal.classList.remove('hidden');
-                document.getElementById('overlay')?.classList.remove('hidden');
-            }
-        });
-    }
-}
-
 // Initialize application
 initApp().then(() => {
     // Initialize UI after data is loaded
@@ -4905,12 +4130,9 @@ initApp().then(() => {
     setupZoomControls();
     setupCopyButtons();
 
-    // v5.0: Setup new UI handlers
-    setupV5UI();
-
     // Welcome message
     setTimeout(() => {
         const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
-        showToast(`Contact Map v5.0 - Bản đồ quan hệ của bạn!`, 'info', 4000);
+        showToast(`SocialGraph v4.2 - Tìm kiếm và lọc node theo từ khóa!`, 'info', 4000);
     }, 500);
 });
