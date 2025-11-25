@@ -36,18 +36,42 @@ function sendMessage(type, data, id = null) {
 }
 
 /**
- * Detect device - Using WASM for Gemma 3 270M stability
- * (WebGPU causes <unused42> token issues with this model)
+ * Detect device - Auto-detect WebGPU or fallback to WASM
+ * WebGPU provides significant speedup (GPU acceleration)
+ * Note: We now filter <unused42> tokens in post-processing, so WebGPU is safe to use
  */
 async function detectDevice() {
-    // Force WASM for Gemma 3 270M following GemmaLabelling approach
+    // Try to detect WebGPU support
+    const hasWebGPU = 'gpu' in navigator;
+
+    if (hasWebGPU) {
+        try {
+            // Check if WebGPU adapter is actually available
+            const adapter = await navigator.gpu?.requestAdapter();
+            if (adapter) {
+                deviceType = 'webgpu';
+                dtypeConfig = 'fp16';  // FP16 for WebGPU (faster)
+
+                sendMessage('deviceInfo', {
+                    device: 'WebGPU (GPU)',
+                    dtype: 'fp16',
+                    message: '⚡ Sử dụng WebGPU (GPU) - Tốc độ nhanh hơn WASM nhiều lần!'
+                });
+                return;
+            }
+        } catch (error) {
+            console.warn('WebGPU detection failed, falling back to WASM:', error);
+        }
+    }
+
+    // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
     dtypeConfig = 'fp32';
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
         dtype: 'fp32',
-        message: 'Sử dụng WASM cho Gemma 3 270M (tối ưu cho trình duyệt).'
+        message: 'Sử dụng WASM (CPU). Tip: Dùng trình duyệt hỗ trợ WebGPU để tăng tốc!'
     });
 }
 
@@ -105,15 +129,17 @@ async function initialize(modelId) {
         await detectDevice();
 
         sendMessage('loading', {
-            message: isCached ? 'Đang nạp mô hình từ cache...' : 'Đang tải mô hình Gemma 3 270M với WASM...',
+            message: isCached ?
+                'Đang nạp mô hình từ cache...' :
+                `Đang tải mô hình Gemma 3 270M với ${deviceType === 'webgpu' ? 'WebGPU (GPU)' : 'WASM (CPU)'}...`,
             progress: 10
         });
 
-        // Create text generation pipeline with WASM (following GemmaLabelling approach)
-        // WebGPU has issues with Gemma 3 270M, use WASM for stability
+        // Create text generation pipeline with detected device (WebGPU or WASM)
+        // Special tokens like <unused42> are filtered in post-processing
         generator = await pipeline('text-generation', modelId, {
-            device: 'wasm',      // Force WASM (WebGPU causes <unused42> tokens)
-            dtype: 'fp32',       // FP32 for WASM
+            device: deviceType,  // Use detected device (webgpu or wasm)
+            dtype: dtypeConfig,  // fp16 for WebGPU, fp32 for WASM
             progress_callback: (progress) => {
                 if (progress.status === 'downloading') {
                     const percent = progress.progress ? Math.round(progress.progress) : 0;
@@ -178,14 +204,14 @@ async function generate(id, prompt, options) {
             max_new_tokens = 512
         } = options;
 
-        // Generate text with parameters matching GemmaLabelling (proven to work)
+        // Generate text with optimized parameters to prevent repetition and poor output
         const generationStart = performance.now();
         const output = await generator(prompt, {
             max_new_tokens,
             temperature,
             top_p,
-            top_k: 10,                    // Lower top_k like GemmaLabelling (was 50)
-            repetition_penalty: 1.1,      // Match GemmaLabelling's value
+            top_k: 40,                    // Increased from 10 for more diverse output
+            repetition_penalty: 1.3,      // Increased from 1.1 to strongly penalize repetition
             do_sample: temperature > 0,
             return_full_text: false,
             pad_token_id: generator.tokenizer?.pad_token_id,
@@ -211,8 +237,18 @@ async function generate(id, prompt, options) {
 
         // Remove all special tokens (including <unused42>, <start_of_turn>, etc.)
         // Pattern matches any token in angle brackets like <token_name> or <unused42>
+        // NOTE: This filtering allows us to safely use WebGPU (which generates <unused42> tokens)
+        // while still getting clean output. WebGPU is significantly faster than WASM!
         generatedText = generatedText
             .replace(/<[^>]+>/g, '')  // Remove all <...> tokens
+            .trim();
+
+        // ADDITIONAL FIX: Remove sequences of repeated characters (like "---" or "===" or "...")
+        // The model sometimes generates these as filler or when confused
+        // Keep only the first occurrence of 3+ repeated chars
+        generatedText = generatedText
+            .replace(/([^\w\s])\1{3,}/g, '')  // Remove 4+ repeated non-alphanumeric chars
+            .replace(/(\s+-{2,}\s+)+/g, ' ')  // Remove sequences like " -- -- -- "
             .trim();
 
         // CRITICAL FIX: Stop at ANY occurrence of "User:" or repeated "Assistant:" to prevent self-dialogue loops
@@ -302,8 +338,9 @@ async function generate(id, prompt, options) {
                 accumulated
             }, id);
 
-            // WASM delay for smooth streaming
-            const baseDelay = 15; // WASM (CPU) timing
+            // Dynamic delay based on device type for smooth streaming
+            // WebGPU is much faster, so use shorter delays
+            const baseDelay = deviceType === 'webgpu' ? 8 : 15; // WebGPU faster, WASM slower
             const wordLengthDelay = Math.min(word.length * 0.5, 5); // Max 5ms extra
             const delay = baseDelay + wordLengthDelay;
 
