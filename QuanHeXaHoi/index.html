@@ -32,8 +32,8 @@
                 <i class="fas fa-tags"></i> Phân loại
             </button>
 
-            <button id="btn-force-layout" title="Chạy Force Layout tự động sắp xếp" style="background: #2196F3; color: white;">
-                <i class="fas fa-project-diagram"></i> Force Layout
+            <button id="btn-force-layout" title="Sắp xếp đồ thị theo nhiều kiểu" style="background: #2196F3; color: white;">
+                <i class="fas fa-project-diagram"></i> Sắp xếp
             </button>
 
             <button id="btn-recolor" title="Cập nhật màu theo khoảng cách" style="background: #673AB7; color: white;">
@@ -667,6 +667,53 @@
         <div class="modal-footer">
             <button class="btn-secondary" id="btn-cancel-vcf">Hủy</button>
             <button class="btn-primary" id="btn-import-vcf-confirm"><i class="fas fa-user-plus"></i> Import contacts đã chọn</button>
+        </div>
+    </div>
+
+    <!-- Layout Selection Modal -->
+    <div id="layout-modal" class="small-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-project-diagram"></i> Chọn kiểu sắp xếp</h3>
+            <span class="close-modal" id="btn-x-close-layout">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="layout-options">
+                <div class="layout-option" data-layout="radial">
+                    <div class="layout-icon"><i class="fas fa-sun"></i></div>
+                    <div class="layout-info">
+                        <h4>Cây Tỏa (Radial)</h4>
+                        <p>Sắp xếp theo khoảng cách từ TÔI, người gần nhất ở vòng trong</p>
+                    </div>
+                </div>
+                <div class="layout-option" data-layout="similarity">
+                    <div class="layout-icon"><i class="fas fa-font"></i></div>
+                    <div class="layout-info">
+                        <h4>Tên Giống Nhau</h4>
+                        <p>Nhóm các tên tương tự gần nhau (dựa trên Edit Distance)</p>
+                    </div>
+                </div>
+                <div class="layout-option" data-layout="layer">
+                    <div class="layout-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="layout-info">
+                        <h4>Theo Layer</h4>
+                        <p>Nhóm theo phân loại (Gia đình, Công việc, Bạn bè...)</p>
+                    </div>
+                </div>
+                <div class="layout-option" data-layout="grid">
+                    <div class="layout-icon"><i class="fas fa-th"></i></div>
+                    <div class="layout-info">
+                        <h4>Lưới (Grid)</h4>
+                        <p>Sắp xếp theo hàng cột đều nhau</p>
+                    </div>
+                </div>
+                <div class="layout-option" data-layout="circular">
+                    <div class="layout-icon"><i class="fas fa-circle-notch"></i></div>
+                    <div class="layout-info">
+                        <h4>Vòng Tròn</h4>
+                        <p>Tất cả xếp thành vòng tròn quanh TÔI</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

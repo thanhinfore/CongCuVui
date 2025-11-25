@@ -2116,9 +2116,294 @@ function openEdgeModal(edge) {
 }
 
 // ==========================================
-// PHẦN 8: RADIAL TREE LAYOUT (Cây tỏa ra từ trung tâm)
+// PHẦN 8: LAYOUT ALGORITHMS
 // ==========================================
 
+// Levenshtein Edit Distance - tính độ khác biệt giữa 2 chuỗi
+function levenshteinDistance(str1, str2) {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+
+    if (s1 === s2) return 0;
+    if (s1.length === 0) return s2.length;
+    if (s2.length === 0) return s1.length;
+
+    const matrix = [];
+
+    // Initialize first column
+    for (let i = 0; i <= s1.length; i++) {
+        matrix[i] = [i];
+    }
+
+    // Initialize first row
+    for (let j = 0; j <= s2.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // Fill in the rest of the matrix
+    for (let i = 1; i <= s1.length; i++) {
+        for (let j = 1; j <= s2.length; j++) {
+            const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,      // deletion
+                matrix[i][j - 1] + 1,      // insertion
+                matrix[i - 1][j - 1] + cost // substitution
+            );
+        }
+    }
+
+    return matrix[s1.length][s2.length];
+}
+
+// Normalize name for better similarity matching
+function normalizeName(name) {
+    return name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim();
+}
+
+// Calculate similarity score (0-1, higher is more similar)
+function nameSimilarity(name1, name2) {
+    const n1 = normalizeName(name1);
+    const n2 = normalizeName(name2);
+    const maxLen = Math.max(n1.length, n2.length);
+    if (maxLen === 0) return 1;
+    const distance = levenshteinDistance(n1, n2);
+    return 1 - (distance / maxLen);
+}
+
+// Layout: Name Similarity - group similar names together
+function calculateSimilarityPositions() {
+    const positions = new Map();
+    const nodes = [];
+
+    // Collect all nodes except center
+    graph.forEachNode((nodeId) => {
+        if (nodeId !== 'center') {
+            const attrs = graph.getNodeAttributes(nodeId);
+            nodes.push({ id: nodeId, label: attrs.label || nodeId });
+        }
+    });
+
+    // Place center at origin
+    positions.set('center', { x: 0, y: 0 });
+
+    if (nodes.length === 0) return positions;
+
+    // Group nodes by similarity using clustering
+    const clusters = [];
+    const assigned = new Set();
+    const SIMILARITY_THRESHOLD = 0.4;
+
+    // Sort by name to ensure consistent grouping
+    nodes.sort((a, b) => a.label.localeCompare(b.label));
+
+    nodes.forEach(node => {
+        if (assigned.has(node.id)) return;
+
+        // Start a new cluster with this node
+        const cluster = [node];
+        assigned.add(node.id);
+
+        // Find similar nodes
+        nodes.forEach(other => {
+            if (assigned.has(other.id)) return;
+            const similarity = nameSimilarity(node.label, other.label);
+            if (similarity >= SIMILARITY_THRESHOLD) {
+                cluster.push(other);
+                assigned.add(other.id);
+            }
+        });
+
+        clusters.push(cluster);
+    });
+
+    // Position clusters in a spiral around center
+    const CLUSTER_RADIUS = 120;
+    const NODE_SPACING = 50;
+    let currentAngle = -Math.PI / 2;
+    let currentRadius = CLUSTER_RADIUS;
+
+    clusters.forEach((cluster, clusterIndex) => {
+        // Calculate cluster center position
+        const clusterX = currentRadius * Math.cos(currentAngle);
+        const clusterY = currentRadius * Math.sin(currentAngle);
+
+        // Position nodes in cluster
+        if (cluster.length === 1) {
+            positions.set(cluster[0].id, { x: clusterX, y: clusterY });
+        } else {
+            // Arrange cluster nodes in a small circle
+            const subRadius = Math.max(30, cluster.length * 8);
+            cluster.forEach((node, nodeIndex) => {
+                const subAngle = (nodeIndex / cluster.length) * 2 * Math.PI - Math.PI / 2;
+                positions.set(node.id, {
+                    x: clusterX + subRadius * Math.cos(subAngle),
+                    y: clusterY + subRadius * Math.sin(subAngle)
+                });
+            });
+        }
+
+        // Move to next position (spiral outward)
+        currentAngle += Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+        if (clusterIndex % 8 === 7) {
+            currentRadius += CLUSTER_RADIUS * 0.8;
+            currentAngle = -Math.PI / 2;
+        }
+    });
+
+    return positions;
+}
+
+// Layout: By Layer - group by layer category
+function calculateLayerPositions() {
+    const positions = new Map();
+
+    // Place center at origin
+    positions.set('center', { x: 0, y: 0 });
+
+    // Group nodes by layer
+    const layerGroups = new Map();
+    graph.forEachNode((nodeId) => {
+        if (nodeId === 'center') return;
+        const attrs = graph.getNodeAttributes(nodeId);
+        const layer = attrs.layer || 'others';
+        if (!layerGroups.has(layer)) {
+            layerGroups.set(layer, []);
+        }
+        layerGroups.get(layer).push(nodeId);
+    });
+
+    // Position each layer in a sector
+    const layerCount = layerGroups.size;
+    const anglePerLayer = (2 * Math.PI) / Math.max(layerCount, 1);
+    let layerIndex = 0;
+
+    const BASE_RADIUS = 150;
+    const RING_SPACING = 60;
+    const MIN_ARC_SPACING = 40;
+
+    layerGroups.forEach((nodes, layerId) => {
+        const layerAngle = layerIndex * anglePerLayer - Math.PI / 2;
+        const halfSpread = anglePerLayer * 0.4;
+
+        // Sort nodes by label for consistent ordering
+        nodes.sort((a, b) => {
+            const labelA = graph.getNodeAttributes(a).label || '';
+            const labelB = graph.getNodeAttributes(b).label || '';
+            return labelA.localeCompare(labelB);
+        });
+
+        // Distribute nodes in concentric arcs within the sector
+        const nodesPerRing = Math.max(3, Math.floor(anglePerLayer * BASE_RADIUS / MIN_ARC_SPACING));
+
+        nodes.forEach((nodeId, nodeIndex) => {
+            const ring = Math.floor(nodeIndex / nodesPerRing);
+            const indexInRing = nodeIndex % nodesPerRing;
+            const nodesInThisRing = Math.min(nodesPerRing, nodes.length - ring * nodesPerRing);
+
+            const radius = BASE_RADIUS + ring * RING_SPACING;
+            const angleSpread = halfSpread * 2 * (nodesInThisRing / nodesPerRing);
+            const startAngle = layerAngle - angleSpread / 2;
+            const angleStep = nodesInThisRing > 1 ? angleSpread / (nodesInThisRing - 1) : 0;
+            const angle = startAngle + indexInRing * angleStep;
+
+            positions.set(nodeId, {
+                x: radius * Math.cos(angle),
+                y: radius * Math.sin(angle)
+            });
+        });
+
+        layerIndex++;
+    });
+
+    return positions;
+}
+
+// Layout: Grid - arrange in rows and columns
+function calculateGridPositions() {
+    const positions = new Map();
+    const nodes = [];
+
+    graph.forEachNode((nodeId) => {
+        if (nodeId !== 'center') {
+            const attrs = graph.getNodeAttributes(nodeId);
+            nodes.push({ id: nodeId, label: attrs.label || nodeId });
+        }
+    });
+
+    // Sort alphabetically
+    nodes.sort((a, b) => a.label.localeCompare(b.label));
+
+    // Calculate grid dimensions
+    const count = nodes.length;
+    const cols = Math.ceil(Math.sqrt(count));
+    const rows = Math.ceil(count / cols);
+
+    const CELL_WIDTH = 80;
+    const CELL_HEIGHT = 70;
+    const offsetX = -(cols - 1) * CELL_WIDTH / 2;
+    const offsetY = -(rows - 1) * CELL_HEIGHT / 2 + 80; // Leave space for center
+
+    // Place center above the grid
+    positions.set('center', { x: 0, y: offsetY - 100 });
+
+    nodes.forEach((node, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        positions.set(node.id, {
+            x: offsetX + col * CELL_WIDTH,
+            y: offsetY + row * CELL_HEIGHT
+        });
+    });
+
+    return positions;
+}
+
+// Layout: Circular - all nodes in a circle around center
+function calculateCircularPositions() {
+    const positions = new Map();
+    const nodes = [];
+
+    graph.forEachNode((nodeId) => {
+        if (nodeId !== 'center') {
+            nodes.push(nodeId);
+        }
+    });
+
+    // Place center at origin
+    positions.set('center', { x: 0, y: 0 });
+
+    if (nodes.length === 0) return positions;
+
+    // Sort by label for consistent ordering
+    nodes.sort((a, b) => {
+        const labelA = graph.getNodeAttributes(a).label || '';
+        const labelB = graph.getNodeAttributes(b).label || '';
+        return labelA.localeCompare(labelB);
+    });
+
+    // Calculate radius based on node count
+    const MIN_RADIUS = 150;
+    const NODE_ARC = 50; // Minimum arc length per node
+    const radius = Math.max(MIN_RADIUS, (nodes.length * NODE_ARC) / (2 * Math.PI));
+
+    nodes.forEach((nodeId, index) => {
+        const angle = (index / nodes.length) * 2 * Math.PI - Math.PI / 2;
+        positions.set(nodeId, {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle)
+        });
+    });
+
+    return positions;
+}
+
+// Layout: Radial Tree - original layout based on graph distance
 function calculateRadialTreePositions() {
     const positions = new Map();
 
@@ -2222,7 +2507,24 @@ function calculateRadialTreePositions() {
     return positions;
 }
 
-function startForceLayout() {
+// Layout names for toast messages
+const LAYOUT_NAMES = {
+    radial: 'Cây Tỏa (Radial)',
+    similarity: 'Tên Giống Nhau',
+    layer: 'Theo Layer',
+    grid: 'Lưới (Grid)',
+    circular: 'Vòng Tròn'
+};
+
+function openLayoutModal() {
+    document.getElementById('layout-modal').style.display = 'block';
+}
+
+function closeLayoutModal() {
+    document.getElementById('layout-modal').style.display = 'none';
+}
+
+function startForceLayout(layoutType = 'radial') {
     if (state.forceRunning) {
         stopForceLayout();
         return;
@@ -2233,10 +2535,32 @@ function startForceLayout() {
     btn.innerHTML = '<i class="fas fa-stop"></i> Dừng';
     btn.style.background = '#f44336';
 
-    showToast('Đang sắp xếp cây tỏa...', 'info', 2000);
+    const layoutName = LAYOUT_NAMES[layoutType] || layoutType;
+    showToast(`Đang sắp xếp: ${layoutName}...`, 'info', 2000);
 
-    // Calculate target positions using radial tree
-    const targetPositions = calculateRadialTreePositions();
+    // Calculate target positions based on layout type
+    let targetPositions;
+    switch (layoutType) {
+        case 'similarity':
+            targetPositions = calculateSimilarityPositions();
+            break;
+        case 'layer':
+            targetPositions = calculateLayerPositions();
+            break;
+        case 'grid':
+            targetPositions = calculateGridPositions();
+            break;
+        case 'circular':
+            targetPositions = calculateCircularPositions();
+            break;
+        case 'radial':
+        default:
+            targetPositions = calculateRadialTreePositions();
+            break;
+    }
+
+    // Store selected layout type for toast
+    state.currentLayoutType = layoutType;
 
     // Store current positions
     const startPositions = new Map();
@@ -2288,11 +2612,12 @@ function startForceLayout() {
 function stopForceLayout() {
     state.forceRunning = false;
     const btn = document.getElementById('btn-force-layout');
-    btn.innerHTML = '<i class="fas fa-project-diagram"></i> Force Layout';
+    btn.innerHTML = '<i class="fas fa-project-diagram"></i> Sắp xếp';
     btn.style.background = '#2196F3';
     renderer.refresh();
     saveData();
-    showToast('Đã sắp xếp cây tỏa!', 'success');
+    const layoutName = LAYOUT_NAMES[state.currentLayoutType] || 'Cây Tỏa';
+    showToast(`Đã sắp xếp: ${layoutName}!`, 'success');
 }
 
 // ==========================================
@@ -3134,8 +3459,24 @@ document.getElementById('btn-import-vcf').addEventListener('click', () => docume
 document.getElementById('vcf-input').addEventListener('change', uploadVCF);
 document.getElementById('file-input').addEventListener('change', uploadJSON);
 document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
-document.getElementById('btn-force-layout').addEventListener('click', startForceLayout);
+document.getElementById('btn-force-layout').addEventListener('click', () => {
+    if (state.forceRunning) {
+        stopForceLayout();
+    } else {
+        openLayoutModal();
+    }
+});
 document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
+
+// Layout Modal handlers
+document.getElementById('btn-x-close-layout')?.addEventListener('click', closeLayoutModal);
+document.querySelectorAll('.layout-option').forEach(option => {
+    option.addEventListener('click', () => {
+        const layoutType = option.dataset.layout;
+        closeLayoutModal();
+        startForceLayout(layoutType);
+    });
+});
 document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
 
 // Classification Mode handlers (v4.1)
