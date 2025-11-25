@@ -2076,6 +2076,7 @@ function uploadJSON(event) {
                     state.layers = data.layers;
                     renderLayerFilters();
                     renderLayersList();
+    renderTagList();
                 }
 
                 // Load graph
@@ -2530,6 +2531,7 @@ function confirmMerge() {
         });
         renderLayerFilters();
         renderLayersList();
+    renderTagList();
     }
 
     ensureNodeAttributes();
@@ -2579,6 +2581,7 @@ async function decryptAndImport() {
             state.layers = data.layers;
             renderLayerFilters();
             renderLayersList();
+    renderTagList();
         }
 
         const graphData = data.graph || data;
@@ -2669,6 +2672,46 @@ function renderLayersList() {
     });
 }
 
+// v5.0: Render tags in sidebar
+function renderTagList() {
+    const container = document.getElementById('tag-list');
+    if (!container) return;
+
+    // Build tag list HTML
+    let html = `
+        <div class="tag-item ${state.currentLayer === 'all' ? 'active' : ''}" data-layer="all">
+            <div class="tag-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            <span class="tag-name">Tất cả</span>
+            <span class="tag-count">${graph.order}</span>
+        </div>
+    `;
+
+    state.layers.forEach(layer => {
+        const nodeCount = countNodesInLayer(layer.id);
+        html += `
+            <div class="tag-item ${state.currentLayer === layer.id ? 'active' : ''}" data-layer="${layer.id}">
+                <div class="tag-color" style="background: ${layer.color};"></div>
+                <span class="tag-name">${layer.name}</span>
+                <span class="tag-count">${nodeCount}</span>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // Add click handlers for filtering
+    container.querySelectorAll('.tag-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const layerId = item.dataset.layer;
+            switchLayer(layerId);
+
+            // Update active state visually
+            container.querySelectorAll('.tag-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+        });
+    });
+}
+
 function countNodesInLayer(layerId) {
     let count = 0;
     graph.forEachNode((node) => {
@@ -2704,6 +2747,7 @@ function addLayer() {
 
     renderLayerFilters();
     renderLayersList();
+    renderTagList();
     saveData();
     showToast(`Đã thêm layer "${name}"`, 'success');
 }
@@ -2737,6 +2781,7 @@ function saveLayer() {
 
     renderLayerFilters();
     renderLayersList();
+    renderTagList();
     saveData();
     closeLayerModal();
     showToast('Đã lưu layer', 'success');
@@ -2768,6 +2813,7 @@ function deleteLayer() {
 
     renderLayerFilters();
     renderLayersList();
+    renderTagList();
     saveData();
     closeLayerModal();
     renderer.refresh();
@@ -2777,9 +2823,14 @@ function deleteLayer() {
 function switchLayer(layerId) {
     state.currentLayer = layerId;
 
-    // Update button states
+    // Update button states (old toolbar)
     document.querySelectorAll('.layer-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.layer === layerId);
+    });
+
+    // v5.0: Update tag list active state in sidebar
+    document.querySelectorAll('#tag-list .tag-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.layer === layerId);
     });
 
     // Filter nodes
@@ -4333,7 +4384,7 @@ function setupClickHandlers() {
 // ==========================================
 
 // Save Node
-ui.btnSave.addEventListener('click', () => {
+ui.btnSave?.addEventListener('click', () => {
     const label = ui.inpLabel.value.trim();
     const layer = ui.inpLayer?.value || 'others';
 
@@ -4405,7 +4456,7 @@ ui.btnSave.addEventListener('click', () => {
 });
 
 // Save Edge
-document.getElementById('btn-save-edge').addEventListener('click', () => {
+document.getElementById('btn-save-edge')?.addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const edgeType = ui.edgeType.value;
@@ -4422,7 +4473,7 @@ document.getElementById('btn-save-edge').addEventListener('click', () => {
 });
 
 // Delete Edge
-document.getElementById('btn-delete-edge').addEventListener('click', () => {
+document.getElementById('btn-delete-edge')?.addEventListener('click', () => {
     if (!state.selectedEdge) return;
 
     const source = graph.source(state.selectedEdge);
@@ -4476,13 +4527,13 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 // Add child node
-document.getElementById('btn-add-child').addEventListener('click', () => {
+document.getElementById('btn-add-child')?.addEventListener('click', () => {
     state.parentNode = state.selectedNode;
     openModal(null, 'ADD');
 });
 
 // Delete node
-document.getElementById('btn-delete').addEventListener('click', () => {
+document.getElementById('btn-delete')?.addEventListener('click', () => {
     if (!state.selectedNode || state.selectedNode === 'center') return;
 
     const label = graph.getNodeAttribute(state.selectedNode, 'label');
@@ -4526,41 +4577,47 @@ document.getElementById('btn-delete').addEventListener('click', () => {
     }
 });
 
-// Close modals
-document.getElementById('btn-x-close').addEventListener('click', closeModal);
-document.getElementById('btn-x-close-edge').addEventListener('click', closeEdgeModal);
-document.getElementById('btn-x-close-layer').addEventListener('click', closeLayerModal);
-document.getElementById('close-layers-panel').addEventListener('click', toggleLayersPanel);
-document.getElementById('close-detail-panel').addEventListener('click', closeDetailPanel);
+// Close modals (v5.0: add null checks for changed IDs)
+document.getElementById('btn-x-close')?.addEventListener('click', closeModal);
+document.getElementById('btn-x-close-edge')?.addEventListener('click', closeEdgeModal);
+document.getElementById('btn-x-close-layer')?.addEventListener('click', closeLayerModal);
+document.getElementById('close-layers-panel')?.addEventListener('click', toggleLayersPanel);
+document.getElementById('close-detail-panel')?.addEventListener('click', closeDetailPanel);
 
-// Edit from detail panel
-document.getElementById('btn-edit-from-detail').addEventListener('click', () => {
+// Edit from detail panel (v5.0: button moved to detail-quick-actions)
+document.getElementById('btn-edit-from-detail')?.addEventListener('click', () => {
+    if (state.detailNode) {
+        openModal(state.detailNode, 'EDIT');
+    }
+});
+// v5.0: Quick action edit button
+document.getElementById('btn-edit')?.addEventListener('click', () => {
     if (state.detailNode) {
         openModal(state.detailNode, 'EDIT');
     }
 });
 
-ui.overlay.addEventListener('click', () => {
+ui.overlay?.addEventListener('click', () => {
     closeModal();
     closeEdgeModal();
     closeLayerModal();
 });
 
-// Toolbar buttons
-document.getElementById('btn-export').addEventListener('click', openExportModal);
-document.getElementById('btn-import-trigger').addEventListener('click', openImportModal);
-document.getElementById('btn-import-vcf').addEventListener('click', () => document.getElementById('vcf-input').click());
-document.getElementById('vcf-input').addEventListener('change', uploadVCF);
-document.getElementById('file-input').addEventListener('change', uploadJSON);
-document.getElementById('btn-capture').addEventListener('click', captureGraphImage);
-document.getElementById('btn-force-layout').addEventListener('click', () => {
+// Toolbar buttons (v5.0: add null checks - some buttons moved to sidebar)
+document.getElementById('btn-export')?.addEventListener('click', openExportModal);
+document.getElementById('btn-import-trigger')?.addEventListener('click', openImportModal);
+document.getElementById('btn-import-vcf')?.addEventListener('click', () => document.getElementById('vcf-input')?.click());
+document.getElementById('vcf-input')?.addEventListener('change', uploadVCF);
+document.getElementById('file-input')?.addEventListener('change', uploadJSON);
+document.getElementById('btn-capture')?.addEventListener('click', captureGraphImage);
+document.getElementById('btn-force-layout')?.addEventListener('click', () => {
     if (state.forceRunning) {
         stopForceLayout();
     } else {
         openLayoutModal();
     }
 });
-document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
+document.getElementById('btn-recolor')?.addEventListener('click', () => applyColorsByDistance(true));
 
 // Layout Modal handlers
 document.getElementById('btn-x-close-layout')?.addEventListener('click', closeLayoutModal);
@@ -4571,7 +4628,7 @@ document.querySelectorAll('.layout-option').forEach(option => {
         startForceLayout(layoutType);
     });
 });
-document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
+document.getElementById('btn-manage-layers')?.addEventListener('click', toggleLayersPanel);
 
 // Classification Mode handlers (v4.1)
 document.getElementById('btn-quick-classify')?.addEventListener('click', enterClassificationMode);
@@ -4633,13 +4690,13 @@ document.getElementById('btn-select-encrypted')?.addEventListener('click', () =>
 });
 document.getElementById('btn-decrypt')?.addEventListener('click', decryptAndImport);
 
-// Layer management
-document.getElementById('btn-add-layer').addEventListener('click', addLayer);
-document.getElementById('btn-save-layer').addEventListener('click', saveLayer);
-document.getElementById('btn-delete-layer').addEventListener('click', deleteLayer);
+// Layer management (v5.0: add null checks)
+document.getElementById('btn-add-layer')?.addEventListener('click', addLayer);
+document.getElementById('btn-save-layer')?.addEventListener('click', saveLayer);
+document.getElementById('btn-delete-layer')?.addEventListener('click', deleteLayer);
 
 // Reset data
-document.getElementById('btn-reset-data').addEventListener('click', () => {
+document.getElementById('btn-reset-data')?.addEventListener('click', () => {
     const confirmDialog = document.createElement('div');
     confirmDialog.className = 'link-confirmation';
     confirmDialog.innerHTML = `
@@ -4894,6 +4951,7 @@ initApp().then(() => {
     // Initialize UI after data is loaded
     renderLayerFilters();
     renderLayersList();
+    renderTagList();  // v5.0: Render tags in sidebar
     updateNodeCount();
     updateStatistics();
     applyColorsByDistance(false);
