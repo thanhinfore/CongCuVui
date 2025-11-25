@@ -600,6 +600,294 @@ function mergeContacts(existing, newContact, strategy) {
 }
 
 // ==========================================
+// PHẦN 2G: CLASSIFICATION MODULE (v4.1)
+// ==========================================
+
+let classificationState = {
+    isActive: false,
+    selectedNodes: new Set(),
+    draggedNodeId: null
+};
+
+function enterClassificationMode() {
+    classificationState.isActive = true;
+    classificationState.selectedNodes.clear();
+
+    // Show layer drop zones
+    renderLayerDropZones();
+    document.getElementById('layer-drop-zones').classList.remove('hidden');
+    document.getElementById('classify-indicator').classList.remove('hidden');
+    document.body.classList.add('classifying');
+
+    // Show quick classify panel
+    openQuickClassifyPanel();
+
+    showToast('Chế độ phân loại: Kéo node vào vùng Layer để phân loại!', 'info', 3000);
+}
+
+function exitClassificationMode() {
+    classificationState.isActive = false;
+    classificationState.selectedNodes.clear();
+    classificationState.draggedNodeId = null;
+
+    // Hide elements
+    document.getElementById('layer-drop-zones').classList.add('hidden');
+    document.getElementById('classify-indicator').classList.add('hidden');
+    document.body.classList.remove('classifying');
+}
+
+function renderLayerDropZones() {
+    const container = document.getElementById('layer-drop-zones');
+    const layerCounts = getLayerCounts();
+
+    container.innerHTML = state.layers.map(layer => `
+        <div class="layer-drop-zone" data-layer="${layer.id}" style="color: ${layer.color}; border-color: ${layer.color};">
+            <i class="fas fa-folder"></i>
+            <span>${layer.name}</span>
+            <span class="drop-count">${layerCounts[layer.id] || 0} người</span>
+        </div>
+    `).join('');
+
+    // Add event listeners for drop zones
+    container.querySelectorAll('.layer-drop-zone').forEach(zone => {
+        zone.addEventListener('dragover', handleZoneDragOver);
+        zone.addEventListener('dragleave', handleZoneDragLeave);
+        zone.addEventListener('drop', handleZoneDrop);
+    });
+}
+
+function getLayerCounts() {
+    const counts = {};
+    graph.forEachNode((nodeId, attrs) => {
+        if (nodeId !== 'center' && attrs.layer) {
+            counts[attrs.layer] = (counts[attrs.layer] || 0) + 1;
+        }
+    });
+    return counts;
+}
+
+function handleZoneDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('dragover');
+}
+
+function handleZoneDragLeave(e) {
+    e.currentTarget.classList.remove('dragover');
+}
+
+function handleZoneDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('dragover');
+
+    const targetLayer = e.currentTarget.dataset.layer;
+    const nodeId = classificationState.draggedNodeId;
+
+    if (nodeId && targetLayer) {
+        assignNodeToLayer(nodeId, targetLayer);
+        classificationState.draggedNodeId = null;
+        renderLayerDropZones(); // Update counts
+        updateQuickClassifyList();
+    }
+}
+
+function assignNodeToLayer(nodeId, layerId) {
+    if (!graph.hasNode(nodeId) || nodeId === 'center') return;
+
+    const layer = state.layers.find(l => l.id === layerId);
+    if (!layer) return;
+
+    graph.setNodeAttribute(nodeId, 'layer', layerId);
+    graph.setNodeAttribute(nodeId, 'color', layer.color);
+
+    saveData();
+    showToast(`Đã gán "${graph.getNodeAttribute(nodeId, 'label')}" vào ${layer.name}`, 'success', 2000);
+}
+
+function assignMultipleNodesToLayer(nodeIds, layerId) {
+    const layer = state.layers.find(l => l.id === layerId);
+    if (!layer) return;
+
+    let count = 0;
+    nodeIds.forEach(nodeId => {
+        if (graph.hasNode(nodeId) && nodeId !== 'center') {
+            graph.setNodeAttribute(nodeId, 'layer', layerId);
+            graph.setNodeAttribute(nodeId, 'color', layer.color);
+            count++;
+        }
+    });
+
+    saveData();
+    renderLayerDropZones();
+    updateQuickClassifyList();
+    renderLayerFilters();
+
+    showToast(`Đã gán ${count} người vào ${layer.name}`, 'success');
+}
+
+// Quick Classify Panel Functions
+function openQuickClassifyPanel() {
+    document.getElementById('quick-classify-panel').classList.remove('hidden');
+
+    // Populate layer select
+    const select = document.getElementById('bulk-layer-select');
+    select.innerHTML = state.layers.map(l =>
+        `<option value="${l.id}" style="color: ${l.color}">${l.name}</option>`
+    ).join('');
+
+    updateQuickClassifyList();
+}
+
+function closeQuickClassifyPanel() {
+    document.getElementById('quick-classify-panel').classList.add('hidden');
+    exitClassificationMode();
+}
+
+function getUnconnectedNodes() {
+    const unconnected = [];
+    graph.forEachNode((nodeId, attrs) => {
+        if (nodeId === 'center') return;
+
+        // Check if connected to center
+        const isConnected = graph.hasEdge(nodeId, 'center') || graph.hasEdge('center', nodeId);
+
+        if (!isConnected) {
+            unconnected.push({
+                id: nodeId,
+                label: attrs.label || '',
+                layer: attrs.layer || '',
+                layerName: state.layers.find(l => l.id === attrs.layer)?.name || 'Chưa phân loại'
+            });
+        }
+    });
+
+    return unconnected.sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+}
+
+function updateQuickClassifyList(filterText = '') {
+    const list = document.getElementById('classify-list');
+    const unconnected = getUnconnectedNodes();
+    const filter = filterText.toLowerCase();
+
+    // Update count
+    document.getElementById('unclassified-count').textContent = unconnected.length;
+
+    // Filter nodes
+    const filtered = filter
+        ? unconnected.filter(n => n.label.toLowerCase().includes(filter))
+        : unconnected;
+
+    if (filtered.length === 0) {
+        list.innerHTML = `
+            <div class="classify-empty">
+                <i class="fas fa-check-circle"></i>
+                <p>${filter ? 'Không tìm thấy' : 'Tất cả đã được kết nối!'}</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Show max 100 items for performance
+    const displayItems = filtered.slice(0, 100);
+
+    list.innerHTML = displayItems.map(node => `
+        <div class="classify-item" data-node-id="${node.id}">
+            <input type="checkbox" data-node-id="${node.id}">
+            <div class="classify-item-avatar">${getInitials(node.label)}</div>
+            <div class="classify-item-info">
+                <div class="classify-item-name">${node.label}</div>
+                <div class="classify-item-layer">${node.layerName}</div>
+            </div>
+            <div class="classify-item-assign">
+                ${state.layers.slice(0, 3).map(l => `
+                    <button style="background: ${l.color}; color: white;" title="${l.name}" data-layer="${l.id}" data-node="${node.id}">
+                        ${l.name.charAt(0)}
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+
+    if (filtered.length > 100) {
+        list.innerHTML += `<div class="classify-item" style="justify-content: center; color: #999;">...và ${filtered.length - 100} người khác</div>`;
+    }
+
+    // Add click handlers
+    list.querySelectorAll('.classify-item').forEach(item => {
+        const nodeId = item.dataset.nodeId;
+        if (!nodeId) return;
+
+        // Checkbox click
+        item.querySelector('input[type="checkbox"]')?.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                classificationState.selectedNodes.add(nodeId);
+                item.classList.add('selected');
+            } else {
+                classificationState.selectedNodes.delete(nodeId);
+                item.classList.remove('selected');
+            }
+        });
+
+        // Quick assign buttons
+        item.querySelectorAll('.classify-item-assign button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const layerId = btn.dataset.layer;
+                const targetNodeId = btn.dataset.node;
+                assignNodeToLayer(targetNodeId, layerId);
+                item.remove();
+                updateUnconnectedCount();
+            });
+        });
+
+        // Click item to focus on graph
+        item.addEventListener('click', (e) => {
+            if (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON') return;
+            focusOnNode(nodeId);
+        });
+    });
+}
+
+function updateUnconnectedCount() {
+    const count = getUnconnectedNodes().length;
+    document.getElementById('unclassified-count').textContent = count;
+}
+
+function focusOnNode(nodeId) {
+    if (!graph.hasNode(nodeId)) return;
+
+    const attrs = graph.getNodeAttributes(nodeId);
+    const camera = renderer.getCamera();
+
+    camera.animate(
+        { x: attrs.x, y: attrs.y, ratio: 0.3 },
+        { duration: 300 }
+    );
+
+    // Highlight node
+    state.selectedNode = nodeId;
+    graph.setNodeAttribute(nodeId, 'highlighted', true);
+    renderer.refresh();
+
+    setTimeout(() => {
+        graph.setNodeAttribute(nodeId, 'highlighted', false);
+        renderer.refresh();
+    }, 2000);
+}
+
+function bulkAssignSelectedNodes() {
+    const layerId = document.getElementById('bulk-layer-select').value;
+    const selectedNodes = Array.from(classificationState.selectedNodes);
+
+    if (selectedNodes.length === 0) {
+        showToast('Chưa chọn người nào!', 'warning');
+        return;
+    }
+
+    assignMultipleNodesToLayer(selectedNodes, layerId);
+    classificationState.selectedNodes.clear();
+}
+
+// ==========================================
 // PHẦN 3: HELPER FUNCTIONS
 // ==========================================
 
@@ -2023,6 +2311,11 @@ function setupDragAndDrop() {
         const attr = graph.getNodeAttributes(e.node);
         state.dragStartPos = { x: attr.x, y: attr.y };
 
+        // Set for classification drag detection
+        if (classificationState.isActive) {
+            classificationState.draggedNodeId = e.node;
+        }
+
         renderer.getCamera().disable();
         graph.setNodeAttribute(e.node, 'highlighted', true);
         renderer.refresh();
@@ -2042,19 +2335,32 @@ function setupDragAndDrop() {
         graph.setNodeAttribute(state.draggedNode, 'x', pos.x);
         graph.setNodeAttribute(state.draggedNode, 'y', pos.y);
 
+        // Check if hovering over a layer drop zone during classification mode
+        if (classificationState.isActive && state.hasMoved) {
+            checkLayerDropZoneHover(e.original);
+        }
+
         e.preventSigmaDefault();
         e.original.preventDefault();
         e.original.stopPropagation();
     });
 
-    captor.on('mouseup', () => {
+    captor.on('mouseup', (e) => {
         if (state.isDragging && state.draggedNode) {
             const nodeA = state.draggedNode;
             const posA = graph.getNodeAttributes(nodeA);
 
             graph.removeNodeAttribute(nodeA, 'highlighted');
 
-            if (state.hasMoved) {
+            // Check if dropped on a layer zone during classification
+            if (classificationState.isActive && state.hasMoved) {
+                const droppedOnLayer = checkLayerDropZoneDrop(e.original);
+                if (droppedOnLayer) {
+                    assignNodeToLayer(nodeA, droppedOnLayer);
+                    renderLayerDropZones();
+                    updateQuickClassifyList();
+                }
+            } else if (state.hasMoved) {
                 const dragDuration = Date.now() - state.dragStartTime;
                 if (dragDuration > DRAG_CONFIG.MIN_DURATION) {
                     checkAndLinkNodes(nodeA, posA);
@@ -2068,9 +2374,38 @@ function setupDragAndDrop() {
         state.draggedNode = null;
         state.hasMoved = false;
         state.dragStartPos = null;
+        classificationState.draggedNodeId = null;
+
+        // Clear hover state from all zones
+        document.querySelectorAll('.layer-drop-zone').forEach(zone => {
+            zone.classList.remove('dragover');
+        });
+
         renderer.getCamera().enable();
         renderer.refresh();
     });
+}
+
+function checkLayerDropZoneHover(event) {
+    const zones = document.querySelectorAll('.layer-drop-zone');
+    zones.forEach(zone => {
+        const rect = zone.getBoundingClientRect();
+        const isOver = event.clientX >= rect.left && event.clientX <= rect.right &&
+                       event.clientY >= rect.top && event.clientY <= rect.bottom;
+        zone.classList.toggle('dragover', isOver);
+    });
+}
+
+function checkLayerDropZoneDrop(event) {
+    const zones = document.querySelectorAll('.layer-drop-zone');
+    for (const zone of zones) {
+        const rect = zone.getBoundingClientRect();
+        if (event.clientX >= rect.left && event.clientX <= rect.right &&
+            event.clientY >= rect.top && event.clientY <= rect.bottom) {
+            return zone.dataset.layer;
+        }
+    }
+    return null;
 }
 
 function checkAndLinkNodes(nodeA, posA) {
@@ -2815,6 +3150,15 @@ document.getElementById('btn-force-layout').addEventListener('click', startForce
 document.getElementById('btn-recolor').addEventListener('click', () => applyColorsByDistance(true));
 document.getElementById('btn-manage-layers').addEventListener('click', toggleLayersPanel);
 
+// Classification Mode handlers (v4.1)
+document.getElementById('btn-quick-classify')?.addEventListener('click', enterClassificationMode);
+document.getElementById('btn-exit-classify')?.addEventListener('click', exitClassificationMode);
+document.getElementById('close-quick-classify')?.addEventListener('click', closeQuickClassifyPanel);
+document.getElementById('classify-filter')?.addEventListener('input', (e) => {
+    updateQuickClassifyList(e.target.value);
+});
+document.getElementById('btn-bulk-assign')?.addEventListener('click', bulkAssignSelectedNodes);
+
 // Export Modal handlers (v4.0)
 document.getElementById('btn-x-close-export')?.addEventListener('click', closeExportModal);
 document.getElementById('btn-export-json')?.addEventListener('click', downloadJSON);
@@ -2888,9 +3232,25 @@ document.getElementById('btn-reset-data').addEventListener('click', () => {
     document.body.appendChild(confirmDialog);
     setTimeout(() => confirmDialog.classList.add('show'), 10);
 
-    document.getElementById('reset-confirm').addEventListener('click', () => {
+    document.getElementById('reset-confirm').addEventListener('click', async () => {
+        // Clear localStorage
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem('social_graph_v2_data');
+
+        // Clear IndexedDB
+        if (state.db) {
+            state.db.close();
+        }
+        try {
+            await new Promise((resolve, reject) => {
+                const deleteReq = indexedDB.deleteDatabase(INDEXEDDB_NAME);
+                deleteReq.onsuccess = resolve;
+                deleteReq.onerror = reject;
+            });
+        } catch (e) {
+            console.warn('Could not delete IndexedDB:', e);
+        }
+
         location.reload();
     });
 
@@ -2978,6 +3338,6 @@ initApp().then(() => {
     // Welcome message
     setTimeout(() => {
         const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
-        showToast(`SocialGraph v4.0 - VCF Import, Encryption, ${storageType}!`, 'info', 4000);
+        showToast(`SocialGraph v4.1 - Kéo thả phân loại nhanh 1000+ contacts!`, 'info', 4000);
     }, 500);
 });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sơ đồ Quan hệ Xã hội v4.0</title>
+    <title>Sơ đồ Quan hệ Xã hội v4.1</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
@@ -12,7 +12,7 @@
 
     <div id="toolbar">
         <div class="brand">
-            <i class="fas fa-project-diagram"></i> SocialGraph v4.0
+            <i class="fas fa-project-diagram"></i> SocialGraph v4.1
         </div>
 
         <!-- Layer Filters - Dynamic -->
@@ -26,6 +26,10 @@
         <div class="tools">
             <button id="btn-manage-layers" title="Quản lý các Layer" style="background: #9C27B0; color: white;">
                 <i class="fas fa-layer-group"></i> Layers
+            </button>
+
+            <button id="btn-quick-classify" title="Phân loại nhanh bằng kéo thả" style="background: #FF5722; color: white;">
+                <i class="fas fa-tags"></i> Phân loại
             </button>
 
             <button id="btn-force-layout" title="Chạy Force Layout tự động sắp xếp" style="background: #2196F3; color: white;">
@@ -49,6 +53,45 @@
     </div>
 
     <div id="container"></div>
+
+    <!-- Layer Drop Zones for Classification (v4.1) -->
+    <div id="layer-drop-zones" class="layer-drop-zones hidden">
+        <!-- Dynamic layer zones will be added here -->
+    </div>
+
+    <!-- Classification Mode Indicator -->
+    <div id="classify-indicator" class="classify-indicator hidden">
+        <i class="fas fa-arrows-alt"></i>
+        <span>Kéo node vào vùng Layer để phân loại</span>
+        <button id="btn-exit-classify" class="btn-small"><i class="fas fa-times"></i> Thoát</button>
+    </div>
+
+    <!-- Quick Classify Panel -->
+    <div id="quick-classify-panel" class="quick-classify-panel hidden">
+        <div class="panel-header">
+            <h3><i class="fas fa-tags"></i> Phân loại nhanh</h3>
+            <span class="close-panel" id="close-quick-classify">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div class="classify-stats">
+                <span id="unclassified-count">0</span> contacts chưa kết nối với TÔI
+            </div>
+            <div class="classify-search">
+                <input type="text" id="classify-filter" placeholder="Tìm kiếm theo tên...">
+            </div>
+            <div class="classify-list" id="classify-list">
+                <!-- Unclassified nodes will appear here -->
+            </div>
+            <div class="classify-actions">
+                <select id="bulk-layer-select">
+                    <!-- Dynamic layers -->
+                </select>
+                <button id="btn-bulk-assign" class="btn-primary btn-small">
+                    <i class="fas fa-check"></i> Gán layer
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Layers Panel (Sidebar) -->
     <div id="layers-panel" class="panel hidden">
