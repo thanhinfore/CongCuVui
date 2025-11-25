@@ -956,6 +956,616 @@ function bulkAssignSelectedNodes() {
 }
 
 // ==========================================
+// PHẦN 2H: SMART CONNECT MODULE (v4.2)
+// ==========================================
+
+let smartConnectState = {
+    isActive: false,
+    hubNode: null,           // Node trung tâm để kết nối
+    selectedNodes: new Set(), // Các node được chọn để kết nối
+    groups: [],              // Các nhóm được phát hiện
+    currentGroupType: 'company' // 'company' | 'email_domain' | 'phone_prefix'
+};
+
+// Mở panel Smart Connect
+function openSmartConnectPanel() {
+    const panel = document.getElementById('smart-connect-panel');
+    if (panel) {
+        panel.classList.remove('hidden');
+        smartConnectState.isActive = true;
+        smartConnectState.selectedNodes.clear();
+        smartConnectState.hubNode = null;
+        analyzeAndGroupContacts();
+    }
+}
+
+// Đóng panel Smart Connect
+function closeSmartConnectPanel() {
+    const panel = document.getElementById('smart-connect-panel');
+    if (panel) {
+        panel.classList.add('hidden');
+    }
+    smartConnectState.isActive = false;
+    smartConnectState.selectedNodes.clear();
+    smartConnectState.hubNode = null;
+
+    // Clear highlights
+    graph.forEachNode((nodeId, attrs) => {
+        graph.setNodeAttribute(nodeId, 'highlighted', false);
+    });
+    if (renderer) renderer.refresh();
+}
+
+// Phân tích và nhóm contacts theo tiêu chí
+function analyzeAndGroupContacts() {
+    const groups = {
+        byCompany: new Map(),
+        byEmailDomain: new Map(),
+        byPhonePrefix: new Map()
+    };
+
+    graph.forEachNode((nodeId, attrs) => {
+        if (nodeId === 'center') return;
+
+        const contact = attrs.contact || {};
+        const label = attrs.label || '';
+
+        // Group by company
+        if (contact.company && contact.company.trim()) {
+            const company = contact.company.trim().toLowerCase();
+            if (!groups.byCompany.has(company)) {
+                groups.byCompany.set(company, []);
+            }
+            groups.byCompany.get(company).push({ nodeId, label, attrs });
+        }
+
+        // Group by email domain
+        if (contact.email && contact.email.includes('@')) {
+            const domain = contact.email.split('@')[1].toLowerCase();
+            if (!groups.byEmailDomain.has(domain)) {
+                groups.byEmailDomain.set(domain, []);
+            }
+            groups.byEmailDomain.get(domain).push({ nodeId, label, attrs });
+        }
+
+        // Group by phone prefix (first 4 digits)
+        if (contact.phone) {
+            const phoneClean = contact.phone.replace(/\D/g, '');
+            if (phoneClean.length >= 4) {
+                const prefix = phoneClean.substring(0, 4);
+                if (!groups.byPhonePrefix.has(prefix)) {
+                    groups.byPhonePrefix.set(prefix, []);
+                }
+                groups.byPhonePrefix.get(prefix).push({ nodeId, label, attrs });
+            }
+        }
+    });
+
+    // Filter groups with 2+ members and sort by size
+    smartConnectState.groups = {
+        byCompany: [...groups.byCompany.entries()]
+            .filter(([_, nodes]) => nodes.length >= 2)
+            .sort((a, b) => b[1].length - a[1].length),
+        byEmailDomain: [...groups.byEmailDomain.entries()]
+            .filter(([_, nodes]) => nodes.length >= 2)
+            .sort((a, b) => b[1].length - a[1].length),
+        byPhonePrefix: [...groups.byPhonePrefix.entries()]
+            .filter(([_, nodes]) => nodes.length >= 2)
+            .sort((a, b) => b[1].length - a[1].length)
+    };
+
+    renderSmartConnectGroups();
+}
+
+// Render danh sách nhóm
+function renderSmartConnectGroups() {
+    const groupList = document.getElementById('smart-connect-groups');
+    const groupType = smartConnectState.currentGroupType;
+
+    let groups;
+    let groupLabel;
+    let icon;
+
+    switch (groupType) {
+        case 'company':
+            groups = smartConnectState.groups.byCompany;
+            groupLabel = 'Công ty';
+            icon = 'fa-building';
+            break;
+        case 'email_domain':
+            groups = smartConnectState.groups.byEmailDomain;
+            groupLabel = 'Domain Email';
+            icon = 'fa-envelope';
+            break;
+        case 'phone_prefix':
+            groups = smartConnectState.groups.byPhonePrefix;
+            groupLabel = 'Đầu số ĐT';
+            icon = 'fa-phone';
+            break;
+    }
+
+    if (!groups || groups.length === 0) {
+        groupList.innerHTML = `
+            <div class="smart-connect-empty">
+                <i class="fas fa-search"></i>
+                <p>Không tìm thấy nhóm nào theo ${groupLabel}</p>
+            </div>
+        `;
+        return;
+    }
+
+    groupList.innerHTML = groups.map(([key, nodes]) => {
+        const connectedCount = countExistingConnections(nodes.map(n => n.nodeId));
+        const totalPossible = (nodes.length * (nodes.length - 1)) / 2;
+        const percentage = totalPossible > 0 ? Math.round((connectedCount / totalPossible) * 100) : 0;
+
+        return `
+            <div class="smart-group-item" data-group-key="${key}">
+                <div class="smart-group-header">
+                    <div class="smart-group-info">
+                        <i class="fas ${icon}"></i>
+                        <span class="smart-group-name">${escapeHtml(key)}</span>
+                        <span class="smart-group-count">${nodes.length} người</span>
+                    </div>
+                    <div class="smart-group-status">
+                        <span class="connection-status ${percentage === 100 ? 'complete' : ''}">${percentage}% kết nối</span>
+                    </div>
+                </div>
+                <div class="smart-group-members">
+                    ${nodes.slice(0, 5).map(n => `<span class="member-chip">${escapeHtml(n.label)}</span>`).join('')}
+                    ${nodes.length > 5 ? `<span class="member-chip more">+${nodes.length - 5}</span>` : ''}
+                </div>
+                <div class="smart-group-actions">
+                    <button class="btn-view-group" onclick="viewGroupOnGraph('${escapeHtml(key)}', '${groupType}')">
+                        <i class="fas fa-eye"></i> Xem
+                    </button>
+                    <button class="btn-connect-group" onclick="connectAllInGroup('${escapeHtml(key)}', '${groupType}')"
+                            ${percentage === 100 ? 'disabled' : ''}>
+                        <i class="fas fa-link"></i> Kết nối tất cả
+                    </button>
+                    <button class="btn-select-hub" onclick="openHubSelector('${escapeHtml(key)}', '${groupType}')">
+                        <i class="fas fa-star"></i> Chọn Hub
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Đếm số kết nối đã có trong nhóm
+function countExistingConnections(nodeIds) {
+    let count = 0;
+    for (let i = 0; i < nodeIds.length; i++) {
+        for (let j = i + 1; j < nodeIds.length; j++) {
+            if (graph.hasEdge(nodeIds[i], nodeIds[j]) || graph.hasEdge(nodeIds[j], nodeIds[i])) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+// Xem nhóm trên graph (filter + highlight)
+function viewGroupOnGraph(groupKey, groupType) {
+    let groups;
+    switch (groupType) {
+        case 'company': groups = smartConnectState.groups.byCompany; break;
+        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
+        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
+    }
+
+    const group = groups.find(([key]) => key === groupKey);
+    if (!group) return;
+
+    const nodeIds = group[1].map(n => n.nodeId);
+
+    // Apply search filter to show only this group
+    applySearchFilter(nodeIds);
+
+    // Close panel temporarily to see the graph
+    document.getElementById('smart-connect-panel').classList.add('minimized');
+
+    showToast(`Đang hiển thị ${nodeIds.length} người thuộc "${groupKey}"`, 'info');
+}
+
+// Kết nối tất cả trong nhóm với nhau
+function connectAllInGroup(groupKey, groupType) {
+    let groups;
+    switch (groupType) {
+        case 'company': groups = smartConnectState.groups.byCompany; break;
+        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
+        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
+    }
+
+    const group = groups.find(([key]) => key === groupKey);
+    if (!group) return;
+
+    const nodes = group[1];
+    const nodeIds = nodes.map(n => n.nodeId);
+
+    // Determine relationship type based on group type
+    let relationType = 'colleague';
+    if (groupType === 'company') relationType = 'colleague';
+    else if (groupType === 'email_domain') relationType = 'colleague';
+    else relationType = 'other';
+
+    let newConnections = 0;
+
+    // Connect all pairs
+    for (let i = 0; i < nodeIds.length; i++) {
+        for (let j = i + 1; j < nodeIds.length; j++) {
+            if (!graph.hasEdge(nodeIds[i], nodeIds[j]) && !graph.hasEdge(nodeIds[j], nodeIds[i])) {
+                graph.addEdge(nodeIds[i], nodeIds[j], {
+                    relationship: relationType,
+                    color: EDGE_TYPES[relationType].color,
+                    label: groupKey,
+                    size: 2
+                });
+                newConnections++;
+            }
+        }
+    }
+
+    if (newConnections > 0) {
+        applyColorsByDistance(false);
+        saveData();
+        renderSmartConnectGroups();
+        showToast(`Đã tạo ${newConnections} kết nối mới cho nhóm "${groupKey}"`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối!', 'info');
+    }
+
+    if (renderer) renderer.refresh();
+}
+
+// Mở selector để chọn hub node
+function openHubSelector(groupKey, groupType) {
+    let groups;
+    switch (groupType) {
+        case 'company': groups = smartConnectState.groups.byCompany; break;
+        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
+        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
+    }
+
+    const group = groups.find(([key]) => key === groupKey);
+    if (!group) return;
+
+    const nodes = group[1];
+
+    // Create hub selector modal
+    const modal = document.createElement('div');
+    modal.className = 'hub-selector-modal';
+    modal.innerHTML = `
+        <div class="hub-selector-content">
+            <h3><i class="fas fa-star"></i> Chọn Hub cho "${escapeHtml(groupKey)}"</h3>
+            <p class="hub-description">Hub là người trung tâm, tất cả người khác sẽ kết nối với Hub.</p>
+            <div class="hub-list">
+                ${nodes.map(n => {
+                    const layer = getLayerById(n.attrs.layer);
+                    const connections = graph.degree(n.nodeId);
+                    return `
+                        <div class="hub-option" data-node-id="${n.nodeId}">
+                            <div class="hub-avatar" style="background: ${layer.color}">${getInitials(n.label)}</div>
+                            <div class="hub-info">
+                                <div class="hub-name">${escapeHtml(n.label)}</div>
+                                <div class="hub-connections">${connections} kết nối hiện có</div>
+                            </div>
+                            <button class="btn-select-as-hub">Chọn làm Hub</button>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div class="hub-actions">
+                <button class="btn-cancel-hub">Hủy</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Event handlers
+    modal.querySelectorAll('.btn-select-as-hub').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const hubNodeId = e.target.closest('.hub-option').dataset.nodeId;
+            connectGroupToHub(groupKey, groupType, hubNodeId);
+            modal.remove();
+        });
+    });
+
+    modal.querySelector('.btn-cancel-hub').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Kết nối tất cả trong nhóm với Hub
+function connectGroupToHub(groupKey, groupType, hubNodeId) {
+    let groups;
+    switch (groupType) {
+        case 'company': groups = smartConnectState.groups.byCompany; break;
+        case 'email_domain': groups = smartConnectState.groups.byEmailDomain; break;
+        case 'phone_prefix': groups = smartConnectState.groups.byPhonePrefix; break;
+    }
+
+    const group = groups.find(([key]) => key === groupKey);
+    if (!group) return;
+
+    const nodeIds = group[1].map(n => n.nodeId).filter(id => id !== hubNodeId);
+
+    let relationType = groupType === 'company' ? 'colleague' : 'other';
+    let newConnections = 0;
+
+    nodeIds.forEach(nodeId => {
+        if (!graph.hasEdge(hubNodeId, nodeId) && !graph.hasEdge(nodeId, hubNodeId)) {
+            graph.addEdge(hubNodeId, nodeId, {
+                relationship: relationType,
+                color: EDGE_TYPES[relationType].color,
+                label: groupKey,
+                size: 2
+            });
+            newConnections++;
+        }
+    });
+
+    if (newConnections > 0) {
+        applyColorsByDistance(false);
+        saveData();
+        renderSmartConnectGroups();
+
+        const hubLabel = graph.getNodeAttribute(hubNodeId, 'label');
+        showToast(`Đã kết nối ${newConnections} người với Hub "${hubLabel}"`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối với Hub!', 'info');
+    }
+
+    if (renderer) renderer.refresh();
+}
+
+// Thay đổi loại nhóm hiển thị
+function changeGroupType(type) {
+    smartConnectState.currentGroupType = type;
+
+    // Update tab active state
+    document.querySelectorAll('.smart-connect-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.type === type);
+    });
+
+    renderSmartConnectGroups();
+}
+
+// Batch Connect Mode - Chọn nhiều node và kết nối với TÔI hoặc node khác
+function openBatchConnectMode() {
+    smartConnectState.isActive = true;
+    smartConnectState.selectedNodes.clear();
+
+    const panel = document.getElementById('batch-connect-panel');
+    if (panel) {
+        panel.classList.remove('hidden');
+        renderBatchConnectList();
+    }
+
+    showToast('Chọn các node cần kết nối, sau đó chọn đích kết nối', 'info');
+}
+
+function closeBatchConnectPanel() {
+    const panel = document.getElementById('batch-connect-panel');
+    if (panel) {
+        panel.classList.add('hidden');
+    }
+    smartConnectState.selectedNodes.clear();
+
+    // Clear highlights
+    graph.forEachNode((nodeId) => {
+        graph.setNodeAttribute(nodeId, 'highlighted', false);
+    });
+    if (renderer) renderer.refresh();
+}
+
+function renderBatchConnectList() {
+    const list = document.getElementById('batch-connect-list');
+    const searchInput = document.getElementById('batch-search-input');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase() : '';
+
+    const nodes = [];
+    graph.forEachNode((nodeId, attrs) => {
+        if (nodeId === 'center') return;
+
+        const label = (attrs.label || '').toLowerCase();
+        const company = (attrs.contact?.company || '').toLowerCase();
+
+        if (!searchQuery || label.includes(searchQuery) || company.includes(searchQuery)) {
+            nodes.push({ nodeId, attrs });
+        }
+    });
+
+    // Sort by label
+    nodes.sort((a, b) => (a.attrs.label || '').localeCompare(b.attrs.label || ''));
+
+    list.innerHTML = nodes.slice(0, 100).map(({ nodeId, attrs }) => {
+        const layer = getLayerById(attrs.layer);
+        const isSelected = smartConnectState.selectedNodes.has(nodeId);
+        const company = attrs.contact?.company || '';
+
+        return `
+            <div class="batch-node-item ${isSelected ? 'selected' : ''}" data-node-id="${nodeId}">
+                <input type="checkbox" ${isSelected ? 'checked' : ''}>
+                <div class="batch-node-avatar" style="background: ${layer.color}">${getInitials(attrs.label)}</div>
+                <div class="batch-node-info">
+                    <div class="batch-node-name">${escapeHtml(attrs.label)}</div>
+                    ${company ? `<div class="batch-node-company">${escapeHtml(company)}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (nodes.length > 100) {
+        list.innerHTML += `<div class="batch-more">Hiển thị 100/${nodes.length}. Dùng tìm kiếm để lọc.</div>`;
+    }
+
+    // Add click handlers
+    list.querySelectorAll('.batch-node-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.type === 'checkbox') return;
+
+            const nodeId = item.dataset.nodeId;
+            const checkbox = item.querySelector('input[type="checkbox"]');
+
+            if (smartConnectState.selectedNodes.has(nodeId)) {
+                smartConnectState.selectedNodes.delete(nodeId);
+                item.classList.remove('selected');
+                checkbox.checked = false;
+            } else {
+                smartConnectState.selectedNodes.add(nodeId);
+                item.classList.add('selected');
+                checkbox.checked = true;
+            }
+
+            updateBatchConnectCount();
+            highlightSelectedNodes();
+        });
+
+        item.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+            const nodeId = item.dataset.nodeId;
+
+            if (e.target.checked) {
+                smartConnectState.selectedNodes.add(nodeId);
+                item.classList.add('selected');
+            } else {
+                smartConnectState.selectedNodes.delete(nodeId);
+                item.classList.remove('selected');
+            }
+
+            updateBatchConnectCount();
+            highlightSelectedNodes();
+        });
+    });
+
+    updateBatchConnectCount();
+}
+
+function updateBatchConnectCount() {
+    const countEl = document.getElementById('batch-selected-count');
+    if (countEl) {
+        countEl.textContent = smartConnectState.selectedNodes.size;
+    }
+}
+
+function highlightSelectedNodes() {
+    graph.forEachNode((nodeId) => {
+        const isSelected = smartConnectState.selectedNodes.has(nodeId);
+        graph.setNodeAttribute(nodeId, 'highlighted', isSelected);
+    });
+    if (renderer) renderer.refresh();
+}
+
+// Kết nối tất cả selected nodes với TÔI (center)
+function batchConnectToCenter() {
+    const selectedNodes = Array.from(smartConnectState.selectedNodes);
+
+    if (selectedNodes.length === 0) {
+        showToast('Chưa chọn node nào!', 'warning');
+        return;
+    }
+
+    let newConnections = 0;
+
+    selectedNodes.forEach(nodeId => {
+        if (!graph.hasEdge('center', nodeId) && !graph.hasEdge(nodeId, 'center')) {
+            graph.addEdge('center', nodeId, {
+                relationship: 'other',
+                color: EDGE_TYPES.other.color,
+                label: '',
+                size: 2
+            });
+            newConnections++;
+        }
+    });
+
+    if (newConnections > 0) {
+        applyColorsByDistance(false);
+        saveData();
+        showToast(`Đã kết nối ${newConnections} người với TÔI`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối với TÔI!', 'info');
+    }
+
+    smartConnectState.selectedNodes.clear();
+    renderBatchConnectList();
+    if (renderer) renderer.refresh();
+}
+
+// Kết nối selected nodes với nhau (all pairs)
+function batchConnectAllPairs() {
+    const selectedNodes = Array.from(smartConnectState.selectedNodes);
+
+    if (selectedNodes.length < 2) {
+        showToast('Cần chọn ít nhất 2 node!', 'warning');
+        return;
+    }
+
+    let newConnections = 0;
+
+    for (let i = 0; i < selectedNodes.length; i++) {
+        for (let j = i + 1; j < selectedNodes.length; j++) {
+            if (!graph.hasEdge(selectedNodes[i], selectedNodes[j]) &&
+                !graph.hasEdge(selectedNodes[j], selectedNodes[i])) {
+                graph.addEdge(selectedNodes[i], selectedNodes[j], {
+                    relationship: 'other',
+                    color: EDGE_TYPES.other.color,
+                    label: '',
+                    size: 2
+                });
+                newConnections++;
+            }
+        }
+    }
+
+    if (newConnections > 0) {
+        applyColorsByDistance(false);
+        saveData();
+        showToast(`Đã tạo ${newConnections} kết nối giữa ${selectedNodes.length} người`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối với nhau!', 'info');
+    }
+
+    smartConnectState.selectedNodes.clear();
+    renderBatchConnectList();
+    if (renderer) renderer.refresh();
+}
+
+// Select all visible nodes
+function batchSelectAll() {
+    const list = document.getElementById('batch-connect-list');
+    list.querySelectorAll('.batch-node-item').forEach(item => {
+        const nodeId = item.dataset.nodeId;
+        smartConnectState.selectedNodes.add(nodeId);
+        item.classList.add('selected');
+        item.querySelector('input[type="checkbox"]').checked = true;
+    });
+    updateBatchConnectCount();
+    highlightSelectedNodes();
+}
+
+// Deselect all
+function batchDeselectAll() {
+    smartConnectState.selectedNodes.clear();
+    const list = document.getElementById('batch-connect-list');
+    list.querySelectorAll('.batch-node-item').forEach(item => {
+        item.classList.remove('selected');
+        item.querySelector('input[type="checkbox"]').checked = false;
+    });
+    updateBatchConnectCount();
+    highlightSelectedNodes();
+}
+
+// Escape HTML helper
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==========================================
 // PHẦN 3: HELPER FUNCTIONS
 // ==========================================
 
@@ -3971,6 +4581,10 @@ document.getElementById('classify-filter')?.addEventListener('input', (e) => {
     updateQuickClassifyList(e.target.value);
 });
 document.getElementById('btn-bulk-assign')?.addEventListener('click', bulkAssignSelectedNodes);
+
+// Smart Connect & Batch Connect handlers (v4.2)
+document.getElementById('btn-smart-connect')?.addEventListener('click', openSmartConnectPanel);
+document.getElementById('btn-batch-connect')?.addEventListener('click', openBatchConnectMode);
 
 // Export Modal handlers (v4.0)
 document.getElementById('btn-x-close-export')?.addEventListener('click', closeExportModal);
