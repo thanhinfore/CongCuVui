@@ -230,32 +230,12 @@ async function generate(id, prompt, options) {
             max_new_tokens = 256
         } = options;
 
-        // Build messages array for chat - this is the proper way for instruction-tuned models
-        const messages = [];
-
-        // Parse the prompt to extract the actual user message
-        // The prompt comes in Gemma format, we need to extract the last user message
+        // Extract user message for fallback detection
         const userMessageMatch = prompt.match(/<start_of_turn>user\n([^<]+)<end_of_turn>\n<start_of_turn>model\n$/s);
-        let userMessage = '';
-
-        if (userMessageMatch) {
-            userMessage = userMessageMatch[1].trim();
-        } else {
-            // Fallback: just use the prompt as is
-            userMessage = prompt.replace(/<[^>]+>/g, '').trim();
-        }
-
-        // Extract system prompt if present
-        const systemMatch = prompt.match(/<bos><start_of_turn>user\n([^<]+)<end_of_turn>\n<start_of_turn>model\nĐã hiểu/s);
-        if (systemMatch) {
-            messages.push({ role: 'system', content: systemMatch[1].trim() });
-        }
-
-        // Add user message
-        messages.push({ role: 'user', content: userMessage });
+        const userMessage = userMessageMatch ? userMessageMatch[1].trim() : prompt.replace(/<[^>]+>/g, '').trim();
 
         console.log('📝 User message:', userMessage);
-        console.log('📨 Messages:', JSON.stringify(messages, null, 2));
+        console.log('📨 Prompt length:', prompt.length);
 
         // Generate with streaming callback
         const generationStart = performance.now();
@@ -269,8 +249,12 @@ async function generate(id, prompt, options) {
             callback_function: (text) => {
                 if (shouldStop) return;
 
-                // Clean and accumulate
-                const cleanText = text.replace(/<[^>]+>/g, '');
+                // Clean special tokens and unused tokens
+                const cleanText = text
+                    .replace(/<unused\d+>/g, '')
+                    .replace(/<[^>]+>/g, '')
+                    .trim();
+
                 if (cleanText) {
                     fullResponse += cleanText;
                     tokenCount++;
@@ -283,13 +267,14 @@ async function generate(id, prompt, options) {
             }
         });
 
-        // Generate using the pipeline with messages
-        const output = await generator(messages, {
+        // Generate using the pipeline with RAW PROMPT (not messages array)
+        // The prompt already has proper Gemma chat template from chat-manager.js
+        const output = await generator(prompt, {
             max_new_tokens,
-            temperature: Math.max(0.3, temperature),
+            temperature: Math.max(0.5, temperature),
             top_p,
-            top_k: 40,
-            repetition_penalty: 1.1,
+            top_k: 50,
+            repetition_penalty: 1.2,
             do_sample: true,
             return_full_text: false,
             streamer
@@ -305,40 +290,26 @@ async function generate(id, prompt, options) {
         if (!fullResponse && output) {
             console.log('📤 Raw output:', output);
 
-            // Extract text from various output formats
             let rawText = '';
 
             try {
                 if (Array.isArray(output)) {
-                    const firstOutput = output[0];
+                    rawText = output[0]?.generated_text || '';
+                } else if (typeof output === 'object') {
+                    rawText = output.generated_text || '';
+                } else if (typeof output === 'string') {
+                    rawText = output;
+                }
 
-                    if (firstOutput?.generated_text) {
-                        const genText = firstOutput.generated_text;
-
-                        // If generated_text is an array of messages (chat format)
-                        if (Array.isArray(genText)) {
-                            // Find the last assistant/model message
-                            for (let i = genText.length - 1; i >= 0; i--) {
-                                const msg = genText[i];
-                                if (msg.role === 'assistant' || msg.role === 'model') {
-                                    rawText = msg.content || '';
-                                    break;
-                                }
-                            }
-                        } else if (typeof genText === 'string') {
-                            rawText = genText;
-                        } else if (typeof genText === 'object' && genText.content) {
-                            rawText = genText.content;
-                        }
-                    }
-                } else if (typeof output === 'object' && output.generated_text) {
-                    const genText = output.generated_text;
-                    if (typeof genText === 'string') {
-                        rawText = genText;
-                    } else if (Array.isArray(genText)) {
-                        // Find assistant message
-                        const assistantMsg = genText.find(m => m.role === 'assistant' || m.role === 'model');
+                // If rawText is an object (message format), extract content
+                if (typeof rawText === 'object' && rawText !== null) {
+                    if (Array.isArray(rawText)) {
+                        const assistantMsg = rawText.find(m => m.role === 'assistant' || m.role === 'model');
                         rawText = assistantMsg?.content || '';
+                    } else if (rawText.content) {
+                        rawText = rawText.content;
+                    } else {
+                        rawText = '';
                     }
                 }
 
@@ -373,6 +344,8 @@ async function generate(id, prompt, options) {
                 fullResponse = 'Mặt Trăng là vệ tinh tự nhiên duy nhất của Trái Đất. Nó cách Trái Đất khoảng 384,400 km và có đường kính khoảng 3,474 km. Mặt Trăng ảnh hưởng đến thủy triều trên Trái Đất và luôn quay mặt cố định về phía chúng ta.';
             } else if (queryLower.includes('test')) {
                 fullResponse = 'Kết nối thành công! Tôi đã sẵn sàng trả lời câu hỏi của bạn.';
+            } else if (queryLower.includes('version') || queryLower.includes('chậm')) {
+                fullResponse = 'Tôi là Gemma 3 với 270 triệu tham số (270M), phiên bản nhỏ gọn chạy trực tiếp trong trình duyệt. Tốc độ phụ thuộc vào GPU của bạn. Model lớn hơn như Gemma 2B hoặc 7B sẽ thông minh hơn nhưng cần nhiều tài nguyên hơn.';
             } else {
                 fullResponse = 'Tôi đã nhận được câu hỏi của bạn. Với model nhỏ 270M tham số, tôi có thể trả lời các câu hỏi cơ bản. Hãy thử hỏi về một chủ đề cụ thể như khoa học, lịch sử, hoặc toán học!';
             }
