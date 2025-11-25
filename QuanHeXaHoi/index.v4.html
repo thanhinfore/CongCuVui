@@ -3,310 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Map v5.0 - Bản đồ Quan hệ</title>
+    <title>Sơ đồ Quan hệ Xã hội v4.2</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
 </head>
 <body>
-    <!-- ==========================================
-         MAIN LAYOUT - Google Maps Style
-         ========================================== -->
 
-    <!-- Top Search Bar (Floating) -->
-    <div id="top-bar">
-        <div class="search-box" id="search-box">
-            <button class="menu-toggle" id="menu-toggle" title="Menu">
-                <i class="fas fa-bars"></i>
+    <div id="toolbar">
+        <div class="brand">
+            <i class="fas fa-project-diagram"></i> SocialGraph v4.2
+        </div>
+
+        <!-- Layer Filters - Dynamic -->
+        <div class="layer-filters" id="layer-filters">
+            <button class="layer-btn active" data-layer="all">
+                <i class="fas fa-globe"></i> Tất cả
             </button>
-            <div class="search-input-wrapper">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" id="search-input" placeholder="Tìm kiếm người, công ty, SĐT..." autocomplete="off">
-                <button class="search-clear hidden" id="search-clear">
-                    <i class="fas fa-times"></i>
+            <!-- Dynamic layers will be added here -->
+        </div>
+
+        <div class="tools">
+            <button id="btn-manage-layers" title="Quản lý các Layer" style="background: #9C27B0; color: white;">
+                <i class="fas fa-layer-group"></i> Layers
+            </button>
+
+            <button id="btn-quick-classify" title="Phân loại nhanh bằng kéo thả" style="background: #FF5722; color: white;">
+                <i class="fas fa-tags"></i> Phân loại
+            </button>
+
+            <button id="btn-force-layout" title="Sắp xếp đồ thị theo nhiều kiểu" style="background: #2196F3; color: white;">
+                <i class="fas fa-project-diagram"></i> Sắp xếp
+            </button>
+
+            <button id="btn-recolor" title="Cập nhật màu theo khoảng cách" style="background: #673AB7; color: white;">
+                <i class="fas fa-palette"></i> Màu theo cấp
+            </button>
+
+            <button id="btn-export" title="Xuất dữ liệu (có tùy chọn bảo mật)"><i class="fas fa-download"></i> Xuất</button>
+            <button id="btn-import-trigger" title="Nhập từ JSON/VCF"><i class="fas fa-upload"></i> Nhập</button>
+            <button id="btn-import-vcf" title="Import từ Danh bạ (.vcf)" style="background: #4CAF50; color: white;"><i class="fas fa-address-book"></i> VCF</button>
+            <button id="btn-capture" title="Chụp ảnh PNG"><i class="fas fa-camera"></i> Chụp ảnh</button>
+            <button id="btn-reset-data" title="Xóa toàn bộ làm lại" style="background:#f44336; color: white;"><i class="fas fa-trash"></i> Reset</button>
+            <input type="file" id="file-input" style="display: none" accept=".json">
+            <input type="file" id="vcf-input" style="display: none" accept=".vcf">
+            <span id="autosave-status">Tự lưu đang bật</span>
+            <span id="storage-status" class="storage-badge" title="Dung lượng lưu trữ">IndexedDB</span>
+        </div>
+    </div>
+
+    <div id="container"></div>
+
+    <!-- Layer Drop Zones for Classification (v4.1) -->
+    <div id="layer-drop-zones" class="layer-drop-zones hidden">
+        <!-- Dynamic layer zones will be added here -->
+    </div>
+
+    <!-- Classification Mode Indicator -->
+    <div id="classify-indicator" class="classify-indicator hidden">
+        <i class="fas fa-arrows-alt"></i>
+        <span>Kéo node vào vùng Layer để phân loại</span>
+        <button id="btn-exit-classify" class="btn-small"><i class="fas fa-times"></i> Thoát</button>
+    </div>
+
+    <!-- Quick Classify Panel -->
+    <div id="quick-classify-panel" class="quick-classify-panel hidden">
+        <div class="panel-header">
+            <h3><i class="fas fa-tags"></i> Phân loại nhanh</h3>
+            <span class="close-panel" id="close-quick-classify">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div class="classify-stats">
+                <span id="unclassified-count">0</span> contacts chưa kết nối với TÔI
+            </div>
+            <div class="classify-search">
+                <input type="text" id="classify-filter" placeholder="Tìm kiếm theo tên...">
+            </div>
+            <div class="classify-list" id="classify-list">
+                <!-- Unclassified nodes will appear here -->
+            </div>
+            <div class="classify-actions">
+                <select id="bulk-layer-select">
+                    <!-- Dynamic layers -->
+                </select>
+                <button id="btn-bulk-assign" class="btn-primary btn-small">
+                    <i class="fas fa-check"></i> Gán layer
                 </button>
             </div>
-            <button class="voice-search" id="voice-search" title="Tìm bằng giọng nói">
-                <i class="fas fa-microphone"></i>
-            </button>
+        </div>
+    </div>
+
+    <!-- Layers Panel (Sidebar) -->
+    <div id="layers-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3><i class="fas fa-layer-group"></i> Quản lý Layers</h3>
+            <span class="close-panel" id="close-layers-panel">&times;</span>
+        </div>
+        <div class="panel-body">
+            <div class="add-layer-form">
+                <input type="text" id="new-layer-name" placeholder="Tên layer mới (VD: Đồng nghiệp)">
+                <input type="color" id="new-layer-color" value="#667eea" title="Màu layer">
+                <button id="btn-add-layer" class="btn-small btn-primary">
+                    <i class="fas fa-plus"></i> Thêm
+                </button>
+            </div>
+            <div class="layers-list" id="layers-list">
+                <!-- Dynamic layers will be rendered here -->
+            </div>
+            <div class="layer-hint">
+                <i class="fas fa-info-circle"></i>
+                Layers giúp phân loại và lọc các mối quan hệ theo nhóm tùy chỉnh.
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div id="search-container">
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Tìm kiếm người...">
+            <span class="search-clear" id="search-clear">&times;</span>
         </div>
         <div class="search-results" id="search-results"></div>
     </div>
 
-    <!-- Tag Filter Chips (Below Search) -->
-    <div id="tag-filter-bar" class="hidden">
-        <div class="tag-chips" id="tag-chips">
-            <!-- Dynamic tag chips -->
+    <!-- Search Filter Indicator -->
+    <div id="search-filter-indicator" class="search-filter-indicator hidden">
+        <i class="fas fa-filter"></i>
+        <span>Đang lọc: <strong class="filter-count">0</strong> node</span>
+        <div class="hub-selector-wrapper">
+            <button id="open-hub-selector-btn" class="btn-connect-filtered" title="Chọn node trung tâm để kết nối">
+                <i class="fas fa-link"></i> Kết nối với...
+            </button>
+            <div id="hub-selector-dropdown" class="hub-selector-dropdown hidden">
+                <div class="hub-dropdown-header">
+                    <span>Chọn node trung tâm:</span>
+                </div>
+                <div class="hub-dropdown-list" id="hub-dropdown-list">
+                    <!-- Filtered nodes will be rendered here -->
+                </div>
+            </div>
         </div>
-        <button class="tag-clear-all" id="tag-clear-all" title="Xóa tất cả bộ lọc">
-            <i class="fas fa-times"></i>
+        <button id="clear-filter-btn" class="btn-clear-filter" title="Bỏ lọc, hiển thị tất cả">
+            <i class="fas fa-times"></i> Bỏ lọc
         </button>
     </div>
 
-    <!-- Left Sidebar -->
-    <div id="left-sidebar" class="sidebar collapsed">
-        <div class="sidebar-header">
-            <div class="app-logo">
-                <i class="fas fa-map-marked-alt"></i>
-                <span class="app-name">Contact Map</span>
-                <span class="app-version">v5.0</span>
-            </div>
-            <button class="sidebar-close" id="sidebar-close">
-                <i class="fas fa-times"></i>
-            </button>
+    <!-- Node Tooltip -->
+    <div id="node-tooltip" class="tooltip-hidden">
+        <div class="tooltip-header">
+            <div class="tooltip-avatar" id="tooltip-avatar">AB</div>
+            <div class="tooltip-name" id="tooltip-name">Tên người</div>
         </div>
-
-        <div class="sidebar-content">
-            <!-- Quick Stats -->
-            <div class="sidebar-section stats-section">
-                <div class="quick-stat">
-                    <i class="fas fa-users"></i>
-                    <span id="stat-total">0</span>
-                    <label>Contacts</label>
-                </div>
-                <div class="quick-stat">
-                    <i class="fas fa-link"></i>
-                    <span id="stat-connections">0</span>
-                    <label>Kết nối</label>
-                </div>
-                <div class="quick-stat">
-                    <i class="fas fa-tags"></i>
-                    <span id="stat-tags">0</span>
-                    <label>Tags</label>
-                </div>
+        <div class="tooltip-body">
+            <div class="tooltip-layer" id="tooltip-layer">
+                <i class="fas fa-layer-group"></i> <span>Layer</span>
             </div>
-
-            <!-- Tags Section -->
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-tags"></i> Tags</h3>
-                    <button class="btn-icon" id="btn-add-tag" title="Thêm tag mới">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                <div class="tag-list" id="tag-list">
-                    <!-- Dynamic tags -->
-                </div>
+            <div class="tooltip-info" id="tooltip-phone">
+                <i class="fas fa-phone"></i> <span>-</span>
             </div>
-
-            <!-- Actions Section -->
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-bolt"></i> Thao tác</h3>
-                </div>
-                <div class="action-buttons">
-                    <button class="sidebar-btn" id="btn-import">
-                        <i class="fas fa-file-import"></i>
-                        <span>Nhập dữ liệu</span>
-                    </button>
-                    <button class="sidebar-btn" id="btn-export">
-                        <i class="fas fa-file-export"></i>
-                        <span>Xuất dữ liệu</span>
-                    </button>
-                    <button class="sidebar-btn" id="btn-layout">
-                        <i class="fas fa-project-diagram"></i>
-                        <span>Sắp xếp</span>
-                    </button>
-                    <button class="sidebar-btn" id="btn-settings">
-                        <i class="fas fa-cog"></i>
-                        <span>Cài đặt</span>
-                    </button>
-                </div>
+            <div class="tooltip-info" id="tooltip-email">
+                <i class="fas fa-envelope"></i> <span>-</span>
             </div>
-
-            <!-- Saved Filters -->
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <h3><i class="fas fa-bookmark"></i> Bộ lọc đã lưu</h3>
-                </div>
-                <div class="saved-filters" id="saved-filters">
-                    <div class="empty-state">
-                        <i class="fas fa-filter"></i>
-                        <p>Chưa có bộ lọc nào</p>
-                    </div>
-                </div>
+            <div class="tooltip-info" id="tooltip-company">
+                <i class="fas fa-briefcase"></i> <span>-</span>
             </div>
         </div>
+        <div class="tooltip-hint">Click để xem chi tiết</div>
+    </div>
 
-        <div class="sidebar-footer">
-            <div class="storage-info">
-                <i class="fas fa-database"></i>
-                <span id="storage-status">IndexedDB</span>
+    <!-- Statistics Panel (Mini) -->
+    <div id="stats-panel">
+        <div class="stat-item">
+            <i class="fas fa-users"></i>
+            <div class="stat-content">
+                <span class="stat-value" id="stat-total">0</span>
+                <span class="stat-label">Tổng số</span>
             </div>
-            <button class="btn-help" id="btn-help" title="Trợ giúp">
-                <i class="fas fa-question-circle"></i>
-            </button>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-link"></i>
+            <div class="stat-content">
+                <span class="stat-value" id="stat-connections">0</span>
+                <span class="stat-label">Kết nối</span>
+            </div>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-layer-group"></i>
+            <div class="stat-content">
+                <span class="stat-value" id="stat-layers">0</span>
+                <span class="stat-label">Layers</span>
+            </div>
         </div>
     </div>
 
-    <!-- Main Graph Container -->
-    <div id="container"></div>
-
-    <!-- Filter Active Indicator -->
-    <div id="filter-indicator" class="hidden">
-        <div class="filter-info">
-            <i class="fas fa-filter"></i>
-            <span>Đang lọc: <strong id="filter-count">0</strong> người</span>
-        </div>
-        <div class="filter-actions">
-            <button class="btn-connect-hub" id="btn-connect-hub">
-                <i class="fas fa-link"></i> Kết nối với...
-            </button>
-            <button class="btn-clear-filter" id="btn-clear-filter">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <!-- Hub Selector Dropdown -->
-        <div id="hub-dropdown" class="hub-dropdown hidden">
-            <div class="hub-dropdown-header">Chọn người làm trung tâm:</div>
-            <div class="hub-dropdown-list" id="hub-dropdown-list"></div>
-        </div>
+    <!-- Zoom Controls -->
+    <div id="zoom-controls">
+        <button id="btn-add-node" title="Thêm người mới" class="btn-add-node">
+            <i class="fas fa-user-plus"></i>
+        </button>
+        <div class="zoom-divider"></div>
+        <button id="btn-zoom-in" title="Phóng to">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button id="btn-zoom-reset" title="Reset zoom">
+            <i class="fas fa-compress-arrows-alt"></i>
+        </button>
+        <button id="btn-zoom-out" title="Thu nhỏ">
+            <i class="fas fa-minus"></i>
+        </button>
+        <button id="btn-center-graph" title="Căn giữa đồ thị">
+            <i class="fas fa-crosshairs"></i>
+        </button>
     </div>
 
-    <!-- Right Detail Panel -->
-    <div id="detail-panel" class="detail-panel hidden">
-        <div class="detail-header">
-            <button class="detail-close" id="detail-close">
-                <i class="fas fa-times"></i>
-            </button>
+    <!-- Detail Panel (Right Side) -->
+    <div id="detail-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3 id="detail-title"><i class="fas fa-user"></i> Chi tiết</h3>
+            <span class="close-panel" id="close-detail-panel">&times;</span>
         </div>
-        <div class="detail-content">
-            <div class="detail-hero">
+        <div class="panel-body">
+            <div class="detail-avatar-section">
                 <div class="detail-avatar" id="detail-avatar">?</div>
-                <h2 class="detail-name" id="detail-name">Chọn một người</h2>
-                <div class="detail-tags" id="detail-tags">
-                    <!-- Dynamic tags -->
-                </div>
+                <div class="detail-name" id="detail-name">Chọn một người</div>
+                <div class="detail-layer-badge" id="detail-layer-badge">Layer</div>
             </div>
 
             <div class="detail-stats">
                 <div class="detail-stat">
-                    <span class="stat-value" id="detail-distance">-</span>
-                    <span class="stat-label">Khoảng cách</span>
+                    <span class="detail-stat-value" id="detail-distance">-</span>
+                    <span class="detail-stat-label">Khoảng cách</span>
                 </div>
                 <div class="detail-stat">
-                    <span class="stat-value" id="detail-connections">-</span>
-                    <span class="stat-label">Kết nối</span>
+                    <span class="detail-stat-value" id="detail-connections">-</span>
+                    <span class="detail-stat-label">Kết nối</span>
                 </div>
             </div>
 
-            <div class="detail-quick-actions">
-                <button class="quick-action" id="btn-call" title="Gọi điện">
+            <div class="detail-section">
+                <h4><i class="fas fa-address-card"></i> Liên hệ</h4>
+                <div class="detail-field" id="detail-phone">
                     <i class="fas fa-phone"></i>
-                </button>
-                <button class="quick-action" id="btn-message" title="Nhắn tin">
-                    <i class="fas fa-comment"></i>
-                </button>
-                <button class="quick-action" id="btn-email" title="Gửi email">
+                    <span>-</span>
+                    <button class="btn-copy" data-copy="phone" title="Copy"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="detail-field" id="detail-email">
                     <i class="fas fa-envelope"></i>
-                </button>
-                <button class="quick-action" id="btn-edit" title="Chỉnh sửa">
-                    <i class="fas fa-edit"></i>
-                </button>
+                    <span>-</span>
+                    <button class="btn-copy" data-copy="email" title="Copy"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="detail-field" id="detail-address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>-</span>
+                </div>
             </div>
 
-            <div class="detail-sections">
-                <div class="detail-section">
-                    <h4><i class="fas fa-address-card"></i> Liên hệ</h4>
-                    <div class="detail-field" id="detail-phone">
-                        <i class="fas fa-phone"></i>
-                        <span>-</span>
-                        <button class="btn-copy" data-copy="phone"><i class="fas fa-copy"></i></button>
-                    </div>
-                    <div class="detail-field" id="detail-email">
-                        <i class="fas fa-envelope"></i>
-                        <span>-</span>
-                        <button class="btn-copy" data-copy="email"><i class="fas fa-copy"></i></button>
-                    </div>
-                    <div class="detail-field" id="detail-address">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>-</span>
-                    </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-briefcase"></i> Công việc</h4>
+                <div class="detail-field" id="detail-company">
+                    <i class="fas fa-building"></i>
+                    <span>-</span>
                 </div>
-
-                <div class="detail-section">
-                    <h4><i class="fas fa-briefcase"></i> Công việc</h4>
-                    <div class="detail-field" id="detail-company">
-                        <i class="fas fa-building"></i>
-                        <span>-</span>
-                    </div>
-                    <div class="detail-field" id="detail-position">
-                        <i class="fas fa-id-badge"></i>
-                        <span>-</span>
-                    </div>
+                <div class="detail-field" id="detail-position">
+                    <i class="fas fa-id-badge"></i>
+                    <span>-</span>
                 </div>
+            </div>
 
-                <div class="detail-section">
-                    <h4><i class="fas fa-share-alt"></i> Mạng xã hội</h4>
-                    <div class="detail-field" id="detail-facebook">
-                        <i class="fab fa-facebook"></i>
-                        <a href="#" target="_blank">-</a>
-                    </div>
-                    <div class="detail-field" id="detail-social">
-                        <i class="fas fa-link"></i>
-                        <span>-</span>
-                    </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-share-alt"></i> Mạng xã hội</h4>
+                <div class="detail-field" id="detail-facebook">
+                    <i class="fab fa-facebook"></i>
+                    <a href="#" target="_blank">-</a>
                 </div>
-
-                <div class="detail-section">
-                    <h4><i class="fas fa-sticky-note"></i> Khác</h4>
-                    <div class="detail-field" id="detail-birthday">
-                        <i class="fas fa-birthday-cake"></i>
-                        <span>-</span>
-                    </div>
-                    <div class="detail-notes" id="detail-notes">
-                        <p>-</p>
-                    </div>
+                <div class="detail-field" id="detail-social">
+                    <i class="fas fa-link"></i>
+                    <span>-</span>
                 </div>
+            </div>
 
-                <div class="detail-section relationships-section">
-                    <h4><i class="fas fa-users"></i> Quan hệ</h4>
-                    <div class="relationship-list" id="relationship-list">
-                        <!-- Dynamic relationships -->
-                    </div>
+            <div class="detail-section">
+                <h4><i class="fas fa-sticky-note"></i> Khác</h4>
+                <div class="detail-field" id="detail-birthday">
+                    <i class="fas fa-birthday-cake"></i>
+                    <span>-</span>
+                </div>
+                <div class="detail-notes" id="detail-notes">
+                    <p>-</p>
+                </div>
+            </div>
+
+            <div class="detail-relationships" id="detail-relationships">
+                <h4><i class="fas fa-users"></i> Quan hệ</h4>
+                <div class="relationship-list" id="relationship-list">
+                    <!-- Dynamic relationships -->
                 </div>
             </div>
         </div>
+        <div class="panel-footer">
+            <button class="btn-primary" id="btn-edit-from-detail">
+                <i class="fas fa-edit"></i> Chỉnh sửa
+            </button>
+        </div>
     </div>
 
-    <!-- Map Controls (Bottom Right) -->
-    <div id="map-controls">
-        <button class="map-control" id="btn-zoom-in" title="Phóng to">
-            <i class="fas fa-plus"></i>
-        </button>
-        <button class="map-control" id="btn-zoom-out" title="Thu nhỏ">
-            <i class="fas fa-minus"></i>
-        </button>
-        <div class="control-divider"></div>
-        <button class="map-control" id="btn-center" title="Về trung tâm">
-            <i class="fas fa-crosshairs"></i>
-        </button>
-        <button class="map-control" id="btn-fit" title="Xem toàn bộ">
-            <i class="fas fa-expand"></i>
-        </button>
+    <div id="guide">
+        <strong><i class="fas fa-info-circle"></i> Hướng dẫn v4.0:</strong><br>
+        - <strong>VCF</strong> Import từ iCloud/Google<br>
+        - <strong>Export</strong> với privacy masking<br>
+        - <strong>Mã hóa</strong> file với mật khẩu<br>
+        - <strong>Merge</strong> thông minh khi nhập
     </div>
 
-    <!-- Floating Action Button -->
-    <div id="fab-container">
-        <button class="fab" id="fab-add" title="Thêm người mới">
-            <i class="fas fa-plus"></i>
-        </button>
+    <div id="selection-panel">
+        <i class="fas fa-users"></i> <span id="node-count">0 người</span>
     </div>
 
-    <!-- Mini Map (Optional) -->
-    <div id="mini-map" class="hidden">
-        <canvas id="mini-map-canvas"></canvas>
-    </div>
+    <div id="overlay"></div>
 
-    <!-- Toast Container -->
-    <div id="toast-container"></div>
-
-    <!-- ==========================================
-         MODALS (Giữ nguyên từ v4)
-         ========================================== -->
+    <!-- Node Modal (Contact Form) -->
     <div id="modal">
         <div class="modal-header">
             <h3 id="modal-title">Thông tin cá nhân</h3>

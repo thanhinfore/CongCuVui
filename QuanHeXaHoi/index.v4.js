@@ -3134,8 +3134,8 @@ function clearSearchFilter() {
     state.searchFilterActive = false;
     state.searchFilteredNodes = null;
 
-    // Update filter indicator (v5.0: using new ID)
-    const filterIndicator = document.getElementById('filter-indicator');
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
     if (filterIndicator) {
         filterIndicator.classList.add('hidden');
     }
@@ -3151,11 +3151,11 @@ function applySearchFilter(nodeIds) {
     state.searchFilteredNodes = new Set(nodeIds);
     state.searchFilterActive = true;
 
-    // Update filter indicator (v5.0: using new IDs)
-    const filterIndicator = document.getElementById('filter-indicator');
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
     if (filterIndicator) {
         filterIndicator.classList.remove('hidden');
-        const countSpan = document.getElementById('filter-count');
+        const countSpan = filterIndicator.querySelector('.filter-count');
         if (countSpan) {
             countSpan.textContent = nodeIds.length;
         }
@@ -3169,9 +3169,9 @@ function applySearchFilter(nodeIds) {
     showToast(`Đang hiển thị ${nodeIds.length} node khớp với tìm kiếm`, 'info');
 }
 
-// Toggle hub selector dropdown (v5.0: using new ID)
+// Toggle hub selector dropdown
 function toggleHubSelectorDropdown() {
-    const dropdown = document.getElementById('hub-dropdown');
+    const dropdown = document.getElementById('hub-selector-dropdown');
     if (!dropdown) return;
 
     const isHidden = dropdown.classList.contains('hidden');
@@ -3185,22 +3185,22 @@ function toggleHubSelectorDropdown() {
     }
 }
 
-// Close hub selector dropdown (v5.0: using new ID)
+// Close hub selector dropdown
 function closeHubSelectorDropdown() {
-    const dropdown = document.getElementById('hub-dropdown');
+    const dropdown = document.getElementById('hub-selector-dropdown');
     if (dropdown) {
         dropdown.classList.add('hidden');
     }
 }
 
-// Render list of filtered nodes in the hub dropdown (v5.0: updated CSS classes)
+// Render list of filtered nodes in the hub dropdown
 function renderHubDropdownList() {
     const list = document.getElementById('hub-dropdown-list');
     if (!list || !state.searchFilteredNodes) return;
 
     const filteredNodes = Array.from(state.searchFilteredNodes);
 
-    // Build list items with v5.0 CSS classes
+    // Build list items
     list.innerHTML = filteredNodes.map(nodeId => {
         const attrs = graph.getNodeAttributes(nodeId);
         const label = attrs.label || nodeId;
@@ -3209,8 +3209,11 @@ function renderHubDropdownList() {
 
         return `
             <div class="hub-dropdown-item" data-node-id="${nodeId}">
-                <div class="avatar" style="background: ${layer.color}">${getInitials(label)}</div>
-                <span class="name">${label}</span>
+                <div class="hub-item-avatar" style="background: ${layer.color}">${getInitials(label)}</div>
+                <div class="hub-item-info">
+                    <div class="hub-item-name">${label}</div>
+                    <div class="hub-item-detail">${connections} kết nối</div>
+                </div>
             </div>
         `;
     }).join('');
@@ -3263,11 +3266,12 @@ function connectFilteredNodesToHub(hubNodeId) {
     if (renderer) renderer.refresh();
 }
 
-// v5.0: Updated setupSearch for Google Maps-style UI
 function setupSearch() {
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
     const searchResults = document.getElementById('search-results');
+    const filterBtn = document.getElementById('search-filter-btn');
+    const filterIndicator = document.getElementById('search-filter-indicator');
 
     if (!searchInput) return;
 
@@ -3277,13 +3281,11 @@ function setupSearch() {
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
 
-        // Toggle clear button (v5.0: using hidden class)
-        if (searchClear) {
-            searchClear.classList.toggle('hidden', query.length === 0);
-        }
+        // Toggle clear button
+        searchClear.classList.toggle('visible', query.length > 0);
 
         if (query.length < 1) {
-            searchResults.classList.remove('active');
+            searchResults.classList.remove('visible');
             currentSearchResults = [];
             return;
         }
@@ -3307,16 +3309,16 @@ function setupSearch() {
 
         currentSearchResults = results;
 
-        // Render results with v5.0 CSS classes
+        // Render results
         if (results.length === 0) {
-            searchResults.innerHTML = '<div class="search-result-item" style="justify-content:center;color:var(--text-muted);">Không tìm thấy kết quả</div>';
+            searchResults.innerHTML = '<div class="search-no-results">Không tìm thấy kết quả</div>';
         } else {
             // Filter action bar at top
             const filterBar = `
-                <div class="search-result-item" style="background: var(--primary-light); justify-content: space-between;">
-                    <span style="color: var(--primary); font-weight: 500;">${results.length} kết quả</span>
-                    <button class="btn btn-primary" id="apply-filter-btn" style="padding: 6px 12px; font-size: 12px;">
-                        <i class="fas fa-filter"></i> Lọc
+                <div class="search-filter-bar">
+                    <span class="search-result-count">${results.length} kết quả</span>
+                    <button class="search-filter-action" id="apply-filter-btn" title="Lọc hiển thị chỉ các node này">
+                        <i class="fas fa-filter"></i> Lọc ${results.length} node
                     </button>
                 </div>
             `;
@@ -3327,10 +3329,10 @@ function setupSearch() {
                 const detail = contact.company || contact.phone || layer.name;
                 return `
                     <div class="search-result-item" data-node-id="${nodeId}">
-                        <div class="avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
-                        <div class="info">
-                            <div class="name">${attrs.label}</div>
-                            <div class="meta">${detail}</div>
+                        <div class="search-result-avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
+                        <div class="search-result-info">
+                            <div class="search-result-name">${attrs.label}</div>
+                            <div class="search-result-detail">${detail}</div>
                         </div>
                     </div>
                 `;
@@ -3339,7 +3341,7 @@ function setupSearch() {
             searchResults.innerHTML = filterBar + resultItems;
 
             if (results.length > 10) {
-                searchResults.innerHTML += `<div class="search-result-item" style="justify-content:center;color:var(--text-muted);font-size:12px;">... và ${results.length - 10} kết quả khác</div>`;
+                searchResults.innerHTML += `<div class="search-more-results">... và ${results.length - 10} kết quả khác</div>`;
             }
 
             // Add filter button click handler
@@ -3349,53 +3351,51 @@ function setupSearch() {
                     e.stopPropagation();
                     const nodeIds = currentSearchResults.map(r => r.nodeId);
                     applySearchFilter(nodeIds);
-                    searchResults.classList.remove('active');
+                    searchResults.classList.remove('visible');
                 });
             }
 
             // Add click handlers for result items
-            searchResults.querySelectorAll('.search-result-item[data-node-id]').forEach(item => {
+            searchResults.querySelectorAll('.search-result-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const nodeId = item.dataset.nodeId;
                     focusOnNode(nodeId);
                     openDetailPanel(nodeId);
-                    searchResults.classList.remove('active');
+                    searchResults.classList.remove('visible');
                     searchInput.value = '';
-                    if (searchClear) searchClear.classList.add('hidden');
+                    searchClear.classList.remove('visible');
                 });
             });
         }
 
-        searchResults.classList.add('active');
+        searchResults.classList.add('visible');
     });
 
-    if (searchClear) {
-        searchClear.addEventListener('click', () => {
-            searchInput.value = '';
-            searchClear.classList.add('hidden');
-            searchResults.classList.remove('active');
-            currentSearchResults = [];
-            // Also clear filter when clearing search
-            if (state.searchFilterActive) {
-                clearSearchFilter();
-            }
-        });
-    }
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.remove('visible');
+        searchResults.classList.remove('visible');
+        currentSearchResults = [];
+        // Also clear filter when clearing search
+        if (state.searchFilterActive) {
+            clearSearchFilter();
+        }
+    });
 
-    // v5.0: Clear filter button handler (new ID)
-    const clearFilterBtn = document.getElementById('btn-clear-filter');
+    // Clear filter button handler
+    const clearFilterBtn = document.getElementById('clear-filter-btn');
     if (clearFilterBtn) {
         clearFilterBtn.addEventListener('click', () => {
             clearSearchFilter();
             searchInput.value = '';
-            if (searchClear) searchClear.classList.add('hidden');
+            searchClear.classList.remove('visible');
         });
     }
 
-    // v5.0: Hub selector button handler (new ID)
-    const connectHubBtn = document.getElementById('btn-connect-hub');
-    if (connectHubBtn) {
-        connectHubBtn.addEventListener('click', (e) => {
+    // Hub selector button handler
+    const openHubSelectorBtn = document.getElementById('open-hub-selector-btn');
+    if (openHubSelectorBtn) {
+        openHubSelectorBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             toggleHubSelectorDropdown();
         });
@@ -3403,10 +3403,10 @@ function setupSearch() {
 
     // Close results and hub dropdown when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('#top-bar')) {
-            searchResults.classList.remove('active');
+        if (!e.target.closest('#search-container')) {
+            searchResults.classList.remove('visible');
         }
-        if (!e.target.closest('#filter-indicator')) {
+        if (!e.target.closest('.hub-selector-wrapper')) {
             closeHubSelectorDropdown();
         }
     });
@@ -3423,15 +3423,13 @@ function updateStatistics() {
 
     document.getElementById('stat-total').textContent = totalNodes;
     document.getElementById('stat-connections').textContent = totalEdges;
-    const statTags = document.getElementById('stat-tags');
-    if (statTags) statTags.textContent = totalLayers;
+    document.getElementById('stat-layers').textContent = totalLayers;
 }
 
 // ==========================================
 // PHẦN 13: DETAIL PANEL FUNCTIONS
 // ==========================================
 
-// v5.0: Updated openDetailPanel for new UI structure
 function openDetailPanel(nodeId) {
     if (!graph.hasNode(nodeId)) return;
 
@@ -3442,28 +3440,17 @@ function openDetailPanel(nodeId) {
     const layer = getLayerById(attrs.layer);
 
     // Update header
-    const avatarEl = document.getElementById('detail-avatar');
-    if (avatarEl) {
-        avatarEl.textContent = getInitials(attrs.label);
-        avatarEl.style.background = `linear-gradient(135deg, ${layer.color} 0%, ${adjustColor(layer.color, 30)} 100%)`;
-    }
-
-    const nameEl = document.getElementById('detail-name');
-    if (nameEl) nameEl.textContent = attrs.label;
-
-    // v5.0: Update tags instead of single badge
-    const tagsContainer = document.getElementById('detail-tags');
-    if (tagsContainer) {
-        tagsContainer.innerHTML = `<span class="detail-tag" style="background: ${layer.color}20; color: ${layer.color}">${layer.name}</span>`;
-    }
+    document.getElementById('detail-avatar').textContent = getInitials(attrs.label);
+    document.getElementById('detail-avatar').style.background = layer.color;
+    document.getElementById('detail-name').textContent = attrs.label;
+    document.getElementById('detail-layer-badge').textContent = layer.name;
+    document.getElementById('detail-layer-badge').style.background = layer.color;
 
     // Update stats
     const distance = attrs.distance !== undefined ? attrs.distance : '-';
     const connections = graph.degree(nodeId);
-    const distanceEl = document.getElementById('detail-distance');
-    const connectionsEl = document.getElementById('detail-connections');
-    if (distanceEl) distanceEl.textContent = distance === 0 ? 'Trung tâm' : distance;
-    if (connectionsEl) connectionsEl.textContent = connections;
+    document.getElementById('detail-distance').textContent = distance === 0 ? 'Trung tâm' : distance;
+    document.getElementById('detail-connections').textContent = connections;
 
     // Update contact info
     updateDetailField('detail-phone', contact.phone);
@@ -3474,48 +3461,25 @@ function openDetailPanel(nodeId) {
 
     // Update social links
     const fbField = document.getElementById('detail-facebook');
-    if (fbField) {
-        const fbLink = fbField.querySelector('a');
-        if (fbLink) {
-            if (contact.facebook) {
-                fbLink.href = contact.facebook;
-                fbLink.textContent = 'Facebook';
-            } else {
-                fbLink.textContent = '-';
-                fbLink.href = '#';
-            }
-        }
+    if (contact.facebook) {
+        fbField.querySelector('a').href = contact.facebook;
+        fbField.querySelector('a').textContent = 'Facebook';
+        fbField.style.display = 'flex';
+    } else {
+        fbField.querySelector('a').textContent = '-';
+        fbField.querySelector('a').href = '#';
     }
     updateDetailField('detail-social', contact.social);
 
     // Update notes
-    const birthdayEl = document.getElementById('detail-birthday');
-    if (birthdayEl) {
-        const span = birthdayEl.querySelector('span');
-        if (span) span.textContent = formatDate(contact.birthday);
-    }
-
-    const notesEl = document.getElementById('detail-notes');
-    if (notesEl) {
-        const p = notesEl.querySelector('p');
-        if (p) p.textContent = contact.notes || '-';
-    }
+    document.getElementById('detail-birthday').querySelector('span').textContent = formatDate(contact.birthday);
+    document.getElementById('detail-notes').querySelector('p').textContent = contact.notes || '-';
 
     // Update relationships
     updateRelationshipList(nodeId);
 
     // Show panel
-    if (panel) panel.classList.remove('hidden');
-}
-
-// Helper function to adjust color brightness
-function adjustColor(color, amount) {
-    const clamp = (num) => Math.min(255, Math.max(0, num));
-    const hex = color.replace('#', '');
-    const r = clamp(parseInt(hex.substr(0, 2), 16) + amount);
-    const g = clamp(parseInt(hex.substr(2, 2), 16) + amount);
-    const b = clamp(parseInt(hex.substr(4, 2), 16) + amount);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    panel.classList.remove('hidden');
 }
 
 function updateDetailField(fieldId, value) {
@@ -3525,7 +3489,6 @@ function updateDetailField(fieldId, value) {
     }
 }
 
-// v5.0: Updated for new CSS classes
 function updateRelationshipList(nodeId) {
     const listContainer = document.getElementById('relationship-list');
     if (!listContainer) return;
@@ -3553,15 +3516,14 @@ function updateRelationshipList(nodeId) {
     });
 
     if (relationships.length === 0) {
-        listContainer.innerHTML = '<div class="empty-state"><i class="fas fa-link"></i><p>Chưa có kết nối</p></div>';
+        listContainer.innerHTML = '<div class="no-relationships">Chưa có kết nối</div>';
     } else {
-        // v5.0: Using new CSS class names
         listContainer.innerHTML = relationships.map(rel => `
             <div class="relationship-item" data-node-id="${rel.nodeId}">
-                <div class="avatar" style="background: ${rel.color};">${getInitials(rel.name)}</div>
-                <div class="info">
-                    <div class="name">${rel.name}</div>
-                    <div class="relation">${rel.label || 'Quan hệ'}</div>
+                <div class="relationship-avatar" style="background: ${rel.color};">${getInitials(rel.name)}</div>
+                <div class="relationship-info">
+                    <div class="relationship-name">${rel.name}</div>
+                    <div class="relationship-label">${rel.label || 'Quan hệ'}</div>
                 </div>
             </div>
         `).join('');
@@ -3579,7 +3541,7 @@ function updateRelationshipList(nodeId) {
 
 function closeDetailPanel() {
     const panel = document.getElementById('detail-panel');
-    if (panel) panel.classList.add('hidden');
+    panel.classList.add('hidden');
     state.detailNode = null;
 }
 
@@ -4152,129 +4114,6 @@ renderer = new Sigma(graph, container, {
     }
 });
 
-// ==========================================
-// PHẦN v5.0: NEW UI HANDLERS
-// ==========================================
-
-function setupV5UI() {
-    // Menu toggle (sidebar)
-    const menuToggle = document.getElementById('menu-toggle');
-    const leftSidebar = document.getElementById('left-sidebar');
-    const sidebarClose = document.getElementById('sidebar-close');
-
-    if (menuToggle && leftSidebar) {
-        menuToggle.addEventListener('click', () => {
-            leftSidebar.classList.toggle('collapsed');
-        });
-    }
-
-    if (sidebarClose && leftSidebar) {
-        sidebarClose.addEventListener('click', () => {
-            leftSidebar.classList.add('collapsed');
-        });
-    }
-
-    // Detail panel close
-    const detailClose = document.getElementById('detail-close');
-    if (detailClose) {
-        detailClose.addEventListener('click', () => {
-            closeDetailPanel();
-        });
-    }
-
-    // FAB - Add new person
-    const fabAdd = document.getElementById('fab-add');
-    if (fabAdd) {
-        fabAdd.addEventListener('click', () => {
-            openModal(null, 'ADD');
-        });
-    }
-
-    // Map controls
-    const btnZoomIn = document.getElementById('btn-zoom-in');
-    const btnZoomOut = document.getElementById('btn-zoom-out');
-    const btnCenter = document.getElementById('btn-center');
-    const btnFit = document.getElementById('btn-fit');
-
-    if (btnZoomIn && renderer) {
-        btnZoomIn.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedZoom({ duration: 200 });
-        });
-    }
-
-    if (btnZoomOut && renderer) {
-        btnZoomOut.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedUnzoom({ duration: 200 });
-        });
-    }
-
-    if (btnCenter && renderer) {
-        btnCenter.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            // Try to focus on TÔI node (center)
-            if (graph.hasNode('me')) {
-                const attrs = graph.getNodeAttributes('me');
-                camera.animate({ x: attrs.x, y: attrs.y, ratio: 1 }, { duration: 300 });
-            } else {
-                camera.animate({ x: 0, y: 0, ratio: 1 }, { duration: 300 });
-            }
-        });
-    }
-
-    if (btnFit && renderer) {
-        btnFit.addEventListener('click', () => {
-            const camera = renderer.getCamera();
-            camera.animatedReset({ duration: 300 });
-        });
-    }
-
-    // Sidebar action buttons
-    const btnImport = document.getElementById('btn-import');
-    const btnExport = document.getElementById('btn-export');
-    const btnLayout = document.getElementById('btn-layout');
-    const btnSettings = document.getElementById('btn-settings');
-
-    if (btnImport) {
-        btnImport.addEventListener('click', () => {
-            // Trigger import modal
-            const importModal = document.getElementById('import-modal');
-            if (importModal) {
-                importModal.classList.remove('hidden');
-                document.getElementById('overlay')?.classList.remove('hidden');
-            }
-        });
-    }
-
-    if (btnExport) {
-        btnExport.addEventListener('click', () => {
-            // Trigger export
-            exportJSON();
-        });
-    }
-
-    if (btnLayout) {
-        btnLayout.addEventListener('click', () => {
-            // Apply radial layout
-            applyRadialLayout();
-            showToast('Đang sắp xếp lại bản đồ...', 'info');
-        });
-    }
-
-    // Add tag button
-    const btnAddTag = document.getElementById('btn-add-tag');
-    if (btnAddTag) {
-        btnAddTag.addEventListener('click', () => {
-            const layerModal = document.getElementById('layer-modal');
-            if (layerModal) {
-                layerModal.classList.remove('hidden');
-                document.getElementById('overlay')?.classList.remove('hidden');
-            }
-        });
-    }
-}
-
 // Initialize application
 initApp().then(() => {
     // Initialize UI after data is loaded
@@ -4291,12 +4130,9 @@ initApp().then(() => {
     setupZoomControls();
     setupCopyButtons();
 
-    // v5.0: Setup new UI handlers
-    setupV5UI();
-
     // Welcome message
     setTimeout(() => {
         const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
-        showToast(`Contact Map v5.0 - Bản đồ quan hệ của bạn!`, 'info', 4000);
+        showToast(`SocialGraph v4.2 - Tìm kiếm và lọc node theo từ khóa!`, 'info', 4000);
     }, 500);
 });
