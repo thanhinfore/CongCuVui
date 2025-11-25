@@ -633,6 +633,21 @@ body, html {
     font-size: 14px;
 }
 
+#zoom-controls .btn-add-node {
+    background: #4CAF50;
+    color: white;
+}
+
+#zoom-controls .btn-add-node:hover {
+    background: #388E3C;
+}
+
+#zoom-controls .zoom-divider {
+    height: 1px;
+    background: #ddd;
+    margin: 4px 0;
+}
+
 /* ==========================================
    DETAIL PANEL (Right Side)
    ========================================== */

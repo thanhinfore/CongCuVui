@@ -2641,28 +2641,6 @@ function setupSearch() {
     });
 }
 
-function focusOnNode(nodeId) {
-    if (!graph.hasNode(nodeId)) return;
-
-    const attrs = graph.getNodeAttributes(nodeId);
-    const camera = renderer.getCamera();
-
-    camera.animate({
-        x: attrs.x,
-        y: attrs.y,
-        ratio: 0.5
-    }, { duration: 500 });
-
-    // Highlight the node briefly
-    graph.setNodeAttribute(nodeId, 'highlighted', true);
-    setTimeout(() => {
-        graph.removeNodeAttribute(nodeId, 'highlighted');
-        renderer.refresh();
-    }, 2000);
-
-    renderer.refresh();
-}
-
 // ==========================================
 // PHẦN 12: STATISTICS FUNCTIONS
 // ==========================================
@@ -2801,10 +2779,19 @@ function closeDetailPanel() {
 // ==========================================
 
 function setupZoomControls() {
+    const addNode = document.getElementById('btn-add-node');
     const zoomIn = document.getElementById('btn-zoom-in');
     const zoomOut = document.getElementById('btn-zoom-out');
     const zoomReset = document.getElementById('btn-zoom-reset');
     const centerGraph = document.getElementById('btn-center-graph');
+
+    // Add new node button
+    if (addNode) {
+        addNode.addEventListener('click', () => {
+            state.parentNode = null;
+            openModal(null, 'ADD');
+        });
+    }
 
     if (zoomIn) {
         zoomIn.addEventListener('click', () => {
@@ -2877,9 +2864,10 @@ function setupCopyButtons() {
 
 function setupClickHandlers() {
     renderer.on('clickStage', () => {
+        // Click on empty canvas - just deselect/clear state (no longer opens add modal)
         if (!state.hasMoved && !state.isDragging) {
-            state.parentNode = null;
-            openModal(null, 'ADD');
+            state.selectedNode = null;
+            closeDetailPanel();
         }
     });
 
