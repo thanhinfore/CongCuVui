@@ -37,6 +37,105 @@
     --transition: 0.2s ease;
 }
 
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Colors - same accents */
+    --primary: #8ab4f8;
+    --primary-dark: #aecbfa;
+    --primary-light: #1a3a5c;
+    --secondary: #81c995;
+    --warning: #fdd663;
+    --danger: #f28b82;
+
+    /* Neutrals - inverted */
+    --bg: #1f1f1f;
+    --surface: #2d2d2d;
+    --text: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --text-muted: #6e7275;
+    --border: #3c4043;
+    --divider: #3c4043;
+
+    /* Shadows - darker */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 8px 16px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark theme specific overrides */
+[data-theme="dark"] #container {
+    background: #1a1a1a;
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--primary);
+    color: #1f1f1f;
+}
+
+[data-theme="dark"] .btn-danger {
+    background: var(--danger);
+    color: #1f1f1f;
+}
+
+[data-theme="dark"] .hover-action-danger:hover {
+    background: rgba(242, 139, 130, 0.2);
+}
+
+/* Dark theme - Buttons */
+[data-theme="dark"] .btn-secondary {
+    background: var(--divider);
+}
+
+[data-theme="dark"] .btn-danger {
+    background: rgba(242, 139, 130, 0.2);
+}
+
+/* Dark theme - Form inputs */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* Dark theme - Modals */
+[data-theme="dark"] #modal,
+[data-theme="dark"] #edge-modal,
+[data-theme="dark"] #layer-modal,
+[data-theme="dark"] .modal-v4 {
+    background: var(--surface);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--divider);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--divider);
+}
+
+/* Dark theme - Edge labels */
+[data-theme="dark"] .edge-legend .legend-item {
+    opacity: 0.9;
+}
+
+/* Dark theme - Preset buttons */
+[data-theme="dark"] .preset-btn {
+    background: var(--divider);
+    color: var(--text);
+}
+
+[data-theme="dark"] .preset-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
 /* ==========================================
    RESET & BASE
    ========================================== */
@@ -619,6 +718,33 @@ input, select, textarea {
 
 .btn-help:hover {
     background: var(--divider);
+}
+
+.footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+}
+
+.theme-toggle:hover {
+    background: var(--divider);
+    color: var(--warning);
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    color: var(--primary);
 }
 
 /* ==========================================

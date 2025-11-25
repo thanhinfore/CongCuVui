@@ -5217,6 +5217,59 @@ function setupV5UI() {
             }
         });
     }
+
+    // Theme toggle (Phase 5)
+    const btnThemeToggle = document.getElementById('btn-theme-toggle');
+    if (btnThemeToggle) {
+        btnThemeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Initialize theme from localStorage
+    initTheme();
+}
+
+// Theme functions (Phase 5)
+function initTheme() {
+    const savedTheme = localStorage.getItem('contactmap-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // Use saved theme or system preference
+    const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    setTheme(theme);
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('contactmap-theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeIcon(theme);
+
+    // Update graph background if renderer exists
+    if (renderer) {
+        const bgColor = theme === 'dark' ? '#1a1a1a' : '#f8f9fa';
+        renderer.setSetting('renderEdgeLabels', true);
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    localStorage.setItem('contactmap-theme', newTheme);
+    setTheme(newTheme);
+    showToast(`Đã chuyển sang chế độ ${newTheme === 'dark' ? 'tối' : 'sáng'}`, 'info');
+}
+
+function updateThemeIcon(theme) {
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+        themeIcon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
 }
 
 // Initialize application
