@@ -242,6 +242,15 @@ input, select, textarea {
     color: var(--text-muted);
 }
 
+/* Selected state for keyboard navigation */
+.search-result-item.selected {
+    background: var(--primary-light);
+}
+
+.search-result-item.selected .name {
+    color: var(--primary);
+}
+
 /* ==========================================
    TAG FILTER BAR
    ========================================== */

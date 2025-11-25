@@ -3927,7 +3927,7 @@ function connectFilteredNodesToHub(hubNodeId) {
     if (renderer) renderer.refresh();
 }
 
-// v5.0: Updated setupSearch for Google Maps-style UI
+// v5.0: Updated setupSearch for Google Maps-style UI with keyboard navigation
 function setupSearch() {
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
@@ -3935,11 +3935,74 @@ function setupSearch() {
 
     if (!searchInput) return;
 
-    // Store current search results for filter button
+    // Store current search results and selected index for keyboard navigation
     let currentSearchResults = [];
+    let selectedIndex = -1;
+
+    // Helper to update visual selection
+    function updateSelectedItem() {
+        const items = searchResults.querySelectorAll('.search-result-item[data-node-id]');
+        items.forEach((item, i) => {
+            item.classList.toggle('selected', i === selectedIndex);
+            if (i === selectedIndex) {
+                item.scrollIntoView({ block: 'nearest' });
+            }
+        });
+    }
+
+    // Helper to select current item
+    function selectCurrentItem() {
+        const items = searchResults.querySelectorAll('.search-result-item[data-node-id]');
+        if (selectedIndex >= 0 && selectedIndex < items.length) {
+            const nodeId = items[selectedIndex].dataset.nodeId;
+            focusOnNode(nodeId);
+            openDetailPanel(nodeId);
+            searchResults.classList.remove('active');
+            searchInput.value = '';
+            if (searchClear) searchClear.classList.add('hidden');
+            selectedIndex = -1;
+        }
+    }
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        const items = searchResults.querySelectorAll('.search-result-item[data-node-id]');
+        const itemCount = items.length;
+
+        if (!searchResults.classList.contains('active') || itemCount === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, itemCount - 1);
+                updateSelectedItem();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                updateSelectedItem();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedIndex >= 0) {
+                    selectCurrentItem();
+                } else if (currentSearchResults.length > 0) {
+                    // If no selection, apply filter
+                    const nodeIds = currentSearchResults.map(r => r.nodeId);
+                    applySearchFilter(nodeIds);
+                    searchResults.classList.remove('active');
+                }
+                break;
+            case 'Escape':
+                searchResults.classList.remove('active');
+                selectedIndex = -1;
+                break;
+        }
+    });
 
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
+        selectedIndex = -1;  // Reset selection on new search
 
         // Toggle clear button (v5.0: using hidden class)
         if (searchClear) {
@@ -3977,7 +4040,7 @@ function setupSearch() {
         } else {
             // Filter action bar at top
             const filterBar = `
-                <div class="search-result-item" style="background: var(--primary-light); justify-content: space-between;">
+                <div class="search-result-item search-action-bar" style="background: var(--primary-light); justify-content: space-between;">
                     <span style="color: var(--primary); font-weight: 500;">${results.length} kết quả</span>
                     <button class="btn btn-primary" id="apply-filter-btn" style="padding: 6px 12px; font-size: 12px;">
                         <i class="fas fa-filter"></i> Lọc
@@ -3985,15 +4048,15 @@ function setupSearch() {
                 </div>
             `;
 
-            const resultItems = results.slice(0, 10).map(({ nodeId, attrs }) => {
+            const resultItems = results.slice(0, 10).map(({ nodeId, attrs }, index) => {
                 const contact = attrs.contact || {};
                 const layer = getLayerById(attrs.layer);
                 const detail = contact.company || contact.phone || layer.name;
                 return `
-                    <div class="search-result-item" data-node-id="${nodeId}">
+                    <div class="search-result-item" data-node-id="${nodeId}" data-index="${index}">
                         <div class="avatar" style="background: ${layer.color};">${getInitials(attrs.label)}</div>
                         <div class="info">
-                            <div class="name">${attrs.label}</div>
+                            <div class="name">${highlightMatch(attrs.label, query)}</div>
                             <div class="meta">${detail}</div>
                         </div>
                     </div>
@@ -4003,7 +4066,7 @@ function setupSearch() {
             searchResults.innerHTML = filterBar + resultItems;
 
             if (results.length > 10) {
-                searchResults.innerHTML += `<div class="search-result-item" style="justify-content:center;color:var(--text-muted);font-size:12px;">... và ${results.length - 10} kết quả khác</div>`;
+                searchResults.innerHTML += `<div class="search-result-item search-more" style="justify-content:center;color:var(--text-muted);font-size:12px;">... và ${results.length - 10} kết quả khác</div>`;
             }
 
             // Add filter button click handler
@@ -4017,8 +4080,8 @@ function setupSearch() {
                 });
             }
 
-            // Add click handlers for result items
-            searchResults.querySelectorAll('.search-result-item[data-node-id]').forEach(item => {
+            // Add click and hover handlers for result items
+            searchResults.querySelectorAll('.search-result-item[data-node-id]').forEach((item, i) => {
                 item.addEventListener('click', () => {
                     const nodeId = item.dataset.nodeId;
                     focusOnNode(nodeId);
@@ -4026,6 +4089,10 @@ function setupSearch() {
                     searchResults.classList.remove('active');
                     searchInput.value = '';
                     if (searchClear) searchClear.classList.add('hidden');
+                });
+                item.addEventListener('mouseenter', () => {
+                    selectedIndex = i;
+                    updateSelectedItem();
                 });
             });
         }
@@ -4039,6 +4106,7 @@ function setupSearch() {
             searchClear.classList.add('hidden');
             searchResults.classList.remove('active');
             currentSearchResults = [];
+            selectedIndex = -1;
             // Also clear filter when clearing search
             if (state.searchFilterActive) {
                 clearSearchFilter();
@@ -4069,11 +4137,19 @@ function setupSearch() {
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#top-bar')) {
             searchResults.classList.remove('active');
+            selectedIndex = -1;
         }
         if (!e.target.closest('#filter-indicator')) {
             closeHubSelectorDropdown();
         }
     });
+}
+
+// Helper function to highlight matched text
+function highlightMatch(text, query) {
+    if (!query) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark style="background:var(--warning);padding:0 2px;border-radius:2px;">$1</mark>');
 }
 
 // ==========================================
