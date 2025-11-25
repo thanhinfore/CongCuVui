@@ -303,27 +303,62 @@ async function generate(id, prompt, options) {
 
         // Get final text if streaming didn't capture it
         if (!fullResponse && output) {
-            let rawText = '';
-            if (Array.isArray(output)) {
-                rawText = output[0]?.generated_text || '';
-                // Handle case where output is message object
-                if (typeof rawText === 'object' && rawText.content) {
-                    rawText = rawText.content;
-                }
-            } else if (typeof output === 'object') {
-                rawText = output.generated_text || '';
-                if (typeof rawText === 'object' && rawText.content) {
-                    rawText = rawText.content;
-                }
-            }
+            console.log('📤 Raw output:', output);
 
-            console.log('📤 Raw output:', rawText);
-            fullResponse = cleanGeneratedText(rawText);
-            tokenCount = fullResponse.split(/\s+/).length;
+            // Extract text from various output formats
+            let rawText = '';
+
+            try {
+                if (Array.isArray(output)) {
+                    const firstOutput = output[0];
+
+                    if (firstOutput?.generated_text) {
+                        const genText = firstOutput.generated_text;
+
+                        // If generated_text is an array of messages (chat format)
+                        if (Array.isArray(genText)) {
+                            // Find the last assistant/model message
+                            for (let i = genText.length - 1; i >= 0; i--) {
+                                const msg = genText[i];
+                                if (msg.role === 'assistant' || msg.role === 'model') {
+                                    rawText = msg.content || '';
+                                    break;
+                                }
+                            }
+                        } else if (typeof genText === 'string') {
+                            rawText = genText;
+                        } else if (typeof genText === 'object' && genText.content) {
+                            rawText = genText.content;
+                        }
+                    }
+                } else if (typeof output === 'object' && output.generated_text) {
+                    const genText = output.generated_text;
+                    if (typeof genText === 'string') {
+                        rawText = genText;
+                    } else if (Array.isArray(genText)) {
+                        // Find assistant message
+                        const assistantMsg = genText.find(m => m.role === 'assistant' || m.role === 'model');
+                        rawText = assistantMsg?.content || '';
+                    }
+                }
+
+                console.log('📝 Extracted text:', rawText);
+
+                if (typeof rawText === 'string' && rawText) {
+                    fullResponse = cleanGeneratedText(rawText);
+                    tokenCount = fullResponse.split(/\s+/).length;
+                }
+            } catch (extractError) {
+                console.error('❌ Error extracting text:', extractError);
+            }
         }
 
-        // Clean final response
-        fullResponse = cleanGeneratedText(fullResponse);
+        // Clean final response (ensure it's a string)
+        if (typeof fullResponse === 'string') {
+            fullResponse = cleanGeneratedText(fullResponse);
+        } else {
+            fullResponse = '';
+        }
         console.log('✅ Final response:', fullResponse);
 
         // Handle empty response with contextual fallback
