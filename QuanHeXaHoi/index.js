@@ -105,7 +105,10 @@ let state = {
     saveDataTimeout: null,
     vcfRenderLimit: 50,      // Initial render limit for VCF
     vcfScrollListener: null,
-    vcfFilteredIndices: []   // Filtered contact indices for lazy loading
+    vcfFilteredIndices: [],   // Filtered contact indices for lazy loading
+    // Search filter state (v4.2)
+    searchFilteredNodes: null,  // Set of nodeIds to show when filtering, null = show all
+    searchFilterActive: false   // Whether search filter mode is active
 };
 
 // ==========================================
@@ -3126,12 +3129,57 @@ function hideNodeTooltip() {
 // PHẦN 11: SEARCH FUNCTIONS
 // ==========================================
 
+// Clear search filter and show all nodes
+function clearSearchFilter() {
+    state.searchFilterActive = false;
+    state.searchFilteredNodes = null;
+
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
+    if (filterIndicator) {
+        filterIndicator.classList.add('hidden');
+    }
+
+    // Refresh renderer to show all nodes
+    if (renderer) {
+        renderer.refresh();
+    }
+}
+
+// Apply search filter to show only matching nodes
+function applySearchFilter(nodeIds) {
+    state.searchFilteredNodes = new Set(nodeIds);
+    state.searchFilterActive = true;
+
+    // Update filter indicator
+    const filterIndicator = document.getElementById('search-filter-indicator');
+    if (filterIndicator) {
+        filterIndicator.classList.remove('hidden');
+        const countSpan = filterIndicator.querySelector('.filter-count');
+        if (countSpan) {
+            countSpan.textContent = nodeIds.length;
+        }
+    }
+
+    // Refresh renderer to apply filter
+    if (renderer) {
+        renderer.refresh();
+    }
+
+    showToast(`Đang hiển thị ${nodeIds.length} node khớp với tìm kiếm`, 'info');
+}
+
 function setupSearch() {
     const searchInput = document.getElementById('search-input');
     const searchClear = document.getElementById('search-clear');
     const searchResults = document.getElementById('search-results');
+    const filterBtn = document.getElementById('search-filter-btn');
+    const filterIndicator = document.getElementById('search-filter-indicator');
 
     if (!searchInput) return;
+
+    // Store current search results for filter button
+    let currentSearchResults = [];
 
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim().toLowerCase();
@@ -3141,6 +3189,7 @@ function setupSearch() {
 
         if (query.length < 1) {
             searchResults.classList.remove('visible');
+            currentSearchResults = [];
             return;
         }
 
@@ -3161,11 +3210,23 @@ function setupSearch() {
             }
         });
 
+        currentSearchResults = results;
+
         // Render results
         if (results.length === 0) {
             searchResults.innerHTML = '<div class="search-no-results">Không tìm thấy kết quả</div>';
         } else {
-            searchResults.innerHTML = results.slice(0, 10).map(({ nodeId, attrs }) => {
+            // Filter action bar at top
+            const filterBar = `
+                <div class="search-filter-bar">
+                    <span class="search-result-count">${results.length} kết quả</span>
+                    <button class="search-filter-action" id="apply-filter-btn" title="Lọc hiển thị chỉ các node này">
+                        <i class="fas fa-filter"></i> Lọc ${results.length} node
+                    </button>
+                </div>
+            `;
+
+            const resultItems = results.slice(0, 10).map(({ nodeId, attrs }) => {
                 const contact = attrs.contact || {};
                 const layer = getLayerById(attrs.layer);
                 const detail = contact.company || contact.phone || layer.name;
@@ -3180,7 +3241,24 @@ function setupSearch() {
                 `;
             }).join('');
 
-            // Add click handlers
+            searchResults.innerHTML = filterBar + resultItems;
+
+            if (results.length > 10) {
+                searchResults.innerHTML += `<div class="search-more-results">... và ${results.length - 10} kết quả khác</div>`;
+            }
+
+            // Add filter button click handler
+            const applyFilterBtn = searchResults.querySelector('#apply-filter-btn');
+            if (applyFilterBtn) {
+                applyFilterBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const nodeIds = currentSearchResults.map(r => r.nodeId);
+                    applySearchFilter(nodeIds);
+                    searchResults.classList.remove('visible');
+                });
+            }
+
+            // Add click handlers for result items
             searchResults.querySelectorAll('.search-result-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const nodeId = item.dataset.nodeId;
@@ -3200,7 +3278,22 @@ function setupSearch() {
         searchInput.value = '';
         searchClear.classList.remove('visible');
         searchResults.classList.remove('visible');
+        currentSearchResults = [];
+        // Also clear filter when clearing search
+        if (state.searchFilterActive) {
+            clearSearchFilter();
+        }
     });
+
+    // Clear filter button handler
+    const clearFilterBtn = document.getElementById('clear-filter-btn');
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', () => {
+            clearSearchFilter();
+            searchInput.value = '';
+            searchClear.classList.remove('visible');
+        });
+    }
 
     // Close results when clicking outside
     document.addEventListener('click', (e) => {
@@ -3863,6 +3956,15 @@ renderer = new Sigma(graph, container, {
     defaultEdgeColor: '#999',
     nodeReducer: (node, data) => {
         const res = { ...data };
+
+        // Hide nodes not in search filter (when filter is active)
+        if (state.searchFilterActive && state.searchFilteredNodes) {
+            if (!state.searchFilteredNodes.has(node)) {
+                res.hidden = true;
+                return res;
+            }
+        }
+
         if (state.hoveredNode === node || data.highlighted) {
             res.highlighted = true;
             res.zIndex = 1;
@@ -3871,14 +3973,25 @@ renderer = new Sigma(graph, container, {
     },
     edgeReducer: (edge, data) => {
         const res = { ...data };
+        const source = graph.source(edge);
+        const target = graph.target(edge);
+
+        // Hide edges not connected to filtered nodes (when filter is active)
+        if (state.searchFilterActive && state.searchFilteredNodes) {
+            const sourceVisible = state.searchFilteredNodes.has(source);
+            const targetVisible = state.searchFilteredNodes.has(target);
+            if (!sourceVisible || !targetVisible) {
+                res.hidden = true;
+                return res;
+            }
+        }
+
         // Ensure edges always have minimum size
         if (!res.size || res.size < 1.5) {
             res.size = 1.5;
         }
         // When hovering a node, highlight connected edges
         if (state.hoveredNode) {
-            const source = graph.source(edge);
-            const target = graph.target(edge);
             if (source === state.hoveredNode || target === state.hoveredNode) {
                 res.highlighted = true;
                 res.size = 3;
@@ -3911,6 +4024,6 @@ initApp().then(() => {
     // Welcome message
     setTimeout(() => {
         const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
-        showToast(`SocialGraph v4.1 - Kéo thả phân loại nhanh 1000+ contacts!`, 'info', 4000);
+        showToast(`SocialGraph v4.2 - Tìm kiếm và lọc node theo từ khóa!`, 'info', 4000);
     }, 500);
 });

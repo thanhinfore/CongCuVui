@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sơ đồ Quan hệ Xã hội v4.1</title>
+    <title>Sơ đồ Quan hệ Xã hội v4.2</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
@@ -12,7 +12,7 @@
 
     <div id="toolbar">
         <div class="brand">
-            <i class="fas fa-project-diagram"></i> SocialGraph v4.1
+            <i class="fas fa-project-diagram"></i> SocialGraph v4.2
         </div>
 
         <!-- Layer Filters - Dynamic -->
@@ -125,6 +125,15 @@
             <span class="search-clear" id="search-clear">&times;</span>
         </div>
         <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Search Filter Indicator -->
+    <div id="search-filter-indicator" class="search-filter-indicator hidden">
+        <i class="fas fa-filter"></i>
+        <span>Đang lọc: <strong class="filter-count">0</strong> node</span>
+        <button id="clear-filter-btn" class="btn-clear-filter" title="Bỏ lọc, hiển thị tất cả">
+            <i class="fas fa-times"></i> Bỏ lọc
+        </button>
     </div>
 
     <!-- Node Tooltip -->
