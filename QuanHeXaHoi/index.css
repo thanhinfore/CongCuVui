@@ -1,5 +1,5 @@
 /* ==========================================
-   RESET & BASIC - SocialGraph v4.0
+   RESET & BASIC - SocialGraph v4.1
    ========================================== */
 body, html {
     margin: 0;
@@ -2269,5 +2269,368 @@ button:disabled {
     .tab-btn {
         justify-content: flex-start !important;
         padding: 12px 16px !important;
+    }
+}
+
+/* ==========================================
+   V4.1 CLASSIFICATION - Layer Drop Zones
+   ========================================== */
+
+/* Layer Drop Zones Container */
+.layer-drop-zones {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 800;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.layer-drop-zones.hidden {
+    display: none;
+}
+
+.layer-drop-zones.active {
+    pointer-events: auto;
+}
+
+.layer-drop-zone {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    opacity: 0.7;
+    border: 3px dashed currentColor;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.layer-drop-zone:hover,
+.layer-drop-zone.dragover {
+    opacity: 1;
+    transform: scale(1.15);
+    border-style: solid;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.layer-drop-zone i {
+    font-size: 28px;
+}
+
+.layer-drop-zone span {
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layer-drop-zone .drop-count {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Classification Indicator */
+.classify-indicator {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 900;
+    box-shadow: 0 4px 20px rgba(255, 87, 34, 0.3);
+    animation: slideDown 0.3s ease;
+}
+
+.classify-indicator.hidden {
+    display: none;
+}
+
+.classify-indicator i {
+    font-size: 18px;
+    animation: pulse 1.5s infinite;
+}
+
+.classify-indicator span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.classify-indicator .btn-small {
+    background: rgba(255,255,255,0.2) !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    margin: 0 !important;
+}
+
+.classify-indicator .btn-small:hover {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Quick Classify Panel */
+.quick-classify-panel {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    width: 350px;
+    max-height: calc(100vh - 80px);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+    z-index: 600;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideInLeft 0.3s ease;
+}
+
+.quick-classify-panel.hidden {
+    display: none;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.classify-stats {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.classify-stats span {
+    font-size: 24px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.classify-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.classify-search input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    margin: 0;
+}
+
+.classify-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.classify-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.classify-item:hover {
+    background: #f8f9fa;
+}
+
+.classify-item.selected {
+    background: rgba(255, 87, 34, 0.1);
+}
+
+.classify-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #FF5722;
+    flex-shrink: 0;
+}
+
+.classify-item-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.classify-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.classify-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.classify-item-layer {
+    font-size: 11px;
+    color: #999;
+}
+
+.classify-item-assign {
+    display: flex;
+    gap: 4px;
+}
+
+.classify-item-assign button {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.classify-actions {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.classify-actions select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 0;
+}
+
+.classify-actions button {
+    white-space: nowrap;
+    margin: 0 !important;
+}
+
+/* Empty State */
+.classify-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+}
+
+.classify-empty i {
+    font-size: 48px;
+    color: #e0e0e0;
+    margin-bottom: 12px;
+}
+
+.classify-empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Drag Feedback */
+.node-dragging {
+    cursor: grabbing !important;
+}
+
+body.classifying {
+    cursor: crosshair;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .layer-drop-zones {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        padding-bottom: 80px;
+    }
+
+    .layer-drop-zone {
+        width: 100px;
+        height: 100px;
+    }
+
+    .layer-drop-zone i {
+        font-size: 20px;
+    }
+
+    .layer-drop-zone span {
+        font-size: 11px;
+    }
+
+    .quick-classify-panel {
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+    }
+
+    .classify-indicator {
+        width: calc(100% - 40px);
+        left: 20px;
+        transform: none;
+        justify-content: center;
     }
 }
