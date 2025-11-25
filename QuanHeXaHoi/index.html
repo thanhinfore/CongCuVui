@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Map v5.0 - Bản đồ Quan hệ</title>
+    <title>Contact Map v7.0 - Bản đồ Quan hệ</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,7 +52,7 @@
             <div class="app-logo">
                 <i class="fas fa-map-marked-alt"></i>
                 <span class="app-name">Contact Map</span>
-                <span class="app-version">v5.0</span>
+                <span class="app-version">v7.0</span>
             </div>
             <button class="sidebar-close" id="sidebar-close">
                 <i class="fas fa-times"></i>
@@ -308,6 +308,87 @@
 
     <!-- Toast Container -->
     <div id="toast-container"></div>
+
+    <!-- Command Palette (v7.0 - Ctrl+K) -->
+    <div id="command-palette" class="command-palette hidden">
+        <div class="command-palette-backdrop"></div>
+        <div class="command-palette-content">
+            <div class="command-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="command-input" placeholder="Tìm người, thao tác, hoặc nhập lệnh..." autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-results" id="command-results">
+                <div class="command-section">
+                    <div class="command-section-title">Thao tác nhanh</div>
+                    <div class="command-item" data-action="add-person">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Thêm người mới</span>
+                        <kbd>N</kbd>
+                    </div>
+                    <div class="command-item" data-action="import">
+                        <i class="fas fa-file-import"></i>
+                        <span>Nhập dữ liệu</span>
+                    </div>
+                    <div class="command-item" data-action="export">
+                        <i class="fas fa-file-export"></i>
+                        <span>Xuất dữ liệu</span>
+                    </div>
+                    <div class="command-item" data-action="layout">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Sắp xếp lại bản đồ</span>
+                    </div>
+                    <div class="command-item" data-action="select-all">
+                        <i class="fas fa-check-double"></i>
+                        <span>Chọn tất cả</span>
+                        <kbd>Ctrl+A</kbd>
+                    </div>
+                    <div class="command-item" data-action="toggle-theme">
+                        <i class="fas fa-moon"></i>
+                        <span>Đổi Dark/Light mode</span>
+                    </div>
+                </div>
+                <div class="command-section command-contacts-section hidden">
+                    <div class="command-section-title">Contacts</div>
+                    <div id="command-contacts-list"></div>
+                </div>
+            </div>
+            <div class="command-footer">
+                <span><kbd>↑↓</kbd> để chọn</span>
+                <span><kbd>Enter</kbd> để thực hiện</span>
+                <span><kbd>Ctrl+K</kbd> mở Command Palette</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Select Toolbar (v7.0) -->
+    <div id="multi-select-toolbar" class="multi-select-toolbar hidden">
+        <div class="selection-count">
+            <i class="fas fa-check-circle"></i>
+            <span id="selected-count">0</span> đã chọn
+        </div>
+        <div class="selection-actions">
+            <button class="toolbar-btn" id="btn-bulk-tag" title="Gán tag">
+                <i class="fas fa-tag"></i>
+                <span>Gán Tag</span>
+            </button>
+            <button class="toolbar-btn" id="btn-bulk-connect" title="Kết nối với nhau">
+                <i class="fas fa-link"></i>
+                <span>Kết nối</span>
+            </button>
+            <button class="toolbar-btn" id="btn-bulk-connect-hub" title="Kết nối với 1 người">
+                <i class="fas fa-sitemap"></i>
+                <span>Kết nối Hub</span>
+            </button>
+            <button class="toolbar-btn danger" id="btn-bulk-delete" title="Xóa">
+                <i class="fas fa-trash"></i>
+                <span>Xóa</span>
+            </button>
+        </div>
+        <button class="toolbar-close" id="btn-clear-selection" title="Bỏ chọn">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
     <!-- Node Hover Quick Actions (Phase 4) -->
     <div id="node-hover-panel" class="node-hover-panel hidden">

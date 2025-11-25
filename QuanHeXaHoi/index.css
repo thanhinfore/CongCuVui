@@ -1,5 +1,5 @@
 /* ==========================================
-   CONTACT MAP v5.0 - Google Maps Style CSS
+   CONTACT MAP v7.0 - Google Maps Style CSS
    ========================================== */
 
 /* CSS Variables */
@@ -2644,5 +2644,320 @@ input, select, textarea {
 
     .welcome-header h1 {
         font-size: 20px;
+    }
+}
+
+/* ==========================================
+   COMMAND PALETTE (v7.0)
+   ========================================== */
+.command-palette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+}
+
+.command-palette.hidden {
+    display: none;
+}
+
+.command-palette-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.command-palette-content {
+    position: relative;
+    width: 560px;
+    max-width: 90%;
+    max-height: 70vh;
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.command-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--divider);
+}
+
+.command-search i {
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.command-search input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+}
+
+.command-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.command-search kbd {
+    padding: 4px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: inherit;
+}
+
+.command-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.command-section {
+    padding: 8px 0;
+}
+
+.command-section-title {
+    padding: 8px 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.command-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.command-item:hover,
+.command-item.selected {
+    background: var(--primary-light);
+}
+
+.command-item i {
+    width: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.command-item span {
+    flex: 1;
+    color: var(--text);
+}
+
+.command-item kbd {
+    padding: 2px 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.command-item.selected i {
+    color: var(--primary);
+}
+
+.command-footer {
+    display: flex;
+    gap: 16px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--divider);
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.command-footer kbd {
+    padding: 2px 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+/* Command palette contact items */
+.command-contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.command-contact .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.command-contact .info {
+    flex: 1;
+}
+
+.command-contact .name {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.command-contact .meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ==========================================
+   MULTI-SELECT TOOLBAR (v7.0)
+   ========================================== */
+.multi-select-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+}
+
+.multi-select-toolbar.hidden {
+    display: none;
+}
+
+.selection-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.selection-count i {
+    font-size: 18px;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 8px;
+    padding-left: 16px;
+    border-left: 1px solid var(--divider);
+}
+
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    font-size: 13px;
+    color: var(--text);
+    transition: all var(--transition);
+}
+
+.toolbar-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.toolbar-btn.danger:hover {
+    background: rgba(234, 67, 53, 0.1);
+    color: var(--danger);
+}
+
+.toolbar-btn i {
+    font-size: 14px;
+}
+
+.toolbar-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    margin-left: 8px;
+    transition: all var(--transition);
+}
+
+.toolbar-close:hover {
+    background: var(--divider);
+    color: var(--text);
+}
+
+/* Selected node visual indicator */
+.node-selected-ring {
+    stroke: var(--primary);
+    stroke-width: 3;
+    fill: none;
+}
+
+/* Dark theme overrides for v7.0 */
+[data-theme="dark"] .command-palette-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .command-search kbd,
+[data-theme="dark"] .command-item kbd,
+[data-theme="dark"] .command-footer kbd {
+    background: var(--divider);
+    border-color: var(--border);
+}
+
+/* Responsive for multi-select toolbar */
+@media (max-width: 600px) {
+    .multi-select-toolbar {
+        padding: 10px 16px;
+        gap: 12px;
+    }
+
+    .toolbar-btn span {
+        display: none;
+    }
+
+    .selection-actions {
+        padding-left: 12px;
     }
 }

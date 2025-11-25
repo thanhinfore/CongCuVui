@@ -4615,6 +4615,18 @@ function setupClickHandlers() {
             return;
         }
 
+        // v7.0: Multi-select with Ctrl/Cmd click
+        if (e.event.ctrlKey || e.event.metaKey) {
+            toggleNodeSelection(e.node, true);
+            return;
+        }
+
+        // v7.0: Add to selection with Shift click
+        if (e.event.shiftKey && multiSelectState.selectedNodes.size > 0) {
+            toggleNodeSelection(e.node, true);
+            return;
+        }
+
         const now = Date.now();
         const isDoubleClick = (now - state.lastClickTime) < 300;
         state.lastClickTime = now;
@@ -4623,9 +4635,11 @@ function setupClickHandlers() {
             if (!state.isDragging && !state.hasMoved) {
                 if (isDoubleClick) {
                     // Double click - open edit modal
+                    clearSelection();
                     openModal(e.node, 'EDIT');
                 } else {
-                    // Single click - open detail panel
+                    // Single click - open detail panel (and clear multi-select)
+                    clearSelection();
                     openDetailPanel(e.node);
                 }
             }
@@ -5060,6 +5074,15 @@ renderer = new Sigma(graph, container, {
             res.highlighted = true;
             res.zIndex = 1;
         }
+
+        // v7.0: Highlight selected nodes
+        if (multiSelectState.selectedNodes.has(node)) {
+            res.highlighted = true;
+            res.zIndex = 2;
+            // Add a ring effect by making the node slightly larger
+            res.size = (res.size || 10) * 1.2;
+        }
+
         return res;
     },
     edgeReducer: (edge, data) => {
@@ -5345,6 +5368,455 @@ function setupWelcomeModal() {
     }
 }
 
+// ==========================================
+// PHẦN v7.0: COMMAND PALETTE
+// ==========================================
+
+const commandPaletteState = {
+    isOpen: false,
+    selectedIndex: 0,
+    items: []
+};
+
+function openCommandPalette() {
+    const palette = document.getElementById('command-palette');
+    const input = document.getElementById('command-input');
+    if (!palette) return;
+
+    commandPaletteState.isOpen = true;
+    commandPaletteState.selectedIndex = 0;
+    palette.classList.remove('hidden');
+    input.value = '';
+    input.focus();
+    updateCommandResults('');
+}
+
+function closeCommandPalette() {
+    const palette = document.getElementById('command-palette');
+    if (palette) {
+        palette.classList.add('hidden');
+        commandPaletteState.isOpen = false;
+    }
+}
+
+function updateCommandResults(query) {
+    const contactsSection = document.querySelector('.command-contacts-section');
+    const contactsList = document.getElementById('command-contacts-list');
+    const actionsSection = document.querySelector('.command-section:not(.command-contacts-section)');
+
+    if (!query.trim()) {
+        // Show default actions, hide contacts
+        if (actionsSection) actionsSection.style.display = 'block';
+        if (contactsSection) contactsSection.classList.add('hidden');
+        commandPaletteState.items = Array.from(document.querySelectorAll('.command-item[data-action]'));
+        updateCommandSelection();
+        return;
+    }
+
+    // Search contacts
+    const lowerQuery = query.toLowerCase();
+    const matchingNodes = [];
+    graph.forEachNode((nodeId, attrs) => {
+        const label = (attrs.label || '').toLowerCase();
+        const contact = attrs.contact || {};
+        const company = (contact.company || '').toLowerCase();
+        const phone = (contact.phone || '').toLowerCase();
+
+        if (label.includes(lowerQuery) || company.includes(lowerQuery) || phone.includes(lowerQuery)) {
+            matchingNodes.push({ nodeId, attrs, score: label.startsWith(lowerQuery) ? 1 : 0 });
+        }
+    });
+
+    // Sort by relevance
+    matchingNodes.sort((a, b) => b.score - a.score);
+    const topResults = matchingNodes.slice(0, 8);
+
+    if (topResults.length > 0) {
+        if (actionsSection) actionsSection.style.display = 'none';
+        if (contactsSection) contactsSection.classList.remove('hidden');
+
+        contactsList.innerHTML = topResults.map(({ nodeId, attrs }) => {
+            const layer = getLayerById(attrs.layer);
+            const contact = attrs.contact || {};
+            const meta = contact.company || contact.phone || layer.name;
+            return `
+                <div class="command-item" data-node-id="${nodeId}">
+                    <div class="command-contact">
+                        <div class="avatar" style="background:${layer.color}">${getInitials(attrs.label)}</div>
+                        <div class="info">
+                            <div class="name">${highlightMatch(attrs.label, query)}</div>
+                            <div class="meta">${meta}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        commandPaletteState.items = Array.from(contactsList.querySelectorAll('.command-item'));
+    } else {
+        if (actionsSection) actionsSection.style.display = 'block';
+        if (contactsSection) contactsSection.classList.add('hidden');
+        commandPaletteState.items = Array.from(document.querySelectorAll('.command-item[data-action]'));
+    }
+
+    commandPaletteState.selectedIndex = 0;
+    updateCommandSelection();
+}
+
+function updateCommandSelection() {
+    commandPaletteState.items.forEach((item, i) => {
+        item.classList.toggle('selected', i === commandPaletteState.selectedIndex);
+    });
+
+    const selected = commandPaletteState.items[commandPaletteState.selectedIndex];
+    if (selected) {
+        selected.scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function executeCommandItem(item) {
+    if (!item) return;
+
+    const action = item.dataset.action;
+    const nodeId = item.dataset.nodeId;
+
+    closeCommandPalette();
+
+    if (nodeId) {
+        focusOnNode(nodeId);
+        openDetailPanel(nodeId);
+    } else if (action) {
+        switch (action) {
+            case 'add-person':
+                openModal(null, 'ADD');
+                break;
+            case 'import':
+                document.getElementById('import-modal')?.classList.remove('hidden');
+                document.getElementById('overlay')?.classList.remove('hidden');
+                break;
+            case 'export':
+                exportJSON();
+                break;
+            case 'layout':
+                applyRadialLayout();
+                showToast('Đang sắp xếp lại bản đồ...', 'info');
+                break;
+            case 'select-all':
+                selectAllNodes();
+                break;
+            case 'toggle-theme':
+                toggleTheme();
+                break;
+        }
+    }
+}
+
+function setupCommandPalette() {
+    const palette = document.getElementById('command-palette');
+    const input = document.getElementById('command-input');
+    const backdrop = document.querySelector('.command-palette-backdrop');
+
+    if (!palette) return;
+
+    // Search input
+    input?.addEventListener('input', (e) => {
+        updateCommandResults(e.target.value);
+    });
+
+    // Keyboard navigation
+    input?.addEventListener('keydown', (e) => {
+        const items = commandPaletteState.items;
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                commandPaletteState.selectedIndex = Math.min(commandPaletteState.selectedIndex + 1, items.length - 1);
+                updateCommandSelection();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                commandPaletteState.selectedIndex = Math.max(commandPaletteState.selectedIndex - 1, 0);
+                updateCommandSelection();
+                break;
+            case 'Enter':
+                e.preventDefault();
+                executeCommandItem(items[commandPaletteState.selectedIndex]);
+                break;
+            case 'Escape':
+                closeCommandPalette();
+                break;
+        }
+    });
+
+    // Click on backdrop closes
+    backdrop?.addEventListener('click', closeCommandPalette);
+
+    // Click on items
+    document.getElementById('command-results')?.addEventListener('click', (e) => {
+        const item = e.target.closest('.command-item');
+        if (item) executeCommandItem(item);
+    });
+}
+
+// ==========================================
+// PHẦN v7.0: MULTI-SELECT
+// ==========================================
+
+const multiSelectState = {
+    isActive: false,
+    selectedNodes: new Set()
+};
+
+function toggleNodeSelection(nodeId, addToSelection = false) {
+    if (!addToSelection) {
+        multiSelectState.selectedNodes.clear();
+    }
+
+    if (multiSelectState.selectedNodes.has(nodeId)) {
+        multiSelectState.selectedNodes.delete(nodeId);
+    } else {
+        multiSelectState.selectedNodes.add(nodeId);
+    }
+
+    updateMultiSelectUI();
+    renderer.refresh();
+}
+
+function selectAllNodes() {
+    multiSelectState.selectedNodes.clear();
+    graph.forEachNode((nodeId) => {
+        if (nodeId !== 'center') {
+            multiSelectState.selectedNodes.add(nodeId);
+        }
+    });
+    updateMultiSelectUI();
+    renderer.refresh();
+    showToast(`Đã chọn ${multiSelectState.selectedNodes.size} người`, 'info');
+}
+
+function clearSelection() {
+    multiSelectState.selectedNodes.clear();
+    updateMultiSelectUI();
+    renderer.refresh();
+}
+
+function updateMultiSelectUI() {
+    const toolbar = document.getElementById('multi-select-toolbar');
+    const countEl = document.getElementById('selected-count');
+    const count = multiSelectState.selectedNodes.size;
+
+    if (count > 0) {
+        multiSelectState.isActive = true;
+        toolbar?.classList.remove('hidden');
+        if (countEl) countEl.textContent = count;
+    } else {
+        multiSelectState.isActive = false;
+        toolbar?.classList.add('hidden');
+    }
+}
+
+function bulkAssignTag(layerId) {
+    const nodes = Array.from(multiSelectState.selectedNodes);
+    nodes.forEach(nodeId => {
+        if (graph.hasNode(nodeId)) {
+            graph.setNodeAttribute(nodeId, 'layer', layerId);
+            const layer = getLayerById(layerId);
+            graph.setNodeAttribute(nodeId, 'color', layer.color);
+        }
+    });
+    saveGraph();
+    clearSelection();
+    applyColorsByDistance(false);
+    showToast(`Đã gán tag cho ${nodes.length} người`, 'success');
+}
+
+function bulkConnect() {
+    const nodes = Array.from(multiSelectState.selectedNodes);
+    if (nodes.length < 2) {
+        showToast('Cần chọn ít nhất 2 người để kết nối', 'warning');
+        return;
+    }
+
+    let connectionCount = 0;
+    for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+            if (!graph.hasEdge(nodes[i], nodes[j]) && !graph.hasEdge(nodes[j], nodes[i])) {
+                graph.addEdge(nodes[i], nodes[j], {
+                    relationship: 'other',
+                    color: EDGE_TYPES.other.color,
+                    label: '',
+                    size: 2
+                });
+                connectionCount++;
+            }
+        }
+    }
+
+    if (connectionCount > 0) {
+        saveGraph();
+        showToast(`Đã tạo ${connectionCount} kết nối`, 'success');
+    } else {
+        showToast('Tất cả đã được kết nối', 'info');
+    }
+
+    clearSelection();
+}
+
+function bulkDelete() {
+    const nodes = Array.from(multiSelectState.selectedNodes);
+    if (nodes.length === 0) return;
+
+    if (!confirm(`Xóa ${nodes.length} người đã chọn? Hành động này không thể hoàn tác.`)) {
+        return;
+    }
+
+    nodes.forEach(nodeId => {
+        if (graph.hasNode(nodeId) && nodeId !== 'center') {
+            graph.dropNode(nodeId);
+        }
+    });
+
+    saveGraph();
+    updateNodeCount();
+    applyColorsByDistance(false);
+    clearSelection();
+    showToast(`Đã xóa ${nodes.length} người`, 'success');
+}
+
+function setupMultiSelect() {
+    // Clear selection button
+    document.getElementById('btn-clear-selection')?.addEventListener('click', clearSelection);
+
+    // Bulk tag button - show tag picker
+    document.getElementById('btn-bulk-tag')?.addEventListener('click', () => {
+        const layers = state.layers;
+        const options = layers.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+        const select = document.createElement('select');
+        select.innerHTML = options;
+        select.style.cssText = 'padding:8px;font-size:14px;border-radius:8px;border:1px solid var(--border);';
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `<p style="margin:0 0 12px;color:var(--text-secondary);">Chọn tag để gán cho ${multiSelectState.selectedNodes.size} người:</p>`;
+        wrapper.appendChild(select);
+
+        if (confirm('Gán tag cho ' + multiSelectState.selectedNodes.size + ' người?')) {
+            // Simple prompt for layer selection
+            const layerId = prompt('Nhập ID của layer (family, work, friends, acquaintances, others):');
+            if (layerId) {
+                bulkAssignTag(layerId);
+            }
+        }
+    });
+
+    // Bulk connect
+    document.getElementById('btn-bulk-connect')?.addEventListener('click', bulkConnect);
+
+    // Bulk connect to hub
+    document.getElementById('btn-bulk-connect-hub')?.addEventListener('click', () => {
+        const hubName = prompt('Nhập tên người làm trung tâm:');
+        if (!hubName) return;
+
+        let hubNodeId = null;
+        graph.forEachNode((nodeId, attrs) => {
+            if (attrs.label.toLowerCase() === hubName.toLowerCase()) {
+                hubNodeId = nodeId;
+            }
+        });
+
+        if (!hubNodeId) {
+            showToast('Không tìm thấy người này', 'error');
+            return;
+        }
+
+        const nodes = Array.from(multiSelectState.selectedNodes);
+        let count = 0;
+        nodes.forEach(nodeId => {
+            if (nodeId !== hubNodeId && !graph.hasEdge(hubNodeId, nodeId) && !graph.hasEdge(nodeId, hubNodeId)) {
+                graph.addEdge(hubNodeId, nodeId, {
+                    relationship: 'other',
+                    color: EDGE_TYPES.other.color,
+                    label: '',
+                    size: 2
+                });
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            saveGraph();
+            showToast(`Đã kết nối ${count} người với ${hubName}`, 'success');
+        }
+        clearSelection();
+    });
+
+    // Bulk delete
+    document.getElementById('btn-bulk-delete')?.addEventListener('click', bulkDelete);
+}
+
+// ==========================================
+// PHẦN v7.0: KEYBOARD SHORTCUTS
+// ==========================================
+
+function setupGlobalKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Don't trigger when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            // Allow ESC to close modals even in inputs
+            if (e.key !== 'Escape') return;
+        }
+
+        // Ctrl+K or Cmd+K - Command Palette
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (commandPaletteState.isOpen) {
+                closeCommandPalette();
+            } else {
+                openCommandPalette();
+            }
+            return;
+        }
+
+        // N - Add new person
+        if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !commandPaletteState.isOpen) {
+            e.preventDefault();
+            openModal(null, 'ADD');
+            return;
+        }
+
+        // / - Focus search
+        if (e.key === '/' && !commandPaletteState.isOpen) {
+            e.preventDefault();
+            document.getElementById('search-input')?.focus();
+            return;
+        }
+
+        // Ctrl+A - Select all
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !commandPaletteState.isOpen) {
+            e.preventDefault();
+            selectAllNodes();
+            return;
+        }
+
+        // ESC - Close modals/panels
+        if (e.key === 'Escape') {
+            if (commandPaletteState.isOpen) {
+                closeCommandPalette();
+            } else if (multiSelectState.selectedNodes.size > 0) {
+                clearSelection();
+            } else {
+                closeDetailPanel();
+            }
+            return;
+        }
+
+        // Delete/Backspace - Delete selected
+        if ((e.key === 'Delete' || e.key === 'Backspace') && multiSelectState.selectedNodes.size > 0) {
+            e.preventDefault();
+            bulkDelete();
+            return;
+        }
+    });
+}
+
 // Initialize application
 initApp().then(() => {
     // Initialize UI after data is loaded
@@ -5371,8 +5843,18 @@ initApp().then(() => {
     // Phase 6: Setup welcome modal
     setupWelcomeModal();
 
+    // v7.0: Setup new features
+    setupCommandPalette();
+    setupMultiSelect();
+    setupGlobalKeyboardShortcuts();
+
     // Check if should show welcome screen (for new users)
     setTimeout(() => {
         checkShowWelcome();
     }, 300);
+
+    // v7.0 welcome toast
+    setTimeout(() => {
+        showToast('Contact Map v7.0 - Nhấn Ctrl+K để mở Command Palette', 'info', 4000);
+    }, 600);
 });
