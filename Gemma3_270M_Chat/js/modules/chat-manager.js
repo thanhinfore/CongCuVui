@@ -41,6 +41,7 @@ export class ChatManager {
 
     /**
      * Add a message
+     * Handles consecutive same-role messages by replacing the last one
      */
     addMessage(role, content) {
         const message = {
@@ -50,7 +51,14 @@ export class ChatManager {
             timestamp: new Date().toISOString()
         };
 
-        this.messages.push(message);
+        // Check if last message has same role - if so, replace it
+        // This prevents consecutive user messages when previous request failed
+        if (this.messages.length > 0 && this.messages[this.messages.length - 1].role === role) {
+            this.messages[this.messages.length - 1] = message;
+        } else {
+            this.messages.push(message);
+        }
+
         this.saveHistory();
         return message;
     }
@@ -104,10 +112,23 @@ export class ChatManager {
             prompt += `### Hướng dẫn:\n${systemPrompt}\n\n`;
         }
 
-        // Add conversation history (last 4 messages for context)
-        const recentMessages = this.messages.slice(-4);
+        // Add conversation history (last 6 messages for context)
+        // Make sure to keep pairs of user/assistant to maintain alternation
+        const recentMessages = this.messages.slice(-6);
 
-        for (const msg of recentMessages) {
+        // Find a valid starting point (must start with user message)
+        let startIdx = 0;
+        for (let i = 0; i < recentMessages.length; i++) {
+            if (recentMessages[i].role === 'user') {
+                startIdx = i;
+                break;
+            }
+        }
+
+        for (let i = startIdx; i < recentMessages.length; i++) {
+            const msg = recentMessages[i];
+
+            // Skip if this is the current user message
             if (msg.role === 'user' && msg.content === userMessage) {
                 continue;
             }

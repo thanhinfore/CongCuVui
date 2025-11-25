@@ -260,8 +260,47 @@ async function generate(id, prompt, options) {
         // Get the last user message for fallback detection
         const userMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
 
+        // Fix message alternation: ensure roles alternate properly
+        // Remove consecutive messages with same role (keep the last one)
+        const fixedMessages = [];
+        for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+
+            // Always keep system message at start
+            if (msg.role === 'system') {
+                if (fixedMessages.length === 0 || fixedMessages[0].role !== 'system') {
+                    fixedMessages.unshift(msg);
+                }
+                continue;
+            }
+
+            // For user/assistant messages, check alternation
+            const lastNonSystem = fixedMessages.filter(m => m.role !== 'system').pop();
+
+            if (!lastNonSystem) {
+                // First non-system message must be user
+                if (msg.role === 'user') {
+                    fixedMessages.push(msg);
+                }
+            } else if (lastNonSystem.role !== msg.role) {
+                // Different role - good, add it
+                fixedMessages.push(msg);
+            } else {
+                // Same role - replace the last one with current (keep latest)
+                const lastIdx = fixedMessages.lastIndexOf(lastNonSystem);
+                fixedMessages[lastIdx] = msg;
+            }
+        }
+
+        // Ensure the last message is from user (required for generation)
+        const nonSystemMessages = fixedMessages.filter(m => m.role !== 'system');
+        if (nonSystemMessages.length === 0 || nonSystemMessages[nonSystemMessages.length - 1].role !== 'user') {
+            // Add the user message if missing
+            fixedMessages.push({ role: 'user', content: userMessage });
+        }
+
         console.log('📝 User message:', userMessage);
-        console.log('📨 Messages:', JSON.stringify(messages, null, 2));
+        console.log('📨 Fixed messages:', JSON.stringify(fixedMessages, null, 2));
 
         // Generate with streaming callback
         const generationStart = performance.now();
@@ -293,7 +332,7 @@ async function generate(id, prompt, options) {
         });
 
         // Generate using MESSAGES ARRAY (official Gemma 3 format)
-        const output = await generator(messages, {
+        const output = await generator(fixedMessages, {
             max_new_tokens,
             temperature: 0.7,
             top_p,
