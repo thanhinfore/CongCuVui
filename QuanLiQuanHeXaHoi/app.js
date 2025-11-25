@@ -32,7 +32,7 @@ class SocialRelationshipManager {
             try {
                 this.contacts = JSON.parse(stored);
             } catch (e) {
-                console.error('Error loading contacts:', e);
+                // Silent fail - data corrupted, start fresh
                 this.contacts = [];
             }
         }
@@ -40,11 +40,48 @@ class SocialRelationshipManager {
 
     saveContacts() {
         try {
-            localStorage.setItem('srm_contacts', JSON.stringify(this.contacts));
+            const data = JSON.stringify(this.contacts);
+            localStorage.setItem('srm_contacts', data);
         } catch (e) {
-            console.error('Error saving contacts:', e);
-            alert('Lỗi khi lưu dữ liệu. Vui lòng kiểm tra dung lượng trình duyệt.');
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                this.showToast('Dung lượng lưu trữ đã đầy! Hãy xóa bớt dữ liệu cũ hoặc xuất file backup.');
+                // Thử xóa dữ liệu cũ nếu cần
+                this.handleStorageQuotaExceeded();
+            } else {
+                this.showToast('Lỗi khi lưu dữ liệu. Vui lòng thử lại.');
+            }
         }
+    }
+
+    handleStorageQuotaExceeded() {
+        // Hiển thị dialog yêu cầu người dùng xuất dữ liệu
+        const dialog = document.createElement('div');
+        dialog.className = 'modal active';
+        dialog.id = 'storage-warning-modal';
+        dialog.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i> Cảnh Báo Dung Lượng</h2>
+                </div>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="margin-bottom: 1rem;">Bộ nhớ trình duyệt đã đầy. Để tiếp tục sử dụng, bạn có thể:</p>
+                    <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                        <li>Xuất dữ liệu ra file JSON để backup</li>
+                        <li>Xóa bớt các liên hệ không cần thiết</li>
+                        <li>Xóa dữ liệu cache của trình duyệt</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('storage-warning-modal').remove()">
+                        Đóng
+                    </button>
+                    <button type="button" class="btn-primary" onclick="app.exportData(); document.getElementById('storage-warning-modal').remove()">
+                        <i class="fas fa-download"></i> Xuất Dữ Liệu
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dialog);
     }
 
     // ===== Event Listeners Setup =====
@@ -161,6 +198,13 @@ class SocialRelationshipManager {
             updatedAt: new Date().toISOString()
         };
 
+        // Validate form data
+        const validationErrors = this.validateContactForm(formData);
+        if (validationErrors.length > 0) {
+            validationErrors.forEach(error => this.showToast(error));
+            return;
+        }
+
         // Validate Dunbar limits
         if (!this.validateDunbarLimit(formData.level, this.currentEditId)) {
             const limits = {
@@ -170,7 +214,7 @@ class SocialRelationshipManager {
                 'friends': 150,
                 'acquaintances': 500
             };
-            alert(`Bạn đã đạt giới hạn cho nhóm này (${limits[formData.level]} người).\nVui lòng chọn nhóm khác hoặc xóa bớt người trong nhóm hiện tại.`);
+            this.showToast(`Bạn đã đạt giới hạn cho nhóm này (${limits[formData.level]} người). Vui lòng chọn nhóm khác.`);
             return;
         }
 
@@ -203,6 +247,72 @@ class SocialRelationshipManager {
         ).length;
 
         return currentCount < this.dunbarLimits[level];
+    }
+
+    // Form validation - kiểm tra dữ liệu đầu vào
+    validateContactForm(formData) {
+        const errors = [];
+
+        // Validate name (required, min 2 characters)
+        if (!formData.name || formData.name.length < 2) {
+            errors.push('Tên phải có ít nhất 2 ký tự');
+        }
+
+        if (formData.name && formData.name.length > 100) {
+            errors.push('Tên không được quá 100 ký tự');
+        }
+
+        // Validate email format (optional but must be valid if provided)
+        if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            errors.push('Email không hợp lệ');
+        }
+
+        // Validate phone format (optional but must be valid if provided)
+        if (formData.phone) {
+            const cleanPhone = formData.phone.replace(/[\s\-\(\)\.]/g, '');
+            if (!/^\+?\d{9,15}$/.test(cleanPhone)) {
+                errors.push('Số điện thoại không hợp lệ (9-15 chữ số)');
+            }
+        }
+
+        // Validate dates (optional but must not be in the future)
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        if (formData.metDate) {
+            const metDate = new Date(formData.metDate);
+            if (metDate > today) {
+                errors.push('Ngày gặp lần đầu không thể trong tương lai');
+            }
+        }
+
+        if (formData.lastMet) {
+            const lastMet = new Date(formData.lastMet);
+            if (lastMet > today) {
+                errors.push('Ngày gặp lần cuối không thể trong tương lai');
+            }
+        }
+
+        // Validate Facebook URL (optional but must be valid if provided)
+        if (formData.facebook && !this.isValidUrl(formData.facebook)) {
+            // Thử thêm https://
+            if (!formData.facebook.startsWith('http')) {
+                formData.facebook = 'https://' + formData.facebook;
+                if (!this.isValidUrl(formData.facebook)) {
+                    errors.push('URL Facebook không hợp lệ');
+                }
+            } else {
+                errors.push('URL Facebook không hợp lệ');
+            }
+        }
+
+        // Validate level (required)
+        const validLevels = ['inner', 'close', 'good', 'friends', 'acquaintances', 'others'];
+        if (!formData.level || !validLevels.includes(formData.level)) {
+            errors.push('Vui lòng chọn nhóm quan hệ');
+        }
+
+        return errors;
     }
 
     deleteContact(id) {
@@ -344,15 +454,23 @@ class SocialRelationshipManager {
                         </div>
                     </div>
                 ` : ''}
-                ${contact.facebook ? `
+                ${contact.facebook && this.isValidUrl(contact.facebook) ? `
                     <div class="detail-item">
                         <i class="fab fa-facebook"></i>
                         <div class="detail-item-content">
                             <strong>Facebook</strong>
-                            <span><a href="${contact.facebook}" target="_blank">${this.escapeHtml(contact.facebook)}</a></span>
+                            <span><a href="${this.sanitizeUrl(contact.facebook)}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(contact.facebook)}</a></span>
                         </div>
                     </div>
-                ` : ''}
+                ` : (contact.facebook ? `
+                    <div class="detail-item">
+                        <i class="fab fa-facebook"></i>
+                        <div class="detail-item-content">
+                            <strong>Facebook</strong>
+                            <span>${this.escapeHtml(contact.facebook)}</span>
+                        </div>
+                    </div>
+                ` : '')}
                 ${tags.length > 0 ? `
                     <div class="detail-item full-width">
                         <i class="fas fa-tags"></i>
@@ -662,6 +780,40 @@ class SocialRelationshipManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Validate URL - chỉ cho phép http/https protocols
+    isValidUrl(url) {
+        if (!url) return false;
+        try {
+            const u = new URL(url);
+            return u.protocol === 'http:' || u.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    }
+
+    // Sanitize URL - đảm bảo an toàn
+    sanitizeUrl(url) {
+        if (!url) return '';
+        try {
+            const u = new URL(url);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+                return '';
+            }
+            return u.href;
+        } catch {
+            // Nếu không phải URL đầy đủ, thử thêm https://
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                try {
+                    const u = new URL('https://' + url);
+                    return u.href;
+                } catch {
+                    return '';
+                }
+            }
+            return '';
+        }
     }
 
     showToast(message) {
