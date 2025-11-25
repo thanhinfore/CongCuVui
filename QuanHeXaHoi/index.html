@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sơ đồ Quan hệ Xã hội v3.2</title>
+    <title>Sơ đồ Quan hệ Xã hội v4.0</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
@@ -12,7 +12,7 @@
 
     <div id="toolbar">
         <div class="brand">
-            <i class="fas fa-project-diagram"></i> SocialGraph v3.2
+            <i class="fas fa-project-diagram"></i> SocialGraph v4.0
         </div>
 
         <!-- Layer Filters - Dynamic -->
@@ -36,12 +36,15 @@
                 <i class="fas fa-palette"></i> Màu theo cấp
             </button>
 
-            <button id="btn-export" title="Tải dữ liệu về máy"><i class="fas fa-download"></i> Xuất File</button>
-            <button id="btn-import-trigger" title="Mở file từ máy"><i class="fas fa-upload"></i> Nhập File</button>
+            <button id="btn-export" title="Xuất dữ liệu (có tùy chọn bảo mật)"><i class="fas fa-download"></i> Xuất</button>
+            <button id="btn-import-trigger" title="Nhập từ JSON/VCF"><i class="fas fa-upload"></i> Nhập</button>
+            <button id="btn-import-vcf" title="Import từ Danh bạ (.vcf)" style="background: #4CAF50; color: white;"><i class="fas fa-address-book"></i> VCF</button>
             <button id="btn-capture" title="Chụp ảnh PNG"><i class="fas fa-camera"></i> Chụp ảnh</button>
             <button id="btn-reset-data" title="Xóa toàn bộ làm lại" style="background:#f44336; color: white;"><i class="fas fa-trash"></i> Reset</button>
             <input type="file" id="file-input" style="display: none" accept=".json">
+            <input type="file" id="vcf-input" style="display: none" accept=".vcf">
             <span id="autosave-status">Tự lưu đang bật</span>
+            <span id="storage-status" class="storage-badge" title="Dung lượng lưu trữ">IndexedDB</span>
         </div>
     </div>
 
@@ -237,12 +240,11 @@
     </div>
 
     <div id="guide">
-        <strong><i class="fas fa-info-circle"></i> Hướng dẫn v3.2:</strong><br>
-        - <strong>Click nền</strong> để thêm người mới<br>
-        - <strong>Click node</strong> để xem chi tiết<br>
-        - <strong>Double click</strong> để sửa thông tin<br>
-        - <strong>Force Layout</strong> xếp vòng tròn<br>
-        - <strong>Kéo thả</strong> để nối quan hệ
+        <strong><i class="fas fa-info-circle"></i> Hướng dẫn v4.0:</strong><br>
+        - <strong>VCF</strong> Import từ iCloud/Google<br>
+        - <strong>Export</strong> với privacy masking<br>
+        - <strong>Mã hóa</strong> file với mật khẩu<br>
+        - <strong>Merge</strong> thông minh khi nhập
     </div>
 
     <div id="selection-panel">
@@ -405,6 +407,219 @@
         <div class="modal-footer">
             <button class="btn-primary" id="btn-save-layer"><i class="fas fa-save"></i> Lưu</button>
             <button class="btn-danger" id="btn-delete-layer"><i class="fas fa-trash"></i> Xóa Layer</button>
+        </div>
+    </div>
+
+    <!-- Export Modal (v4.0) -->
+    <div id="export-modal" class="modal-v4">
+        <div class="modal-header">
+            <h3><i class="fas fa-download"></i> Xuất dữ liệu</h3>
+            <span class="close-modal" id="btn-x-close-export">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="export-options">
+                <h4><i class="fas fa-filter"></i> Chọn dữ liệu xuất</h4>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="export-all" checked>
+                        <span>Tất cả dữ liệu</span>
+                    </label>
+                    <div class="layer-checkboxes" id="export-layers">
+                        <!-- Dynamic layer checkboxes -->
+                    </div>
+                </div>
+
+                <h4><i class="fas fa-user-shield"></i> Bảo mật (Privacy Masking)</h4>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="mask-phone">
+                        <span>Ẩn số điện thoại (VD: 090****567)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="mask-email">
+                        <span>Ẩn email (VD: ngu***@gmail.com)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="mask-address">
+                        <span>Ẩn địa chỉ</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="mask-notes">
+                        <span>Loại bỏ ghi chú</span>
+                    </label>
+                </div>
+
+                <h4><i class="fas fa-lock"></i> Mã hóa file</h4>
+                <div class="encryption-section">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="enable-encryption">
+                        <span>Mã hóa file với mật khẩu (AES-GCM)</span>
+                    </label>
+                    <div class="password-fields" id="export-password-fields" style="display: none;">
+                        <input type="password" id="export-password" placeholder="Nhập mật khẩu...">
+                        <input type="password" id="export-password-confirm" placeholder="Xác nhận mật khẩu...">
+                        <div class="password-strength" id="password-strength"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btn-export-json"><i class="fas fa-file-code"></i> Xuất JSON</button>
+            <button class="btn-primary" id="btn-export-encrypted"><i class="fas fa-shield-alt"></i> Xuất có mã hóa</button>
+        </div>
+    </div>
+
+    <!-- Import Modal (v4.0 - with Merge) -->
+    <div id="import-modal" class="modal-v4">
+        <div class="modal-header">
+            <h3><i class="fas fa-upload"></i> Nhập dữ liệu</h3>
+            <span class="close-modal" id="btn-x-close-import">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="import-tabs">
+                <button class="tab-btn active" data-tab="json-tab">
+                    <i class="fas fa-file-code"></i> JSON
+                </button>
+                <button class="tab-btn" data-tab="vcf-tab">
+                    <i class="fas fa-address-book"></i> VCF (Danh bạ)
+                </button>
+                <button class="tab-btn" data-tab="encrypted-tab">
+                    <i class="fas fa-lock"></i> File mã hóa
+                </button>
+            </div>
+
+            <div class="tab-content active" id="json-tab">
+                <div class="drop-zone" id="json-drop-zone">
+                    <i class="fas fa-file-upload"></i>
+                    <p>Kéo thả file JSON vào đây hoặc</p>
+                    <button class="btn-secondary" id="btn-select-json">Chọn file</button>
+                </div>
+                <div class="import-options">
+                    <h4><i class="fas fa-code-branch"></i> Tùy chọn nhập</h4>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="import-mode" value="replace" checked>
+                            <span>Thay thế toàn bộ dữ liệu hiện tại</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="import-mode" value="merge">
+                            <span>Gộp với dữ liệu hiện tại (Merge)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="vcf-tab">
+                <div class="drop-zone" id="vcf-drop-zone">
+                    <i class="fas fa-address-card"></i>
+                    <p>Kéo thả file .vcf vào đây hoặc</p>
+                    <button class="btn-secondary" id="btn-select-vcf">Chọn file VCF</button>
+                    <p class="hint">Hỗ trợ: iCloud, Google Contacts, Outlook</p>
+                </div>
+                <div class="vcf-preview" id="vcf-preview" style="display: none;">
+                    <h4><i class="fas fa-list"></i> Xem trước (<span id="vcf-count">0</span> contacts)</h4>
+                    <div class="vcf-list" id="vcf-list"></div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="encrypted-tab">
+                <div class="drop-zone" id="encrypted-drop-zone">
+                    <i class="fas fa-file-shield"></i>
+                    <p>Kéo thả file .sgraph vào đây</p>
+                    <button class="btn-secondary" id="btn-select-encrypted">Chọn file</button>
+                </div>
+                <div class="decrypt-section" id="decrypt-section" style="display: none;">
+                    <input type="password" id="decrypt-password" placeholder="Nhập mật khẩu để giải mã...">
+                    <button class="btn-primary" id="btn-decrypt"><i class="fas fa-unlock"></i> Giải mã</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btn-cancel-import">Hủy</button>
+            <button class="btn-primary" id="btn-confirm-import" disabled><i class="fas fa-check"></i> Nhập dữ liệu</button>
+        </div>
+    </div>
+
+    <!-- Merge Conflict Modal -->
+    <div id="merge-modal" class="modal-v4">
+        <div class="modal-header">
+            <h3><i class="fas fa-code-branch"></i> Gộp dữ liệu - Phát hiện trùng lặp</h3>
+            <span class="close-modal" id="btn-x-close-merge">&times;</span>
+        </div>
+        <div class="modal-body modal-scrollable">
+            <div class="merge-stats" id="merge-stats">
+                <div class="merge-stat">
+                    <span class="stat-value" id="merge-new">0</span>
+                    <span class="stat-label">Contacts mới</span>
+                </div>
+                <div class="merge-stat">
+                    <span class="stat-value" id="merge-duplicate">0</span>
+                    <span class="stat-label">Trùng lặp</span>
+                </div>
+                <div class="merge-stat">
+                    <span class="stat-value" id="merge-update">0</span>
+                    <span class="stat-label">Cập nhật</span>
+                </div>
+            </div>
+            <div class="merge-options">
+                <h4>Xử lý contacts trùng (cùng tên hoặc SĐT):</h4>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="merge-strategy" value="skip" checked>
+                        <span>Bỏ qua (giữ nguyên dữ liệu cũ)</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="merge-strategy" value="overwrite">
+                        <span>Ghi đè (thay bằng dữ liệu mới)</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="merge-strategy" value="merge-fields">
+                        <span>Gộp thông minh (bổ sung trường trống)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="merge-conflicts" id="merge-conflicts">
+                <!-- Dynamic conflict items -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btn-cancel-merge">Hủy</button>
+            <button class="btn-primary" id="btn-confirm-merge"><i class="fas fa-check"></i> Xác nhận gộp</button>
+        </div>
+    </div>
+
+    <!-- VCF Import Preview Modal -->
+    <div id="vcf-modal" class="modal-v4 wide-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-address-book"></i> Import VCF - Danh bạ</h3>
+            <span class="close-modal" id="btn-x-close-vcf">&times;</span>
+        </div>
+        <div class="modal-body modal-scrollable">
+            <div class="vcf-stats" id="vcf-stats">
+                <div class="vcf-stat">
+                    <i class="fas fa-users"></i>
+                    <span id="vcf-total">0</span> contacts
+                </div>
+                <div class="vcf-stat">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="vcf-selected">0</span> đã chọn
+                </div>
+            </div>
+            <div class="vcf-toolbar">
+                <button class="btn-small" id="vcf-select-all"><i class="fas fa-check-double"></i> Chọn tất cả</button>
+                <button class="btn-small" id="vcf-deselect-all"><i class="fas fa-times"></i> Bỏ chọn</button>
+                <input type="text" id="vcf-search" placeholder="Lọc theo tên...">
+                <select id="vcf-target-layer">
+                    <!-- Dynamic layers -->
+                </select>
+            </div>
+            <div class="vcf-contacts-list" id="vcf-contacts-list">
+                <!-- Dynamic VCF contacts -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btn-cancel-vcf">Hủy</button>
+            <button class="btn-primary" id="btn-import-vcf-confirm"><i class="fas fa-user-plus"></i> Import contacts đã chọn</button>
         </div>
     </div>
 
