@@ -38,6 +38,7 @@ function sendMessage(type, data, id = null) {
 /**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
+ * IMPORTANT: Use fp32 for WebGPU to avoid <unused> token issues
  */
 async function detectDevice() {
     // Try to detect WebGPU support
@@ -49,12 +50,14 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                dtypeConfig = 'fp16';  // FP16 for WebGPU (faster)
+                // CRITICAL: Use fp32 for Gemma 3 270M on WebGPU
+                // fp16 causes <unused42> token generation issues
+                dtypeConfig = 'fp32';
 
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'fp16',
-                    message: '⚡ Sử dụng WebGPU (GPU) - Tốc độ nhanh hơn WASM nhiều lần!'
+                    dtype: 'fp32',
+                    message: '⚡ Sử dụng WebGPU (GPU) với fp32 - Tối ưu cho Gemma 3!'
                 });
                 return;
             }
@@ -65,11 +68,11 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
-    dtypeConfig = 'fp32';
+    dtypeConfig = 'q8';  // Use q8 for WASM (better quality than q4)
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
-        dtype: 'fp32',
+        dtype: 'q8',
         message: 'Sử dụng WASM (CPU). Tip: Dùng trình duyệt hỗ trợ WebGPU để tăng tốc!'
     });
 }
@@ -230,12 +233,23 @@ async function generate(id, prompt, options) {
             max_new_tokens = 256
         } = options;
 
-        // Extract user message for fallback detection
+        // Extract user message for building messages array
         const userMessageMatch = prompt.match(/### Người dùng:\n([^\n#]+)/s);
         const userMessage = userMessageMatch ? userMessageMatch[1].trim() : prompt.split('\n').filter(l => l.trim()).pop() || '';
 
+        // Extract system prompt
+        const systemMatch = prompt.match(/### Hướng dẫn:\n([^\n#]+)/s);
+        const systemPrompt = systemMatch ? systemMatch[1].trim() : 'Bạn là Gemma, trợ lý AI thông minh.';
+
+        // Build messages array - OFFICIAL FORMAT for Gemma 3
+        // Reference: https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage }
+        ];
+
         console.log('📝 User message:', userMessage);
-        console.log('📨 Prompt length:', prompt.length);
+        console.log('📨 Messages:', JSON.stringify(messages));
 
         // Generate with streaming callback
         const generationStart = performance.now();
@@ -267,16 +281,11 @@ async function generate(id, prompt, options) {
             }
         });
 
-        // Generate using the pipeline with RAW PROMPT (not messages array)
-        // The prompt already has proper Gemma chat template from chat-manager.js
-        const output = await generator(prompt, {
+        // Generate using MESSAGES ARRAY (official Gemma 3 format)
+        // Use do_sample: false for consistent output (as in official example)
+        const output = await generator(messages, {
             max_new_tokens,
-            temperature: Math.max(0.5, temperature),
-            top_p,
-            top_k: 50,
-            repetition_penalty: 1.2,
-            do_sample: true,
-            return_full_text: false,
+            do_sample: false,  // Greedy decoding for consistency
             streamer
         });
 
@@ -286,39 +295,27 @@ async function generate(id, prompt, options) {
             return;
         }
 
-        // Get final text if streaming didn't capture it
+        // Extract response using official format: output[0].generated_text.at(-1).content
         if (!fullResponse && output) {
             console.log('📤 Raw output:', output);
 
-            let rawText = '';
-
             try {
-                if (Array.isArray(output)) {
-                    rawText = output[0]?.generated_text || '';
-                } else if (typeof output === 'object') {
-                    rawText = output.generated_text || '';
-                } else if (typeof output === 'string') {
-                    rawText = output;
-                }
+                // Official extraction method
+                const generatedMessages = output[0]?.generated_text;
+                console.log('📝 Generated messages:', generatedMessages);
 
-                // If rawText is an object (message format), extract content
-                if (typeof rawText === 'object' && rawText !== null) {
-                    if (Array.isArray(rawText)) {
-                        const assistantMsg = rawText.find(m => m.role === 'assistant' || m.role === 'model');
-                        rawText = assistantMsg?.content || '';
-                    } else if (rawText.content) {
-                        rawText = rawText.content;
-                    } else {
-                        rawText = '';
+                if (Array.isArray(generatedMessages)) {
+                    // Get the last message (assistant's response)
+                    const lastMessage = generatedMessages.at(-1);
+                    if (lastMessage && lastMessage.content) {
+                        fullResponse = cleanGeneratedText(lastMessage.content);
+                        console.log('📝 Extracted content:', fullResponse);
                     }
+                } else if (typeof generatedMessages === 'string') {
+                    fullResponse = cleanGeneratedText(generatedMessages);
                 }
 
-                console.log('📝 Extracted text:', rawText);
-
-                if (typeof rawText === 'string' && rawText) {
-                    fullResponse = cleanGeneratedText(rawText);
-                    tokenCount = fullResponse.split(/\s+/).length;
-                }
+                tokenCount = fullResponse.split(/\s+/).length;
             } catch (extractError) {
                 console.error('❌ Error extracting text:', extractError);
             }
