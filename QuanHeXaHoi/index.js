@@ -100,8 +100,73 @@ let state = {
     vcfSelected: new Set(),
     pendingImportData: null,
     mergeConflicts: [],
-    encryptedFileData: null
+    encryptedFileData: null,
+    // Performance optimization state
+    saveDataTimeout: null,
+    vcfRenderLimit: 50,      // Initial render limit for VCF
+    vcfScrollListener: null,
+    vcfFilteredIndices: []   // Filtered contact indices for lazy loading
 };
+
+// ==========================================
+// PHẦN 2A: PERFORMANCE UTILITIES
+// ==========================================
+
+// Debounce function - delays execution until after wait ms have passed
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Throttle function - limits execution to once per wait ms
+function throttle(func, wait) {
+    let lastTime = 0;
+    return function executedFunction(...args) {
+        const now = Date.now();
+        if (now - lastTime >= wait) {
+            lastTime = now;
+            func(...args);
+        }
+    };
+}
+
+// Process items in batches using requestAnimationFrame to prevent UI freeze
+async function processBatch(items, processFunc, batchSize = 50, onProgress = null) {
+    const total = items.length;
+    let processed = 0;
+
+    return new Promise((resolve) => {
+        function processBatchChunk() {
+            const start = processed;
+            const end = Math.min(processed + batchSize, total);
+
+            for (let i = start; i < end; i++) {
+                processFunc(items[i], i);
+            }
+
+            processed = end;
+
+            if (onProgress) {
+                onProgress(processed, total);
+            }
+
+            if (processed < total) {
+                requestAnimationFrame(processBatchChunk);
+            } else {
+                resolve();
+            }
+        }
+
+        requestAnimationFrame(processBatchChunk);
+    });
+}
 
 // ==========================================
 // PHẦN 2B: INDEXEDDB STORAGE (v4.0)
@@ -997,7 +1062,27 @@ function showToast(message, type = 'info', duration = 3000) {
 // PHẦN 5: STORAGE MANAGEMENT
 // ==========================================
 
-async function saveData() {
+// Debounced save to prevent excessive writes
+let saveDataPending = false;
+function saveData() {
+    // Clear any pending save
+    if (state.saveDataTimeout) {
+        clearTimeout(state.saveDataTimeout);
+    }
+
+    // Schedule save after 500ms of inactivity
+    state.saveDataTimeout = setTimeout(() => {
+        saveDataImmediate();
+    }, 500);
+}
+
+// Immediate save for critical operations
+async function saveDataImmediate() {
+    if (state.saveDataTimeout) {
+        clearTimeout(state.saveDataTimeout);
+        state.saveDataTimeout = null;
+    }
+
     const payload = {
         version: '4.0',
         graph: graph.export(),
@@ -1472,51 +1557,143 @@ function closeVCFModal() {
     document.getElementById('overlay').style.display = 'none';
 }
 
+// VCF contact item HTML generator
+function createVCFContactHTML(contact, index) {
+    const isSelected = state.vcfSelected.has(index);
+    const phone = contact.phones[0]?.number || '';
+    const email = contact.emails[0]?.email || '';
+    const detail = contact.company || phone || email;
+
+    return `
+        <div class="vcf-contact-item ${isSelected ? 'selected' : ''}" data-index="${index}">
+            <input type="checkbox" ${isSelected ? 'checked' : ''} data-index="${index}">
+            <div class="vcf-contact-avatar">${getInitials(contact.name)}</div>
+            <div class="vcf-contact-info">
+                <div class="vcf-contact-name">${contact.name}</div>
+                <div class="vcf-contact-detail">${detail}</div>
+                ${contact.phones.length > 1 ? `
+                    <div class="vcf-contact-phones">
+                        ${contact.phones.slice(0, 3).map(p => `<span class="vcf-phone-badge">${p.type}: ${p.number}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Lazy loading for VCF contacts - only render visible items + buffer
 function renderVCFContacts(filterText = '') {
     const list = document.getElementById('vcf-contacts-list');
     const filter = filterText.toLowerCase();
 
-    const html = state.vcfContacts
-        .map((contact, index) => {
-            if (filter && !contact.name.toLowerCase().includes(filter)) {
-                return '';
-            }
-
-            const isSelected = state.vcfSelected.has(index);
-            const phone = contact.phones[0]?.number || '';
-            const email = contact.emails[0]?.email || '';
-            const detail = contact.company || phone || email;
-
-            return `
-                <div class="vcf-contact-item ${isSelected ? 'selected' : ''}" data-index="${index}">
-                    <input type="checkbox" ${isSelected ? 'checked' : ''} data-index="${index}">
-                    <div class="vcf-contact-avatar">${getInitials(contact.name)}</div>
-                    <div class="vcf-contact-info">
-                        <div class="vcf-contact-name">${contact.name}</div>
-                        <div class="vcf-contact-detail">${detail}</div>
-                        ${contact.phones.length > 1 ? `
-                            <div class="vcf-contact-phones">
-                                ${contact.phones.map(p => `<span class="vcf-phone-badge">${p.type}: ${p.number}</span>`).join('')}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        })
-        .join('');
-
-    list.innerHTML = html || '<div class="no-results">Không tìm thấy kết quả</div>';
-
-    // Add click handlers
-    list.querySelectorAll('.vcf-contact-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            if (e.target.type !== 'checkbox') {
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                checkbox.checked = !checkbox.checked;
-            }
-            toggleVCFSelection(parseInt(item.dataset.index));
-        });
+    // Filter contacts first
+    state.vcfFilteredIndices = [];
+    state.vcfContacts.forEach((contact, index) => {
+        if (!filter || contact.name.toLowerCase().includes(filter)) {
+            state.vcfFilteredIndices.push(index);
+        }
     });
+
+    // Reset render limit for new filter
+    state.vcfRenderLimit = 50;
+
+    // Render only first batch
+    renderVCFBatch();
+
+    // Setup scroll listener for lazy loading
+    if (state.vcfScrollListener) {
+        list.removeEventListener('scroll', state.vcfScrollListener);
+    }
+
+    state.vcfScrollListener = throttle(() => {
+        const scrollTop = list.scrollTop;
+        const scrollHeight = list.scrollHeight;
+        const clientHeight = list.clientHeight;
+
+        // Load more when near bottom (100px threshold)
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+            if (state.vcfRenderLimit < state.vcfFilteredIndices.length) {
+                state.vcfRenderLimit += 50;
+                renderVCFBatch(true); // Append mode
+            }
+        }
+    }, 100);
+
+    list.addEventListener('scroll', state.vcfScrollListener);
+}
+
+// Render a batch of VCF contacts
+function renderVCFBatch(append = false) {
+    const list = document.getElementById('vcf-contacts-list');
+    const indices = state.vcfFilteredIndices || [];
+    const limit = Math.min(state.vcfRenderLimit, indices.length);
+
+    if (indices.length === 0) {
+        list.innerHTML = '<div class="no-results">Không tìm thấy kết quả</div>';
+        return;
+    }
+
+    const startIndex = append ? list.children.length : 0;
+    const html = [];
+
+    for (let i = startIndex; i < limit; i++) {
+        const index = indices[i];
+        html.push(createVCFContactHTML(state.vcfContacts[index], index));
+    }
+
+    if (append) {
+        list.insertAdjacentHTML('beforeend', html.join(''));
+    } else {
+        list.innerHTML = html.join('');
+    }
+
+    // Show load more indicator if there are more items
+    if (limit < indices.length) {
+        const remaining = indices.length - limit;
+        const existingIndicator = list.querySelector('.vcf-load-more');
+        if (!existingIndicator) {
+            list.insertAdjacentHTML('beforeend',
+                `<div class="vcf-load-more">Cuộn xuống để xem thêm ${remaining} contacts...</div>`
+            );
+        } else {
+            existingIndicator.textContent = `Cuộn xuống để xem thêm ${remaining} contacts...`;
+        }
+    } else {
+        const existingIndicator = list.querySelector('.vcf-load-more');
+        if (existingIndicator) existingIndicator.remove();
+    }
+
+    // Use event delegation for better performance
+    setupVCFClickHandlers();
+}
+
+// Event delegation for VCF contact clicks
+function setupVCFClickHandlers() {
+    const list = document.getElementById('vcf-contacts-list');
+
+    // Remove old listener if exists
+    if (list._vcfClickHandler) {
+        list.removeEventListener('click', list._vcfClickHandler);
+    }
+
+    // Single event listener for all items
+    list._vcfClickHandler = (e) => {
+        const item = e.target.closest('.vcf-contact-item');
+        if (!item) return;
+
+        const index = parseInt(item.dataset.index);
+        if (isNaN(index)) return;
+
+        if (e.target.type !== 'checkbox') {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox) checkbox.checked = !checkbox.checked;
+        }
+
+        toggleVCFSelection(index);
+        item.classList.toggle('selected', state.vcfSelected.has(index));
+    };
+
+    list.addEventListener('click', list._vcfClickHandler);
 }
 
 function toggleVCFSelection(index) {
@@ -1529,68 +1706,108 @@ function toggleVCFSelection(index) {
 }
 
 function selectAllVCF() {
-    state.vcfContacts.forEach((_, i) => state.vcfSelected.add(i));
-    renderVCFContacts(document.getElementById('vcf-search')?.value || '');
+    // Select all filtered contacts
+    const indices = state.vcfFilteredIndices || [];
+    indices.forEach(i => state.vcfSelected.add(i));
+
+    // Update UI without full re-render
+    document.querySelectorAll('.vcf-contact-item').forEach(item => {
+        item.classList.add('selected');
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = true;
+    });
+
     updateVCFStats();
 }
 
 function deselectAllVCF() {
-    state.vcfSelected.clear();
-    renderVCFContacts(document.getElementById('vcf-search')?.value || '');
+    // Deselect all filtered contacts
+    const indices = state.vcfFilteredIndices || [];
+    indices.forEach(i => state.vcfSelected.delete(i));
+
+    // Update UI without full re-render
+    document.querySelectorAll('.vcf-contact-item').forEach(item => {
+        item.classList.remove('selected');
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) checkbox.checked = false;
+    });
+
     updateVCFStats();
 }
 
 function updateVCFStats() {
-    document.getElementById('vcf-total').textContent = state.vcfContacts.length;
-    document.getElementById('vcf-selected').textContent = state.vcfSelected.size;
+    const total = state.vcfContacts.length;
+    const filtered = state.vcfFilteredIndices?.length || total;
+    const selected = state.vcfSelected.size;
+
+    document.getElementById('vcf-total').textContent =
+        filtered === total ? total : `${filtered}/${total}`;
+    document.getElementById('vcf-selected').textContent = selected;
 }
 
-function importSelectedVCF() {
+async function importSelectedVCF() {
     if (state.vcfSelected.size === 0) {
         showToast('Vui lòng chọn ít nhất một contact!', 'warning');
         return;
     }
 
     const targetLayer = document.getElementById('vcf-target-layer').value;
-    let imported = 0;
+    const selectedIndices = Array.from(state.vcfSelected);
+    const total = selectedIndices.length;
 
-    state.vcfSelected.forEach(index => {
-        const contact = state.vcfContacts[index];
-        const nodeId = 'vcf_' + Date.now() + '_' + index;
+    // Close modal and show progress
+    closeVCFModal();
+    showToast(`Đang import ${total} contacts...`, 'info', 10000);
 
-        // Random position around center
-        const angle = Math.random() * 2 * Math.PI;
-        const radius = 50 + Math.random() * 150;
+    // Disable graph refresh during import
+    const timestamp = Date.now();
 
-        graph.addNode(nodeId, {
-            label: contact.name,
-            layer: targetLayer,
-            distance: 0,
-            size: 15,
-            color: '#999',
-            x: radius * Math.cos(angle),
-            y: radius * Math.sin(angle),
-            contact: {
-                email: contact.emails[0]?.email || '',
-                phone: contact.phones[0]?.number || '',
-                address: contact.addresses[0] || '',
-                company: contact.company || '',
-                position: contact.position || '',
-                facebook: '',
-                social: '',
-                birthday: contact.birthday || '',
-                notes: contact.notes || ''
+    // Process in batches using requestAnimationFrame
+    await processBatch(
+        selectedIndices,
+        (index, i) => {
+            const contact = state.vcfContacts[index];
+            const nodeId = 'vcf_' + timestamp + '_' + index;
+
+            // Distribute in spiral pattern for better initial layout
+            const spiralAngle = (i / total) * Math.PI * 8;
+            const radius = 80 + (i / total) * 200;
+
+            graph.addNode(nodeId, {
+                label: contact.name,
+                layer: targetLayer,
+                distance: 0,
+                size: 15,
+                color: '#999',
+                x: radius * Math.cos(spiralAngle),
+                y: radius * Math.sin(spiralAngle),
+                contact: {
+                    email: contact.emails[0]?.email || '',
+                    phone: contact.phones[0]?.number || '',
+                    address: contact.addresses[0] || '',
+                    company: contact.company || '',
+                    position: contact.position || '',
+                    facebook: '',
+                    social: '',
+                    birthday: contact.birthday || '',
+                    notes: contact.notes || ''
+                }
+            });
+        },
+        100, // Batch size
+        (processed, totalItems) => {
+            // Update progress every batch
+            if (processed % 200 === 0 || processed === totalItems) {
+                renderer.refresh();
             }
-        });
+        }
+    );
 
-        imported++;
-    });
-
+    // Final updates
     applyColorsByDistance(false);
     updateNodeCount();
-    saveData();
-    closeVCFModal();
-    showToast(`Đã import ${imported} contacts!`, 'success');
+    saveDataImmediate(); // Use immediate save after import
+    showToast(`Đã import ${total} contacts!`, 'success');
 }
 
 // Merge Functions (v4.0)
@@ -2176,16 +2393,22 @@ function nameSimilarity(name1, name2) {
     return 1 - (distance / maxLen);
 }
 
-// Layout: Name Similarity - group similar names together
+// Layout: Name Similarity - group similar names together (optimized)
 function calculateSimilarityPositions() {
     const positions = new Map();
     const nodes = [];
 
-    // Collect all nodes except center
+    // Collect all nodes except center with pre-computed normalized names
     graph.forEachNode((nodeId) => {
         if (nodeId !== 'center') {
             const attrs = graph.getNodeAttributes(nodeId);
-            nodes.push({ id: nodeId, label: attrs.label || nodeId });
+            const label = attrs.label || nodeId;
+            nodes.push({
+                id: nodeId,
+                label: label,
+                normalized: normalizeName(label),
+                prefix: normalizeName(label).substring(0, 3) // First 3 chars for fast grouping
+            });
         }
     });
 
@@ -2194,7 +2417,17 @@ function calculateSimilarityPositions() {
 
     if (nodes.length === 0) return positions;
 
-    // Group nodes by similarity using clustering
+    // OPTIMIZATION: Group by prefix first to reduce O(n²) comparisons
+    const prefixGroups = new Map();
+    nodes.forEach(node => {
+        const prefix = node.prefix;
+        if (!prefixGroups.has(prefix)) {
+            prefixGroups.set(prefix, []);
+        }
+        prefixGroups.get(prefix).push(node);
+    });
+
+    // Cluster within prefix groups (much smaller O(n²) in small groups)
     const clusters = [];
     const assigned = new Set();
     const SIMILARITY_THRESHOLD = 0.4;
@@ -2205,18 +2438,34 @@ function calculateSimilarityPositions() {
     nodes.forEach(node => {
         if (assigned.has(node.id)) return;
 
-        // Start a new cluster with this node
         const cluster = [node];
         assigned.add(node.id);
 
-        // Find similar nodes
-        nodes.forEach(other => {
-            if (assigned.has(other.id)) return;
-            const similarity = nameSimilarity(node.label, other.label);
-            if (similarity >= SIMILARITY_THRESHOLD) {
-                cluster.push(other);
-                assigned.add(other.id);
-            }
+        // Only check nodes with similar prefixes (optimization)
+        const prefixesToCheck = [node.prefix];
+
+        // Also check adjacent prefixes (for names like "An" vs "Ann")
+        const prefixChars = node.prefix.split('');
+        if (prefixChars.length >= 2) {
+            prefixesToCheck.push(prefixChars.slice(0, 2).join(''));
+        }
+
+        prefixesToCheck.forEach(prefix => {
+            const candidates = prefixGroups.get(prefix) || [];
+            candidates.forEach(other => {
+                if (assigned.has(other.id)) return;
+
+                // Quick length check - skip if lengths differ too much
+                const lenDiff = Math.abs(node.normalized.length - other.normalized.length);
+                const maxLen = Math.max(node.normalized.length, other.normalized.length);
+                if (maxLen > 0 && lenDiff / maxLen > 0.6) return;
+
+                const similarity = nameSimilarity(node.label, other.label);
+                if (similarity >= SIMILARITY_THRESHOLD) {
+                    cluster.push(other);
+                    assigned.add(other.id);
+                }
+            });
         });
 
         clusters.push(cluster);
@@ -2224,20 +2473,16 @@ function calculateSimilarityPositions() {
 
     // Position clusters in a spiral around center
     const CLUSTER_RADIUS = 120;
-    const NODE_SPACING = 50;
     let currentAngle = -Math.PI / 2;
     let currentRadius = CLUSTER_RADIUS;
 
     clusters.forEach((cluster, clusterIndex) => {
-        // Calculate cluster center position
         const clusterX = currentRadius * Math.cos(currentAngle);
         const clusterY = currentRadius * Math.sin(currentAngle);
 
-        // Position nodes in cluster
         if (cluster.length === 1) {
             positions.set(cluster[0].id, { x: clusterX, y: clusterY });
         } else {
-            // Arrange cluster nodes in a small circle
             const subRadius = Math.max(30, cluster.length * 8);
             cluster.forEach((node, nodeIndex) => {
                 const subAngle = (nodeIndex / cluster.length) * 2 * Math.PI - Math.PI / 2;
@@ -2248,8 +2493,7 @@ function calculateSimilarityPositions() {
             });
         }
 
-        // Move to next position (spiral outward)
-        currentAngle += Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+        currentAngle += Math.PI / 4;
         if (clusterIndex % 8 === 7) {
             currentRadius += CLUSTER_RADIUS * 0.8;
             currentAngle = -Math.PI / 2;

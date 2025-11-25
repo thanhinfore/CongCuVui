@@ -2098,6 +2098,16 @@ button:disabled {
     border-radius: 4px;
 }
 
+.vcf-load-more {
+    text-align: center;
+    padding: 15px;
+    color: #667eea;
+    font-size: 13px;
+    background: linear-gradient(180deg, transparent 0%, rgba(102, 126, 234, 0.05) 100%);
+    border-top: 1px dashed #e0e0e0;
+    margin-top: 8px;
+}
+
 /* Decrypt Section */
 .decrypt-section {
     padding: 20px;
