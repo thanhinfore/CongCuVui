@@ -5272,6 +5272,79 @@ function updateThemeIcon(theme) {
     }
 }
 
+// ==========================================
+// PHẦN v5.0: WELCOME SCREEN (Phase 6)
+// ==========================================
+
+function checkShowWelcome() {
+    // Check if user has seen welcome before
+    const hasSeenWelcome = localStorage.getItem('contactmap-welcomed');
+    const nodeCount = graph.nodes().length;
+
+    // Show welcome if never seen and graph is empty (only TÔI node)
+    if (!hasSeenWelcome && nodeCount <= 1) {
+        showWelcomeModal();
+    }
+}
+
+function showWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function hideWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+
+    // Check if user wants to not see again
+    const dontShowAgain = document.getElementById('dont-show-again');
+    if (dontShowAgain?.checked) {
+        localStorage.setItem('contactmap-welcomed', 'true');
+    }
+}
+
+function setupWelcomeModal() {
+    const btnStartFresh = document.getElementById('btn-start-fresh');
+    const btnImportData = document.getElementById('btn-import-data');
+
+    if (btnStartFresh) {
+        btnStartFresh.addEventListener('click', () => {
+            hideWelcomeModal();
+            // Mark as welcomed
+            localStorage.setItem('contactmap-welcomed', 'true');
+            showToast('Hãy bắt đầu bằng cách click nút + để thêm người mới!', 'info', 4000);
+        });
+    }
+
+    if (btnImportData) {
+        btnImportData.addEventListener('click', () => {
+            hideWelcomeModal();
+            // Mark as welcomed
+            localStorage.setItem('contactmap-welcomed', 'true');
+            // Open import modal
+            const importModal = document.getElementById('import-modal');
+            if (importModal) {
+                importModal.classList.remove('hidden');
+                document.getElementById('overlay')?.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Close on clicking overlay
+    const welcomeModal = document.getElementById('welcome-modal');
+    if (welcomeModal) {
+        welcomeModal.addEventListener('click', (e) => {
+            if (e.target === welcomeModal) {
+                hideWelcomeModal();
+            }
+        });
+    }
+}
+
 // Initialize application
 initApp().then(() => {
     // Initialize UI after data is loaded
@@ -5295,9 +5368,11 @@ initApp().then(() => {
     // Phase 4: Setup hover panel events
     setupHoverPanelEvents();
 
-    // Welcome message
+    // Phase 6: Setup welcome modal
+    setupWelcomeModal();
+
+    // Check if should show welcome screen (for new users)
     setTimeout(() => {
-        const storageType = state.useIndexedDB ? 'IndexedDB' : 'localStorage';
-        showToast(`Contact Map v5.0 - Bản đồ quan hệ của bạn!`, 'info', 4000);
-    }, 500);
+        checkShowWelcome();
+    }, 300);
 });
