@@ -1148,7 +1148,7 @@ body, html {
     backdrop-filter: blur(3px);
 }
 
-#modal, #edge-modal, #layer-modal {
+#modal, #edge-modal, #layer-modal, #layout-modal {
     display: none;
     position: fixed;
     top: 50%;
@@ -2647,5 +2647,124 @@ body.classifying {
         left: 20px;
         transform: none;
         justify-content: center;
+    }
+}
+
+/* ==========================================
+   LAYOUT MODAL
+   ========================================== */
+#layout-modal {
+    max-width: 450px;
+}
+
+#layout-modal .modal-body {
+    padding: 10px;
+}
+
+.layout-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.layout-option {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.layout-option:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+    transform: translateX(5px);
+}
+
+.layout-option:active {
+    transform: scale(0.98);
+}
+
+.layout-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.layout-icon i {
+    font-size: 22px;
+    color: white;
+}
+
+.layout-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+}
+
+.layout-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Layout option color variations */
+.layout-option[data-layout="radial"] .layout-icon {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+}
+
+.layout-option[data-layout="similarity"] .layout-icon {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+}
+
+.layout-option[data-layout="layer"] .layout-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.layout-option[data-layout="grid"] .layout-icon {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.layout-option[data-layout="circular"] .layout-icon {
+    background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+}
+
+@media (max-width: 480px) {
+    #layout-modal {
+        width: calc(100% - 20px);
+        margin: 10px;
+    }
+
+    .layout-option {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .layout-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .layout-icon i {
+        font-size: 18px;
+    }
+
+    .layout-info h4 {
+        font-size: 14px;
+    }
+
+    .layout-info p {
+        font-size: 11px;
     }
 }
