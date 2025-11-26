@@ -2981,8 +2981,14 @@ function openModal(nodeId, mode = 'EDIT') {
 
 function openEdgeModal(edge) {
     state.selectedEdge = edge;
+
+    // Close main modal if open to prevent overlapping (v7.6)
+    if (ui.modal && ui.modal.style.display !== 'none') {
+        ui.modal.style.display = 'none';
+    }
+
     if (ui.overlay) ui.overlay.style.display = 'block';
-    if (ui.edgeModal) ui.edgeModal.style.display = 'block';
+    if (ui.edgeModal) ui.edgeModal.style.display = 'flex';
 
     const source = graph.source(edge);
     const target = graph.target(edge);
@@ -2990,13 +2996,24 @@ function openEdgeModal(edge) {
     const targetLabel = graph.getNodeAttribute(target, 'label');
 
     const edgeTitle = document.getElementById('edge-modal-title');
-    if (edgeTitle) edgeTitle.innerText = `${sourceLabel} ↔ ${targetLabel}`;
+    if (edgeTitle) {
+        // Keep the heart icon in title (v7.6)
+        edgeTitle.innerHTML = `<i class="fas fa-heart"></i> ${sourceLabel} ↔ ${targetLabel}`;
+    }
 
     const edgeRelationship = graph.getEdgeAttribute(edge, 'relationship') || 'other';
     const edgeLabelVal = graph.getEdgeAttribute(edge, 'label') || '';
 
     if (ui.edgeType) ui.edgeType.value = edgeRelationship;
     if (ui.edgeLabel) ui.edgeLabel.value = edgeLabelVal;
+
+    // Update category button active state (v7.6)
+    document.querySelectorAll('.edge-category-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === edgeRelationship) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // ==========================================
@@ -4806,10 +4823,34 @@ document.getElementById('btn-delete-edge')?.addEventListener('click', () => {
     }
 });
 
-// Preset buttons for relationship labels
+// Edge Category buttons (v7.6)
+document.querySelectorAll('.edge-category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active from all
+        document.querySelectorAll('.edge-category-btn').forEach(b => b.classList.remove('active'));
+        // Add active to clicked
+        btn.classList.add('active');
+        // Update hidden select
+        const type = btn.dataset.type;
+        if (ui.edgeType) ui.edgeType.value = type;
+    });
+});
+
+// Preset buttons for relationship labels (updated v7.6)
 document.querySelectorAll('.preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+        // Set label value
         ui.edgeLabel.value = btn.dataset.label;
+
+        // If preset has a type, also set the category
+        const presetType = btn.dataset.type;
+        if (presetType) {
+            if (ui.edgeType) ui.edgeType.value = presetType;
+            // Update category button active state
+            document.querySelectorAll('.edge-category-btn').forEach(b => b.classList.remove('active'));
+            const categoryBtn = document.querySelector(`.edge-category-btn[data-type="${presetType}"]`);
+            if (categoryBtn) categoryBtn.classList.add('active');
+        }
     });
 });
 
