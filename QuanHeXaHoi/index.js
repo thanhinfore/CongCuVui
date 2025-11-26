@@ -3883,8 +3883,14 @@ function setupDragAndDrop() {
     });
 
     captor.on('mouseup', (e) => {
-        if (state.isDragging && state.draggedNode) {
-            const nodeA = state.draggedNode;
+        // v8.1: Save potential target FIRST before any state changes
+        const savedPotentialTarget = state.potentialTarget;
+        const wasDragging = state.isDragging;
+        const draggedNodeId = state.draggedNode;
+        const hadMoved = state.hasMoved;
+
+        if (wasDragging && draggedNodeId) {
+            const nodeA = draggedNodeId;
             const posA = graph.getNodeAttributes(nodeA);
 
             graph.removeNodeAttribute(nodeA, 'highlighted');
@@ -3892,7 +3898,7 @@ function setupDragAndDrop() {
             let handledByClassification = false;
 
             // Check if dropped on a layer zone during classification
-            if (classificationState.isActive && state.hasMoved) {
+            if (classificationState.isActive && hadMoved) {
                 const droppedOnLayer = checkLayerDropZoneDrop(e.original);
                 if (droppedOnLayer) {
                     assignNodeToLayer(nodeA, droppedOnLayer);
@@ -3902,9 +3908,9 @@ function setupDragAndDrop() {
                 }
             }
 
-            // v8.0: Always check for drag-to-connect if we have a potential target
-            if (!handledByClassification && state.hasMoved && state.potentialTarget) {
-                const targetNode = state.potentialTarget;
+            // v8.1: Use saved potential target for drag-to-connect
+            if (!handledByClassification && hadMoved && savedPotentialTarget) {
+                const targetNode = savedPotentialTarget;
                 const labelA = graph.getNodeAttribute(nodeA, 'label');
                 const labelB = graph.getNodeAttribute(targetNode, 'label');
 
@@ -3941,6 +3947,26 @@ function setupDragAndDrop() {
 
         renderer.getCamera().enable();
         renderer.refresh();
+    });
+
+    // v8.1: Backup document mouseup handler for drag-to-connect
+    document.addEventListener('mouseup', (e) => {
+        if (state.isDragging && state.draggedNode && state.potentialTarget) {
+            const nodeA = state.draggedNode;
+            const targetNode = state.potentialTarget;
+            const posA = graph.getNodeAttributes(nodeA);
+            const labelA = graph.getNodeAttribute(nodeA, 'label');
+            const labelB = graph.getNodeAttribute(targetNode, 'label');
+
+            if (!graph.hasEdge(nodeA, targetNode) && !graph.hasEdge(targetNode, nodeA)) {
+                // Small delay to let captor handle first
+                setTimeout(() => {
+                    if (!document.querySelector('.link-confirmation')) {
+                        showLinkConfirmation(nodeA, targetNode, labelA, labelB, posA);
+                    }
+                }, 50);
+            }
+        }
     });
 }
 
