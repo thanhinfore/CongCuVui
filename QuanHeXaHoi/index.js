@@ -115,7 +115,8 @@ let state = {
     maxDegree: 1,               // Maximum degree in graph (for normalization)
     // v8.1: Continuous force layout
     continuousForceActive: false,
-    forceAnimationId: null
+    forceAnimationId: null,
+    forcePausedForDrag: false
 };
 
 // v8.1: Vibrant multi-color palette for degree visualization (low to high)
@@ -3828,6 +3829,12 @@ function setupDragAndDrop() {
         // Hide hover panel when starting drag
         hideHoverPanel(true);
 
+        // v8.1: Pause force layout during drag
+        if (state.continuousForceActive) {
+            state.forcePausedForDrag = true;
+            stopContinuousForce();
+        }
+
         state.isDragging = true;
         state.draggedNode = e.node;
         state.dragStartTime = Date.now();
@@ -3925,6 +3932,13 @@ function setupDragAndDrop() {
             zone.classList.remove('dragover');
         });
 
+        // v8.1: Resume force layout if it was paused for drag
+        if (state.forcePausedForDrag) {
+            state.forcePausedForDrag = false;
+            startContinuousForce();
+            document.getElementById('fab-force-toggle')?.classList.add('active');
+        }
+
         renderer.getCamera().enable();
         renderer.refresh();
     });
@@ -3955,7 +3969,7 @@ function checkLayerDropZoneDrop(event) {
 // v8.0: Highlight potential connection target during drag
 function highlightPotentialConnection(draggedNode, pos) {
     const sizeA = graph.getNodeAttribute(draggedNode, 'size') || 10;
-    const baseThreshold = 25;
+    const baseThreshold = 60; // v8.1: Increased for easier connection
 
     // Clear previous potential target highlight
     if (state.potentialTarget) {
@@ -5536,18 +5550,18 @@ renderer = new Sigma(graph, container, {
 function setupV5UI() {
     // Menu toggle (sidebar)
     const menuToggle = document.getElementById('menu-toggle');
-    const leftSidebar = document.getElementById('left-sidebar');
+    const sidebar = document.getElementById('sidebar'); // Fixed: was 'left-sidebar'
     const sidebarClose = document.getElementById('sidebar-close');
 
-    if (menuToggle && leftSidebar) {
+    if (menuToggle && sidebar) {
         menuToggle.addEventListener('click', () => {
-            leftSidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('collapsed');
         });
     }
 
-    if (sidebarClose && leftSidebar) {
+    if (sidebarClose && sidebar) {
         sidebarClose.addEventListener('click', () => {
-            leftSidebar.classList.add('collapsed');
+            sidebar.classList.add('collapsed');
         });
     }
 
