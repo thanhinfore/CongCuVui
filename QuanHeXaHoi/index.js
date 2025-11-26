@@ -112,22 +112,25 @@ let state = {
     searchFilterActive: false,  // Whether search filter mode is active
     // v8.0: Degree-based coloring
     degreeColorEnabled: true,   // Enable degree-based node coloring
-    maxDegree: 1                // Maximum degree in graph (for normalization)
+    maxDegree: 1,               // Maximum degree in graph (for normalization)
+    // v8.1: Continuous force layout
+    continuousForceActive: false,
+    forceAnimationId: null
 };
 
-// v8.0: 11-level color palette for degree visualization (low to high)
+// v8.1: Vibrant multi-color palette for degree visualization (low to high)
 const DEGREE_COLORS = [
-    '#E8F5E9',  // Level 0: Lightest green (0 connections)
-    '#C8E6C9',  // Level 1
-    '#A5D6A7',  // Level 2
-    '#81C784',  // Level 3
-    '#66BB6A',  // Level 4
-    '#4CAF50',  // Level 5: Mid green
-    '#43A047',  // Level 6
-    '#388E3C',  // Level 7
-    '#2E7D32',  // Level 8
-    '#1B5E20',  // Level 9
-    '#0D3A14'   // Level 10: Darkest green (most connections)
+    '#94A3B8',  // Level 0: Slate gray (isolated nodes)
+    '#60A5FA',  // Level 1: Sky blue
+    '#34D399',  // Level 2: Emerald
+    '#A78BFA',  // Level 3: Violet
+    '#F472B6',  // Level 4: Pink
+    '#FB923C',  // Level 5: Orange
+    '#FBBF24',  // Level 6: Amber
+    '#F87171',  // Level 7: Red
+    '#E879F9',  // Level 8: Fuchsia
+    '#22D3EE',  // Level 9: Cyan
+    '#10B981'   // Level 10: Green (hub nodes - most connections)
 ];
 
 // ==========================================
@@ -3696,6 +3699,123 @@ function stopForceLayout() {
     showToast(`Đã sắp xếp: ${layoutName}!`, 'success');
 }
 
+// v8.1: Continuous Force-Directed Layout
+const FORCE_CONFIG = {
+    repulsion: 800,      // Repulsion strength between nodes
+    attraction: 0.06,    // Attraction along edges
+    gravity: 0.02,       // Pull towards center
+    damping: 0.85,       // Velocity damping
+    minVelocity: 0.1,    // Stop threshold
+    maxVelocity: 50      // Max velocity cap
+};
+
+// Store velocities for each node
+const nodeVelocities = new Map();
+
+function startContinuousForce() {
+    state.continuousForceActive = true;
+
+    // Initialize velocities
+    graph.forEachNode((node) => {
+        nodeVelocities.set(node, { vx: 0, vy: 0 });
+    });
+
+    function animate() {
+        if (!state.continuousForceActive) return;
+
+        const nodes = graph.nodes();
+        const positions = new Map();
+
+        // Get current positions
+        nodes.forEach(node => {
+            const attrs = graph.getNodeAttributes(node);
+            positions.set(node, { x: attrs.x || 0, y: attrs.y || 0 });
+        });
+
+        // Calculate forces
+        nodes.forEach(nodeA => {
+            if (nodeA === 'center') return; // Don't move center
+
+            let vel = nodeVelocities.get(nodeA) || { vx: 0, vy: 0 };
+            let fx = 0, fy = 0;
+            const posA = positions.get(nodeA);
+
+            // Repulsion from all other nodes
+            nodes.forEach(nodeB => {
+                if (nodeA === nodeB) return;
+                const posB = positions.get(nodeB);
+                const dx = posA.x - posB.x;
+                const dy = posA.y - posB.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                const force = FORCE_CONFIG.repulsion / (dist * dist);
+                fx += (dx / dist) * force;
+                fy += (dy / dist) * force;
+            });
+
+            // Attraction along edges
+            graph.forEachEdge(nodeA, (edge, attrs, source, target) => {
+                const otherNode = source === nodeA ? target : source;
+                const posB = positions.get(otherNode);
+                const dx = posB.x - posA.x;
+                const dy = posB.y - posA.y;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                fx += dx * FORCE_CONFIG.attraction;
+                fy += dy * FORCE_CONFIG.attraction;
+            });
+
+            // Gravity towards center
+            fx -= posA.x * FORCE_CONFIG.gravity;
+            fy -= posA.y * FORCE_CONFIG.gravity;
+
+            // Update velocity with damping
+            vel.vx = (vel.vx + fx) * FORCE_CONFIG.damping;
+            vel.vy = (vel.vy + fy) * FORCE_CONFIG.damping;
+
+            // Cap velocity
+            const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+            if (speed > FORCE_CONFIG.maxVelocity) {
+                vel.vx = (vel.vx / speed) * FORCE_CONFIG.maxVelocity;
+                vel.vy = (vel.vy / speed) * FORCE_CONFIG.maxVelocity;
+            }
+
+            nodeVelocities.set(nodeA, vel);
+        });
+
+        // Apply velocities
+        let totalMovement = 0;
+        nodes.forEach(node => {
+            if (node === 'center') return;
+
+            const vel = nodeVelocities.get(node);
+            const posA = positions.get(node);
+            const newX = posA.x + vel.vx;
+            const newY = posA.y + vel.vy;
+
+            totalMovement += Math.abs(vel.vx) + Math.abs(vel.vy);
+
+            graph.setNodeAttribute(node, 'x', newX);
+            graph.setNodeAttribute(node, 'y', newY);
+        });
+
+        renderer.refresh();
+
+        // Continue animation
+        state.forceAnimationId = requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+function stopContinuousForce() {
+    state.continuousForceActive = false;
+    if (state.forceAnimationId) {
+        cancelAnimationFrame(state.forceAnimationId);
+        state.forceAnimationId = null;
+    }
+    nodeVelocities.clear();
+    saveData();
+}
+
 // ==========================================
 // PHẦN 9: DRAG & DROP
 // ==========================================
@@ -5341,14 +5461,19 @@ renderer = new Sigma(graph, container, {
             }
         }
 
+        // v8.1: Special golden color for center node "TÔI"
+        if (node === 'center') {
+            res.color = '#F59E0B'; // Amber/Gold
+            res.zIndex = 10;
+        }
         // v8.0: Apply degree-based color (base color before highlights)
-        if (state.degreeColorEnabled && !data.potentialConnection) {
+        else if (state.degreeColorEnabled && !data.potentialConnection) {
             res.color = getDegreeColor(node);
         }
 
         if (state.hoveredNode === node || data.highlighted) {
             res.highlighted = true;
-            res.zIndex = 1;
+            res.zIndex = node === 'center' ? 10 : 1;
         }
 
         // v7.5: Highlight selected nodes
@@ -5438,6 +5563,31 @@ function setupV5UI() {
     if (fabAdd) {
         fabAdd.addEventListener('click', () => {
             openModal(null, 'ADD');
+        });
+    }
+
+    // v8.1: FAB - Add and connect to TÔI
+    const fabConnectMe = document.getElementById('fab-connect-me');
+    if (fabConnectMe) {
+        fabConnectMe.addEventListener('click', () => {
+            state.parentNode = 'center'; // Connect to TÔI
+            openModal(null, 'ADD');
+        });
+    }
+
+    // v8.1: FAB - Toggle Force Layout
+    const fabForceToggle = document.getElementById('fab-force-toggle');
+    if (fabForceToggle) {
+        fabForceToggle.addEventListener('click', () => {
+            if (state.continuousForceActive) {
+                stopContinuousForce();
+                fabForceToggle.classList.remove('active');
+                showToast('Đã tắt Force Layout', 'info');
+            } else {
+                startContinuousForce();
+                fabForceToggle.classList.add('active');
+                showToast('Force Layout đang chạy', 'success');
+            }
         });
     }
 
