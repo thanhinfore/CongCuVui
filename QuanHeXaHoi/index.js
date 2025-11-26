@@ -3702,19 +3702,25 @@ function stopForceLayout() {
 
 // v8.1: Continuous Force-Directed Layout
 // v8.4: Enhanced with radial distribution for center neighbors
+// v8.5: Dynamic scaling for large datasets + isolated nodes handling
 const FORCE_CONFIG = {
-    repulsion: 3000,          // Strong repulsion to spread nodes
-    attraction: 0.02,         // Weak attraction along edges
-    gravity: 0.0005,          // Very weak gravity (prevents flying away)
-    damping: 0.92,            // High damping for stability
+    // Base values (will be scaled based on node count)
+    baseRepulsion: 5000,      // Base repulsion force
+    attraction: 0.01,         // Weak attraction along edges
+    gravity: 0.0001,          // Very weak gravity
+    damping: 0.85,            // Damping for stability
     minVelocity: 0.05,        // Stop threshold
-    maxVelocity: 20,          // Lower max velocity for smooth movement
-    idealDistance: 80,        // Ideal distance between connected nodes
-    // v8.4: New config for radial distribution
-    centerRadius: 150,        // Ideal distance from center node
-    angularForce: 0.5,        // Force to spread neighbors evenly around center
-    radialForce: 0.1,         // Force to maintain ideal distance from center
-    tierSpacing: 120          // Spacing between tiers (distance levels from center)
+    maxVelocity: 15,          // Max velocity for smooth movement
+
+    // Radial distribution (dynamic)
+    baseCenterRadius: 200,    // Base distance from center (will scale with neighbor count)
+    angularForce: 0.8,        // Force to spread neighbors evenly around center
+    radialForce: 0.15,        // Force to maintain ideal distance from center
+    baseTierSpacing: 150,     // Base spacing between tiers
+
+    // Isolated nodes
+    isolatedRadius: 800,      // Base radius for isolated nodes
+    isolatedAngularForce: 0.3 // Angular force for isolated nodes
 };
 
 // Store velocities for each node
@@ -3755,6 +3761,35 @@ function getNodeDistanceFromCenter() {
     return distances;
 }
 
+// v8.5: Calculate dynamic config based on node count
+function getDynamicForceConfig(nodeCount, centerNeighborCount, isolatedCount) {
+    // Scale factor based on node count
+    const scaleFactor = Math.sqrt(nodeCount / 100); // Baseline: 100 nodes
+
+    // Center radius scales with number of direct neighbors
+    // More neighbors = larger circle needed
+    const neighborFactor = Math.max(1, centerNeighborCount / 10);
+    const centerRadius = FORCE_CONFIG.baseCenterRadius * neighborFactor;
+
+    // Tier spacing scales with total nodes
+    const tierSpacing = FORCE_CONFIG.baseTierSpacing * Math.max(1, scaleFactor * 0.5);
+
+    // Repulsion scales with node count
+    const repulsion = FORCE_CONFIG.baseRepulsion * Math.max(1, scaleFactor);
+
+    // Isolated nodes radius - should be outside all connected nodes
+    const maxTier = Math.ceil(Math.log2(nodeCount + 1));
+    const isolatedRadius = centerRadius + tierSpacing * maxTier + 200;
+
+    return {
+        repulsion,
+        centerRadius,
+        tierSpacing,
+        isolatedRadius,
+        isolatedAngularForce: FORCE_CONFIG.isolatedAngularForce
+    };
+}
+
 function startContinuousForce() {
     state.continuousForceActive = true;
 
@@ -3766,6 +3801,21 @@ function startContinuousForce() {
     // v8.4: Pre-calculate center neighbors and distances
     const centerNeighbors = getCenterNeighbors();
     const nodeDistances = getNodeDistanceFromCenter();
+
+    // v8.5: Find isolated nodes (not connected to center at all)
+    const allNodes = graph.nodes();
+    const isolatedNodes = allNodes.filter(n => n !== 'center' && !nodeDistances.has(n));
+    const connectedNodes = allNodes.filter(n => n !== 'center' && nodeDistances.has(n));
+
+    // v8.5: Get dynamic config
+    const dynamicConfig = getDynamicForceConfig(
+        allNodes.length,
+        centerNeighbors.length,
+        isolatedNodes.length
+    );
+
+    console.log(`Force Layout: ${allNodes.length} nodes, ${centerNeighbors.length} center neighbors, ${isolatedNodes.length} isolated`);
+    console.log(`Dynamic config:`, dynamicConfig);
 
     function animate() {
         if (!state.continuousForceActive) return;
@@ -3779,7 +3829,7 @@ function startContinuousForce() {
             positions.set(node, { x: attrs.x || 0, y: attrs.y || 0 });
         });
 
-        // v8.4: Calculate ideal angles for center neighbors
+        // v8.5: Calculate ideal angles for center neighbors (evenly distributed)
         const numNeighbors = centerNeighbors.length;
         const neighborAngles = new Map();
 
@@ -3800,6 +3850,25 @@ function startContinuousForce() {
             });
         }
 
+        // v8.5: Calculate ideal angles for isolated nodes (outer ring)
+        const numIsolated = isolatedNodes.length;
+        const isolatedAngles = new Map();
+
+        if (numIsolated > 0) {
+            const sortedIsolated = [...isolatedNodes].sort((a, b) => {
+                const posA = positions.get(a);
+                const posB = positions.get(b);
+                const angleA = Math.atan2(posA.y, posA.x);
+                const angleB = Math.atan2(posB.y, posB.x);
+                return angleA - angleB;
+            });
+
+            sortedIsolated.forEach((node, index) => {
+                const idealAngle = (2 * Math.PI * index) / numIsolated;
+                isolatedAngles.set(node, idealAngle);
+            });
+        }
+
         // Calculate forces
         nodes.forEach(nodeA => {
             if (nodeA === 'center') return; // Don't move center
@@ -3807,79 +3876,101 @@ function startContinuousForce() {
             let vel = nodeVelocities.get(nodeA) || { vx: 0, vy: 0 };
             let fx = 0, fy = 0;
             const posA = positions.get(nodeA);
-            const distFromCenter = nodeDistances.get(nodeA) || 999;
+            const distFromCenter = nodeDistances.get(nodeA);
+            const isIsolated = !nodeDistances.has(nodeA);
 
-            // Repulsion from all other nodes
+            // v8.5: Optimized repulsion - only calculate for nearby nodes
+            // Use spatial hashing or limit to closest N nodes for performance
+            const maxRepulsionDist = 500; // Only calculate repulsion within this distance
+
             nodes.forEach(nodeB => {
                 if (nodeA === nodeB) return;
                 const posB = positions.get(nodeB);
                 const dx = posA.x - posB.x;
                 const dy = posA.y - posB.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                const force = FORCE_CONFIG.repulsion / (dist * dist);
+                const distSq = dx * dx + dy * dy;
+                const dist = Math.sqrt(distSq) || 1;
+
+                // Skip if too far for repulsion (performance optimization)
+                if (dist > maxRepulsionDist) return;
+
+                const force = dynamicConfig.repulsion / (distSq + 100); // Add constant to prevent extreme forces
                 fx += (dx / dist) * force;
                 fy += (dy / dist) * force;
             });
 
-            // Attraction along edges
-            graph.forEachEdge(nodeA, (edge, attrs, source, target) => {
-                const otherNode = source === nodeA ? target : source;
-                const posB = positions.get(otherNode);
-                const dx = posB.x - posA.x;
-                const dy = posB.y - posA.y;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                fx += dx * FORCE_CONFIG.attraction;
-                fy += dy * FORCE_CONFIG.attraction;
-            });
+            // Attraction along edges (only for connected nodes)
+            if (!isIsolated) {
+                graph.forEachEdge(nodeA, (edge, attrs, source, target) => {
+                    const otherNode = source === nodeA ? target : source;
+                    const posB = positions.get(otherNode);
+                    if (!posB) return;
+                    const dx = posB.x - posA.x;
+                    const dy = posB.y - posA.y;
+                    fx += dx * FORCE_CONFIG.attraction;
+                    fy += dy * FORCE_CONFIG.attraction;
+                });
+            }
 
-            // v8.4: RADIAL DISTRIBUTION FORCES for center neighbors
-            if (centerNeighbors.includes(nodeA)) {
-                const idealAngle = neighborAngles.get(nodeA);
-                const idealRadius = FORCE_CONFIG.centerRadius;
+            // v8.5: RADIAL DISTRIBUTION based on node type
+            const currentAngle = Math.atan2(posA.y, posA.x);
+            const currentRadius = Math.sqrt(posA.x * posA.x + posA.y * posA.y) || 1;
 
-                // Calculate ideal position
-                const idealX = Math.cos(idealAngle) * idealRadius;
-                const idealY = Math.sin(idealAngle) * idealRadius;
+            if (isIsolated) {
+                // ISOLATED NODES: Push to outer ring with even angular distribution
+                const idealAngle = isolatedAngles.get(nodeA) || 0;
+                const idealRadius = dynamicConfig.isolatedRadius;
 
-                // Current position relative to center
-                const currentAngle = Math.atan2(posA.y, posA.x);
-                const currentRadius = Math.sqrt(posA.x * posA.x + posA.y * posA.y);
-
-                // Angular force - push towards ideal angle
+                // Angular force
                 let angleDiff = idealAngle - currentAngle;
-                // Normalize angle difference to [-PI, PI]
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
-                // Apply tangential force (perpendicular to radial direction)
+                const tangentX = -Math.sin(currentAngle);
+                const tangentY = Math.cos(currentAngle);
+                const angularStrength = angleDiff * dynamicConfig.isolatedAngularForce * currentRadius;
+                fx += tangentX * angularStrength;
+                fy += tangentY * angularStrength;
+
+                // Radial force - push to outer ring
+                const radiusDiff = idealRadius - currentRadius;
+                const radialStrength = radiusDiff * FORCE_CONFIG.radialForce;
+                fx += (posA.x / currentRadius) * radialStrength;
+                fy += (posA.y / currentRadius) * radialStrength;
+            }
+            else if (centerNeighbors.includes(nodeA)) {
+                // CENTER NEIGHBORS: First ring around TÔI
+                const idealAngle = neighborAngles.get(nodeA);
+                const idealRadius = dynamicConfig.centerRadius;
+
+                // Angular force
+                let angleDiff = idealAngle - currentAngle;
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
                 const tangentX = -Math.sin(currentAngle);
                 const tangentY = Math.cos(currentAngle);
                 const angularStrength = angleDiff * FORCE_CONFIG.angularForce * currentRadius;
                 fx += tangentX * angularStrength;
                 fy += tangentY * angularStrength;
 
-                // Radial force - push towards ideal radius
+                // Radial force
                 const radiusDiff = idealRadius - currentRadius;
                 const radialStrength = radiusDiff * FORCE_CONFIG.radialForce;
-                if (currentRadius > 0) {
-                    fx += (posA.x / currentRadius) * radialStrength;
-                    fy += (posA.y / currentRadius) * radialStrength;
-                }
+                fx += (posA.x / currentRadius) * radialStrength;
+                fy += (posA.y / currentRadius) * radialStrength;
             }
-            // v8.4: TIER-BASED RADIAL FORCE for non-direct neighbors
             else if (distFromCenter > 1) {
-                const idealRadius = FORCE_CONFIG.centerRadius + (distFromCenter - 1) * FORCE_CONFIG.tierSpacing;
-                const currentRadius = Math.sqrt(posA.x * posA.x + posA.y * posA.y);
+                // OTHER CONNECTED NODES: Tier-based positioning
+                const idealRadius = dynamicConfig.centerRadius + (distFromCenter - 1) * dynamicConfig.tierSpacing;
 
-                if (currentRadius > 0) {
-                    const radiusDiff = idealRadius - currentRadius;
-                    const radialStrength = radiusDiff * FORCE_CONFIG.radialForce * 0.5;
-                    fx += (posA.x / currentRadius) * radialStrength;
-                    fy += (posA.y / currentRadius) * radialStrength;
-                }
+                const radiusDiff = idealRadius - currentRadius;
+                const radialStrength = radiusDiff * FORCE_CONFIG.radialForce * 0.3;
+                fx += (posA.x / currentRadius) * radialStrength;
+                fy += (posA.y / currentRadius) * radialStrength;
             }
 
-            // Gravity towards center (weaker for nodes already positioned)
+            // Weak gravity towards center (prevent flying away)
             fx -= posA.x * FORCE_CONFIG.gravity;
             fy -= posA.y * FORCE_CONFIG.gravity;
 
@@ -3903,6 +3994,8 @@ function startContinuousForce() {
             if (node === 'center') return;
 
             const vel = nodeVelocities.get(node);
+            if (!vel) return;
+
             const posA = positions.get(node);
             const newX = posA.x + vel.vx;
             const newY = posA.y + vel.vy;
