@@ -4615,13 +4615,13 @@ function setupClickHandlers() {
             return;
         }
 
-        // v7.0: Multi-select with Ctrl/Cmd click
+        // v7.5: Multi-select with Ctrl/Cmd click
         if (e.event.ctrlKey || e.event.metaKey) {
             toggleNodeSelection(e.node, true);
             return;
         }
 
-        // v7.0: Add to selection with Shift click
+        // v7.5: Add to selection with Shift click
         if (e.event.shiftKey && multiSelectState.selectedNodes.size > 0) {
             toggleNodeSelection(e.node, true);
             return;
@@ -5075,7 +5075,7 @@ renderer = new Sigma(graph, container, {
             res.zIndex = 1;
         }
 
-        // v7.0: Highlight selected nodes
+        // v7.5: Highlight selected nodes
         if (multiSelectState.selectedNodes.has(node)) {
             res.highlighted = true;
             res.zIndex = 2;
@@ -5369,7 +5369,7 @@ function setupWelcomeModal() {
 }
 
 // ==========================================
-// PHẦN v7.0: COMMAND PALETTE
+// PHẦN v7.5: COMMAND PALETTE
 // ==========================================
 
 const commandPaletteState = {
@@ -5558,7 +5558,7 @@ function setupCommandPalette() {
 }
 
 // ==========================================
-// PHẦN v7.0: MULTI-SELECT
+// PHẦN v7.5: MULTI-SELECT
 // ==========================================
 
 const multiSelectState = {
@@ -5753,7 +5753,7 @@ function setupMultiSelect() {
 }
 
 // ==========================================
-// PHẦN v7.0: KEYBOARD SHORTCUTS
+// PHẦN v7.5: KEYBOARD SHORTCUTS
 // ==========================================
 
 function setupGlobalKeyboardShortcuts() {
@@ -5843,7 +5843,7 @@ initApp().then(() => {
     // Phase 6: Setup welcome modal
     setupWelcomeModal();
 
-    // v7.0: Setup new features
+    // v7.5: Setup new features
     setupCommandPalette();
     setupMultiSelect();
     setupGlobalKeyboardShortcuts();
@@ -5853,8 +5853,8 @@ initApp().then(() => {
         checkShowWelcome();
     }, 300);
 
-    // v7.0 welcome toast
+    // v7.5 welcome toast
     setTimeout(() => {
-        showToast('Contact Map v7.0 - Nhấn Ctrl+K để mở Command Palette', 'info', 4000);
+        showToast('Contact Map v7.5 - Nhấn Ctrl+K để mở Command Palette', 'info', 4000);
     }, 600);
 });
