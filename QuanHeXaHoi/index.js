@@ -2910,8 +2910,8 @@ function updateNodeCount() {
 }
 
 function closeModal() {
-    if (ui.modal) ui.modal.style.display = 'none';
-    if (ui.overlay) ui.overlay.style.display = 'none';
+    if (ui.modal) ui.modal.classList.add('hidden');
+    if (ui.overlay) ui.overlay.classList.add('hidden');
     clearModalForm();
     state.mode = 'NORMAL';
     state.selectedNode = null;
@@ -2932,15 +2932,15 @@ function clearModalForm() {
 }
 
 function closeEdgeModal() {
-    if (ui.edgeModal) ui.edgeModal.style.display = 'none';
-    if (ui.overlay) ui.overlay.style.display = 'none';
+    if (ui.edgeModal) ui.edgeModal.classList.add('hidden');
+    if (ui.overlay) ui.overlay.classList.add('hidden');
     state.selectedEdge = null;
 }
 
 function openModal(nodeId, mode = 'EDIT') {
     state.mode = mode;
-    if (ui.overlay) ui.overlay.style.display = 'block';
-    if (ui.modal) ui.modal.style.display = 'block';
+    if (ui.overlay) ui.overlay.classList.remove('hidden');
+    if (ui.modal) ui.modal.classList.remove('hidden');
 
     if (mode === 'ADD') {
         if (ui.title) ui.title.innerText = state.parentNode
@@ -2982,13 +2982,11 @@ function openModal(nodeId, mode = 'EDIT') {
 function openEdgeModal(edge) {
     state.selectedEdge = edge;
 
-    // Close main modal if open to prevent overlapping (v7.6)
-    if (ui.modal && ui.modal.style.display !== 'none') {
-        ui.modal.style.display = 'none';
-    }
+    // Close main modal if open to prevent overlapping (v8.0)
+    if (ui.modal) ui.modal.classList.add('hidden');
 
-    if (ui.overlay) ui.overlay.style.display = 'block';
-    if (ui.edgeModal) ui.edgeModal.style.display = 'flex';
+    if (ui.overlay) ui.overlay.classList.remove('hidden');
+    if (ui.edgeModal) ui.edgeModal.classList.remove('hidden');
 
     const source = graph.source(edge);
     const target = graph.target(edge);
