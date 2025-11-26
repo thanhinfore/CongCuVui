@@ -85,6 +85,7 @@ let state = {
     dragStartTime: 0,
     dragStartPos: null,
     hasMoved: false,
+    potentialTarget: null,  // v8.0: Node to highlight during drag-to-connect
     lastSaved: null,
     currentLayer: 'all',
     forceRunning: false,
@@ -3433,9 +3434,68 @@ function calculateRadialTreePositions() {
     return positions;
 }
 
+// Layout: By Degree - nodes with more connections closer to center (v8.0)
+function calculateDegreeBasedPositions() {
+    const positions = new Map();
+
+    // Place center node at origin
+    positions.set('center', { x: 0, y: 0 });
+
+    // Get all nodes except center with their degrees
+    const nodesDegrees = [];
+    graph.forEachNode((nodeId) => {
+        if (nodeId === 'center') return;
+        const degree = graph.degree(nodeId);
+        nodesDegrees.push({ nodeId, degree });
+    });
+
+    // Sort by degree descending (higher degree = closer to center)
+    nodesDegrees.sort((a, b) => b.degree - a.degree);
+
+    if (nodesDegrees.length === 0) return positions;
+
+    // Group nodes into rings based on degree percentiles
+    const totalNodes = nodesDegrees.length;
+    const nodesPerRing = Math.max(8, Math.ceil(totalNodes / 6)); // At least 8 nodes per ring
+
+    let currentRing = 1;
+    let nodesInCurrentRing = 0;
+    let ringNodes = [];
+
+    nodesDegrees.forEach((item, index) => {
+        ringNodes.push(item.nodeId);
+        nodesInCurrentRing++;
+
+        // Check if ring is full or we're at the end
+        const ringCapacity = nodesPerRing * currentRing; // Outer rings can hold more
+        if (nodesInCurrentRing >= ringCapacity || index === totalNodes - 1) {
+            // Position all nodes in this ring
+            const radius = RADIAL_LAYOUT_CONFIG.MIN_RADIUS +
+                          (currentRing - 1) * RADIAL_LAYOUT_CONFIG.RING_SPACING;
+            const angleStep = (2 * Math.PI) / ringNodes.length;
+
+            ringNodes.forEach((nodeId, nodeIndex) => {
+                const angle = nodeIndex * angleStep - Math.PI / 2; // Start from top
+                positions.set(nodeId, {
+                    x: radius * Math.cos(angle),
+                    y: radius * Math.sin(angle)
+                });
+            });
+
+            // Move to next ring
+            currentRing++;
+            nodesInCurrentRing = 0;
+            ringNodes = [];
+        }
+    });
+
+    return positions;
+}
+
 // Layout names for toast messages
 const LAYOUT_NAMES = {
     radial: 'Cây Tỏa (Radial)',
+    degree: 'Theo Độ Kết Nối',
     similarity: 'Tên Giống Nhau',
     layer: 'Theo Layer',
     grid: 'Lưới (Grid)',
@@ -3467,6 +3527,9 @@ function startForceLayout(layoutType = 'radial') {
     // Calculate target positions based on layout type
     let targetPositions;
     switch (layoutType) {
+        case 'degree':
+            targetPositions = calculateDegreeBasedPositions();
+            break;
         case 'similarity':
             targetPositions = calculateSimilarityPositions();
             break;
@@ -3589,6 +3652,11 @@ function setupDragAndDrop() {
         graph.setNodeAttribute(state.draggedNode, 'x', pos.x);
         graph.setNodeAttribute(state.draggedNode, 'y', pos.y);
 
+        // v8.0: Highlight potential connection target during drag
+        if (state.hasMoved) {
+            highlightPotentialConnection(state.draggedNode, pos);
+        }
+
         // Check if hovering over a layer drop zone during classification mode
         if (classificationState.isActive && state.hasMoved) {
             checkLayerDropZoneHover(e.original);
@@ -3630,6 +3698,9 @@ function setupDragAndDrop() {
         state.dragStartPos = null;
         classificationState.draggedNodeId = null;
 
+        // v8.0: Clear potential connection highlight
+        clearPotentialConnectionHighlight();
+
         // Clear hover state from all zones
         document.querySelectorAll('.layer-drop-zone').forEach(zone => {
             zone.classList.remove('dragover');
@@ -3662,10 +3733,62 @@ function checkLayerDropZoneDrop(event) {
     return null;
 }
 
+// v8.0: Highlight potential connection target during drag
+function highlightPotentialConnection(draggedNode, pos) {
+    const sizeA = graph.getNodeAttribute(draggedNode, 'size') || 10;
+    const baseThreshold = 25;
+
+    // Clear previous potential target highlight
+    if (state.potentialTarget) {
+        graph.removeNodeAttribute(state.potentialTarget, 'potentialConnection');
+        state.potentialTarget = null;
+    }
+
+    let targetNode = null;
+    let minDist = Infinity;
+
+    graph.forEachNode((nodeB, attrB) => {
+        if (draggedNode !== nodeB && !attrB.hidden) {
+            const dx = pos.x - attrB.x;
+            const dy = pos.y - attrB.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            const sizeB = attrB.size || 10;
+            const threshold = Math.max(baseThreshold, (sizeA + sizeB) / 2 + 10);
+
+            if (dist < threshold && dist < minDist) {
+                targetNode = nodeB;
+                minDist = dist;
+            }
+        }
+    });
+
+    if (targetNode) {
+        // Check if already connected
+        if (!graph.hasEdge(draggedNode, targetNode) && !graph.hasEdge(targetNode, draggedNode)) {
+            graph.setNodeAttribute(targetNode, 'potentialConnection', true);
+            state.potentialTarget = targetNode;
+        }
+    }
+
+    renderer.refresh();
+}
+
+// v8.0: Clear potential connection highlight
+function clearPotentialConnectionHighlight() {
+    if (state.potentialTarget) {
+        graph.removeNodeAttribute(state.potentialTarget, 'potentialConnection');
+        state.potentialTarget = null;
+    }
+}
+
 function checkAndLinkNodes(nodeA, posA) {
     let targetNode = null;
     let minDist = Infinity;
     const sizeA = posA.size || 10;
+
+    // v8.0: Increased threshold for easier drag-to-connect
+    const baseThreshold = 25; // Larger base threshold for easier connection
 
     graph.forEachNode((nodeB, attrB) => {
         if (nodeA !== nodeB && !attrB.hidden) {
@@ -3674,7 +3797,7 @@ function checkAndLinkNodes(nodeA, posA) {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const sizeB = attrB.size || 10;
-            const threshold = (sizeA + sizeB) / 2 + 5;
+            const threshold = Math.max(baseThreshold, (sizeA + sizeB) / 2 + 10);
 
             if (dist < threshold && dist < minDist) {
                 targetNode = nodeB;
@@ -4738,6 +4861,16 @@ ui.btnSave?.addEventListener('click', () => {
             });
         }
 
+        // v8.0: Add new node to filter if filter is active
+        if (state.searchFilterActive && state.searchFilteredNodes) {
+            state.searchFilteredNodes.add(newId);
+            // Update filter count
+            const countSpan = document.getElementById('filter-count');
+            if (countSpan) {
+                countSpan.textContent = state.searchFilteredNodes.size;
+            }
+        }
+
         applyColorsByDistance(false);
         updateNodeCount();
         showToast(`Đã thêm "${label}"!`, 'success');
@@ -5120,6 +5253,14 @@ renderer = new Sigma(graph, container, {
             res.zIndex = 2;
             // Add a ring effect by making the node slightly larger
             res.size = (res.size || 10) * 1.2;
+        }
+
+        // v8.0: Highlight potential connection target during drag
+        if (data.potentialConnection) {
+            res.highlighted = true;
+            res.zIndex = 3;
+            res.color = '#4CAF50'; // Green to indicate connection possible
+            res.size = (res.size || 10) * 1.5;
         }
 
         return res;
