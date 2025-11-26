@@ -3862,14 +3862,16 @@ function setupDragAndDrop() {
 
         if (dx > DRAG_CONFIG.MOVE_THRESHOLD || dy > DRAG_CONFIG.MOVE_THRESHOLD) {
             state.hasMoved = true;
+            // v8.2: Add dragging class to body
+            document.body.classList.add('dragging-node');
         }
 
         graph.setNodeAttribute(state.draggedNode, 'x', pos.x);
         graph.setNodeAttribute(state.draggedNode, 'y', pos.y);
 
-        // v8.0: Highlight potential connection target during drag
+        // v8.2: Highlight potential connection target during drag with preview line
         if (state.hasMoved) {
-            highlightPotentialConnection(state.draggedNode, pos);
+            highlightPotentialConnection(state.draggedNode, pos, e.original);
         }
 
         // Check if hovering over a layer drop zone during classification mode
@@ -3992,10 +3994,124 @@ function checkLayerDropZoneDrop(event) {
     return null;
 }
 
-// v8.0: Highlight potential connection target during drag
-function highlightPotentialConnection(draggedNode, pos) {
+// v8.2: Enhanced drag-to-connect with preview line and tooltip
+let dragPreviewCanvas = null;
+let dragPreviewCtx = null;
+let lastMouseViewport = null;
+
+function initDragPreviewCanvas() {
+    dragPreviewCanvas = document.getElementById('drag-preview-canvas');
+    if (dragPreviewCanvas) {
+        dragPreviewCtx = dragPreviewCanvas.getContext('2d');
+        resizeDragPreviewCanvas();
+        window.addEventListener('resize', resizeDragPreviewCanvas);
+    }
+}
+
+function resizeDragPreviewCanvas() {
+    if (dragPreviewCanvas) {
+        dragPreviewCanvas.width = window.innerWidth;
+        dragPreviewCanvas.height = window.innerHeight;
+    }
+}
+
+function clearDragPreviewCanvas() {
+    if (dragPreviewCtx && dragPreviewCanvas) {
+        dragPreviewCtx.clearRect(0, 0, dragPreviewCanvas.width, dragPreviewCanvas.height);
+    }
+}
+
+function drawPreviewLine(fromViewport, toViewport, isConnectable = true) {
+    if (!dragPreviewCtx || !dragPreviewCanvas) return;
+
+    clearDragPreviewCanvas();
+
+    const ctx = dragPreviewCtx;
+    ctx.save();
+
+    // Draw dashed line
+    ctx.beginPath();
+    ctx.setLineDash([8, 4]);
+    ctx.strokeStyle = isConnectable ? '#4CAF50' : '#FF9800';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    ctx.moveTo(fromViewport.x, fromViewport.y);
+    ctx.lineTo(toViewport.x, toViewport.y);
+    ctx.stroke();
+
+    // Draw arrow at target
+    const angle = Math.atan2(toViewport.y - fromViewport.y, toViewport.x - fromViewport.x);
+    const arrowLength = 12;
+
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(toViewport.x, toViewport.y);
+    ctx.lineTo(
+        toViewport.x - arrowLength * Math.cos(angle - Math.PI / 6),
+        toViewport.y - arrowLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.moveTo(toViewport.x, toViewport.y);
+    ctx.lineTo(
+        toViewport.x - arrowLength * Math.cos(angle + Math.PI / 6),
+        toViewport.y - arrowLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.stroke();
+
+    // Draw glow effect at connection point
+    if (isConnectable) {
+        ctx.beginPath();
+        const gradient = ctx.createRadialGradient(toViewport.x, toViewport.y, 0, toViewport.x, toViewport.y, 20);
+        gradient.addColorStop(0, 'rgba(76, 175, 80, 0.4)');
+        gradient.addColorStop(1, 'rgba(76, 175, 80, 0)');
+        ctx.fillStyle = gradient;
+        ctx.arc(toViewport.x, toViewport.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function showDragTooltip(x, y, targetNode, alreadyConnected = false) {
+    const tooltip = document.getElementById('drag-tooltip');
+    const tooltipText = document.getElementById('drag-tooltip-text');
+
+    if (!tooltip || !tooltipText) return;
+
+    const targetLabel = graph.getNodeAttribute(targetNode, 'label');
+
+    if (alreadyConnected) {
+        tooltipText.textContent = `Đã kết nối với "${targetLabel}"`;
+        tooltip.classList.remove('can-connect');
+        tooltip.classList.add('already-connected');
+    } else {
+        tooltipText.textContent = `Thả để kết nối với "${targetLabel}"`;
+        tooltip.classList.remove('already-connected');
+        tooltip.classList.add('can-connect');
+    }
+
+    // Position tooltip near cursor
+    tooltip.style.left = `${x + 20}px`;
+    tooltip.style.top = `${y - 40}px`;
+    tooltip.classList.remove('hidden');
+
+    // Add body class for cursor change
+    document.body.classList.add('can-connect-node');
+}
+
+function hideDragTooltip() {
+    const tooltip = document.getElementById('drag-tooltip');
+    if (tooltip) {
+        tooltip.classList.add('hidden');
+        tooltip.classList.remove('can-connect', 'already-connected');
+    }
+    document.body.classList.remove('can-connect-node');
+}
+
+// v8.2: Enhanced highlight potential connection with preview line
+function highlightPotentialConnection(draggedNode, pos, mouseEvent) {
     const sizeA = graph.getNodeAttribute(draggedNode, 'size') || 10;
-    const baseThreshold = 60; // v8.1: Increased for easier connection
+    const baseThreshold = 80; // v8.2: Further increased for easier connection
 
     // Clear previous potential target highlight
     if (state.potentialTarget) {
@@ -4005,6 +4121,7 @@ function highlightPotentialConnection(draggedNode, pos) {
 
     let targetNode = null;
     let minDist = Infinity;
+    let targetAttr = null;
 
     graph.forEachNode((nodeB, attrB) => {
         if (draggedNode !== nodeB && !attrB.hidden) {
@@ -4013,32 +4130,56 @@ function highlightPotentialConnection(draggedNode, pos) {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             const sizeB = attrB.size || 10;
-            const threshold = Math.max(baseThreshold, (sizeA + sizeB) / 2 + 10);
+            const threshold = Math.max(baseThreshold, (sizeA + sizeB) / 2 + 20);
 
             if (dist < threshold && dist < minDist) {
                 targetNode = nodeB;
+                targetAttr = attrB;
                 minDist = dist;
             }
         }
     });
 
-    if (targetNode) {
-        // Check if already connected
-        if (!graph.hasEdge(draggedNode, targetNode) && !graph.hasEdge(targetNode, draggedNode)) {
+    if (targetNode && targetAttr) {
+        const alreadyConnected = graph.hasEdge(draggedNode, targetNode) || graph.hasEdge(targetNode, draggedNode);
+
+        // Get viewport coordinates for drawing preview line
+        const draggedViewport = renderer.graphToViewport(pos);
+        const targetViewport = renderer.graphToViewport({ x: targetAttr.x, y: targetAttr.y });
+
+        // Draw preview line
+        drawPreviewLine(draggedViewport, targetViewport, !alreadyConnected);
+
+        // Show tooltip
+        if (mouseEvent) {
+            showDragTooltip(mouseEvent.clientX, mouseEvent.clientY, targetNode, alreadyConnected);
+        }
+
+        if (!alreadyConnected) {
             graph.setNodeAttribute(targetNode, 'potentialConnection', true);
             state.potentialTarget = targetNode;
+        } else {
+            // Still set target but mark as already connected
+            state.potentialTarget = null;
         }
+    } else {
+        // No target nearby - clear preview
+        clearDragPreviewCanvas();
+        hideDragTooltip();
     }
 
     renderer.refresh();
 }
 
-// v8.0: Clear potential connection highlight
+// v8.2: Enhanced clear potential connection highlight
 function clearPotentialConnectionHighlight() {
     if (state.potentialTarget) {
         graph.removeNodeAttribute(state.potentialTarget, 'potentialConnection');
         state.potentialTarget = null;
     }
+    clearDragPreviewCanvas();
+    hideDragTooltip();
+    document.body.classList.remove('dragging-node', 'can-connect-node');
 }
 
 function checkAndLinkNodes(nodeA, posA) {
@@ -4046,8 +4187,8 @@ function checkAndLinkNodes(nodeA, posA) {
     let minDist = Infinity;
     const sizeA = posA.size || 10;
 
-    // v8.0: Increased threshold for easier drag-to-connect
-    const baseThreshold = 25; // Larger base threshold for easier connection
+    // v8.2: Increased threshold for easier drag-to-connect
+    const baseThreshold = 80; // Larger base threshold for easier connection
 
     graph.forEachNode((nodeB, attrB) => {
         if (nodeA !== nodeB && !attrB.hidden) {
@@ -5525,12 +5666,14 @@ renderer = new Sigma(graph, container, {
             res.size = (res.size || 10) * 1.2;
         }
 
-        // v8.0: Highlight potential connection target during drag
+        // v8.2: Enhanced highlight for potential connection target during drag
         if (data.potentialConnection) {
             res.highlighted = true;
-            res.zIndex = 3;
-            res.color = '#FF5722'; // Orange to indicate connection possible
-            res.size = (res.size || 10) * 1.5;
+            res.zIndex = 10;
+            res.color = '#4CAF50'; // Green to indicate connection possible
+            res.size = (res.size || 10) * 1.8;
+            // Add special visual marker for drag target
+            res.forceLabel = true;
         }
 
         return res;
@@ -6308,6 +6451,7 @@ initApp().then(() => {
 
     // Setup new features
     setupDragAndDrop();
+    initDragPreviewCanvas(); // v8.2: Initialize drag preview canvas
     setupClickHandlers();
     setupSearch();
     setupZoomControls();
