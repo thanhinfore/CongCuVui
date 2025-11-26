@@ -2981,8 +2981,14 @@ function openModal(nodeId, mode = 'EDIT') {
 
 function openEdgeModal(edge) {
     state.selectedEdge = edge;
+
+    // Close main modal if open to prevent overlapping (v7.6)
+    if (ui.modal && ui.modal.style.display !== 'none') {
+        ui.modal.style.display = 'none';
+    }
+
     if (ui.overlay) ui.overlay.style.display = 'block';
-    if (ui.edgeModal) ui.edgeModal.style.display = 'block';
+    if (ui.edgeModal) ui.edgeModal.style.display = 'flex';
 
     const source = graph.source(edge);
     const target = graph.target(edge);
