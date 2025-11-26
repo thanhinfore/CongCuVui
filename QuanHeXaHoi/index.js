@@ -3701,12 +3701,13 @@ function stopForceLayout() {
 
 // v8.1: Continuous Force-Directed Layout
 const FORCE_CONFIG = {
-    repulsion: 800,      // Repulsion strength between nodes
-    attraction: 0.06,    // Attraction along edges
-    gravity: 0.02,       // Pull towards center
-    damping: 0.85,       // Velocity damping
-    minVelocity: 0.1,    // Stop threshold
-    maxVelocity: 50      // Max velocity cap
+    repulsion: 3000,     // Strong repulsion to spread nodes
+    attraction: 0.02,    // Weak attraction along edges
+    gravity: 0.0005,     // Very weak gravity (prevents flying away)
+    damping: 0.92,       // High damping for stability
+    minVelocity: 0.05,   // Stop threshold
+    maxVelocity: 20,     // Lower max velocity for smooth movement
+    idealDistance: 80    // Ideal distance between connected nodes
 };
 
 // Store velocities for each node
