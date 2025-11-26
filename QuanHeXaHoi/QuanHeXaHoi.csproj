@@ -70,7 +70,19 @@
     <Content Include="index.css" />
     <Content Include="index.html" />
     <Content Include="index.js" />
+    <Content Include="js\README.md" />
     <None Include="readme.md" />
+    <Content Include="js\core\config.js" />
+    <Content Include="js\core\graph.js" />
+    <Content Include="js\core\state.js" />
+    <Content Include="js\core\storage.js" />
+    <Content Include="js\main.js" />
+    <Content Include="js\ui\commandPalette.js" />
+    <Content Include="js\ui\keyboard.js" />
+    <Content Include="js\ui\multiSelect.js" />
+    <Content Include="js\ui\theme.js" />
+    <Content Include="js\utils\helpers.js" />
+    <Content Include="js\utils\toast.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
