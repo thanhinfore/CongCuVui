@@ -116,7 +116,8 @@ let state = {
     // v8.1: Continuous force layout
     continuousForceActive: false,
     forceAnimationId: null,
-    forcePausedForDrag: false
+    forcePausedForDrag: false,
+    justFinishedDragConnect: false  // v8.1: Flag to prevent click after drag-to-connect
 };
 
 // v8.1: Vibrant multi-color palette for degree visualization (low to high)
@@ -3914,6 +3915,10 @@ function setupDragAndDrop() {
                 const labelA = graph.getNodeAttribute(nodeA, 'label');
                 const labelB = graph.getNodeAttribute(targetNode, 'label');
 
+                // Set flag to prevent clickNode from opening detail panel
+                state.justFinishedDragConnect = true;
+                setTimeout(() => { state.justFinishedDragConnect = false; }, 500);
+
                 if (graph.hasEdge(nodeA, targetNode) || graph.hasEdge(targetNode, nodeA)) {
                     showToast(`"${labelA}" và "${labelB}" đã kết nối rồi!`, 'warning');
                 } else {
@@ -3957,6 +3962,10 @@ function setupDragAndDrop() {
             const posA = graph.getNodeAttributes(nodeA);
             const labelA = graph.getNodeAttribute(nodeA, 'label');
             const labelB = graph.getNodeAttribute(targetNode, 'label');
+
+            // Set flag to prevent clickNode
+            state.justFinishedDragConnect = true;
+            setTimeout(() => { state.justFinishedDragConnect = false; }, 500);
 
             if (!graph.hasEdge(nodeA, targetNode) && !graph.hasEdge(targetNode, nodeA)) {
                 // Small delay to let captor handle first
@@ -5007,6 +5016,11 @@ function setupClickHandlers() {
         // Hide hover panel on click
         hideHoverPanel(true);
 
+        // v8.1: Skip if just finished drag-to-connect
+        if (state.justFinishedDragConnect) {
+            return;
+        }
+
         // Handle connection mode
         if (connectionState.isConnecting) {
             completeConnection(e.node);
@@ -5030,7 +5044,8 @@ function setupClickHandlers() {
         state.lastClickTime = now;
 
         setTimeout(() => {
-            if (!state.isDragging && !state.hasMoved) {
+            // v8.1: Check flag again inside timeout
+            if (!state.isDragging && !state.hasMoved && !state.justFinishedDragConnect) {
                 if (isDoubleClick) {
                     // Double click - open edit modal
                     clearSelection();
