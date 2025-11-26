@@ -4218,6 +4218,266 @@ function checkAndLinkNodes(nodeA, posA) {
     }
 }
 
+// ==========================================
+// v8.3: DOPAMINE BOOST - Connection Success Effects
+// ==========================================
+
+let confettiCanvas = null;
+let confettiCtx = null;
+let confettiParticles = [];
+let confettiAnimationId = null;
+
+// Success sound using Web Audio API
+let audioContext = null;
+
+function initConfettiCanvas() {
+    confettiCanvas = document.getElementById('confetti-canvas');
+    if (confettiCanvas) {
+        confettiCtx = confettiCanvas.getContext('2d');
+        resizeConfettiCanvas();
+        window.addEventListener('resize', resizeConfettiCanvas);
+    }
+}
+
+function resizeConfettiCanvas() {
+    if (confettiCanvas) {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+    }
+}
+
+function playSuccessSound() {
+    try {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        // Create a pleasant "ding" sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Pleasant chime frequency
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+        oscillator.frequency.setValueAtTime(1108.73, audioContext.currentTime + 0.1); // C#6
+        oscillator.frequency.setValueAtTime(1318.51, audioContext.currentTime + 0.2); // E6
+
+        oscillator.type = 'sine';
+
+        // Envelope
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        // Audio not supported, silently fail
+    }
+}
+
+function createConfetti(x, y, count = 50) {
+    if (!confettiCanvas || !confettiCtx) {
+        initConfettiCanvas();
+    }
+
+    const colors = ['#4CAF50', '#81C784', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+        const velocity = 8 + Math.random() * 8;
+
+        confettiParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity - 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: 4 + Math.random() * 6,
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 15,
+            gravity: 0.3,
+            friction: 0.99,
+            opacity: 1,
+            shape: Math.random() > 0.5 ? 'circle' : 'rect'
+        });
+    }
+
+    if (!confettiAnimationId) {
+        animateConfetti();
+    }
+}
+
+function animateConfetti() {
+    if (!confettiCtx || !confettiCanvas) return;
+
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+    confettiParticles = confettiParticles.filter(p => {
+        p.vy += p.gravity;
+        p.vx *= p.friction;
+        p.vy *= p.friction;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotationSpeed;
+        p.opacity -= 0.015;
+
+        if (p.opacity <= 0 || p.y > confettiCanvas.height + 50) {
+            return false;
+        }
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate(p.rotation * Math.PI / 180);
+        confettiCtx.globalAlpha = p.opacity;
+        confettiCtx.fillStyle = p.color;
+
+        if (p.shape === 'circle') {
+            confettiCtx.beginPath();
+            confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            confettiCtx.fill();
+        } else {
+            confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        }
+
+        confettiCtx.restore();
+        return true;
+    });
+
+    if (confettiParticles.length > 0) {
+        confettiAnimationId = requestAnimationFrame(animateConfetti);
+    } else {
+        confettiAnimationId = null;
+    }
+}
+
+function createScreenFlash() {
+    const flash = document.createElement('div');
+    flash.className = 'screen-flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 600);
+}
+
+function createSuccessRipple(x, y) {
+    for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+            const ripple = document.createElement('div');
+            ripple.className = 'success-ripple';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 800);
+        }, i * 150);
+    }
+}
+
+function createFloatingEmojis(x, y) {
+    const emojis = ['🎉', '✨', '💫', '🌟', '❤️', '🔗', '👏', '🎊'];
+
+    for (let i = 0; i < 8; i++) {
+        setTimeout(() => {
+            const emoji = document.createElement('div');
+            emoji.className = 'floating-emoji';
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = (x + (Math.random() - 0.5) * 100) + 'px';
+            emoji.style.top = y + 'px';
+            emoji.style.animationDelay = (Math.random() * 0.3) + 's';
+            document.body.appendChild(emoji);
+            setTimeout(() => emoji.remove(), 1500);
+        }, i * 50);
+    }
+}
+
+function createParticleBurst(x, y) {
+    const colors = ['#4CAF50', '#81C784', '#FFD700', '#FF6B6B', '#4ECDC4'];
+    const container = document.createElement('div');
+    container.className = 'particle-burst';
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
+
+    for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        const angle = (Math.PI * 2 * i) / 20;
+        const distance = 50 + Math.random() * 100;
+        particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+        particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = (Math.random() * 0.2) + 's';
+        container.appendChild(particle);
+    }
+
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 1200);
+}
+
+function showConnectionCounter() {
+    const connectionCount = graph.size;
+    const counter = document.createElement('div');
+    counter.className = 'connection-counter';
+    counter.innerHTML = `<span style="font-size: 24px; display: block;">Kết nối #</span>${connectionCount}`;
+    document.body.appendChild(counter);
+    setTimeout(() => counter.remove(), 800);
+}
+
+function createRainbowPulse() {
+    const pulse = document.createElement('div');
+    pulse.className = 'rainbow-pulse';
+    document.body.appendChild(pulse);
+    setTimeout(() => pulse.remove(), 1000);
+}
+
+// Main dopamine boost function - called on successful connection
+function triggerConnectionSuccessEffects(x, y) {
+    // 1. Play success sound
+    playSuccessSound();
+
+    // 2. Screen flash
+    createScreenFlash();
+
+    // 3. Confetti explosion
+    createConfetti(x, y, 60);
+
+    // 4. Success ripples
+    createSuccessRipple(x, y);
+
+    // 5. Floating emojis
+    createFloatingEmojis(x, y);
+
+    // 6. Particle burst
+    createParticleBurst(x, y);
+
+    // 7. Connection counter popup
+    showConnectionCounter();
+
+    // 8. Rainbow border pulse (subtle)
+    setTimeout(() => createRainbowPulse(), 200);
+
+    // 9. Haptic feedback if available
+    if (navigator.vibrate) {
+        navigator.vibrate([50, 30, 100]);
+    }
+}
+
+// Enhanced toast for connection success
+function showSuccessBoostToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast success success-boost';
+    toast.innerHTML = `<i class="fas fa-heart"></i> ${message}`;
+
+    const container = document.getElementById('toast-container');
+    if (container) {
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px) scale(0.8)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+}
+
 function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
     const dialog = document.createElement('div');
     dialog.className = 'link-confirmation';
@@ -4259,7 +4519,8 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
             relationship: 'other',
             color: EDGE_TYPES.other.color,
             label: edgeLabel,
-            size: 2
+            size: 2,
+            newConnection: true // v8.3: Mark as new for glow effect
         });
         graph.setNodeAttribute(nodeA, 'x', posA.x + DRAG_CONFIG.LINK_OFFSET.x);
         graph.setNodeAttribute(nodeA, 'y', posA.y + DRAG_CONFIG.LINK_OFFSET.y);
@@ -4267,8 +4528,21 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
         updateNodeCount();
         updateMaxDegree(); // v8.0: Update degree colors
         saveData();
-        showToast(`Đã kết nối "${labelA}" với "${labelB}"!`, 'success');
-        removeDialog();
+
+        // v8.3: DOPAMINE BOOST - Trigger success effects!
+        dialog.classList.add('success-animation');
+        const dialogRect = dialog.querySelector('.link-confirmation-content').getBoundingClientRect();
+        const centerX = dialogRect.left + dialogRect.width / 2;
+        const centerY = dialogRect.top + dialogRect.height / 2;
+
+        // Trigger all the celebration effects!
+        triggerConnectionSuccessEffects(centerX, centerY);
+
+        // Show enhanced toast instead of regular toast
+        showSuccessBoostToast(`🎉 Đã kết nối "${labelA}" với "${labelB}"!`);
+
+        // Delayed dialog removal for effect
+        setTimeout(() => removeDialog(), 300);
     });
 
     document.getElementById('link-cancel').addEventListener('click', removeDialog);
@@ -6452,6 +6726,7 @@ initApp().then(() => {
     // Setup new features
     setupDragAndDrop();
     initDragPreviewCanvas(); // v8.2: Initialize drag preview canvas
+    initConfettiCanvas(); // v8.3: Initialize confetti canvas for dopamine boost
     setupClickHandlers();
     setupSearch();
     setupZoomControls();
