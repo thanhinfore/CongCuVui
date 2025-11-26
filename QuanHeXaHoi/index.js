@@ -109,8 +109,26 @@ let state = {
     vcfFilteredIndices: [],   // Filtered contact indices for lazy loading
     // Search filter state (v4.2)
     searchFilteredNodes: null,  // Set of nodeIds to show when filtering, null = show all
-    searchFilterActive: false   // Whether search filter mode is active
+    searchFilterActive: false,  // Whether search filter mode is active
+    // v8.0: Degree-based coloring
+    degreeColorEnabled: true,   // Enable degree-based node coloring
+    maxDegree: 1                // Maximum degree in graph (for normalization)
 };
+
+// v8.0: 11-level color palette for degree visualization (low to high)
+const DEGREE_COLORS = [
+    '#E8F5E9',  // Level 0: Lightest green (0 connections)
+    '#C8E6C9',  // Level 1
+    '#A5D6A7',  // Level 2
+    '#81C784',  // Level 3
+    '#66BB6A',  // Level 4
+    '#4CAF50',  // Level 5: Mid green
+    '#43A047',  // Level 6
+    '#388E3C',  // Level 7
+    '#2E7D32',  // Level 8
+    '#1B5E20',  // Level 9
+    '#0D3A14'   // Level 10: Darkest green (most connections)
+];
 
 // ==========================================
 // PHẦN 2A: PERFORMANCE UTILITIES
@@ -139,6 +157,25 @@ function throttle(func, wait) {
             func(...args);
         }
     };
+}
+
+// v8.0: Update max degree for normalization
+function updateMaxDegree() {
+    let maxDeg = 1;
+    graph.forEachNode((node) => {
+        const degree = graph.degree(node);
+        if (degree > maxDeg) maxDeg = degree;
+    });
+    state.maxDegree = maxDeg;
+}
+
+// v8.0: Get degree-based color for a node
+function getDegreeColor(node) {
+    const degree = graph.degree(node);
+    // Normalize to 0-10 scale (11 levels)
+    const normalizedLevel = Math.floor((degree / state.maxDegree) * 10);
+    const level = Math.min(10, Math.max(0, normalizedLevel));
+    return DEGREE_COLORS[level];
 }
 
 // Process items in batches using requestAnimationFrame to prevent UI freeze
@@ -3502,6 +3539,53 @@ const LAYOUT_NAMES = {
     circular: 'Vòng Tròn'
 };
 
+// v8.0: Collision resolution - prevent nodes from overlapping
+function resolveCollisions(positions, iterations = 10) {
+    const nodeArray = Array.from(positions.entries());
+    const minDistance = 35; // Minimum distance between node centers
+
+    for (let iter = 0; iter < iterations; iter++) {
+        let hasCollision = false;
+
+        for (let i = 0; i < nodeArray.length; i++) {
+            for (let j = i + 1; j < nodeArray.length; j++) {
+                const [nodeA, posA] = nodeArray[i];
+                const [nodeB, posB] = nodeArray[j];
+
+                // Skip center node
+                if (nodeA === 'center' || nodeB === 'center') continue;
+
+                const dx = posB.x - posA.x;
+                const dy = posB.y - posA.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < minDistance && dist > 0) {
+                    hasCollision = true;
+                    // Calculate push direction
+                    const overlap = minDistance - dist;
+                    const pushX = (dx / dist) * overlap * 0.5;
+                    const pushY = (dy / dist) * overlap * 0.5;
+
+                    // Push nodes apart (adjust both positions)
+                    posA.x -= pushX;
+                    posA.y -= pushY;
+                    posB.x += pushX;
+                    posB.y += pushY;
+
+                    // Update in map
+                    positions.set(nodeA, posA);
+                    positions.set(nodeB, posB);
+                }
+            }
+        }
+
+        // If no collisions found, we're done
+        if (!hasCollision) break;
+    }
+
+    return positions;
+}
+
 function openLayoutModal() {
     document.getElementById('layout-modal').style.display = 'block';
 }
@@ -3547,6 +3631,9 @@ function startForceLayout(layoutType = 'radial') {
             targetPositions = calculateRadialTreePositions();
             break;
     }
+
+    // v8.0: Apply collision resolution to prevent node overlap
+    targetPositions = resolveCollisions(targetPositions, 15);
 
     // Store selected layout type for toast
     state.currentLayoutType = layoutType;
@@ -3674,6 +3761,8 @@ function setupDragAndDrop() {
 
             graph.removeNodeAttribute(nodeA, 'highlighted');
 
+            let handledByClassification = false;
+
             // Check if dropped on a layer zone during classification
             if (classificationState.isActive && state.hasMoved) {
                 const droppedOnLayer = checkLayerDropZoneDrop(e.original);
@@ -3681,11 +3770,20 @@ function setupDragAndDrop() {
                     assignNodeToLayer(nodeA, droppedOnLayer);
                     renderLayerDropZones();
                     updateQuickClassifyList();
+                    handledByClassification = true;
                 }
-            } else if (state.hasMoved) {
-                const dragDuration = Date.now() - state.dragStartTime;
-                if (dragDuration > DRAG_CONFIG.MIN_DURATION) {
-                    checkAndLinkNodes(nodeA, posA);
+            }
+
+            // v8.0: Always check for drag-to-connect if we have a potential target
+            if (!handledByClassification && state.hasMoved && state.potentialTarget) {
+                const targetNode = state.potentialTarget;
+                const labelA = graph.getNodeAttribute(nodeA, 'label');
+                const labelB = graph.getNodeAttribute(targetNode, 'label');
+
+                if (graph.hasEdge(nodeA, targetNode) || graph.hasEdge(targetNode, nodeA)) {
+                    showToast(`"${labelA}" và "${labelB}" đã kết nối rồi!`, 'warning');
+                } else {
+                    showLinkConfirmation(nodeA, targetNode, labelA, labelB, posA);
                 }
             }
 
@@ -3865,6 +3963,7 @@ function showLinkConfirmation(nodeA, nodeB, labelA, labelB, posA) {
         graph.setNodeAttribute(nodeA, 'y', posA.y + DRAG_CONFIG.LINK_OFFSET.y);
         applyColorsByDistance(false);
         updateNodeCount();
+        updateMaxDegree(); // v8.0: Update degree colors
         saveData();
         showToast(`Đã kết nối "${labelA}" với "${labelB}"!`, 'success');
         removeDialog();
@@ -5242,6 +5341,11 @@ renderer = new Sigma(graph, container, {
             }
         }
 
+        // v8.0: Apply degree-based color (base color before highlights)
+        if (state.degreeColorEnabled && !data.potentialConnection) {
+            res.color = getDegreeColor(node);
+        }
+
         if (state.hoveredNode === node || data.highlighted) {
             res.highlighted = true;
             res.zIndex = 1;
@@ -5259,7 +5363,7 @@ renderer = new Sigma(graph, container, {
         if (data.potentialConnection) {
             res.highlighted = true;
             res.zIndex = 3;
-            res.color = '#4CAF50'; // Green to indicate connection possible
+            res.color = '#FF5722'; // Orange to indicate connection possible
             res.size = (res.size || 10) * 1.5;
         }
 
@@ -6006,6 +6110,10 @@ initApp().then(() => {
     updateNodeCount();
     updateStatistics();
     applyColorsByDistance(false);
+
+    // v8.0: Initialize degree-based coloring
+    updateMaxDegree();
+    renderer.refresh();
 
     // Setup new features
     setupDragAndDrop();
