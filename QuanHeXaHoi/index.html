@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zi Sản v10.0 - 5 Đồ thị Quan hệ Xã hội</title>
+    <title>Zi Sản v10.1 - 5 Đồ thị Quan hệ Xã hội</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,27 +16,58 @@
          v9.0 LAYOUT - Optimized for 1000+ nodes
          ========================================== -->
 
-    <!-- Top Bar - Simplified -->
-    <header id="top-bar">
+    <!-- v10.1: Top Bar with Integrated Category Tabs -->
+    <header id="top-bar" class="top-bar-v10">
         <div class="top-bar-left">
             <button class="icon-btn" id="menu-toggle" title="Menu (M)">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="brand">
                 <span class="brand-name">Zi Sản</span>
+                <span class="brand-version">v10.1</span>
             </div>
         </div>
 
-        <div class="search-container">
-            <div class="search-box" id="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="search-input" placeholder="Tìm kiếm..." autocomplete="off">
-                <kbd class="search-hint">Ctrl+K</kbd>
-            </div>
-            <div class="search-results" id="search-results"></div>
-        </div>
+        <!-- v10.1: Category Tabs in Headline -->
+        <nav id="category-tabs" class="category-tabs-inline">
+            <button class="category-tab active" data-category="all" title="Tất cả quan hệ">
+                <i class="fas fa-circle-nodes"></i>
+                <span>Tất cả</span>
+                <span class="tab-count" id="count-all">0</span>
+            </button>
+            <button class="category-tab" data-category="family" title="Gia đình: Bố mẹ, anh chị em, vợ chồng, con cái">
+                <i class="fas fa-home"></i>
+                <span>Gia đình</span>
+                <span class="tab-count" id="count-family">0</span>
+            </button>
+            <button class="category-tab" data-category="relatives" title="Họ hàng: Cô dì chú bác, anh em họ">
+                <i class="fas fa-people-roof"></i>
+                <span>Họ hàng</span>
+                <span class="tab-count" id="count-relatives">0</span>
+            </button>
+            <button class="category-tab" data-category="friends" title="Bạn bè: Bạn thân, bạn học, bạn chơi">
+                <i class="fas fa-user-group"></i>
+                <span>Bạn bè</span>
+                <span class="tab-count" id="count-friends">0</span>
+            </button>
+            <button class="category-tab" data-category="work" title="Công việc: Đồng nghiệp, sếp, đối tác">
+                <i class="fas fa-briefcase"></i>
+                <span>Công việc</span>
+                <span class="tab-count" id="count-work">0</span>
+            </button>
+            <button class="category-tab" data-category="social" title="Xã hội: Hàng xóm, quen biết, cộng đồng">
+                <i class="fas fa-globe"></i>
+                <span>Xã hội</span>
+                <span class="tab-count" id="count-social">0</span>
+            </button>
+        </nav>
 
         <div class="top-bar-right">
+            <div class="search-container-mini">
+                <button class="icon-btn" id="btn-search-toggle" title="Tìm kiếm (/)">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
             <button class="icon-btn" id="btn-theme-toggle" title="Dark/Light">
                 <i class="fas fa-sun" id="theme-icon"></i>
             </button>
@@ -46,42 +77,24 @@
         </div>
     </header>
 
-    <!-- v10.0: Category Tabs - 5 Social Graphs -->
-    <nav id="category-tabs" class="category-tabs">
-        <button class="category-tab active" data-category="all" title="Tất cả quan hệ">
-            <i class="fas fa-circle-nodes"></i>
-            <span>Tất cả</span>
-        </button>
-        <button class="category-tab" data-category="family" title="Gia đình: Bố mẹ, anh chị em, vợ chồng, con cái">
-            <i class="fas fa-home"></i>
-            <span>Gia đình</span>
-        </button>
-        <button class="category-tab" data-category="relatives" title="Họ hàng: Cô dì chú bác, anh em họ">
-            <i class="fas fa-people-roof"></i>
-            <span>Họ hàng</span>
-        </button>
-        <button class="category-tab" data-category="friends" title="Bạn bè: Bạn thân, bạn học, bạn chơi">
-            <i class="fas fa-user-group"></i>
-            <span>Bạn bè</span>
-        </button>
-        <button class="category-tab" data-category="work" title="Công việc: Đồng nghiệp, sếp, đối tác">
-            <i class="fas fa-briefcase"></i>
-            <span>Công việc</span>
-        </button>
-        <button class="category-tab" data-category="social" title="Xã hội: Hàng xóm, quen biết, cộng đồng">
-            <i class="fas fa-globe"></i>
-            <span>Xã hội</span>
-        </button>
-    </nav>
+    <!-- v10.1: Floating Search Box (appears when triggered) -->
+    <div class="search-container-float hidden" id="search-container-float">
+        <div class="search-box" id="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Tìm kiếm người, nhóm..." autocomplete="off">
+            <kbd class="search-hint">ESC</kbd>
+        </div>
+        <div class="search-results" id="search-results"></div>
+    </div>
 
-    <!-- Left Sidebar - Compact -->
+    <!-- v10.1: Left Sidebar with Category Menu -->
     <aside id="sidebar" class="sidebar collapsed">
         <div class="sidebar-header">
             <div class="app-info">
                 <i class="fas fa-map-marked-alt"></i>
                 <div>
                     <strong>Contact Map</strong>
-                    <small>v10.0</small>
+                    <small>v10.1</small>
                 </div>
             </div>
             <button class="icon-btn" id="sidebar-close">
@@ -99,6 +112,45 @@
                 <div class="stat-item">
                     <span class="stat-number" id="stat-connections">0</span>
                     <span class="stat-label">Kết nối</span>
+                </div>
+            </div>
+
+            <!-- v10.1: Category Menu (synced with tabs) -->
+            <div class="sidebar-section">
+                <div class="section-title">
+                    <span><i class="fas fa-layer-group"></i> Đồ thị Quan hệ</span>
+                </div>
+                <div class="category-menu" id="category-menu">
+                    <button class="category-menu-item active" data-category="all">
+                        <i class="fas fa-circle-nodes"></i>
+                        <span class="menu-label">Tất cả</span>
+                        <span class="menu-count" id="menu-count-all">0</span>
+                    </button>
+                    <button class="category-menu-item" data-category="family">
+                        <i class="fas fa-home"></i>
+                        <span class="menu-label">Gia đình</span>
+                        <span class="menu-count" id="menu-count-family">0</span>
+                    </button>
+                    <button class="category-menu-item" data-category="relatives">
+                        <i class="fas fa-people-roof"></i>
+                        <span class="menu-label">Họ hàng</span>
+                        <span class="menu-count" id="menu-count-relatives">0</span>
+                    </button>
+                    <button class="category-menu-item" data-category="friends">
+                        <i class="fas fa-user-group"></i>
+                        <span class="menu-label">Bạn bè</span>
+                        <span class="menu-count" id="menu-count-friends">0</span>
+                    </button>
+                    <button class="category-menu-item" data-category="work">
+                        <i class="fas fa-briefcase"></i>
+                        <span class="menu-label">Công việc</span>
+                        <span class="menu-count" id="menu-count-work">0</span>
+                    </button>
+                    <button class="category-menu-item" data-category="social">
+                        <i class="fas fa-globe"></i>
+                        <span class="menu-label">Xã hội</span>
+                        <span class="menu-count" id="menu-count-social">0</span>
+                    </button>
                 </div>
             </div>
 
@@ -696,19 +748,84 @@
         </div>
     </div>
 
-    <!-- Export Modal (v4.0) -->
-    <div id="export-modal" class="modal-v4">
+    <!-- v10.1: Export Modal with Category & Branch Selection -->
+    <div id="export-modal" class="modal-v4 export-modal-v10">
         <div class="modal-header">
             <h3><i class="fas fa-download"></i> Xuất dữ liệu</h3>
             <span class="close-modal" id="btn-x-close-export">&times;</span>
         </div>
         <div class="modal-body">
             <div class="export-options">
-                <h4><i class="fas fa-filter"></i> Chọn dữ liệu xuất</h4>
+                <!-- v10.1: Category Selection -->
+                <h4><i class="fas fa-layer-group"></i> Chọn nhóm quan hệ để xuất</h4>
+                <div class="export-category-select" id="export-category-select">
+                    <button type="button" class="export-cat-btn active" data-category="all">
+                        <i class="fas fa-circle-nodes"></i>
+                        <span>Tất cả</span>
+                        <span class="cat-count" id="export-count-all">0</span>
+                    </button>
+                    <button type="button" class="export-cat-btn" data-category="family">
+                        <i class="fas fa-home" style="color: #E53935;"></i>
+                        <span>Gia đình</span>
+                        <span class="cat-count" id="export-count-family">0</span>
+                    </button>
+                    <button type="button" class="export-cat-btn" data-category="relatives">
+                        <i class="fas fa-people-roof" style="color: #FF7043;"></i>
+                        <span>Họ hàng</span>
+                        <span class="cat-count" id="export-count-relatives">0</span>
+                    </button>
+                    <button type="button" class="export-cat-btn" data-category="friends">
+                        <i class="fas fa-user-group" style="color: #4CAF50;"></i>
+                        <span>Bạn bè</span>
+                        <span class="cat-count" id="export-count-friends">0</span>
+                    </button>
+                    <button type="button" class="export-cat-btn" data-category="work">
+                        <i class="fas fa-briefcase" style="color: #2196F3;"></i>
+                        <span>Công việc</span>
+                        <span class="cat-count" id="export-count-work">0</span>
+                    </button>
+                    <button type="button" class="export-cat-btn" data-category="social">
+                        <i class="fas fa-globe" style="color: #9C27B0;"></i>
+                        <span>Xã hội</span>
+                        <span class="cat-count" id="export-count-social">0</span>
+                    </button>
+                </div>
+
+                <!-- v10.1: Branch/Root Node Selection -->
+                <h4><i class="fas fa-code-branch"></i> Xuất nhánh từ node gốc</h4>
+                <div class="export-branch-section">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="export-branch-mode">
+                        <span>Chỉ xuất nhánh con của một node</span>
+                    </label>
+                    <div class="branch-select-container hidden" id="branch-select-container">
+                        <div class="root-node-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="export-root-search" placeholder="Tìm node gốc..." autocomplete="off">
+                        </div>
+                        <div class="root-node-list" id="export-root-list">
+                            <!-- Dynamic node list -->
+                        </div>
+                        <div class="selected-root" id="selected-root-display">
+                            <span class="no-selection">Chưa chọn node gốc</span>
+                        </div>
+                        <div class="branch-depth">
+                            <label>Độ sâu xuất:</label>
+                            <select id="export-branch-depth">
+                                <option value="1">1 cấp (trực tiếp)</option>
+                                <option value="2" selected>2 cấp</option>
+                                <option value="3">3 cấp</option>
+                                <option value="all">Tất cả nhánh con</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h4><i class="fas fa-filter"></i> Lọc theo Tags</h4>
                 <div class="checkbox-group">
                     <label class="checkbox-item">
                         <input type="checkbox" id="export-all" checked>
-                        <span>Tất cả dữ liệu</span>
+                        <span>Tất cả tags</span>
                     </label>
                     <div class="layer-checkboxes" id="export-layers">
                         <!-- Dynamic layer checkboxes -->
@@ -745,6 +862,15 @@
                         <input type="password" id="export-password" placeholder="Nhập mật khẩu...">
                         <input type="password" id="export-password-confirm" placeholder="Xác nhận mật khẩu...">
                         <div class="password-strength" id="password-strength"></div>
+                    </div>
+                </div>
+
+                <!-- Export Preview -->
+                <div class="export-preview" id="export-preview">
+                    <h4><i class="fas fa-eye"></i> Xem trước</h4>
+                    <div class="preview-stats">
+                        <span><i class="fas fa-user"></i> <strong id="preview-nodes">0</strong> người</span>
+                        <span><i class="fas fa-link"></i> <strong id="preview-edges">0</strong> kết nối</span>
                     </div>
                 </div>
             </div>
@@ -792,6 +918,36 @@
                             <span>Gộp với dữ liệu hiện tại (Merge)</span>
                         </label>
                     </div>
+
+                    <!-- v10.1: Import to Category -->
+                    <h4><i class="fas fa-layer-group"></i> Nhập vào nhóm quan hệ</h4>
+                    <div class="import-category-select" id="import-category-select">
+                        <button type="button" class="import-cat-btn active" data-category="auto">
+                            <i class="fas fa-magic"></i>
+                            <span>Tự động (giữ nguyên)</span>
+                        </button>
+                        <button type="button" class="import-cat-btn" data-category="family">
+                            <i class="fas fa-home" style="color: #E53935;"></i>
+                            <span>Gia đình</span>
+                        </button>
+                        <button type="button" class="import-cat-btn" data-category="relatives">
+                            <i class="fas fa-people-roof" style="color: #FF7043;"></i>
+                            <span>Họ hàng</span>
+                        </button>
+                        <button type="button" class="import-cat-btn" data-category="friends">
+                            <i class="fas fa-user-group" style="color: #4CAF50;"></i>
+                            <span>Bạn bè</span>
+                        </button>
+                        <button type="button" class="import-cat-btn" data-category="work">
+                            <i class="fas fa-briefcase" style="color: #2196F3;"></i>
+                            <span>Công việc</span>
+                        </button>
+                        <button type="button" class="import-cat-btn" data-category="social">
+                            <i class="fas fa-globe" style="color: #9C27B0;"></i>
+                            <span>Xã hội</span>
+                        </button>
+                    </div>
+                    <p class="hint">Chọn "Tự động" để giữ nguyên nhóm từ file, hoặc chọn nhóm cụ thể để gán tất cả connections vào nhóm đó.</p>
                 </div>
             </div>
 
