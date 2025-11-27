@@ -49,21 +49,102 @@ const DISTANCE_COLORS = [
     '#00ACC1'    // 7+
 ];
 
-// Edge relationship types with colors
-const EDGE_TYPES = {
-    family: { label: 'Gia đình', color: '#E53935' },
-    spouse: { label: 'Vợ/Chồng', color: '#D81B60' },
-    friend: { label: 'Bạn bè', color: '#3949AB' },
-    colleague: { label: 'Đồng nghiệp', color: '#1E88E5' },
-    mentor: { label: 'Thầy/Trò', color: '#8E24AA' },
-    partner: { label: 'Đối tác', color: '#00ACC1' },
-    other: { label: 'Khác', color: '#757575' }
+// ==========================================
+// v10.0: 5 RELATIONSHIP CATEGORIES (Social Graphs)
+// Mỗi category là 1 đồ thị riêng biệt
+// 1 người có thể xuất hiện trong nhiều đồ thị
+// ==========================================
+const RELATIONSHIP_CATEGORIES = {
+    all: {
+        id: 'all',
+        name: 'Tất cả',
+        icon: 'fa-circle-nodes',
+        color: '#607D8B',
+        description: 'Hiển thị tất cả các mối quan hệ'
+    },
+    family: {
+        id: 'family',
+        name: 'Gia đình',
+        icon: 'fa-home',
+        color: '#E53935',
+        description: 'Bố, mẹ, anh, chị, em, con cái, vợ/chồng'
+    },
+    relatives: {
+        id: 'relatives',
+        name: 'Họ hàng',
+        icon: 'fa-people-roof',
+        color: '#FF7043',
+        description: 'Cô, dì, chú, bác, anh em họ, thông gia'
+    },
+    friends: {
+        id: 'friends',
+        name: 'Bạn bè',
+        icon: 'fa-user-group',
+        color: '#4CAF50',
+        description: 'Bạn thân, bạn học, bạn chơi'
+    },
+    work: {
+        id: 'work',
+        name: 'Công việc',
+        icon: 'fa-briefcase',
+        color: '#2196F3',
+        description: 'Đồng nghiệp, sếp, đối tác, khách hàng'
+    },
+    social: {
+        id: 'social',
+        name: 'Xã hội',
+        icon: 'fa-globe',
+        color: '#9C27B0',
+        description: 'Hàng xóm, quen biết, câu lạc bộ'
+    }
 };
 
-// Default layers
+// Edge relationship types with colors and category mapping
+const EDGE_TYPES = {
+    // === GIA ĐÌNH ===
+    parent: { label: 'Bố/Mẹ', color: '#E53935', category: 'family' },
+    child: { label: 'Con', color: '#EF5350', category: 'family' },
+    sibling: { label: 'Anh/Chị/Em', color: '#E57373', category: 'family' },
+    spouse: { label: 'Vợ/Chồng', color: '#D81B60', category: 'family' },
+    grandparent: { label: 'Ông/Bà', color: '#C62828', category: 'family' },
+    grandchild: { label: 'Cháu nội/ngoại', color: '#EF9A9A', category: 'family' },
+
+    // === HỌ HÀNG ===
+    uncle: { label: 'Chú/Bác/Cậu', color: '#FF7043', category: 'relatives' },
+    aunt: { label: 'Cô/Dì/Mợ', color: '#FF8A65', category: 'relatives' },
+    cousin: { label: 'Anh/Em họ', color: '#FFAB91', category: 'relatives' },
+    'in-law': { label: 'Thông gia', color: '#FF5722', category: 'relatives' },
+    relative: { label: 'Họ hàng khác', color: '#FFCCBC', category: 'relatives' },
+
+    // === BẠN BÈ ===
+    'close-friend': { label: 'Bạn thân', color: '#4CAF50', category: 'friends' },
+    'school-friend': { label: 'Bạn học', color: '#66BB6A', category: 'friends' },
+    'childhood-friend': { label: 'Bạn thuở nhỏ', color: '#81C784', category: 'friends' },
+    friend: { label: 'Bạn bè', color: '#A5D6A7', category: 'friends' },
+
+    // === CÔNG VIỆC ===
+    colleague: { label: 'Đồng nghiệp', color: '#2196F3', category: 'work' },
+    boss: { label: 'Sếp', color: '#1976D2', category: 'work' },
+    employee: { label: 'Nhân viên', color: '#42A5F5', category: 'work' },
+    partner: { label: 'Đối tác', color: '#1E88E5', category: 'work' },
+    client: { label: 'Khách hàng', color: '#64B5F6', category: 'work' },
+    mentor: { label: 'Người hướng dẫn', color: '#0D47A1', category: 'work' },
+
+    // === XÃ HỘI ===
+    neighbor: { label: 'Hàng xóm', color: '#9C27B0', category: 'social' },
+    acquaintance: { label: 'Quen biết', color: '#AB47BC', category: 'social' },
+    'club-member': { label: 'CLB/Hội nhóm', color: '#BA68C8', category: 'social' },
+    community: { label: 'Cộng đồng', color: '#CE93D8', category: 'social' },
+
+    // === KHÁC ===
+    other: { label: 'Khác', color: '#757575', category: 'all' },
+    family: { label: 'Gia đình', color: '#E53935', category: 'family' } // Legacy
+};
+
+// Default layers (keep for backward compatibility with node categorization)
 const DEFAULT_LAYERS = [
     { id: 'family', name: 'Gia đình', color: '#E53935', icon: 'fa-home' },
-    { id: 'work', name: 'Công việc', color: '#1E88E5', icon: 'fa-briefcase' },
+    { id: 'work', name: 'Công việc', color: '#2196F3', icon: 'fa-briefcase' },
     { id: 'friends', name: 'Bạn bè', color: '#4CAF50', icon: 'fa-users' },
     { id: 'others', name: 'Khác', color: '#9E9E9E', icon: 'fa-ellipsis-h' }
 ];
@@ -90,6 +171,8 @@ let state = {
     currentLayer: 'all',
     forceRunning: false,
     initialPositionsSet: false, // v9.0: Track if initial concentric positions are set
+    // v10.0: Current relationship category (social graph view)
+    currentCategory: 'all', // 'all', 'family', 'relatives', 'friends', 'work', 'social'
     editingLayerId: null,
     layers: [...DEFAULT_LAYERS],
     hoveredNode: null,
@@ -5932,14 +6015,20 @@ document.getElementById('btn-save-edge')?.addEventListener('click', () => {
     const edgeType = ui.edgeType.value;
     const edgeLabel = ui.edgeLabel.value.trim();
 
+    // v10.0: Set both relationship and edgeType for category filtering
     graph.setEdgeAttribute(state.selectedEdge, 'relationship', edgeType);
-    graph.setEdgeAttribute(state.selectedEdge, 'color', EDGE_TYPES[edgeType].color);
+    graph.setEdgeAttribute(state.selectedEdge, 'edgeType', edgeType); // v10.0: For category filtering
+    graph.setEdgeAttribute(state.selectedEdge, 'color', EDGE_TYPES[edgeType]?.color || EDGE_TYPES.other.color);
     graph.setEdgeAttribute(state.selectedEdge, 'label', edgeLabel);
 
     saveData();
     closeEdgeModal();
     renderer.refresh();
-    showToast(`Đã cập nhật mối quan hệ!`, 'success');
+
+    // v10.0: Show toast with category info
+    const category = EDGE_TYPES[edgeType]?.category || 'all';
+    const categoryName = RELATIONSHIP_CATEGORIES[category]?.name || 'Khác';
+    showToast(`Đã cập nhật: ${categoryName} - ${EDGE_TYPES[edgeType]?.label || edgeType}`, 'success');
 });
 
 // Delete Edge
@@ -6269,6 +6358,15 @@ renderer = new Sigma(graph, container, {
     nodeReducer: (node, data) => {
         const res = { ...data };
 
+        // v10.0: Hide nodes not in current category
+        if (state.currentCategory !== 'all') {
+            const nodesInCategory = getNodesInCategory(state.currentCategory);
+            if (!nodesInCategory.has(node)) {
+                res.hidden = true;
+                return res;
+            }
+        }
+
         // Hide nodes not in search filter (when filter is active)
         if (state.searchFilterActive && state.searchFilteredNodes) {
             if (!state.searchFilteredNodes.has(node)) {
@@ -6316,6 +6414,14 @@ renderer = new Sigma(graph, container, {
         const res = { ...data };
         const source = graph.source(edge);
         const target = graph.target(edge);
+
+        // v10.0: Hide edges not in current category
+        if (state.currentCategory !== 'all') {
+            if (!edgeBelongsToCategory(edge, state.currentCategory)) {
+                res.hidden = true;
+                return res;
+            }
+        }
 
         // Hide edges not connected to filtered nodes (when filter is active)
         if (state.searchFilterActive && state.searchFilteredNodes) {
@@ -6501,6 +6607,170 @@ function setupV5UI() {
 
     // Initialize theme from localStorage
     initTheme();
+}
+
+// ==========================================
+// v10.0: CATEGORY TABS - 5 Social Graph Views
+// ==========================================
+
+/**
+ * Get nodes that belong to a specific category
+ * A node belongs to a category if it has at least one edge in that category
+ * @param {string} category - The category ID
+ * @returns {Set} Set of node IDs that belong to the category
+ */
+function getNodesInCategory(category) {
+    if (category === 'all') {
+        return new Set(graph.nodes());
+    }
+
+    const nodesInCategory = new Set();
+
+    // Always include center node
+    if (graph.hasNode('center')) {
+        nodesInCategory.add('center');
+    }
+
+    // Find all edges that belong to this category
+    graph.forEachEdge((edge, attrs, source, target) => {
+        // v10.0: Check edgeType first, fallback to relationship for backward compatibility
+        const edgeType = attrs.edgeType || attrs.relationship || 'other';
+        const edgeCategory = EDGE_TYPES[edgeType]?.category || 'all';
+
+        if (edgeCategory === category) {
+            nodesInCategory.add(source);
+            nodesInCategory.add(target);
+        }
+    });
+
+    return nodesInCategory;
+}
+
+/**
+ * Check if an edge belongs to a specific category
+ * @param {string} edge - The edge ID
+ * @param {string} category - The category ID
+ * @returns {boolean}
+ */
+function edgeBelongsToCategory(edge, category) {
+    if (category === 'all') return true;
+
+    const attrs = graph.getEdgeAttributes(edge);
+    // v10.0: Check edgeType first, fallback to relationship for backward compatibility
+    const edgeType = attrs.edgeType || attrs.relationship || 'other';
+    const edgeCategory = EDGE_TYPES[edgeType]?.category || 'all';
+
+    return edgeCategory === category;
+}
+
+/**
+ * Update category tab active state
+ */
+function updateCategoryTabsUI() {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(tab => {
+        const category = tab.dataset.category;
+        if (category === state.currentCategory) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    // Update stats display for current category
+    updateCategoryStats();
+}
+
+/**
+ * Update stats display for current category
+ */
+function updateCategoryStats() {
+    const nodesInCategory = getNodesInCategory(state.currentCategory);
+    const edgesInCategory = graph.edges().filter(e => edgeBelongsToCategory(e, state.currentCategory));
+
+    // Update the stats display
+    const nodeCount = document.getElementById('node-count');
+    const edgeCount = document.getElementById('edge-count');
+
+    if (nodeCount) {
+        if (state.currentCategory === 'all') {
+            nodeCount.textContent = graph.order;
+        } else {
+            nodeCount.textContent = `${nodesInCategory.size}/${graph.order}`;
+        }
+    }
+
+    if (edgeCount) {
+        if (state.currentCategory === 'all') {
+            edgeCount.textContent = graph.size;
+        } else {
+            edgeCount.textContent = `${edgesInCategory.length}/${graph.size}`;
+        }
+    }
+}
+
+/**
+ * Switch to a different category view
+ * @param {string} category - The category ID to switch to
+ */
+function switchCategory(category) {
+    if (!RELATIONSHIP_CATEGORIES[category]) {
+        console.warn(`Unknown category: ${category}`);
+        return;
+    }
+
+    state.currentCategory = category;
+
+    // Update UI
+    updateCategoryTabsUI();
+
+    // Refresh renderer to apply filters
+    renderer.refresh();
+
+    // Show toast notification
+    const cat = RELATIONSHIP_CATEGORIES[category];
+    const nodesInCategory = getNodesInCategory(category);
+    const edgeCount = graph.edges().filter(e => edgeBelongsToCategory(e, category)).length;
+
+    if (category === 'all') {
+        showToast(`Hiển thị tất cả: ${graph.order} người, ${graph.size} kết nối`, 'info');
+    } else {
+        showToast(
+            `<i class="fas ${cat.icon}" style="color: ${cat.color}"></i> ${cat.name}: ${nodesInCategory.size} người, ${edgeCount} kết nối`,
+            'info',
+            2500
+        );
+    }
+}
+
+/**
+ * Setup category tabs event listeners
+ */
+function setupCategoryTabs() {
+    const tabs = document.querySelectorAll('.category-tab');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const category = tab.dataset.category;
+            if (category && category !== state.currentCategory) {
+                switchCategory(category);
+            }
+        });
+
+        // Add keyboard support
+        tab.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const category = tab.dataset.category;
+                if (category && category !== state.currentCategory) {
+                    switchCategory(category);
+                }
+            }
+        });
+    });
+
+    // Initialize with current category
+    updateCategoryTabsUI();
 }
 
 // Theme functions (Phase 5)
@@ -7095,6 +7365,9 @@ initApp().then(() => {
     // v5.0: Setup new UI handlers
     setupV5UI();
 
+    // v10.0: Setup category tabs for 5 social graphs
+    setupCategoryTabs();
+
     // Phase 4: Setup hover panel events
     setupHoverPanelEvents();
 
@@ -7113,6 +7386,6 @@ initApp().then(() => {
 
     // v7.5 welcome toast
     setTimeout(() => {
-        showToast('Contact Map v7.5 - Nhấn Ctrl+K để mở Command Palette', 'info', 4000);
+        showToast('Contact Map v10.0 - 5 Đồ thị Quan hệ Xã hội | Ctrl+K: Command Palette', 'info', 4000);
     }, 600);
 });

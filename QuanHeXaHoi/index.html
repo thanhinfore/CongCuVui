@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zi Sản v9.0 - Bản đồ Quan hệ</title>
+    <title>Zi Sản v10.0 - 5 Đồ thị Quan hệ Xã hội</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,6 +46,34 @@
         </div>
     </header>
 
+    <!-- v10.0: Category Tabs - 5 Social Graphs -->
+    <nav id="category-tabs" class="category-tabs">
+        <button class="category-tab active" data-category="all" title="Tất cả quan hệ">
+            <i class="fas fa-circle-nodes"></i>
+            <span>Tất cả</span>
+        </button>
+        <button class="category-tab" data-category="family" title="Gia đình: Bố mẹ, anh chị em, vợ chồng, con cái">
+            <i class="fas fa-home"></i>
+            <span>Gia đình</span>
+        </button>
+        <button class="category-tab" data-category="relatives" title="Họ hàng: Cô dì chú bác, anh em họ">
+            <i class="fas fa-people-roof"></i>
+            <span>Họ hàng</span>
+        </button>
+        <button class="category-tab" data-category="friends" title="Bạn bè: Bạn thân, bạn học, bạn chơi">
+            <i class="fas fa-user-group"></i>
+            <span>Bạn bè</span>
+        </button>
+        <button class="category-tab" data-category="work" title="Công việc: Đồng nghiệp, sếp, đối tác">
+            <i class="fas fa-briefcase"></i>
+            <span>Công việc</span>
+        </button>
+        <button class="category-tab" data-category="social" title="Xã hội: Hàng xóm, quen biết, cộng đồng">
+            <i class="fas fa-globe"></i>
+            <span>Xã hội</span>
+        </button>
+    </nav>
+
     <!-- Left Sidebar - Compact -->
     <aside id="sidebar" class="sidebar collapsed">
         <div class="sidebar-header">
@@ -53,7 +81,7 @@
                 <i class="fas fa-map-marked-alt"></i>
                 <div>
                     <strong>Contact Map</strong>
-                    <small>v8.0</small>
+                    <small>v10.0</small>
                 </div>
             </div>
             <button class="icon-btn" id="sidebar-close">
@@ -476,41 +504,36 @@
                 <input type="text" id="edge-label" placeholder="VD: Bố, Mẹ, Vợ, Con trai, Bạn thân...">
             </div>
 
-            <!-- Category Selector (Interactive) -->
+            <!-- v10.0: Category Selector with 5 Social Graphs -->
             <div class="edge-form-section">
-                <label><i class="fas fa-palette"></i> Loại quan hệ</label>
-                <div class="edge-category-grid">
-                    <button type="button" class="edge-category-btn" data-type="family">
+                <label><i class="fas fa-palette"></i> Nhóm quan hệ (v10)</label>
+                <div class="edge-category-grid edge-category-grid-v10">
+                    <button type="button" class="edge-category-btn" data-type="parent" data-category="family">
                         <span class="category-color" style="background: #E53935;"></span>
                         <i class="fas fa-home"></i>
                         <span>Gia đình</span>
                     </button>
-                    <button type="button" class="edge-category-btn" data-type="spouse">
-                        <span class="category-color" style="background: #D81B60;"></span>
-                        <i class="fas fa-heart"></i>
-                        <span>Vợ/Chồng</span>
+                    <button type="button" class="edge-category-btn" data-type="relative" data-category="relatives">
+                        <span class="category-color" style="background: #FF7043;"></span>
+                        <i class="fas fa-people-roof"></i>
+                        <span>Họ hàng</span>
                     </button>
-                    <button type="button" class="edge-category-btn" data-type="friend">
-                        <span class="category-color" style="background: #3949AB;"></span>
-                        <i class="fas fa-user-friends"></i>
+                    <button type="button" class="edge-category-btn" data-type="friend" data-category="friends">
+                        <span class="category-color" style="background: #4CAF50;"></span>
+                        <i class="fas fa-user-group"></i>
                         <span>Bạn bè</span>
                     </button>
-                    <button type="button" class="edge-category-btn" data-type="colleague">
-                        <span class="category-color" style="background: #1E88E5;"></span>
+                    <button type="button" class="edge-category-btn" data-type="colleague" data-category="work">
+                        <span class="category-color" style="background: #2196F3;"></span>
                         <i class="fas fa-briefcase"></i>
-                        <span>Đồng nghiệp</span>
+                        <span>Công việc</span>
                     </button>
-                    <button type="button" class="edge-category-btn" data-type="mentor">
-                        <span class="category-color" style="background: #8E24AA;"></span>
-                        <i class="fas fa-graduation-cap"></i>
-                        <span>Thầy/Trò</span>
+                    <button type="button" class="edge-category-btn" data-type="acquaintance" data-category="social">
+                        <span class="category-color" style="background: #9C27B0;"></span>
+                        <i class="fas fa-globe"></i>
+                        <span>Xã hội</span>
                     </button>
-                    <button type="button" class="edge-category-btn" data-type="partner">
-                        <span class="category-color" style="background: #00ACC1;"></span>
-                        <i class="fas fa-handshake"></i>
-                        <span>Đối tác</span>
-                    </button>
-                    <button type="button" class="edge-category-btn" data-type="other">
+                    <button type="button" class="edge-category-btn" data-type="other" data-category="all">
                         <span class="category-color" style="background: #78909C;"></span>
                         <i class="fas fa-ellipsis-h"></i>
                         <span>Khác</span>
@@ -518,61 +541,128 @@
                 </div>
                 <!-- Hidden select for form data -->
                 <select id="edge-type" class="hidden">
-                    <option value="family">Gia đình / Họ hàng</option>
-                    <option value="spouse">Vợ / Chồng</option>
-                    <option value="friend">Bạn bè</option>
-                    <option value="colleague">Đồng nghiệp</option>
-                    <option value="mentor">Thầy / Trò</option>
-                    <option value="partner">Đối tác</option>
+                    <!-- Gia đình -->
+                    <optgroup label="Gia đình">
+                        <option value="parent">Bố/Mẹ</option>
+                        <option value="child">Con</option>
+                        <option value="sibling">Anh/Chị/Em</option>
+                        <option value="spouse">Vợ/Chồng</option>
+                        <option value="grandparent">Ông/Bà</option>
+                        <option value="grandchild">Cháu nội/ngoại</option>
+                    </optgroup>
+                    <!-- Họ hàng -->
+                    <optgroup label="Họ hàng">
+                        <option value="uncle">Chú/Bác/Cậu</option>
+                        <option value="aunt">Cô/Dì/Mợ</option>
+                        <option value="cousin">Anh/Em họ</option>
+                        <option value="in-law">Thông gia</option>
+                        <option value="relative">Họ hàng khác</option>
+                    </optgroup>
+                    <!-- Bạn bè -->
+                    <optgroup label="Bạn bè">
+                        <option value="close-friend">Bạn thân</option>
+                        <option value="school-friend">Bạn học</option>
+                        <option value="childhood-friend">Bạn thuở nhỏ</option>
+                        <option value="friend">Bạn bè</option>
+                    </optgroup>
+                    <!-- Công việc -->
+                    <optgroup label="Công việc">
+                        <option value="colleague">Đồng nghiệp</option>
+                        <option value="boss">Sếp</option>
+                        <option value="employee">Nhân viên</option>
+                        <option value="partner">Đối tác</option>
+                        <option value="client">Khách hàng</option>
+                        <option value="mentor">Người hướng dẫn</option>
+                    </optgroup>
+                    <!-- Xã hội -->
+                    <optgroup label="Xã hội">
+                        <option value="neighbor">Hàng xóm</option>
+                        <option value="acquaintance">Quen biết</option>
+                        <option value="club-member">CLB/Hội nhóm</option>
+                        <option value="community">Cộng đồng</option>
+                    </optgroup>
+                    <!-- Khác -->
                     <option value="other">Khác</option>
                 </select>
             </div>
 
-            <!-- Quick Presets by Category -->
+            <!-- v10.0: Quick Presets by 5 Social Categories -->
             <div class="edge-form-section">
                 <label><i class="fas fa-magic"></i> Chọn nhanh</label>
-                <div class="preset-groups">
-                    <!-- Family Group -->
+                <div class="preset-groups preset-groups-v10">
+                    <!-- Gia đình -->
                     <div class="preset-group" data-category="family">
                         <div class="preset-group-header">
                             <span class="preset-dot" style="background: #E53935;"></span>
                             Gia đình
                         </div>
                         <div class="preset-group-buttons">
-                            <button type="button" class="preset-btn" data-label="Bố" data-type="family">Bố</button>
-                            <button type="button" class="preset-btn" data-label="Mẹ" data-type="family">Mẹ</button>
-                            <button type="button" class="preset-btn" data-label="Con trai" data-type="family">Con trai</button>
-                            <button type="button" class="preset-btn" data-label="Con gái" data-type="family">Con gái</button>
-                            <button type="button" class="preset-btn" data-label="Anh" data-type="family">Anh</button>
-                            <button type="button" class="preset-btn" data-label="Chị" data-type="family">Chị</button>
-                            <button type="button" class="preset-btn" data-label="Em" data-type="family">Em</button>
-                            <button type="button" class="preset-btn" data-label="Ông" data-type="family">Ông</button>
-                            <button type="button" class="preset-btn" data-label="Bà" data-type="family">Bà</button>
-                        </div>
-                    </div>
-                    <!-- Spouse Group -->
-                    <div class="preset-group" data-category="spouse">
-                        <div class="preset-group-header">
-                            <span class="preset-dot" style="background: #D81B60;"></span>
-                            Vợ/Chồng
-                        </div>
-                        <div class="preset-group-buttons">
+                            <button type="button" class="preset-btn" data-label="Bố" data-type="parent">Bố</button>
+                            <button type="button" class="preset-btn" data-label="Mẹ" data-type="parent">Mẹ</button>
                             <button type="button" class="preset-btn" data-label="Vợ" data-type="spouse">Vợ</button>
                             <button type="button" class="preset-btn" data-label="Chồng" data-type="spouse">Chồng</button>
+                            <button type="button" class="preset-btn" data-label="Con trai" data-type="child">Con trai</button>
+                            <button type="button" class="preset-btn" data-label="Con gái" data-type="child">Con gái</button>
+                            <button type="button" class="preset-btn" data-label="Anh" data-type="sibling">Anh</button>
+                            <button type="button" class="preset-btn" data-label="Chị" data-type="sibling">Chị</button>
+                            <button type="button" class="preset-btn" data-label="Em" data-type="sibling">Em</button>
+                            <button type="button" class="preset-btn" data-label="Ông" data-type="grandparent">Ông</button>
+                            <button type="button" class="preset-btn" data-label="Bà" data-type="grandparent">Bà</button>
                         </div>
                     </div>
-                    <!-- Other Groups -->
-                    <div class="preset-group" data-category="other">
+                    <!-- Họ hàng -->
+                    <div class="preset-group" data-category="relatives">
                         <div class="preset-group-header">
-                            <span class="preset-dot" style="background: #78909C;"></span>
-                            Khác
+                            <span class="preset-dot" style="background: #FF7043;"></span>
+                            Họ hàng
                         </div>
                         <div class="preset-group-buttons">
+                            <button type="button" class="preset-btn" data-label="Chú" data-type="uncle">Chú</button>
+                            <button type="button" class="preset-btn" data-label="Bác" data-type="uncle">Bác</button>
+                            <button type="button" class="preset-btn" data-label="Cậu" data-type="uncle">Cậu</button>
+                            <button type="button" class="preset-btn" data-label="Cô" data-type="aunt">Cô</button>
+                            <button type="button" class="preset-btn" data-label="Dì" data-type="aunt">Dì</button>
+                            <button type="button" class="preset-btn" data-label="Anh họ" data-type="cousin">Anh họ</button>
+                            <button type="button" class="preset-btn" data-label="Em họ" data-type="cousin">Em họ</button>
+                        </div>
+                    </div>
+                    <!-- Bạn bè -->
+                    <div class="preset-group" data-category="friends">
+                        <div class="preset-group-header">
+                            <span class="preset-dot" style="background: #4CAF50;"></span>
+                            Bạn bè
+                        </div>
+                        <div class="preset-group-buttons">
+                            <button type="button" class="preset-btn" data-label="Bạn thân" data-type="close-friend">Bạn thân</button>
+                            <button type="button" class="preset-btn" data-label="Bạn học" data-type="school-friend">Bạn học</button>
+                            <button type="button" class="preset-btn" data-label="Bạn cũ" data-type="childhood-friend">Bạn cũ</button>
                             <button type="button" class="preset-btn" data-label="Bạn" data-type="friend">Bạn</button>
+                        </div>
+                    </div>
+                    <!-- Công việc -->
+                    <div class="preset-group" data-category="work">
+                        <div class="preset-group-header">
+                            <span class="preset-dot" style="background: #2196F3;"></span>
+                            Công việc
+                        </div>
+                        <div class="preset-group-buttons">
                             <button type="button" class="preset-btn" data-label="Đồng nghiệp" data-type="colleague">Đồng nghiệp</button>
-                            <button type="button" class="preset-btn" data-label="Thầy" data-type="mentor">Thầy</button>
-                            <button type="button" class="preset-btn" data-label="Trò" data-type="mentor">Trò</button>
+                            <button type="button" class="preset-btn" data-label="Sếp" data-type="boss">Sếp</button>
+                            <button type="button" class="preset-btn" data-label="Nhân viên" data-type="employee">Nhân viên</button>
                             <button type="button" class="preset-btn" data-label="Đối tác" data-type="partner">Đối tác</button>
+                            <button type="button" class="preset-btn" data-label="Khách hàng" data-type="client">Khách hàng</button>
+                        </div>
+                    </div>
+                    <!-- Xã hội -->
+                    <div class="preset-group" data-category="social">
+                        <div class="preset-group-header">
+                            <span class="preset-dot" style="background: #9C27B0;"></span>
+                            Xã hội
+                        </div>
+                        <div class="preset-group-buttons">
+                            <button type="button" class="preset-btn" data-label="Hàng xóm" data-type="neighbor">Hàng xóm</button>
+                            <button type="button" class="preset-btn" data-label="Quen biết" data-type="acquaintance">Quen biết</button>
+                            <button type="button" class="preset-btn" data-label="CLB" data-type="club-member">CLB</button>
                             <button type="button" class="preset-btn clear-preset" data-label="" data-type="">
                                 <i class="fas fa-eraser"></i> Xóa
                             </button>
