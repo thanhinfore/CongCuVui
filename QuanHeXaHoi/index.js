@@ -22,10 +22,10 @@ const NODE_SIZES = {
     REDUCTION_FACTOR: 2
 };
 
-// Radial layout configuration
+// Radial layout configuration - v10.5: Significantly increased for 1000+ nodes
 const RADIAL_LAYOUT_CONFIG = {
-    RING_SPACING: 120,        // Distance between rings - v10.5: increased from 80
-    MIN_RADIUS: 100,          // Minimum radius for first ring - v10.5: increased from 60
+    RING_SPACING: 200,        // Distance between rings - v10.5: increased from 80 to 200
+    MIN_RADIUS: 180,          // Minimum radius for first ring - v10.5: increased from 60 to 180
     ANIMATION_DURATION: 50,   // Animation frame duration (ms)
     ANIMATION_STEPS: 30       // Number of animation steps
 };
@@ -3335,10 +3335,10 @@ function calculateLayerPositions() {
     const anglePerLayer = (2 * Math.PI) / Math.max(layerCount, 1);
     let layerIndex = 0;
 
-    // v10.5: Increased spacing for better display with many nodes
-    const BASE_RADIUS = 200;
-    const RING_SPACING = 100;
-    const MIN_ARC_SPACING = 60;
+    // v10.5: Significantly increased spacing for 1000+ nodes display
+    const BASE_RADIUS = 350;
+    const RING_SPACING = 180;
+    const MIN_ARC_SPACING = 90;
 
     layerGroups.forEach((nodes, layerId) => {
         const layerAngle = layerIndex * anglePerLayer - Math.PI / 2;
@@ -3796,18 +3796,18 @@ const FORCE_CONFIG_V9 = {
     // Barnes-Hut parameters
     theta: 0.8,               // Barnes-Hut approximation threshold (higher = faster, less accurate)
 
-    // Force parameters - v10.5: Increased repulsion for better spacing with 1000+ nodes
-    baseRepulsion: 15000,     // Base repulsion force (increased from 8000)
-    attraction: 0.006,        // Weak attraction along edges (slightly reduced)
-    gravity: 0.00003,         // Very weak gravity to center (reduced)
-    damping: 0.80,            // Damping for stability
-    maxVelocity: 15,          // Max velocity (increased for faster settling)
+    // Force parameters - v10.5: Significantly increased for better spacing with 1000+ nodes
+    baseRepulsion: 25000,     // Base repulsion force (increased from 8000 to 25000)
+    attraction: 0.004,        // Weak attraction along edges (reduced for more spread)
+    gravity: 0.00002,         // Very weak gravity to center (reduced)
+    damping: 0.78,            // Damping for stability
+    maxVelocity: 18,          // Max velocity (increased for faster settling)
 
-    // Radial distribution - v10.5: Increased spacing for 1000+ nodes
-    baseCenterRadius: 350,    // Base distance from center (increased from 250)
-    ringSpacing: 280,         // Spacing between concentric rings (increased from 180)
-    angularForce: 1.5,        // Force to spread nodes evenly around rings (increased)
-    radialForce: 0.25,        // Force to maintain ring distance (slightly increased)
+    // Radial distribution - v10.5: Significantly increased spacing for 1000+ nodes
+    baseCenterRadius: 500,    // Base distance from center (increased from 250 to 500)
+    ringSpacing: 400,         // Spacing between concentric rings (increased from 180 to 400)
+    angularForce: 2.0,        // Force to spread nodes evenly around rings (increased)
+    radialForce: 0.35,        // Force to maintain ring distance (increased)
 
     // Visual
     minNodeSize: 4,           // Minimum node size
@@ -3815,7 +3815,7 @@ const FORCE_CONFIG_V9 = {
 
     // Performance
     maxIterationsPerFrame: 1, // Force iterations per animation frame
-    coolingFactor: 0.993      // Gradual slowdown (slightly faster cooling)
+    coolingFactor: 0.992      // Gradual slowdown (slightly faster cooling)
 };
 
 // ==========================================
@@ -4012,9 +4012,9 @@ function getDynamicConfigV9(nodeCount, tierGroups, isolatedCount) {
         }
 
         // Radius based on number of nodes in this tier (circumference needed)
-        // v10.5: Increased from 50px to 70px per node for better spacing with 1000+ nodes
+        // v10.5: Increased to 100px per node for much better spacing with 1000+ nodes
         const nodesInTier = nodes.length;
-        const minCircumference = nodesInTier * 70; // 70px per node minimum spacing (was 50)
+        const minCircumference = nodesInTier * 100; // 100px per node minimum spacing
         const minRadiusForTier = minCircumference / (2 * Math.PI);
 
         currentRadius = Math.max(currentRadius + config.ringSpacing, minRadiusForTier);
@@ -4022,9 +4022,9 @@ function getDynamicConfigV9(nodeCount, tierGroups, isolatedCount) {
     });
 
     // Isolated nodes go to outermost ring
-    // v10.5: Increased from 40px to 60px per isolated node
+    // v10.5: Increased to 80px per isolated node
     const maxConnectedRadius = currentRadius;
-    const isolatedCircumference = isolatedCount * 60;
+    const isolatedCircumference = isolatedCount * 80;
     const minIsolatedRadius = isolatedCircumference / (2 * Math.PI);
     config.isolatedRadius = Math.max(maxConnectedRadius + config.ringSpacing * 2, minIsolatedRadius);
 
