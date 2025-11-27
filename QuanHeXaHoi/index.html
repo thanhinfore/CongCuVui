@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zi Sản v10.1 - 5 Đồ thị Quan hệ Xã hội</title>
+    <title>Zi Sản v10.5 - 5 Đồ thị Quan hệ Xã hội</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +24,7 @@
             </button>
             <div class="brand">
                 <span class="brand-name">Zi Sản</span>
-                <span class="brand-version">v10.1</span>
+                <span class="brand-version">v10.5</span>
             </div>
         </div>
 
@@ -94,7 +94,7 @@
                 <i class="fas fa-map-marked-alt"></i>
                 <div>
                     <strong>Contact Map</strong>
-                    <small>v10.1</small>
+                    <small>v10.5</small>
                 </div>
             </div>
             <button class="icon-btn" id="sidebar-close">
@@ -121,48 +121,64 @@
                     <span><i class="fas fa-layer-group"></i> Đồ thị Quan hệ</span>
                 </div>
                 <div class="category-menu" id="category-menu">
-                    <button class="category-menu-item active" data-category="all">
-                        <i class="fas fa-circle-nodes"></i>
-                        <span class="menu-label">Tất cả</span>
-                        <span class="menu-count" id="menu-count-all">0</span>
-                    </button>
-                    <button class="category-menu-item" data-category="family">
-                        <i class="fas fa-home"></i>
-                        <span class="menu-label">Gia đình</span>
-                        <span class="menu-count" id="menu-count-family">0</span>
-                    </button>
-                    <button class="category-menu-item" data-category="relatives">
-                        <i class="fas fa-people-roof"></i>
-                        <span class="menu-label">Họ hàng</span>
-                        <span class="menu-count" id="menu-count-relatives">0</span>
-                    </button>
-                    <button class="category-menu-item" data-category="friends">
-                        <i class="fas fa-user-group"></i>
-                        <span class="menu-label">Bạn bè</span>
-                        <span class="menu-count" id="menu-count-friends">0</span>
-                    </button>
-                    <button class="category-menu-item" data-category="work">
-                        <i class="fas fa-briefcase"></i>
-                        <span class="menu-label">Công việc</span>
-                        <span class="menu-count" id="menu-count-work">0</span>
-                    </button>
-                    <button class="category-menu-item" data-category="social">
-                        <i class="fas fa-globe"></i>
-                        <span class="menu-label">Xã hội</span>
-                        <span class="menu-count" id="menu-count-social">0</span>
-                    </button>
+                    <div class="category-menu-item active" data-category="all">
+                        <button class="category-menu-btn" data-category="all">
+                            <i class="fas fa-circle-nodes"></i>
+                            <span class="menu-label">Tất cả</span>
+                            <span class="menu-count" id="menu-count-all">0</span>
+                        </button>
+                    </div>
+                    <div class="category-menu-item" data-category="family">
+                        <button class="category-menu-btn" data-category="family">
+                            <i class="fas fa-home"></i>
+                            <span class="menu-label">Gia đình</span>
+                            <span class="menu-count" id="menu-count-family">0</span>
+                        </button>
+                        <button class="category-delete-btn" data-category="family" title="Xóa dữ liệu Gia đình">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="category-menu-item" data-category="relatives">
+                        <button class="category-menu-btn" data-category="relatives">
+                            <i class="fas fa-people-roof"></i>
+                            <span class="menu-label">Họ hàng</span>
+                            <span class="menu-count" id="menu-count-relatives">0</span>
+                        </button>
+                        <button class="category-delete-btn" data-category="relatives" title="Xóa dữ liệu Họ hàng">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="category-menu-item" data-category="friends">
+                        <button class="category-menu-btn" data-category="friends">
+                            <i class="fas fa-user-group"></i>
+                            <span class="menu-label">Bạn bè</span>
+                            <span class="menu-count" id="menu-count-friends">0</span>
+                        </button>
+                        <button class="category-delete-btn" data-category="friends" title="Xóa dữ liệu Bạn bè">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="category-menu-item" data-category="work">
+                        <button class="category-menu-btn" data-category="work">
+                            <i class="fas fa-briefcase"></i>
+                            <span class="menu-label">Công việc</span>
+                            <span class="menu-count" id="menu-count-work">0</span>
+                        </button>
+                        <button class="category-delete-btn" data-category="work" title="Xóa dữ liệu Công việc">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="category-menu-item" data-category="social">
+                        <button class="category-menu-btn" data-category="social">
+                            <i class="fas fa-globe"></i>
+                            <span class="menu-label">Xã hội</span>
+                            <span class="menu-count" id="menu-count-social">0</span>
+                        </button>
+                        <button class="category-delete-btn" data-category="social" title="Xóa dữ liệu Xã hội">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Tags -->
-            <div class="sidebar-section">
-                <div class="section-title">
-                    <span><i class="fas fa-tags"></i> Tags</span>
-                    <button class="icon-btn-sm" id="btn-add-tag" title="Thêm tag">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                <div class="tag-list" id="tag-list"></div>
             </div>
 
             <!-- Quick Actions -->
@@ -318,16 +334,16 @@
         </button>
     </div>
 
-    <!-- FAB Container - v8.1 -->
-    <div class="fab-container">
-        <button class="fab-mini" id="fab-connect-me" title="Thêm và kết nối với TÔI">
+    <!-- FAB Container - v10.5: Redesigned with separated buttons -->
+    <div class="fab-container-v10">
+        <button class="fab-side fab-side-left" id="fab-connect-me" title="Thêm và kết nối với TÔI">
             <i class="fas fa-user-plus"></i>
         </button>
-        <button class="fab-mini" id="fab-force-toggle" title="Bật/tắt Force Layout">
-            <i class="fas fa-atom"></i>
-        </button>
-        <button class="fab" id="fab-add" title="Thêm người mới (N)">
+        <button class="fab-main" id="fab-add" title="Thêm người mới (N)">
             <i class="fas fa-plus"></i>
+        </button>
+        <button class="fab-side fab-side-right" id="fab-force-toggle" title="Bật/tắt Force Layout">
+            <i class="fas fa-atom"></i>
         </button>
     </div>
 

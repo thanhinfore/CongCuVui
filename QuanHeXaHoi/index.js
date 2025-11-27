@@ -24,8 +24,8 @@ const NODE_SIZES = {
 
 // Radial layout configuration
 const RADIAL_LAYOUT_CONFIG = {
-    RING_SPACING: 80,         // Distance between rings
-    MIN_RADIUS: 60,           // Minimum radius for first ring
+    RING_SPACING: 120,        // Distance between rings - v10.5: increased from 80
+    MIN_RADIUS: 100,          // Minimum radius for first ring - v10.5: increased from 60
     ANIMATION_DURATION: 50,   // Animation frame duration (ms)
     ANIMATION_STEPS: 30       // Number of animation steps
 };
@@ -3335,9 +3335,10 @@ function calculateLayerPositions() {
     const anglePerLayer = (2 * Math.PI) / Math.max(layerCount, 1);
     let layerIndex = 0;
 
-    const BASE_RADIUS = 150;
-    const RING_SPACING = 60;
-    const MIN_ARC_SPACING = 40;
+    // v10.5: Increased spacing for better display with many nodes
+    const BASE_RADIUS = 200;
+    const RING_SPACING = 100;
+    const MIN_ARC_SPACING = 60;
 
     layerGroups.forEach((nodes, layerId) => {
         const layerAngle = layerIndex * anglePerLayer - Math.PI / 2;
@@ -3795,18 +3796,18 @@ const FORCE_CONFIG_V9 = {
     // Barnes-Hut parameters
     theta: 0.8,               // Barnes-Hut approximation threshold (higher = faster, less accurate)
 
-    // Force parameters
-    baseRepulsion: 8000,      // Base repulsion force
-    attraction: 0.008,        // Weak attraction along edges
-    gravity: 0.00005,         // Very weak gravity to center
-    damping: 0.82,            // Damping for stability
-    maxVelocity: 12,          // Max velocity
+    // Force parameters - v10.5: Increased repulsion for better spacing with 1000+ nodes
+    baseRepulsion: 15000,     // Base repulsion force (increased from 8000)
+    attraction: 0.006,        // Weak attraction along edges (slightly reduced)
+    gravity: 0.00003,         // Very weak gravity to center (reduced)
+    damping: 0.80,            // Damping for stability
+    maxVelocity: 15,          // Max velocity (increased for faster settling)
 
-    // Radial distribution
-    baseCenterRadius: 250,    // Base distance from center
-    ringSpacing: 180,         // Spacing between concentric rings
-    angularForce: 1.2,        // Force to spread nodes evenly around rings
-    radialForce: 0.2,         // Force to maintain ring distance
+    // Radial distribution - v10.5: Increased spacing for 1000+ nodes
+    baseCenterRadius: 350,    // Base distance from center (increased from 250)
+    ringSpacing: 280,         // Spacing between concentric rings (increased from 180)
+    angularForce: 1.5,        // Force to spread nodes evenly around rings (increased)
+    radialForce: 0.25,        // Force to maintain ring distance (slightly increased)
 
     // Visual
     minNodeSize: 4,           // Minimum node size
@@ -3814,7 +3815,7 @@ const FORCE_CONFIG_V9 = {
 
     // Performance
     maxIterationsPerFrame: 1, // Force iterations per animation frame
-    coolingFactor: 0.995      // Gradual slowdown
+    coolingFactor: 0.993      // Gradual slowdown (slightly faster cooling)
 };
 
 // ==========================================
@@ -4011,8 +4012,9 @@ function getDynamicConfigV9(nodeCount, tierGroups, isolatedCount) {
         }
 
         // Radius based on number of nodes in this tier (circumference needed)
+        // v10.5: Increased from 50px to 70px per node for better spacing with 1000+ nodes
         const nodesInTier = nodes.length;
-        const minCircumference = nodesInTier * 50; // 50px per node minimum spacing
+        const minCircumference = nodesInTier * 70; // 70px per node minimum spacing (was 50)
         const minRadiusForTier = minCircumference / (2 * Math.PI);
 
         currentRadius = Math.max(currentRadius + config.ringSpacing, minRadiusForTier);
@@ -4020,8 +4022,9 @@ function getDynamicConfigV9(nodeCount, tierGroups, isolatedCount) {
     });
 
     // Isolated nodes go to outermost ring
+    // v10.5: Increased from 40px to 60px per isolated node
     const maxConnectedRadius = currentRadius;
-    const isolatedCircumference = isolatedCount * 40;
+    const isolatedCircumference = isolatedCount * 60;
     const minIsolatedRadius = isolatedCircumference / (2 * Math.PI);
     config.isolatedRadius = Math.max(maxConnectedRadius + config.ringSpacing * 2, minIsolatedRadius);
 
@@ -6664,6 +6667,78 @@ function edgeBelongsToCategory(edge, category) {
 }
 
 /**
+ * v10.5: Delete all data belonging to a specific category
+ * @param {string} category - The category ID to delete
+ */
+function deleteCategoryData(category) {
+    if (category === 'all') {
+        showToast('Không thể xóa tất cả dữ liệu từ đây', 'error');
+        return;
+    }
+
+    const categoryNames = {
+        family: 'Gia đình',
+        relatives: 'Họ hàng',
+        friends: 'Bạn bè',
+        work: 'Công việc',
+        social: 'Xã hội'
+    };
+
+    const categoryName = categoryNames[category] || category;
+
+    // Get nodes and edges in this category
+    const nodesInCategory = getNodesInCategory(category);
+    const edgesInCategory = graph.edges().filter(e => edgeBelongsToCategory(e, category));
+
+    // Remove center node from deletion list
+    nodesInCategory.delete('center');
+
+    if (nodesInCategory.size === 0 && edgesInCategory.length === 0) {
+        showToast(`Không có dữ liệu trong đồ thị ${categoryName}`, 'info');
+        return;
+    }
+
+    // Confirm deletion
+    const confirmMsg = `Bạn có chắc muốn xóa toàn bộ dữ liệu đồ thị "${categoryName}"?\n\n` +
+        `- ${nodesInCategory.size} người (không tính TÔI)\n` +
+        `- ${edgesInCategory.length} kết nối\n\n` +
+        `⚠️ Hành động này không thể hoàn tác!`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    // Delete edges first
+    edgesInCategory.forEach(edge => {
+        try {
+            graph.dropEdge(edge);
+        } catch (e) {
+            // Edge may have been deleted already
+        }
+    });
+
+    // Delete nodes (except center)
+    nodesInCategory.forEach(nodeId => {
+        if (nodeId !== 'center') {
+            try {
+                graph.dropNode(nodeId);
+            } catch (e) {
+                // Node may have been deleted already
+            }
+        }
+    });
+
+    // Update UI
+    renderer.refresh();
+    updateNodeCount();
+    updateCategoryStats();
+    updateAllCategoryCounts();
+    saveData();
+
+    showToast(`Đã xóa ${nodesInCategory.size} người và ${edgesInCategory.length} kết nối trong đồ thị ${categoryName}`, 'success');
+}
+
+/**
  * Update category tab active state
  */
 function updateCategoryTabsUI() {
@@ -6787,12 +6862,25 @@ function setupCategoryTabs() {
         });
     });
 
-    // v10.1: Sidebar menu items (synced with tabs)
-    menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            const category = item.dataset.category;
+    // v10.5: Sidebar menu items - click on category-menu-btn to switch category
+    const menuBtns = document.querySelectorAll('.category-menu-btn');
+    menuBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const category = btn.dataset.category;
             if (category && category !== state.currentCategory) {
                 switchCategory(category);
+            }
+        });
+    });
+
+    // v10.5: Category delete buttons
+    const deleteBtns = document.querySelectorAll('.category-delete-btn');
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const category = btn.dataset.category;
+            if (category && category !== 'all') {
+                deleteCategoryData(category);
             }
         });
     });
