@@ -4476,3 +4476,192 @@ body.can-connect-node * {
         opacity: 0;
     }
 }
+
+/* ==========================================
+   v10.0: CATEGORY TABS - 5 Social Graphs
+   ========================================== */
+
+.category-tabs {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 500;
+    border: 1px solid var(--border);
+}
+
+.category-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.category-tab i {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.category-tab:hover {
+    background: var(--divider);
+    color: var(--text);
+}
+
+.category-tab:hover i {
+    transform: scale(1.1);
+}
+
+/* Active states with category colors */
+.category-tab.active {
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.category-tab[data-category="all"].active {
+    background: linear-gradient(135deg, #607D8B, #455A64);
+}
+
+.category-tab[data-category="family"].active {
+    background: linear-gradient(135deg, #E53935, #C62828);
+}
+
+.category-tab[data-category="relatives"].active {
+    background: linear-gradient(135deg, #FF7043, #E64A19);
+}
+
+.category-tab[data-category="friends"].active {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+}
+
+.category-tab[data-category="work"].active {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.category-tab[data-category="social"].active {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Badge for node count in each category */
+.category-tab .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--divider);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    margin-left: 4px;
+}
+
+.category-tab.active .tab-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* Category indicator bar */
+.category-indicator {
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 400;
+    font-size: 13px;
+    color: var(--text-secondary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.category-indicator.show {
+    opacity: 1;
+}
+
+.category-indicator i {
+    font-size: 16px;
+}
+
+.category-indicator .category-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .category-tabs {
+        padding: 4px;
+        gap: 2px;
+    }
+
+    .category-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .category-tab span {
+        display: none;
+    }
+
+    .category-tab i {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .category-tabs {
+        top: auto;
+        bottom: 20px;
+        left: 10px;
+        right: 10px;
+        transform: none;
+        justify-content: space-around;
+        border-radius: 20px;
+    }
+
+    .category-tab {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 8px;
+    }
+}
+
+/* Main container adjustment for category tabs */
+#container {
+    top: 115px !important;
+}
+
+/* Dark theme */
+[data-theme="dark"] .category-tabs {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+[data-theme="dark"] .category-tab:hover {
+    background: var(--divider);
+}
