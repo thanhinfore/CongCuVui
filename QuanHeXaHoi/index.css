@@ -4665,3 +4665,540 @@ body.can-connect-node * {
 [data-theme="dark"] .category-tab:hover {
     background: var(--divider);
 }
+
+/* ==========================================
+   v10.1: INLINE CATEGORY TABS IN HEADLINE
+   ========================================== */
+
+/* Top bar v10 layout */
+.top-bar-v10 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.top-bar-v10 .brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar-v10 .brand-version {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* Category tabs inline in header */
+.category-tabs-inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: var(--background);
+    border-radius: 12px;
+    position: static;
+    transform: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.category-tabs-inline .category-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.category-tabs-inline .category-tab:hover {
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.category-tabs-inline .category-tab.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.category-tabs-inline .category-tab i {
+    font-size: 14px;
+}
+
+.category-tabs-inline .category-tab span {
+    display: inline;
+}
+
+/* Tab count badge */
+.tab-count {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.category-tabs-inline .category-tab:not(.active) .tab-count {
+    background: var(--divider);
+    color: var(--text-secondary);
+}
+
+/* Category-specific active colors */
+.category-tabs-inline .category-tab[data-category="family"].active {
+    background: linear-gradient(135deg, #E53935, #C62828);
+}
+
+.category-tabs-inline .category-tab[data-category="relatives"].active {
+    background: linear-gradient(135deg, #FF7043, #E64A19);
+}
+
+.category-tabs-inline .category-tab[data-category="friends"].active {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+}
+
+.category-tabs-inline .category-tab[data-category="work"].active {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.category-tabs-inline .category-tab[data-category="social"].active {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Floating Search Box */
+.search-container-float {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    max-width: 90vw;
+    z-index: 1100;
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    animation: slideDown 0.2s ease;
+}
+
+.search-container-float.hidden {
+    display: none;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.search-container-float .search-box {
+    width: 100%;
+    box-shadow: none;
+    background: var(--background);
+}
+
+/* ==========================================
+   v10.1: SIDEBAR CATEGORY MENU
+   ========================================== */
+
+.category-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.category-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.category-menu-item:hover {
+    background: var(--background);
+    color: var(--text-primary);
+}
+
+.category-menu-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.category-menu-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.category-menu-item .menu-label {
+    flex: 1;
+}
+
+.category-menu-item .menu-count {
+    font-size: 12px;
+    padding: 2px 8px;
+    background: var(--divider);
+    border-radius: 10px;
+    color: var(--text-secondary);
+}
+
+.category-menu-item.active .menu-count {
+    background: var(--primary);
+    color: white;
+}
+
+/* Category-specific menu colors */
+.category-menu-item[data-category="family"].active {
+    background: rgba(229, 57, 53, 0.1);
+    color: #E53935;
+}
+
+.category-menu-item[data-category="relatives"].active {
+    background: rgba(255, 112, 67, 0.1);
+    color: #FF7043;
+}
+
+.category-menu-item[data-category="friends"].active {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+.category-menu-item[data-category="work"].active {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196F3;
+}
+
+.category-menu-item[data-category="social"].active {
+    background: rgba(156, 39, 176, 0.1);
+    color: #9C27B0;
+}
+
+/* ==========================================
+   v10.1: IMPORT CATEGORY SELECT
+   ========================================== */
+
+.import-category-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.import-cat-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.import-cat-btn:hover {
+    border-color: var(--primary);
+    background: var(--background);
+}
+
+.import-cat-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.import-cat-btn i {
+    font-size: 16px;
+}
+
+/* ==========================================
+   v10.1: EXPORT MODAL ENHANCEMENTS
+   ========================================== */
+
+.export-modal-v10 .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.export-category-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.export-cat-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.export-cat-btn:hover {
+    border-color: var(--primary);
+}
+
+.export-cat-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+.export-cat-btn .cat-count {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--divider);
+    border-radius: 8px;
+}
+
+.export-cat-btn.active .cat-count {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Branch Selection */
+.export-branch-section {
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--background);
+    border-radius: 8px;
+}
+
+.branch-select-container {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.branch-select-container.hidden {
+    display: none;
+}
+
+.root-node-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--background);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.root-node-search input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.root-node-list {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+}
+
+.root-node-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.root-node-item:hover {
+    background: var(--background);
+}
+
+.root-node-item.selected {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.selected-root {
+    padding: 10px 12px;
+    background: var(--background);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.selected-root .no-selection {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.selected-root .root-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selected-root .root-info .avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.branch-depth {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.branch-depth select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Export Preview */
+.export-preview {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-light), var(--background));
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.export-preview h4 {
+    margin-bottom: 12px;
+}
+
+.preview-stats {
+    display: flex;
+    gap: 24px;
+}
+
+.preview-stats span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.preview-stats strong {
+    font-size: 18px;
+    color: var(--primary);
+}
+
+/* ==========================================
+   v10.1: RESPONSIVE ADJUSTMENTS
+   ========================================== */
+
+@media (max-width: 1200px) {
+    .category-tabs-inline .category-tab span {
+        display: none;
+    }
+
+    .category-tabs-inline .category-tab {
+        padding: 8px 12px;
+    }
+
+    .tab-count {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-bar-v10 {
+        padding: 0 8px;
+    }
+
+    .category-tabs-inline {
+        gap: 2px;
+        padding: 3px;
+    }
+
+    .category-tabs-inline .category-tab {
+        padding: 8px;
+    }
+
+    .category-tabs-inline .category-tab i {
+        font-size: 16px;
+    }
+}
+
+/* Main container adjustment for v10.1 */
+#container {
+    top: 56px !important;
+}
+
+/* Dark theme v10.1 */
+[data-theme="dark"] .category-tabs-inline {
+    background: var(--background);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .search-container-float {
+    background: var(--surface);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .import-cat-btn,
+[data-theme="dark"] .export-cat-btn {
+    background: var(--background);
+}
+
+[data-theme="dark"] .branch-select-container {
+    background: var(--background);
+}

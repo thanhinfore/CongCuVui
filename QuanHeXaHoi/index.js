@@ -6667,7 +6667,10 @@ function edgeBelongsToCategory(edge, category) {
  * Update category tab active state
  */
 function updateCategoryTabsUI() {
+    // v10.1: Update both tabs and sidebar menu
     const tabs = document.querySelectorAll('.category-tab');
+    const menuItems = document.querySelectorAll('.category-menu-item');
+
     tabs.forEach(tab => {
         const category = tab.dataset.category;
         if (category === state.currentCategory) {
@@ -6677,8 +6680,21 @@ function updateCategoryTabsUI() {
         }
     });
 
+    // v10.1: Sync sidebar menu with tabs
+    menuItems.forEach(item => {
+        const category = item.dataset.category;
+        if (category === state.currentCategory) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+
     // Update stats display for current category
     updateCategoryStats();
+
+    // v10.1: Update all counts
+    updateAllCategoryCounts();
 }
 
 /**
@@ -6747,8 +6763,11 @@ function switchCategory(category) {
  * Setup category tabs event listeners
  */
 function setupCategoryTabs() {
+    // v10.1: Setup both header tabs and sidebar menu
     const tabs = document.querySelectorAll('.category-tab');
+    const menuItems = document.querySelectorAll('.category-menu-item');
 
+    // Header tabs
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
             const category = tab.dataset.category;
@@ -6757,7 +6776,6 @@ function setupCategoryTabs() {
             }
         });
 
-        // Add keyboard support
         tab.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -6769,8 +6787,278 @@ function setupCategoryTabs() {
         });
     });
 
+    // v10.1: Sidebar menu items (synced with tabs)
+    menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const category = item.dataset.category;
+            if (category && category !== state.currentCategory) {
+                switchCategory(category);
+            }
+        });
+    });
+
+    // v10.1: Setup floating search toggle
+    setupSearchToggle();
+
+    // v10.1: Setup import category selection
+    setupImportCategorySelect();
+
+    // v10.1: Setup export enhancements
+    setupExportEnhancements();
+
     // Initialize with current category
     updateCategoryTabsUI();
+
+    // v10.1: Update all category counts
+    updateAllCategoryCounts();
+}
+
+/**
+ * v10.1: Setup floating search box toggle
+ */
+function setupSearchToggle() {
+    const searchToggle = document.getElementById('btn-search-toggle');
+    const searchContainer = document.getElementById('search-container-float');
+    const searchInput = document.getElementById('search-input');
+
+    if (searchToggle && searchContainer) {
+        searchToggle.addEventListener('click', () => {
+            searchContainer.classList.toggle('hidden');
+            if (!searchContainer.classList.contains('hidden')) {
+                searchInput?.focus();
+            }
+        });
+
+        // Close on ESC
+        searchInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchContainer.classList.add('hidden');
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchContainer.contains(e.target) && e.target !== searchToggle && !searchToggle.contains(e.target)) {
+                searchContainer.classList.add('hidden');
+            }
+        });
+    }
+}
+
+/**
+ * v10.1: Setup import category selection
+ */
+function setupImportCategorySelect() {
+    const buttons = document.querySelectorAll('.import-cat-btn');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            buttons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.importCategory = btn.dataset.category;
+        });
+    });
+
+    // Default to 'auto'
+    state.importCategory = 'auto';
+}
+
+/**
+ * v10.1: Setup export enhancements (category select, branch select)
+ */
+function setupExportEnhancements() {
+    // Category selection for export
+    const catButtons = document.querySelectorAll('.export-cat-btn');
+    catButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            catButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.exportCategory = btn.dataset.category;
+            updateExportPreview();
+        });
+    });
+    state.exportCategory = 'all';
+
+    // Branch mode toggle
+    const branchModeCheckbox = document.getElementById('export-branch-mode');
+    const branchContainer = document.getElementById('branch-select-container');
+
+    if (branchModeCheckbox && branchContainer) {
+        branchModeCheckbox.addEventListener('change', () => {
+            if (branchModeCheckbox.checked) {
+                branchContainer.classList.remove('hidden');
+                populateRootNodeList();
+            } else {
+                branchContainer.classList.add('hidden');
+                state.exportRootNode = null;
+            }
+            updateExportPreview();
+        });
+    }
+
+    // Root node search
+    const rootSearch = document.getElementById('export-root-search');
+    if (rootSearch) {
+        rootSearch.addEventListener('input', (e) => {
+            populateRootNodeList(e.target.value);
+        });
+    }
+
+    // Branch depth change
+    const branchDepth = document.getElementById('export-branch-depth');
+    if (branchDepth) {
+        branchDepth.addEventListener('change', () => {
+            updateExportPreview();
+        });
+    }
+
+    state.exportRootNode = null;
+}
+
+/**
+ * v10.1: Populate root node list for branch export
+ */
+function populateRootNodeList(searchTerm = '') {
+    const listContainer = document.getElementById('export-root-list');
+    if (!listContainer) return;
+
+    const nodes = [];
+    graph.forEachNode((node, attrs) => {
+        const label = attrs.label || node;
+        if (!searchTerm || label.toLowerCase().includes(searchTerm.toLowerCase())) {
+            nodes.push({ id: node, label: label });
+        }
+    });
+
+    // Sort by label
+    nodes.sort((a, b) => a.label.localeCompare(b.label));
+
+    // Limit to first 20
+    const limitedNodes = nodes.slice(0, 20);
+
+    listContainer.innerHTML = limitedNodes.map(n => `
+        <div class="root-node-item ${state.exportRootNode === n.id ? 'selected' : ''}" data-node="${n.id}">
+            <span class="avatar">${n.label.charAt(0).toUpperCase()}</span>
+            <span>${n.label}</span>
+        </div>
+    `).join('');
+
+    // Add click handlers
+    listContainer.querySelectorAll('.root-node-item').forEach(item => {
+        item.addEventListener('click', () => {
+            state.exportRootNode = item.dataset.node;
+            updateSelectedRootDisplay();
+            populateRootNodeList(searchTerm);
+            updateExportPreview();
+        });
+    });
+}
+
+/**
+ * v10.1: Update selected root node display
+ */
+function updateSelectedRootDisplay() {
+    const display = document.getElementById('selected-root-display');
+    if (!display) return;
+
+    if (state.exportRootNode && graph.hasNode(state.exportRootNode)) {
+        const label = graph.getNodeAttribute(state.exportRootNode, 'label') || state.exportRootNode;
+        display.innerHTML = `
+            <div class="root-info">
+                <span class="avatar">${label.charAt(0).toUpperCase()}</span>
+                <span><strong>${label}</strong> được chọn làm node gốc</span>
+            </div>
+        `;
+    } else {
+        display.innerHTML = '<span class="no-selection">Chưa chọn node gốc</span>';
+    }
+}
+
+/**
+ * v10.1: Get nodes in a branch from root with given depth
+ */
+function getBranchNodes(rootNode, maxDepth = 2) {
+    const visited = new Set();
+    const queue = [{ node: rootNode, depth: 0 }];
+
+    while (queue.length > 0) {
+        const { node, depth } = queue.shift();
+
+        if (visited.has(node)) continue;
+        visited.add(node);
+
+        if (maxDepth === 'all' || depth < maxDepth) {
+            graph.forEachNeighbor(node, (neighbor) => {
+                if (!visited.has(neighbor)) {
+                    queue.push({ node: neighbor, depth: depth + 1 });
+                }
+            });
+        }
+    }
+
+    return visited;
+}
+
+/**
+ * v10.1: Update export preview stats
+ */
+function updateExportPreview() {
+    const previewNodes = document.getElementById('preview-nodes');
+    const previewEdges = document.getElementById('preview-edges');
+
+    if (!previewNodes || !previewEdges) return;
+
+    let nodeCount = 0;
+    let edgeCount = 0;
+
+    // Get nodes based on category and branch mode
+    let nodesToExport = new Set();
+
+    if (state.exportRootNode && document.getElementById('export-branch-mode')?.checked) {
+        const depth = document.getElementById('export-branch-depth')?.value || '2';
+        nodesToExport = getBranchNodes(state.exportRootNode, depth === 'all' ? 'all' : parseInt(depth));
+    } else if (state.exportCategory && state.exportCategory !== 'all') {
+        nodesToExport = getNodesInCategory(state.exportCategory);
+    } else {
+        graph.forEachNode(node => nodesToExport.add(node));
+    }
+
+    nodeCount = nodesToExport.size;
+
+    // Count edges
+    graph.forEachEdge((edge, attrs, source, target) => {
+        if (nodesToExport.has(source) && nodesToExport.has(target)) {
+            if (state.exportCategory === 'all' || edgeBelongsToCategory(edge, state.exportCategory)) {
+                edgeCount++;
+            }
+        }
+    });
+
+    previewNodes.textContent = nodeCount;
+    previewEdges.textContent = edgeCount;
+}
+
+/**
+ * v10.1: Update all category counts (tabs + menu + export)
+ */
+function updateAllCategoryCounts() {
+    const categories = ['all', 'family', 'relatives', 'friends', 'work', 'social'];
+
+    categories.forEach(cat => {
+        const count = cat === 'all' ? graph.order : getNodesInCategory(cat).size;
+
+        // Update tab counts
+        const tabCount = document.getElementById(`count-${cat}`);
+        if (tabCount) tabCount.textContent = count;
+
+        // Update menu counts
+        const menuCount = document.getElementById(`menu-count-${cat}`);
+        if (menuCount) menuCount.textContent = count;
+
+        // Update export counts
+        const exportCount = document.getElementById(`export-count-${cat}`);
+        if (exportCount) exportCount.textContent = count;
+    });
 }
 
 // Theme functions (Phase 5)
@@ -7384,8 +7672,8 @@ initApp().then(() => {
         checkShowWelcome();
     }, 300);
 
-    // v7.5 welcome toast
+    // v10.1 welcome toast
     setTimeout(() => {
-        showToast('Contact Map v10.0 - 5 Đồ thị Quan hệ Xã hội | Ctrl+K: Command Palette', 'info', 4000);
+        showToast('Contact Map v10.1 - Import/Export theo nhóm quan hệ | Ctrl+K: Command Palette', 'info', 4000);
     }, 600);
 });
