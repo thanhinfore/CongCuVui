@@ -1,65 +1,91 @@
 /* ==========================================
-   CONTACT MAP v8.0 - Clean & Intuitive UI
+   CONTACT MAP v11 - Modern & Easy-to-Use UI
    ========================================== */
 
-/* CSS Variables */
+/* CSS Variables - v11: Fresh modern palette */
 :root {
-    /* Colors */
-    --primary: #4285f4;
-    --primary-dark: #3367d6;
-    --primary-light: #e8f0fe;
-    --secondary: #34a853;
-    --warning: #fbbc05;
-    --danger: #ea4335;
+    /* Primary Colors - More vibrant blue */
+    --primary: #3B82F6;
+    --primary-dark: #2563EB;
+    --primary-light: #EFF6FF;
+    --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
 
-    /* Neutrals */
-    --bg: #f8f9fa;
-    --surface: #ffffff;
-    --text: #202124;
-    --text-secondary: #5f6368;
-    --text-muted: #80868b;
-    --border: #dadce0;
-    --divider: #e8eaed;
+    /* Accent Colors */
+    --secondary: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #06B6D4;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-    --shadow-md: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
-    --shadow-lg: 0 4px 8px 0 rgba(60, 64, 67, 0.3), 0 8px 16px 4px rgba(60, 64, 67, 0.15);
+    /* Category Colors - v11: More vibrant */
+    --cat-family: #EF4444;
+    --cat-relatives: #F97316;
+    --cat-friends: #22C55E;
+    --cat-work: #3B82F6;
+    --cat-social: #A855F7;
 
-    /* Sizing */
-    --sidebar-width: 320px;
+    /* Neutrals - Softer, warmer */
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --divider: #F1F5F9;
+
+    /* Shadows - Softer, more modern */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Sizing - v11: More spacious */
+    --sidebar-width: 300px;
     --detail-panel-width: 380px;
-    --top-bar-height: 64px;
-    --border-radius: 8px;
+    --top-bar-height: 72px;
+    --border-radius: 12px;
     --border-radius-lg: 24px;
+    --border-radius-full: 9999px;
 
-    /* Transitions */
-    --transition: 0.2s ease;
+    /* Transitions - Smoother */
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark Theme */
+/* Dark Theme - v11: Modern dark palette */
 [data-theme="dark"] {
-    /* Colors - same accents */
-    --primary: #8ab4f8;
-    --primary-dark: #aecbfa;
-    --primary-light: #1a3a5c;
-    --secondary: #81c995;
-    --warning: #fdd663;
-    --danger: #f28b82;
+    /* Primary Colors */
+    --primary: #60A5FA;
+    --primary-dark: #93C5FD;
+    --primary-light: #1E3A5F;
+    --primary-gradient: linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%);
 
-    /* Neutrals - inverted */
-    --bg: #1f1f1f;
-    --surface: #2d2d2d;
-    --text: #e8eaed;
-    --text-secondary: #9aa0a6;
-    --text-muted: #6e7275;
-    --border: #3c4043;
-    --divider: #3c4043;
+    /* Accent Colors */
+    --secondary: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --info: #22D3EE;
 
-    /* Shadows - darker */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 8px 16px 4px rgba(0, 0, 0, 0.3);
+    /* Category Colors - Brighter for dark mode */
+    --cat-family: #F87171;
+    --cat-relatives: #FB923C;
+    --cat-friends: #4ADE80;
+    --cat-work: #60A5FA;
+    --cat-social: #C084FC;
+
+    /* Neutrals - Rich dark */
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --text: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --border: #334155;
+    --divider: #1E293B;
+
+    /* Shadows - Subtle glow */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 }
 
 /* Dark theme specific overrides */
@@ -1792,78 +1818,111 @@ input, select, textarea {
     transition: all var(--transition);
 }
 
-/* v10.5: Redesigned FAB Container - Separated horizontal buttons */
-.fab-container-v10 {
+/* v11: Modern FAB Container with labels */
+.fab-container-v11 {
     position: fixed;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    gap: 48px;
+    gap: 16px;
     z-index: 900;
 }
 
-/* v10.5: Main FAB button (center, largest) */
-.fab-main {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--primary);
+/* v11: FAB buttons with labels */
+.fab-v11 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+}
+
+.fab-v11 i {
+    font-size: 20px;
+}
+
+.fab-label {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.fab-v11:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.fab-v11:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* v11: Primary FAB (Add new) - Largest and most prominent */
+.fab-v11.fab-primary {
+    padding: 16px 28px;
+    background: var(--primary-gradient);
     color: white;
-    border: none;
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
 }
 
-.fab-main:hover {
-    transform: scale(1.1);
-    box-shadow: 0 10px 32px rgba(99, 102, 241, 0.55);
+.fab-v11.fab-primary i {
+    font-size: 28px;
 }
 
-.fab-main:active {
-    transform: scale(0.95);
+.fab-v11.fab-primary .fab-label {
+    font-size: 13px;
 }
 
-/* v10.5: Side FAB buttons (smaller) */
-.fab-side {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.fab-v11.fab-primary:hover {
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
 }
 
-.fab-side-left {
+/* v11: Secondary FAB (Connect) */
+.fab-v11.fab-secondary {
     background: linear-gradient(135deg, #F59E0B, #D97706);
     color: white;
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
 }
 
-.fab-side-right {
+.fab-v11.fab-secondary:hover {
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.45);
+}
+
+/* v11: Tertiary FAB (Layout) */
+.fab-v11.fab-tertiary {
     background: linear-gradient(135deg, #8B5CF6, #6D28D9);
     color: white;
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
 }
 
-.fab-side:hover {
-    transform: scale(1.12);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.fab-v11.fab-tertiary:hover {
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
 }
 
-.fab-side:active {
-    transform: scale(0.95);
+/* v11: Active state for force toggle */
+#fab-force-toggle.active {
+    background: linear-gradient(135deg, #10B981, #059669);
+    animation: pulse-v11 2s infinite;
+}
+
+@keyframes pulse-v11 {
+    0%, 100% { box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35); }
+    50% { box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6), 0 0 0 8px rgba(16, 185, 129, 0.1); }
+}
+
+/* Legacy v10.5 support */
+.fab-container-v10 {
+    display: none;
 }
 
 #fab-force-toggle.active {
@@ -4768,75 +4827,88 @@ body.can-connect-node * {
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
+/* v11: Bigger, clearer category tabs */
 .category-tabs-inline .category-tab {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
+    gap: 8px;
+    padding: 10px 18px;
+    border: 2px solid transparent;
+    background: var(--surface);
+    border-radius: var(--border-radius-full);
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text-secondary);
-    transition: all 0.2s ease;
+    transition: all var(--transition);
     white-space: nowrap;
+    box-shadow: var(--shadow-sm);
 }
 
 .category-tabs-inline .category-tab:hover {
     background: var(--surface);
-    color: var(--text-primary);
+    color: var(--text);
+    border-color: var(--border);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .category-tabs-inline .category-tab.active {
     background: var(--primary);
     color: white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
 }
 
 .category-tabs-inline .category-tab i {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .category-tabs-inline .category-tab span {
     display: inline;
 }
 
-/* Tab count badge */
+/* v11: Tab count badge - More prominent */
 .tab-count {
-    font-size: 10px;
-    padding: 2px 6px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    min-width: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.25);
+    border-radius: var(--border-radius-full);
+    min-width: 24px;
     text-align: center;
 }
 
 .category-tabs-inline .category-tab:not(.active) .tab-count {
-    background: var(--divider);
-    color: var(--text-secondary);
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
-/* Category-specific active colors */
+/* v11: Category-specific active colors - More vibrant */
 .category-tabs-inline .category-tab[data-category="family"].active {
-    background: linear-gradient(135deg, #E53935, #C62828);
+    background: linear-gradient(135deg, var(--cat-family), #DC2626);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
 .category-tabs-inline .category-tab[data-category="relatives"].active {
-    background: linear-gradient(135deg, #FF7043, #E64A19);
+    background: linear-gradient(135deg, var(--cat-relatives), #EA580C);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 }
 
 .category-tabs-inline .category-tab[data-category="friends"].active {
-    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    background: linear-gradient(135deg, var(--cat-friends), #16A34A);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
 
 .category-tabs-inline .category-tab[data-category="work"].active {
-    background: linear-gradient(135deg, #2196F3, #1976D2);
+    background: linear-gradient(135deg, var(--cat-work), #2563EB);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .category-tabs-inline .category-tab[data-category="social"].active {
-    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    background: linear-gradient(135deg, var(--cat-social), #9333EA);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
 }
 
 /* Floating Search Box */
@@ -4973,30 +5045,35 @@ body.can-connect-node * {
     opacity: 1;
 }
 
-/* Category-specific menu colors - v10.5: Updated for new structure */
+/* v11: Category-specific menu colors - More vibrant */
 .category-menu-item[data-category="family"].active .category-menu-btn {
-    background: rgba(229, 57, 53, 0.1);
-    color: #E53935;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+    color: var(--cat-family);
+    border-left: 3px solid var(--cat-family);
 }
 
 .category-menu-item[data-category="relatives"].active .category-menu-btn {
-    background: rgba(255, 112, 67, 0.1);
-    color: #FF7043;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05));
+    color: var(--cat-relatives);
+    border-left: 3px solid var(--cat-relatives);
 }
 
 .category-menu-item[data-category="friends"].active .category-menu-btn {
-    background: rgba(76, 175, 80, 0.1);
-    color: #4CAF50;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    color: var(--cat-friends);
+    border-left: 3px solid var(--cat-friends);
 }
 
 .category-menu-item[data-category="work"].active .category-menu-btn {
-    background: rgba(33, 150, 243, 0.1);
-    color: #2196F3;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+    color: var(--cat-work);
+    border-left: 3px solid var(--cat-work);
 }
 
 .category-menu-item[data-category="social"].active .category-menu-btn {
-    background: rgba(156, 39, 176, 0.1);
-    color: #9C27B0;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05));
+    color: var(--cat-social);
+    border-left: 3px solid var(--cat-social);
 }
 
 /* ==========================================
