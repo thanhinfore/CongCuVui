@@ -6671,12 +6671,8 @@ function edgeBelongsToCategory(edge, category) {
  * @param {string} category - The category ID to delete
  */
 function deleteCategoryData(category) {
-    if (category === 'all') {
-        showToast('Không thể xóa tất cả dữ liệu từ đây', 'error');
-        return;
-    }
-
     const categoryNames = {
+        all: 'Tất cả',
         family: 'Gia đình',
         relatives: 'Họ hàng',
         friends: 'Bạn bè',
@@ -6698,11 +6694,19 @@ function deleteCategoryData(category) {
         return;
     }
 
-    // Confirm deletion
-    const confirmMsg = `Bạn có chắc muốn xóa toàn bộ dữ liệu đồ thị "${categoryName}"?\n\n` +
-        `- ${nodesInCategory.size} người (không tính TÔI)\n` +
-        `- ${edgesInCategory.length} kết nối\n\n` +
-        `⚠️ Hành động này không thể hoàn tác!`;
+    // Confirm deletion - stronger warning for "all"
+    let confirmMsg;
+    if (category === 'all') {
+        confirmMsg = `⚠️ CẢNH BÁO: Bạn sắp xóa TẤT CẢ dữ liệu!\n\n` +
+            `- ${nodesInCategory.size} người (không tính TÔI)\n` +
+            `- ${edgesInCategory.length} kết nối\n\n` +
+            `🔴 Hành động này KHÔNG THỂ hoàn tác!\n\nBạn có chắc chắn muốn tiếp tục?`;
+    } else {
+        confirmMsg = `Bạn có chắc muốn xóa toàn bộ dữ liệu đồ thị "${categoryName}"?\n\n` +
+            `- ${nodesInCategory.size} người (không tính TÔI)\n` +
+            `- ${edgesInCategory.length} kết nối\n\n` +
+            `⚠️ Hành động này không thể hoàn tác!`;
+    }
 
     if (!confirm(confirmMsg)) {
         return;
@@ -6873,13 +6877,13 @@ function setupCategoryTabs() {
         });
     });
 
-    // v10.5: Category delete buttons
+    // v10.5: Category delete buttons (including "all")
     const deleteBtns = document.querySelectorAll('.category-delete-btn');
     deleteBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const category = btn.dataset.category;
-            if (category && category !== 'all') {
+            if (category) {
                 deleteCategoryData(category);
             }
         });
