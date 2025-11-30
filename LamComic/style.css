@@ -1757,3 +1757,290 @@ input[type="file"], .upload-label {
 #brushSizeRow.visible {
     display: block;
 }
+
+/* ========== UX ENHANCEMENTS ========== */
+
+/* Quick Toolbar - Floating toolbar khi select text */
+.quick-toolbar {
+    position: fixed;
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+}
+
+.quick-toolbar.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.quick-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-light);
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.quick-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.quick-btn-danger:hover {
+    background: var(--danger);
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.zoom-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg-light);
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.9rem;
+}
+
+.zoom-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.zoom-level {
+    min-width: 50px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* Action Feedback Animation */
+.action-feedback {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 1rem;
+    z-index: 9999;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(1);
+    animation: feedbackPop 0.5s ease;
+}
+
+.action-feedback.fade-out {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+    transition: all 0.3s ease;
+}
+
+@keyframes feedbackPop {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Live Preview Indicator */
+.preview-indicator {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 6px 12px;
+    background: rgba(67, 97, 238, 0.9);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    z-index: 10;
+    display: none;
+}
+
+.preview-indicator.visible {
+    display: block;
+}
+
+/* Keyboard Shortcut Hints */
+.shortcut-hint {
+    display: inline-block;
+    padding: 2px 6px;
+    margin-left: 8px;
+    background: var(--bg-dark);
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-medium);
+    font-family: monospace;
+}
+
+/* Enhanced Selection Border */
+.canvas-container canvas.has-selection {
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Tool Button Active State Enhancement */
+.tool-btn.active {
+    position: relative;
+}
+
+.tool-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+}
+
+/* Mobile adjustments for UX enhancements */
+@media (max-width: 768px) {
+    .quick-toolbar {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .quick-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .zoom-controls {
+        bottom: 80px;
+        right: 10px;
+        padding: 4px;
+    }
+
+    .zoom-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .zoom-level {
+        min-width: 45px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Smooth canvas transitions */
+#imageCanvas {
+    transition: width 0.2s ease, height 0.2s ease;
+}
+
+/* Cursor styles for different modes */
+.canvas-container.mode-erase canvas {
+    cursor: crosshair;
+}
+
+.canvas-container.mode-text canvas {
+    cursor: text;
+}
+
+.canvas-container.mode-select canvas {
+    cursor: default;
+}
+
+.canvas-container.mode-select canvas:hover {
+    cursor: grab;
+}
+
+/* Help Tooltip */
+.help-tooltip {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 12px 16px;
+    background: var(--text-dark);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    z-index: 100;
+    max-width: 300px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.help-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.help-tooltip h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+}
+
+.help-tooltip ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.help-tooltip li {
+    margin: 4px 0;
+}
+
+.help-tooltip kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+/* Hide zoom controls on very small screens */
+@media (max-width: 360px) {
+    .zoom-controls {
+        display: none;
+    }
+}
