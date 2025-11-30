@@ -772,7 +772,7 @@ function createHelpButton() {
 }
 
 /**
- * Thêm CSS cho help
+ * Thêm CSS cho help (enhanced version)
  */
 function addHelpStyles() {
     if (document.getElementById('helpStyles')) return;
@@ -780,48 +780,47 @@ function addHelpStyles() {
     const style = document.createElement('style');
     style.id = 'helpStyles';
     style.textContent = `
-        .help-btn {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: var(--bg-light);
-            border: 1px solid var(--border-medium);
-            color: var(--text-medium);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-
-        .help-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
         .help-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
             padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .help-modal {
             background: white;
-            border-radius: var(--radius-lg);
-            max-width: 600px;
+            border-radius: 24px;
+            max-width: 560px;
             width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .help-modal-header {
@@ -829,32 +828,55 @@ function addHelpStyles() {
             justify-content: space-between;
             align-items: center;
             padding: 20px 24px;
-            border-bottom: 1px solid var(--border-light);
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 1;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
         }
 
         .help-modal-header h2 {
             margin: 0;
-            font-size: 1.25rem;
-            color: var(--text-dark);
+            font-size: 1.2rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: white;
         }
 
         .help-modal-header h2 i {
-            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .help-modal-header .help-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .help-modal-header .help-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
         .help-modal-body {
             padding: 24px;
+            overflow-y: auto;
+            max-height: calc(85vh - 70px);
         }
 
         .help-section {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
         }
 
         .help-section:last-child {
@@ -862,12 +884,23 @@ function addHelpStyles() {
         }
 
         .help-section h3 {
-            font-size: 1rem;
-            color: var(--primary);
-            margin: 0 0 12px 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 14px 0;
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .help-section h3 i {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .help-section ul {
@@ -877,66 +910,49 @@ function addHelpStyles() {
         }
 
         .help-section li {
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border-light);
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.5;
         }
 
         .help-section li:last-child {
             border-bottom: none;
+            padding-bottom: 0;
         }
 
         .help-section li i {
-            color: var(--success);
-            margin-top: 3px;
+            color: #22c55e;
+            margin-top: 4px;
+            font-size: 0.75rem;
+        }
+
+        .help-section li strong {
+            color: #1e293b;
+            font-weight: 600;
         }
 
         .help-kbd {
             display: inline-block;
-            padding: 2px 8px;
-            background: var(--bg-medium);
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.85rem;
+            padding: 3px 8px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: var(--text-medium);
-        }
-
-        .help-workflow {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .help-step {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            background: var(--bg-light);
-            border-radius: var(--radius-md);
-            font-size: 0.85rem;
-        }
-
-        .help-step-num {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            font-size: 0.75rem;
-            font-weight: 600;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         @media (max-width: 768px) {
             .help-modal {
                 max-height: 90vh;
+                border-radius: 20px;
             }
 
             .help-modal-header {
@@ -944,11 +960,17 @@ function addHelpStyles() {
             }
 
             .help-modal-body {
-                padding: 20px;
+                padding: 16px;
+                max-height: calc(90vh - 60px);
             }
 
-            .help-workflow {
-                flex-direction: column;
+            .help-section {
+                padding: 14px;
+                margin-bottom: 14px;
+            }
+
+            .help-section li {
+                font-size: 0.85rem;
             }
         }
     `;
