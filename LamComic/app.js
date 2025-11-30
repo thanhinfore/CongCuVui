@@ -1025,24 +1025,436 @@ function handleSave() {
     selectedTextObject = null;
     redrawCanvas();
 
-    setTimeout(() => {
-        const imageName = prompt("Nhập tên file ảnh:", "comic_edited.png") || "comic_edited.png";
+    // Hiển thị modal lưu ảnh
+    showSaveModal(tempSelected);
+}
+
+// Hiển thị modal lưu ảnh với tùy chọn định dạng
+function showSaveModal(tempSelected) {
+    // Xóa modal cũ nếu có
+    const existingModal = document.querySelector('.save-modal-overlay');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.className = 'save-modal-overlay';
+    modal.innerHTML = `
+        <div class="save-modal">
+            <div class="save-modal-header">
+                <h3><i class="fas fa-save"></i> Lưu ảnh</h3>
+                <button class="save-modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="save-modal-body">
+                <div class="save-option-row">
+                    <label for="saveFileName">Tên file:</label>
+                    <input type="text" id="saveFileName" value="comic_edited" placeholder="Nhập tên file">
+                </div>
+                <div class="save-option-row">
+                    <label>Định dạng:</label>
+                    <div class="format-buttons">
+                        <label class="format-option">
+                            <input type="radio" name="saveFormat" value="jpeg" checked>
+                            <span class="format-btn-label">
+                                <i class="fas fa-file-image"></i>
+                                <strong>JPG</strong>
+                                <small>Nhẹ hơn, phù hợp chia sẻ</small>
+                            </span>
+                        </label>
+                        <label class="format-option">
+                            <input type="radio" name="saveFormat" value="png">
+                            <span class="format-btn-label">
+                                <i class="fas fa-file-image"></i>
+                                <strong>PNG</strong>
+                                <small>Chất lượng cao, giữ trong suốt</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div class="save-option-row quality-row" id="qualityRow">
+                    <label for="saveQuality">Chất lượng JPG:</label>
+                    <div class="quality-slider">
+                        <input type="range" id="saveQuality" min="60" max="100" value="92">
+                        <span id="qualityValue">92%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="save-modal-footer">
+                <button class="btn btn-secondary save-cancel">Hủy</button>
+                <button class="btn btn-primary save-confirm"><i class="fas fa-download"></i> Lưu ảnh</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Thêm styles nếu chưa có
+    addSaveModalStyles();
+
+    // Event listeners
+    const closeBtn = modal.querySelector('.save-modal-close');
+    const cancelBtn = modal.querySelector('.save-cancel');
+    const confirmBtn = modal.querySelector('.save-confirm');
+    const formatRadios = modal.querySelectorAll('input[name="saveFormat"]');
+    const qualityRow = modal.querySelector('#qualityRow');
+    const qualitySlider = modal.querySelector('#saveQuality');
+    const qualityValue = modal.querySelector('#qualityValue');
+    const fileNameInput = modal.querySelector('#saveFileName');
+
+    // Focus vào input tên file
+    setTimeout(() => fileNameInput.select(), 100);
+
+    // Đóng modal
+    const closeModal = () => {
+        modal.remove();
+        // Khôi phục selection
+        selectedTextObject = tempSelected;
+        if (selectedTextObject) redrawCanvas();
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Thay đổi định dạng
+    formatRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'jpeg') {
+                qualityRow.style.display = 'block';
+            } else {
+                qualityRow.style.display = 'none';
+            }
+        });
+    });
+
+    // Cập nhật giá trị quality
+    qualitySlider.addEventListener('input', () => {
+        qualityValue.textContent = qualitySlider.value + '%';
+    });
+
+    // Xác nhận lưu
+    confirmBtn.addEventListener('click', () => {
+        const fileName = fileNameInput.value.trim() || 'comic_edited';
+        const format = modal.querySelector('input[name="saveFormat"]:checked').value;
+        const quality = parseInt(qualitySlider.value) / 100;
+
         try {
-            const dataURL = canvas.toDataURL('image/png');
+            let dataURL;
+            let extension;
+
+            if (format === 'jpeg') {
+                dataURL = canvas.toDataURL('image/jpeg', quality);
+                extension = '.jpg';
+            } else {
+                dataURL = canvas.toDataURL('image/png');
+                extension = '.png';
+            }
+
+            // Xử lý tên file
+            let finalName = fileName;
+            if (!finalName.toLowerCase().endsWith('.jpg') &&
+                !finalName.toLowerCase().endsWith('.jpeg') &&
+                !finalName.toLowerCase().endsWith('.png')) {
+                finalName += extension;
+            }
+
             const link = document.createElement('a');
-            link.download = imageName.endsWith('.png') ? imageName : imageName + '.png';
+            link.download = finalName;
             link.href = dataURL;
             link.click();
-            showToast(`Ảnh "${link.download}" đã được lưu.`);
+
+            showToast(`Đã lưu "${finalName}"`);
+            modal.remove();
+
+            // Khôi phục selection
+            selectedTextObject = tempSelected;
+            if (selectedTextObject) redrawCanvas();
         } catch (e) {
             console.error("Lỗi khi lưu:", e);
             showToast("Lỗi khi lưu ảnh. Vui lòng thử lại!");
         }
+    });
 
-        // Khôi phục selection
-        selectedTextObject = tempSelected;
-        if (selectedTextObject) redrawCanvas();
-    }, 50);
+    // Enter để lưu
+    fileNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            confirmBtn.click();
+        } else if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+}
+
+// Thêm styles cho save modal
+function addSaveModalStyles() {
+    if (document.getElementById('saveModalStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'saveModalStyles';
+    style.textContent = `
+        .save-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .save-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .save-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .save-modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .save-modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .save-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .save-modal-body {
+            padding: 24px;
+        }
+
+        .save-option-row {
+            margin-bottom: 20px;
+        }
+
+        .save-option-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .save-option-row > label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .save-option-row input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .save-option-row input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .format-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .format-option {
+            cursor: pointer;
+        }
+
+        .format-option input[type="radio"] {
+            display: none;
+        }
+
+        .format-btn-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 16px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .format-btn-label i {
+            font-size: 1.5rem;
+            color: #6b7280;
+        }
+
+        .format-btn-label strong {
+            font-size: 1rem;
+            color: #374151;
+        }
+
+        .format-btn-label small {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .format-option input[type="radio"]:checked + .format-btn-label {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        }
+
+        .format-option input[type="radio"]:checked + .format-btn-label i {
+            color: #6366f1;
+        }
+
+        .format-option input[type="radio"]:checked + .format-btn-label strong {
+            color: #6366f1;
+        }
+
+        .quality-slider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quality-slider input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e5e7eb;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .quality-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+        }
+
+        .quality-slider span {
+            min-width: 45px;
+            font-weight: 700;
+            color: #6366f1;
+            text-align: right;
+        }
+
+        .quality-row {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            margin-top: 12px;
+        }
+
+        .save-modal-footer {
+            display: flex;
+            gap: 12px;
+            padding: 20px 24px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .save-modal-footer .btn {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .save-modal-footer .btn-secondary {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+        }
+
+        .save-modal-footer .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .save-modal-footer .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        }
+
+        .save-modal-footer .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 480px) {
+            .save-modal {
+                border-radius: 16px;
+            }
+
+            .save-modal-header {
+                padding: 16px 20px;
+            }
+
+            .save-modal-body {
+                padding: 20px;
+            }
+
+            .format-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .save-modal-footer {
+                padding: 16px 20px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // Xử lý thao tác reset
