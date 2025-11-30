@@ -2044,3 +2044,303 @@ input[type="file"], .upload-label {
         display: none;
     }
 }
+
+/* ========== DRAG & DROP ========== */
+
+/* Drop Overlay */
+.drop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(67, 97, 238, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.drop-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.drop-content {
+    text-align: center;
+    color: white;
+}
+
+.drop-content i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: dropBounce 1s infinite;
+}
+
+.drop-content p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.drop-content span {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+@keyframes dropBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Drag over state */
+.drag-over {
+    border-color: var(--primary) !important;
+    background-color: rgba(67, 97, 238, 0.1) !important;
+}
+
+.upload-area.drag-over .upload-label {
+    border-color: var(--primary);
+    background-color: rgba(67, 97, 238, 0.15);
+    transform: scale(1.02);
+}
+
+/* ========== INLINE TEXT INPUT ========== */
+
+.inline-text-input {
+    position: fixed;
+    width: 280px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.2s ease;
+}
+
+.inline-text-input.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.inline-text-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.inline-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    color: var(--text-medium);
+    transition: all var(--transition-fast);
+}
+
+.inline-close:hover {
+    background: var(--bg-medium);
+    color: var(--text-dark);
+}
+
+.inline-text-input textarea {
+    width: 100%;
+    border: none;
+    padding: 12px 16px;
+    font-size: 1rem;
+    resize: none;
+    min-height: 80px;
+}
+
+.inline-text-input textarea:focus {
+    outline: none;
+}
+
+.inline-text-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-light);
+    justify-content: flex-end;
+}
+
+.inline-text-actions .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    background: var(--bg-light);
+    color: var(--text-medium);
+    border: 1px solid var(--border-medium);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-medium);
+}
+
+/* ========== TEXT PRESETS ========== */
+
+.text-presets {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3);
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+}
+
+.text-presets label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-medium);
+    margin-bottom: var(--space-2);
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: white;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.preset-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* ========== IMPROVED UPLOAD AREA ========== */
+
+.upload-label {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.upload-label::before {
+    content: 'Hoặc kéo thả ảnh vào đây';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: var(--text-light);
+    opacity: 0.7;
+}
+
+/* ========== TOOL SECTION IMPROVEMENTS ========== */
+
+.tool-section {
+    position: relative;
+}
+
+/* Quick tips */
+.quick-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+    border-radius: var(--radius-md);
+    margin-top: var(--space-3);
+    font-size: 0.8rem;
+    color: var(--primary);
+}
+
+.quick-tip i {
+    font-size: 1rem;
+}
+
+/* Step indicators */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-3);
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-medium);
+    color: var(--text-medium);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.step.active {
+    background: var(--primary);
+    color: white;
+}
+
+.step.completed {
+    background: var(--success);
+    color: white;
+}
+
+.step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--bg-dark);
+}
+
+.step-line.completed {
+    background: var(--success);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .inline-text-input {
+        width: calc(100vw - 32px);
+        left: 16px !important;
+        right: 16px !important;
+    }
+
+    .preset-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .preset-btn {
+        padding: 10px 12px;
+    }
+
+    .upload-label::before {
+        display: none;
+    }
+
+    .drop-content i {
+        font-size: 3rem;
+    }
+
+    .drop-content p {
+        font-size: 1.2rem;
+    }
+}
