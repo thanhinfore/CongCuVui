@@ -127,6 +127,10 @@ function updateMobilePanelContent() {
 
         // Thiết lập lại event listeners cho các phần tử vừa thêm
         setupMobileEventListeners();
+
+        // Thiết lập event listeners cho các tính năng nâng cấp
+        setupEnhancedMobileListeners();
+
         console.log('Đã thiết lập event listeners');
     } catch (error) {
         console.error('Lỗi khi cập nhật nội dung panel:', error);
@@ -336,3 +340,248 @@ function addEmergencyReloadButton() {
 
 // Thêm nút làm mới khẩn cấp
 setTimeout(addEmergencyReloadButton, 1000);
+
+// ==================== ENHANCED MOBILE LISTENERS ====================
+// Hỗ trợ các tính năng nâng cấp trên mobile
+
+function setupEnhancedMobileListeners() {
+    if (!panelContent) return;
+
+    // Erase mode buttons trong mobile panel
+    const mobileEraseModeButtons = panelContent.querySelectorAll('input[name="eraseMode"]');
+    mobileEraseModeButtons.forEach(btn => {
+        btn.addEventListener('change', function(e) {
+            // Sync với original
+            const originalBtn = document.querySelector(`.controls-panel input[name="eraseMode"][value="${e.target.value}"]`);
+            if (originalBtn) {
+                originalBtn.checked = true;
+                originalBtn.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+    // Brush size slider
+    const mobileBrushSize = panelContent.querySelector('#brushSize');
+    if (mobileBrushSize) {
+        mobileBrushSize.addEventListener('input', function(e) {
+            const originalInput = document.querySelector('.controls-panel #brushSize');
+            if (originalInput) {
+                originalInput.value = e.target.value;
+                originalInput.dispatchEvent(new Event('input'));
+            }
+            // Update display value
+            const displayValue = panelContent.querySelector('#brushSizeValue');
+            if (displayValue) {
+                displayValue.textContent = e.target.value + 'px';
+            }
+        });
+    }
+
+    // Pick color button
+    const mobilePickColorBtn = panelContent.querySelector('#pickColorBtn');
+    if (mobilePickColorBtn) {
+        mobilePickColorBtn.addEventListener('click', function() {
+            // Close mobile panel first
+            if (mobileToolsPanel) {
+                mobileToolsPanel.classList.remove('active');
+                document.body.classList.remove('panel-open');
+            }
+            // Then activate color picker
+            const originalBtn = document.querySelector('.controls-panel #pickColorBtn');
+            if (originalBtn) {
+                originalBtn.click();
+            } else if (typeof toggleColorPicker === 'function') {
+                toggleColorPicker();
+            }
+        });
+    }
+
+    // Bold/Italic buttons
+    const mobileBoldBtn = panelContent.querySelector('#boldBtn');
+    if (mobileBoldBtn) {
+        mobileBoldBtn.addEventListener('click', function() {
+            const originalBtn = document.querySelector('.controls-panel #boldBtn');
+            if (originalBtn) {
+                originalBtn.click();
+            } else if (typeof toggleBold === 'function') {
+                toggleBold();
+            }
+            this.classList.toggle('active');
+        });
+    }
+
+    const mobileItalicBtn = panelContent.querySelector('#italicBtn');
+    if (mobileItalicBtn) {
+        mobileItalicBtn.addEventListener('click', function() {
+            const originalBtn = document.querySelector('.controls-panel #italicBtn');
+            if (originalBtn) {
+                originalBtn.click();
+            } else if (typeof toggleItalic === 'function') {
+                toggleItalic();
+            }
+            this.classList.toggle('active');
+        });
+    }
+
+    // Outline checkbox
+    const mobileOutlineCheckbox = panelContent.querySelector('#enableOutline');
+    if (mobileOutlineCheckbox) {
+        mobileOutlineCheckbox.addEventListener('change', function() {
+            const originalCheckbox = document.querySelector('.controls-panel #enableOutline');
+            if (originalCheckbox) {
+                originalCheckbox.checked = this.checked;
+                originalCheckbox.dispatchEvent(new Event('change'));
+            }
+            // Toggle settings visibility
+            const settings = panelContent.querySelector('#outlineSettings');
+            if (settings) {
+                settings.classList.toggle('active', this.checked);
+            }
+        });
+    }
+
+    // Shadow checkbox
+    const mobileShadowCheckbox = panelContent.querySelector('#enableShadow');
+    if (mobileShadowCheckbox) {
+        mobileShadowCheckbox.addEventListener('change', function() {
+            const originalCheckbox = document.querySelector('.controls-panel #enableShadow');
+            if (originalCheckbox) {
+                originalCheckbox.checked = this.checked;
+                originalCheckbox.dispatchEvent(new Event('change'));
+            }
+            // Toggle settings visibility
+            const settings = panelContent.querySelector('#shadowSettings');
+            if (settings) {
+                settings.classList.toggle('active', this.checked);
+            }
+        });
+    }
+
+    // Selected text action buttons
+    const mobileEditBtn = panelContent.querySelector('#editSelectedTextBtn');
+    if (mobileEditBtn) {
+        mobileEditBtn.addEventListener('click', function() {
+            if (mobileToolsPanel) {
+                mobileToolsPanel.classList.remove('active');
+                document.body.classList.remove('panel-open');
+            }
+            if (typeof openEditTextModal === 'function') {
+                openEditTextModal();
+            }
+        });
+    }
+
+    const mobileDeleteBtn = panelContent.querySelector('#deleteSelectedTextBtn');
+    if (mobileDeleteBtn) {
+        mobileDeleteBtn.addEventListener('click', function() {
+            if (typeof deleteSelectedText === 'function') {
+                deleteSelectedText();
+            }
+            // Update selected text info visibility
+            const infoPanel = panelContent.querySelector('#selectedTextInfo');
+            if (infoPanel) {
+                infoPanel.classList.add('hidden');
+            }
+        });
+    }
+
+    const mobileDuplicateBtn = panelContent.querySelector('#duplicateTextBtn');
+    if (mobileDuplicateBtn) {
+        mobileDuplicateBtn.addEventListener('click', function() {
+            if (typeof duplicateSelectedText === 'function') {
+                duplicateSelectedText();
+            }
+        });
+    }
+
+    // Sync outline/shadow color inputs
+    syncEnhancedInputs();
+
+    // Setup number inputs for new fields
+    setupEnhancedNumberInputsMobile();
+
+    console.log('Enhanced mobile listeners setup complete');
+}
+
+function syncEnhancedInputs() {
+    // Outline color
+    const mobileOutlineColor = panelContent?.querySelector('#outlineColor');
+    if (mobileOutlineColor) {
+        mobileOutlineColor.addEventListener('input', function() {
+            const original = document.querySelector('.controls-panel #outlineColor');
+            if (original) original.value = this.value;
+        });
+    }
+
+    // Outline width
+    const mobileOutlineWidth = panelContent?.querySelector('#outlineWidth');
+    if (mobileOutlineWidth) {
+        mobileOutlineWidth.addEventListener('change', function() {
+            const original = document.querySelector('.controls-panel #outlineWidth');
+            if (original) original.value = this.value;
+        });
+    }
+
+    // Shadow color
+    const mobileShadowColor = panelContent?.querySelector('#shadowColor');
+    if (mobileShadowColor) {
+        mobileShadowColor.addEventListener('input', function() {
+            const original = document.querySelector('.controls-panel #shadowColor');
+            if (original) original.value = this.value;
+        });
+    }
+
+    // Shadow blur
+    const mobileShadowBlur = panelContent?.querySelector('#shadowBlur');
+    if (mobileShadowBlur) {
+        mobileShadowBlur.addEventListener('change', function() {
+            const original = document.querySelector('.controls-panel #shadowBlur');
+            if (original) original.value = this.value;
+        });
+    }
+
+    // Shadow offset X
+    const mobileShadowOffsetX = panelContent?.querySelector('#shadowOffsetX');
+    if (mobileShadowOffsetX) {
+        mobileShadowOffsetX.addEventListener('change', function() {
+            const original = document.querySelector('.controls-panel #shadowOffsetX');
+            if (original) original.value = this.value;
+        });
+    }
+
+    // Shadow offset Y
+    const mobileShadowOffsetY = panelContent?.querySelector('#shadowOffsetY');
+    if (mobileShadowOffsetY) {
+        mobileShadowOffsetY.addEventListener('change', function() {
+            const original = document.querySelector('.controls-panel #shadowOffsetY');
+            if (original) original.value = this.value;
+        });
+    }
+}
+
+function setupEnhancedNumberInputsMobile() {
+    if (!panelContent) return;
+
+    const containers = panelContent.querySelectorAll('#outlineSettings .number-input-container, #shadowSettings .number-input-container');
+    containers.forEach(container => {
+        const input = container.querySelector('input[type="number"]');
+        const upBtn = container.querySelector('.number-up');
+        const downBtn = container.querySelector('.number-down');
+
+        if (upBtn && input) {
+            upBtn.addEventListener('click', () => {
+                const max = parseInt(input.getAttribute('max')) || 100;
+                input.value = Math.min(parseInt(input.value) + 1, max);
+                input.dispatchEvent(new Event('change'));
+            });
+        }
+
+        if (downBtn && input) {
+            downBtn.addEventListener('click', () => {
+                const min = parseInt(input.getAttribute('min')) || 0;
+                input.value = Math.max(parseInt(input.value) - 1, min);
+                input.dispatchEvent(new Event('change'));
+            });
+        }
+    });
+}
