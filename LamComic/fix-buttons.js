@@ -15,6 +15,13 @@
     }
 
     function restoreButtonFunctions() {
+        // Kiểm tra nếu đã khởi tạo rồi thì bỏ qua
+        if (window._fixButtonsInitialized) {
+            console.log("fix-buttons.js đã được khởi tạo trước đó, bỏ qua.");
+            return;
+        }
+        window._fixButtonsInitialized = true;
+
         console.log("Khôi phục chức năng các nút công cụ...");
 
         // Lưu trữ tham chiếu đến các nút
@@ -28,7 +35,18 @@
             return;
         }
 
-        // Khôi phục chức năng cho các nút
+        // Kiểm tra nếu các nút đã có listener từ app.js thì bỏ qua
+        if (eraseModeButton.dataset.fixInit) {
+            console.log("Các nút công cụ đã được khởi tạo từ app.js, bỏ qua fix-buttons.js");
+            return;
+        }
+
+        // Đánh dấu đã khởi tạo
+        eraseModeButton.dataset.fixInit = 'true';
+        textModeButton.dataset.fixInit = 'true';
+        selectModeButton.dataset.fixInit = 'true';
+
+        // Khôi phục chức năng cho các nút (chỉ khi app.js chưa khởi tạo)
         eraseModeButton.addEventListener('click', function () {
             console.log("Nút Che chữ được nhấn");
             // Thiết lập mode
@@ -102,16 +120,12 @@
             }
         });
 
-        // Phục hồi chức năng lưu ảnh
+        // Phục hồi chức năng lưu ảnh - Kiểm tra để tránh duplicate listener
         const saveButton = document.getElementById('saveButton');
-        if (saveButton) {
-            saveButton.addEventListener('click', function () {
-                if (typeof window.handleSave === 'function') {
-                    window.handleSave();
-                } else {
-                    saveImage();
-                }
-            });
+        if (saveButton && !saveButton.dataset.fixBtnInit) {
+            saveButton.dataset.fixBtnInit = 'true';
+            // Không thêm listener vì đã có trong app.js
+            console.log("SaveButton đã được khởi tạo từ app.js, bỏ qua fix-buttons.js");
         }
 
         // Phục hồi chức năng các nút lịch sử
