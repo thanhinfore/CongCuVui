@@ -1204,14 +1204,17 @@ function setupEventListeners() {
     // Tool buttons
     if (eraseModeButton) {
         eraseModeButton.addEventListener('click', handleEraseModeClick);
+        eraseModeButton.dataset.fixInit = 'true'; // Đánh dấu đã khởi tạo
     }
 
     if (textModeButton) {
         textModeButton.addEventListener('click', handleTextModeClick);
+        textModeButton.dataset.fixInit = 'true';
     }
 
     if (selectModeButton) {
         selectModeButton.addEventListener('click', handleSelectModeClick);
+        selectModeButton.dataset.fixInit = 'true';
     }
 
     // History buttons
@@ -1226,10 +1229,12 @@ function setupEventListeners() {
     // Action buttons
     if (saveButton) {
         saveButton.addEventListener('click', handleSave);
+        saveButton.dataset.fixInit = 'true'; // Đánh dấu đã khởi tạo
     }
 
     if (resetButton) {
         resetButton.addEventListener('click', handleReset);
+        resetButton.dataset.fixInit = 'true';
     }
 
     // Canvas interaction - for mouse
