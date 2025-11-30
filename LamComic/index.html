@@ -1,0 +1,384 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#4361ee">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Sửa Truyện Tranh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Fix lỗi touch trên mobile */
+        body, html {
+            touch-action: manipulation;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .upload-label {
+            padding: 15px !important;
+            min-height: 60px;
+        }
+
+        /* Đảm bảo hình ảnh hiển thị đúng kích thước */
+        img {
+            max-width: 100%;
+        }
+
+        /* Tối ưu cho màn hình nhỏ */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .canvas-panel {
+                height: 100% !important;
+            }
+
+            .app-layout {
+                height: 100vh;
+                width: 100vw;
+            }
+        }
+
+        /* Đảm bảo nút bắt đầu dễ nhấn */
+        .btn-start {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+        }
+
+        /* Style mới để sửa lỗi panel mobile */
+        .mobile-tools-panel {
+            display: block !important;
+            height: auto;
+            max-height: 80vh;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            z-index: 9999 !important;
+        }
+
+            .mobile-tools-panel.active {
+                transform: translateY(0) !important;
+                bottom: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+
+        .panel-content {
+            display: block !important;
+            min-height: 200px;
+            padding: 16px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .panel-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 16px !important;
+            background-color: white !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 10 !important;
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+
+        /* Đảm bảo các công cụ hiển thị đúng */
+        .panel-content .tool-buttons {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .panel-content .history-controls {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 16px !important;
+            margin-bottom: 16px !important;
+        }
+
+        .panel-content .tool-options {
+            display: block !important;
+            margin-top: 16px !important;
+        }
+
+        /* Fix cho Safari */
+        @supports (-webkit-touch-callout: none) {
+            .mobile-tools-panel {
+                padding-bottom: 30px !important;
+            }
+        }
+
+        /* Mobile save button */
+        .mobile-save-button {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #4361ee;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border: none;
+            z-index: 15;
+            animation: fadeIn 0.3s ease;
+        }
+
+            .mobile-save-button:active {
+                transform: scale(0.95);
+            }
+
+        /* Hiệu ứng xuất hiện */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Cải thiện toast trên mobile */
+        @media (max-width: 768px) {
+            .toast-notification {
+                padding: 10px 16px;
+                border-radius: 8px;
+                bottom: 150px !important; /* Đặt cao hơn các nút */
+                width: auto;
+                max-width: 90%;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 9999;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Split layout: Left panel (controls) and Right panel (canvas) -->
+        <div class="app-layout">
+            <!-- Left Panel: All controls -->
+            <div class="controls-panel">
+                <!-- App Header -->
+                <header class="app-header">
+                    <div class="header-title">
+                        <i class="fas fa-edit"></i>
+                        <h1>Sửa Truyện Tranh</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button id="saveButton" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            <span>Lưu</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Image Upload Area -->
+                <div class="upload-area">
+                    <div class="upload-container">
+                        <label for="imageLoader" class="upload-label" id="uploadLabel">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Tải ảnh lên</span>
+                        </label>
+                        <input type="file" id="imageLoader" accept="image/*" class="hidden-input">
+                        <div id="loadingIndicator" class="loading-indicator hidden">
+                            <div class="spinner"></div>
+                            <span>Đang tải...</span>
+                        </div>
+                    </div>
+                    <div id="statusMessage" class="status-message hidden"></div>
+                </div>
+
+                <!-- Tool Buttons -->
+                <div class="tool-section">
+                    <h3 class="section-title">Công cụ</h3>
+                    <div class="tool-buttons">
+                        <button id="eraseModeButton" class="tool-btn" title="Che chữ">
+                            <i class="fas fa-eraser"></i>
+                            <span>Che chữ</span>
+                        </button>
+                        <button id="textModeButton" class="tool-btn" title="Thêm chữ">
+                            <i class="fas fa-font"></i>
+                            <span>Thêm chữ</span>
+                        </button>
+                        <button id="selectModeButton" class="tool-btn" title="Di chuyển">
+                            <i class="fas fa-arrows-alt"></i>
+                            <span>Di chuyển</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Controls -->
+                <div class="history-controls">
+                    <button id="undoButton" class="history-btn" title="Hoàn tác (Ctrl+Z)" disabled>
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button id="redoButton" class="history-btn" title="Làm lại (Ctrl+Y)" disabled>
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button id="resetButton" class="history-btn" title="Làm mới">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Tool Options (will show/hide based on selected tool) -->
+                <div id="eraseOptions" class="tool-options hidden">
+                    <h3>Tùy chọn che chữ</h3>
+                    <div class="option-row">
+                        <label for="eraseColor">Màu che phủ:</label>
+                        <div class="color-picker-container">
+                            <input type="color" id="eraseColor" value="#FFFFFF">
+                        </div>
+                    </div>
+                    <div class="tip">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Nhấp và kéo để che phủ vùng chữ</span>
+                    </div>
+                </div>
+
+                <div id="textOptions" class="tool-options hidden">
+                    <h3>Tùy chọn văn bản</h3>
+                    <div class="option-row">
+                        <label for="textContent">Nội dung:</label>
+                        <textarea id="textContent" placeholder="Nhập văn bản..."></textarea>
+                    </div>
+
+                    <div class="option-row">
+                        <label>Căn lề:</label>
+                        <div class="align-buttons">
+                            <label class="align-option">
+                                <input type="radio" name="textAlign" value="left" checked>
+                                <span><i class="fas fa-align-left"></i></span>
+                            </label>
+                            <label class="align-option">
+                                <input type="radio" name="textAlign" value="center">
+                                <span><i class="fas fa-align-center"></i></span>
+                            </label>
+                            <label class="align-option">
+                                <input type="radio" name="textAlign" value="right">
+                                <span><i class="fas fa-align-right"></i></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="option-row style-options">
+                        <div class="style-option">
+                            <label for="textColor">Màu:</label>
+                            <input type="color" id="textColor" value="#000000">
+                        </div>
+                        <div class="style-option">
+                            <label for="fontSize">Cỡ chữ:</label>
+                            <div class="number-input-container">
+                                <input type="number" id="fontSize" value="24" min="8" max="72">
+                                <div class="number-controls">
+                                    <button type="button" class="number-up">+</button>
+                                    <button type="button" class="number-down">−</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="style-option">
+                            <label for="fontFamily">Font:</label>
+                            <select id="fontFamily">
+                                <option value="Inter, sans-serif" selected>Inter</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="Times New Roman, serif">Times</option>
+                                <option value="Comic Sans MS, cursive">Comic</option>
+                                <option value="Impact, fantasy">Impact</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="selectOptions" class="tool-options hidden">
+                    <h3>Chọn & Di chuyển</h3>
+                    <div class="tip">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Nhấp vào văn bản để chọn, sau đó kéo để di chuyển</span>
+                    </div>
+                    <div class="tip">
+                        <i class="fas fa-keyboard"></i>
+                        <span>Delete hoặc Backspace để xóa văn bản đã chọn</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Canvas only -->
+            <div class="canvas-panel">
+                <div class="canvas-container">
+                    <canvas id="imageCanvas"></canvas>
+                    <!-- Mobile helper button hiển thị khi không có ảnh -->
+                    <div class="mobile-helper" id="mobileHelper">
+                        <button class="helper-button">
+                            <i class="fas fa-image"></i>
+                            <span>Tải ảnh lên</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile specific: Bottom toolbar toggle and panel -->
+    <button id="toolbarToggle" class="toolbar-toggle">
+        <i class="fas fa-sliders-h"></i>
+    </button>
+
+    <div id="mobileToolsPanel" class="mobile-tools-panel">
+        <div class="panel-header">
+            <h2>Công cụ</h2>
+            <button class="panel-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="panel-content">
+            <!-- Đây là nội dung mặc định khi panel lỗi -->
+            <div style="padding: 20px; text-align: center;">
+                <p>Đang tải công cụ...</p>
+                <div class="spinner" style="margin: 20px auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastNotification" class="toast-notification">
+        <i class="fas fa-check-circle"></i>
+        <span class="toast-message"></span>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="mobile-fixes.js"></script>
+    <script src="mobile-notification-save-fix.js"></script>
+    <script src="panel-content-fix.js"></script>
+    <script src="font-size-fix.js"></script>
+    <script src="fix-buttons.js"></script>
+</body>
+</html>
