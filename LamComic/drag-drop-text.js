@@ -661,7 +661,7 @@ function applyTextPreset(preset) {
     switch (preset) {
         case 'sfx': // Sound effects - to, đậm, có viền
             if (fontSizeInput) fontSizeInput.value = '48';
-            if (fontFamilyInput) fontFamilyInput.value = 'Impact, fantasy';
+            if (fontFamilyInput) fontFamilyInput.value = 'Bangers, cursive';
             if (textColorInput) textColorInput.value = '#FF0000';
             if (boldBtn) {
                 boldBtn.classList.add('active');
@@ -675,9 +675,9 @@ function applyTextPreset(preset) {
             if (outlineWidthInput) outlineWidthInput.value = '3';
             break;
 
-        case 'dialog': // Thoại thông thường
+        case 'dialog': // Thoại thông thường - font comic Việt
             if (fontSizeInput) fontSizeInput.value = '20';
-            if (fontFamilyInput) fontFamilyInput.value = 'Arial, sans-serif';
+            if (fontFamilyInput) fontFamilyInput.value = "'Baloo 2', cursive";
             if (textColorInput) textColorInput.value = '#000000';
             if (enableOutlineCheckbox) {
                 enableOutlineCheckbox.checked = false;
@@ -685,9 +685,9 @@ function applyTextPreset(preset) {
             }
             break;
 
-        case 'thought': // Suy nghĩ - nghiêng
+        case 'thought': // Suy nghĩ - nghiêng, font tay
             if (fontSizeInput) fontSizeInput.value = '18';
-            if (fontFamilyInput) fontFamilyInput.value = 'Georgia, serif';
+            if (fontFamilyInput) fontFamilyInput.value = "'Patrick Hand', cursive";
             if (textColorInput) textColorInput.value = '#555555';
             if (italicBtn) {
                 italicBtn.classList.add('active');
@@ -699,9 +699,9 @@ function applyTextPreset(preset) {
             }
             break;
 
-        case 'narrator': // Người kể chuyện
+        case 'narrator': // Người kể chuyện - font sạch sẽ
             if (fontSizeInput) fontSizeInput.value = '16';
-            if (fontFamilyInput) fontFamilyInput.value = 'Times New Roman, serif';
+            if (fontFamilyInput) fontFamilyInput.value = 'Nunito, sans-serif';
             if (textColorInput) textColorInput.value = '#333333';
             if (italicBtn) {
                 italicBtn.classList.add('active');
