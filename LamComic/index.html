@@ -256,15 +256,47 @@
                 <!-- Tool Options (will show/hide based on selected tool) -->
                 <div id="eraseOptions" class="tool-options hidden">
                     <h3>Tùy chọn che chữ</h3>
+
+                    <!-- Chế độ xóa -->
                     <div class="option-row">
-                        <label for="eraseColor">Màu che phủ:</label>
-                        <div class="color-picker-container">
-                            <input type="color" id="eraseColor" value="#FFFFFF">
+                        <label>Chế độ xóa:</label>
+                        <div class="erase-mode-buttons">
+                            <label class="erase-mode-option">
+                                <input type="radio" name="eraseMode" value="rectangle" checked>
+                                <span><i class="fas fa-vector-square"></i> Vùng chọn</span>
+                            </label>
+                            <label class="erase-mode-option">
+                                <input type="radio" name="eraseMode" value="brush">
+                                <span><i class="fas fa-paint-brush"></i> Cọ vẽ</span>
+                            </label>
                         </div>
                     </div>
+
+                    <!-- Kích thước cọ (chỉ hiện khi chọn brush mode) -->
+                    <div class="option-row" id="brushSizeRow">
+                        <label for="brushSize">Kích thước cọ:</label>
+                        <div class="slider-container">
+                            <input type="range" id="brushSize" min="5" max="100" value="30">
+                            <span id="brushSizeValue">30px</span>
+                        </div>
+                    </div>
+
+                    <div class="option-row">
+                        <label for="eraseColor">Màu che phủ:</label>
+                        <div class="color-picker-row">
+                            <div class="color-picker-container">
+                                <input type="color" id="eraseColor" value="#FFFFFF">
+                            </div>
+                            <button type="button" id="pickColorBtn" class="btn-pick-color" title="Lấy màu từ ảnh">
+                                <i class="fas fa-eye-dropper"></i>
+                                <span>Lấy màu</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="tip">
                         <i class="fas fa-lightbulb"></i>
-                        <span>Nhấp và kéo để che phủ vùng chữ</span>
+                        <span id="eraseTip">Nhấp và kéo để che phủ vùng chữ</span>
                     </div>
                 </div>
 
@@ -275,33 +307,44 @@
                         <textarea id="textContent" placeholder="Nhập văn bản..."></textarea>
                     </div>
 
+                    <!-- Căn lề và kiểu chữ -->
                     <div class="option-row">
-                        <label>Căn lề:</label>
-                        <div class="align-buttons">
-                            <label class="align-option">
-                                <input type="radio" name="textAlign" value="left" checked>
-                                <span><i class="fas fa-align-left"></i></span>
-                            </label>
-                            <label class="align-option">
-                                <input type="radio" name="textAlign" value="center">
-                                <span><i class="fas fa-align-center"></i></span>
-                            </label>
-                            <label class="align-option">
-                                <input type="radio" name="textAlign" value="right">
-                                <span><i class="fas fa-align-right"></i></span>
-                            </label>
+                        <label>Căn lề & Kiểu:</label>
+                        <div class="text-style-row">
+                            <div class="align-buttons">
+                                <label class="align-option">
+                                    <input type="radio" name="textAlign" value="left" checked>
+                                    <span><i class="fas fa-align-left"></i></span>
+                                </label>
+                                <label class="align-option">
+                                    <input type="radio" name="textAlign" value="center">
+                                    <span><i class="fas fa-align-center"></i></span>
+                                </label>
+                                <label class="align-option">
+                                    <input type="radio" name="textAlign" value="right">
+                                    <span><i class="fas fa-align-right"></i></span>
+                                </label>
+                            </div>
+                            <div class="text-format-buttons">
+                                <button type="button" id="boldBtn" class="format-btn" title="In đậm">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" id="italicBtn" class="format-btn" title="In nghiêng">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <div class="option-row style-options">
                         <div class="style-option">
-                            <label for="textColor">Màu:</label>
+                            <label for="textColor">Màu chữ:</label>
                             <input type="color" id="textColor" value="#000000">
                         </div>
                         <div class="style-option">
                             <label for="fontSize">Cỡ chữ:</label>
                             <div class="number-input-container">
-                                <input type="number" id="fontSize" value="24" min="8" max="72">
+                                <input type="number" id="fontSize" value="24" min="8" max="150">
                                 <div class="number-controls">
                                     <button type="button" class="number-up">+</button>
                                     <button type="button" class="number-down">−</button>
@@ -313,16 +356,113 @@
                             <select id="fontFamily">
                                 <option value="Inter, sans-serif" selected>Inter</option>
                                 <option value="Arial, sans-serif">Arial</option>
+                                <option value="Arial Black, sans-serif">Arial Black</option>
                                 <option value="Times New Roman, serif">Times</option>
                                 <option value="Comic Sans MS, cursive">Comic</option>
                                 <option value="Impact, fantasy">Impact</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="Verdana, sans-serif">Verdana</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Viền chữ (Outline) -->
+                    <div class="option-row outline-options">
+                        <div class="option-header">
+                            <label>
+                                <input type="checkbox" id="enableOutline">
+                                <span>Viền chữ (Outline)</span>
+                            </label>
+                        </div>
+                        <div class="outline-settings" id="outlineSettings">
+                            <div class="style-option">
+                                <label for="outlineColor">Màu viền:</label>
+                                <input type="color" id="outlineColor" value="#FFFFFF">
+                            </div>
+                            <div class="style-option">
+                                <label for="outlineWidth">Độ dày:</label>
+                                <div class="number-input-container">
+                                    <input type="number" id="outlineWidth" value="2" min="1" max="10">
+                                    <div class="number-controls">
+                                        <button type="button" class="number-up">+</button>
+                                        <button type="button" class="number-down">−</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Đổ bóng (Shadow) -->
+                    <div class="option-row shadow-options">
+                        <div class="option-header">
+                            <label>
+                                <input type="checkbox" id="enableShadow">
+                                <span>Đổ bóng (Shadow)</span>
+                            </label>
+                        </div>
+                        <div class="shadow-settings" id="shadowSettings">
+                            <div class="style-option">
+                                <label for="shadowColor">Màu bóng:</label>
+                                <input type="color" id="shadowColor" value="#000000">
+                            </div>
+                            <div class="style-option">
+                                <label for="shadowBlur">Độ mờ:</label>
+                                <div class="number-input-container">
+                                    <input type="number" id="shadowBlur" value="3" min="0" max="20">
+                                    <div class="number-controls">
+                                        <button type="button" class="number-up">+</button>
+                                        <button type="button" class="number-down">−</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="style-option">
+                                <label for="shadowOffsetX">Dịch X:</label>
+                                <div class="number-input-container">
+                                    <input type="number" id="shadowOffsetX" value="2" min="-20" max="20">
+                                    <div class="number-controls">
+                                        <button type="button" class="number-up">+</button>
+                                        <button type="button" class="number-down">−</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="style-option">
+                                <label for="shadowOffsetY">Dịch Y:</label>
+                                <div class="number-input-container">
+                                    <input type="number" id="shadowOffsetY" value="2" min="-20" max="20">
+                                    <div class="number-controls">
+                                        <button type="button" class="number-up">+</button>
+                                        <button type="button" class="number-down">−</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div id="selectOptions" class="tool-options hidden">
                     <h3>Chọn & Di chuyển</h3>
+
+                    <!-- Hiển thị thông tin text được chọn -->
+                    <div id="selectedTextInfo" class="selected-text-info hidden">
+                        <div class="info-header">
+                            <span><i class="fas fa-font"></i> Đang chọn văn bản</span>
+                        </div>
+                        <div class="selected-text-actions">
+                            <button type="button" id="editSelectedTextBtn" class="btn btn-edit" title="Chỉnh sửa văn bản">
+                                <i class="fas fa-edit"></i>
+                                <span>Sửa</span>
+                            </button>
+                            <button type="button" id="duplicateTextBtn" class="btn btn-duplicate" title="Nhân đôi văn bản">
+                                <i class="fas fa-copy"></i>
+                                <span>Nhân đôi</span>
+                            </button>
+                            <button type="button" id="deleteSelectedTextBtn" class="btn btn-danger" title="Xóa văn bản">
+                                <i class="fas fa-trash"></i>
+                                <span>Xóa</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="tip">
                         <i class="fas fa-lightbulb"></i>
                         <span>Nhấp vào văn bản để chọn, sau đó kéo để di chuyển</span>
@@ -375,6 +515,7 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="enhanced-features.js"></script>
     <script src="mobile-fixes.js"></script>
     <script src="mobile-notification-save-fix.js"></script>
     <script src="panel-content-fix.js"></script>
