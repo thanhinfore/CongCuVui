@@ -1,5 +1,27 @@
 ﻿/* style.css - Layout tối ưu */
 
+/* ===== CUSTOM FONTS ===== */
+/* iCiel Wild Words - Font Comic Việt Hóa */
+@font-face {
+    font-family: 'iCiel Wild Words';
+    src: url('fonts/iCielWildWords.woff2') format('woff2'),
+         url('fonts/iCielWildWords.woff') format('woff'),
+         url('fonts/iCielWildWords.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'iCiel Wild Words';
+    src: url('fonts/iCielWildWords-Bold.woff2') format('woff2'),
+         url('fonts/iCielWildWords-Bold.woff') format('woff'),
+         url('fonts/iCielWildWords-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* Main Colors */
     --primary: #4361ee;
