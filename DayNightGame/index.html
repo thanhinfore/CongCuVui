@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day vs Night Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
+        }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 4px;
+            image-rendering: pixelated; /* Giữ độ sắc nét cho pixel */
+        }
+
+        #ui-layer {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .score-day {
+            color: #E0F2F1;
+        }
+
+        .score-night {
+            color: #264653;
+            text-shadow: -1px -1px 0 #fff;
+        }
+        /* Viền nhẹ để dễ đọc */
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="simCanvas"></canvas>
+    </div>
+
+    <div id="ui-layer">
+        <span class="score-day">Day: <span id="dayCount">0</span></span>
+        |
+        <span class="score-night">Night: <span id="nightCount">0</span></span>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const dayEl = document.getElementById('dayCount');
+        const nightEl = document.getElementById('nightCount');
+
+        // Kích thước lưới mô phỏng (càng nhỏ thì ô càng to)
+        const GRID_SIZE = 100;
+        const PIXEL_SIZE = 5; // Kích thước hiển thị của mỗi ô
+
+        // Màu sắc
+        const COLOR_DAY = '#E0F2F1';  // Màu trắng/sáng
+        const COLOR_NIGHT = '#264653'; // Màu xanh tối
+
+        // Thiết lập kích thước canvas
+        canvas.width = GRID_SIZE * PIXEL_SIZE;
+        canvas.height = GRID_SIZE * PIXEL_SIZE;
+
+        // Tạo mảng dữ liệu lưới (0: Day, 1: Night)
+        let grid = [];
+
+        // --- KHỞI TẠO ---
+        function init() {
+            grid = [];
+            for (let x = 0; x < GRID_SIZE; x++) {
+                grid[x] = [];
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    // Chia đôi màn hình lúc bắt đầu giống như ảnh
+                    if (x < GRID_SIZE / 2) {
+                        grid[x][y] = 0; // Day
+                    } else {
+                        grid[x][y] = 1; // Night
+                    }
+
+                    // Thêm chút nhiễu ở biên giới để cuộc chiến bắt đầu tự nhiên hơn
+                    if (x === GRID_SIZE / 2) {
+                        grid[x][y] = Math.random() > 0.5 ? 0 : 1;
+                    }
+                }
+            }
+        }
+
+        // --- VẼ ---
+        function draw() {
+            let dayScore = 0;
+            let nightScore = 0;
+
+            // Xóa canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let x = 0; x < GRID_SIZE; x++) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    const type = grid[x][y];
+
+                    // Chọn màu
+                    ctx.fillStyle = type === 0 ? COLOR_DAY : COLOR_NIGHT;
+
+                    // Vẽ ô vuông
+                    ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+                    // Đếm điểm
+                    if (type === 0) dayScore++;
+                    else nightScore++;
+                }
+            }
+
+            // Cập nhật giao diện
+            dayEl.innerText = dayScore;
+            nightEl.innerText = nightScore;
+        }
+
+        // --- LOGIC GAME (Thuật toán chiến tranh) ---
+        function update() {
+            // Thay vì duyệt từng ô (rất chậm và tạo hoa văn đều),
+            // ta chọn ngẫu nhiên nhiều điểm để xử lý (Stochastic method).
+            // Số lần lặp càng cao, tốc độ game càng nhanh.
+            const loops = (GRID_SIZE * GRID_SIZE) / 2;
+
+            for (let i = 0; i < loops; i++) {
+                // Chọn một tọa độ ngẫu nhiên
+                const x = Math.floor(Math.random() * GRID_SIZE);
+                const y = Math.floor(Math.random() * GRID_SIZE);
+
+                const currentType = grid[x][y];
+
+                // Chọn một hàng xóm ngẫu nhiên (trên, dưới, trái, phải)
+                const neighborDir = Math.floor(Math.random() * 4);
+                let nx = x, ny = y;
+
+                if (neighborDir === 0) nx = x + 1;
+                else if (neighborDir === 1) nx = x - 1;
+                else if (neighborDir === 2) ny = y + 1;
+                else if (neighborDir === 3) ny = y - 1;
+
+                // Kiểm tra biên (không đi ra ngoài bản đồ)
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const neighborType = grid[nx][ny];
+
+                    // NẾU HÀNG XÓM KHÁC MÀU -> ĐÁNH NHAU
+                    if (currentType !== neighborType) {
+                        // Luật chiến tranh:
+                        // Ở đây ta để tỉ lệ thắng là 50/50.
+                        // Kẻ tấn công biến kẻ phòng thủ thành màu của mình.
+                        // Bạn có thể chỉnh tỉ lệ này để bên Ngày hoặc Đêm mạnh hơn.
+
+                        // Ví dụ: Bên Đêm (1) có 51% cơ hội thắng -> Game sẽ nghiêng về đêm
+                        // Bên Ngày (0) có 49%
+
+                        // Ở đây code để công bằng: Kẻ được chọn (attacker) luôn thắng hàng xóm (defender)
+                        // Điều này tạo ra hiệu ứng chất lỏng sôi sục.
+                        grid[nx][ny] = currentType;
+                    }
+                }
+            }
+        }
+
+        // --- VÒNG LẶP GAME ---
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Bắt đầu
+        init();
+        gameLoop();
+
+    </script>
+</body>
+</html>

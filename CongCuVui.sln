@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36408.4
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGen", "ImageGen\ImageGen.csproj", "{55A6CF30-795F-4CA0-B556-92677C753971}"
 EndProject
@@ -40,6 +40,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuanHeXaHoi", "QuanHeXaHoi\QuanHeXaHoi.csproj", "{A4344690-885B-4FF2-8700-B60033DE70CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LamComic", "LamComic\LamComic.csproj", "{6CDAC1E2-7BD4-464C-B8D8-9C3A11B96F13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DayNightGame", "DayNightGame\DayNightGame.csproj", "{AACC1E20-E40E-4794-854A-3A29A1E5EB99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -119,6 +121,10 @@ Global
 		{6CDAC1E2-7BD4-464C-B8D8-9C3A11B96F13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CDAC1E2-7BD4-464C-B8D8-9C3A11B96F13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CDAC1E2-7BD4-464C-B8D8-9C3A11B96F13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
