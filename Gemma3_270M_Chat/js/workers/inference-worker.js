@@ -1,7 +1,7 @@
 /**
  * Inference Worker
  * Handles model loading and inference in a Web Worker to prevent blocking the main thread
- * Optimized for maximum inference speed
+ * Optimized for maximum inference speed with WebGPU/WASM
  */
 
 // Import Transformers.js using ES modules - latest version for best performance
@@ -14,6 +14,28 @@ import { ModelCache } from '../modules/model-cache.js';
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
+// Model configurations with optimal dtype for each
+const MODEL_CONFIGS = {
+    'onnx-community/gemma-3-270m-it-ONNX': {
+        name: 'Gemma 3 270M',
+        dtype: { webgpu: 'fp32', wasm: 'fp32' },
+        size: '~300MB',
+        speed: 'Trung bình'
+    },
+    'onnx-community/Qwen2.5-0.5B-Instruct': {
+        name: 'Qwen 2.5 0.5B',
+        dtype: { webgpu: 'q4f16', wasm: 'q4' },
+        size: '~350MB',
+        speed: 'Nhanh'
+    },
+    'onnx-community/SmolLM2-360M-Instruct': {
+        name: 'SmolLM2 360M',
+        dtype: { webgpu: 'q4f16', wasm: 'q4' },
+        size: '~250MB',
+        speed: 'Rất nhanh'
+    }
+};
+
 // Initialize model cache
 const cache = new ModelCache();
 let cacheInitialized = false;
@@ -23,7 +45,8 @@ let isLoading = false;
 let isGenerating = false;
 let shouldStop = false;
 let deviceType = 'wasm'; // Will be auto-detected
-let dtypeConfig = 'fp32'; // gemma-3-270m-it-ONNX only supports fp32
+let dtypeConfig = 'fp32';
+let currentModelId = null;
 
 /**
  * Send message to main thread
@@ -37,11 +60,22 @@ function sendMessage(type, data, id = null) {
 }
 
 /**
+ * Get optimal dtype for model and device
+ */
+function getOptimalDtype(modelId, device) {
+    const config = MODEL_CONFIGS[modelId];
+    if (config && config.dtype) {
+        return config.dtype[device] || 'fp32';
+    }
+    // Default fallback
+    return device === 'webgpu' ? 'fp32' : 'fp32';
+}
+
+/**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
- * Note: gemma-3-270m-it-ONNX only supports fp32
  */
-async function detectDevice() {
+async function detectDevice(modelId) {
     // Try to detect WebGPU support
     const hasWebGPU = 'gpu' in navigator;
 
@@ -51,14 +85,14 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                // gemma-3-270m-it-ONNX only has fp32 variant
-                // WebGPU will still accelerate fp32 computations on GPU
-                dtypeConfig = 'fp32';
+                dtypeConfig = getOptimalDtype(modelId, 'webgpu');
 
+                const modelConfig = MODEL_CONFIGS[modelId];
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'fp32',
-                    message: '⚡ Sử dụng WebGPU (GPU) - Tốc độ cao!'
+                    dtype: dtypeConfig,
+                    modelName: modelConfig?.name || modelId,
+                    message: `⚡ WebGPU (GPU) + ${dtypeConfig.toUpperCase()} - Tốc độ cao nhất!`
                 });
                 return;
             }
@@ -69,13 +103,12 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
-    // gemma-3-270m-it-ONNX only has fp32 variant
-    dtypeConfig = 'fp32';
+    dtypeConfig = getOptimalDtype(modelId, 'wasm');
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
-        dtype: 'fp32',
-        message: 'Sử dụng WASM (CPU). Tip: Dùng trình duyệt hỗ trợ WebGPU để tăng tốc!'
+        dtype: dtypeConfig,
+        message: `Sử dụng WASM (CPU) + ${dtypeConfig.toUpperCase()}. Tip: Dùng Chrome/Edge để kích hoạt WebGPU!`
     });
 }
 
@@ -116,6 +149,7 @@ async function initialize(modelId) {
 
     try {
         isLoading = true;
+        currentModelId = modelId;
 
         // Initialize cache first
         await initializeCache();
@@ -129,15 +163,20 @@ async function initialize(modelId) {
             });
         }
 
-        // Detect best device first (WebGPU or WASM)
-        await detectDevice();
+        // Detect best device and get optimal dtype for this model
+        await detectDevice(modelId);
+
+        const modelConfig = MODEL_CONFIGS[modelId];
+        const modelName = modelConfig?.name || 'AI Model';
 
         sendMessage('loading', {
             message: isCached ?
-                'Đang nạp mô hình từ cache...' :
-                `Đang tải mô hình Gemma 3 270M với ${deviceType === 'webgpu' ? 'WebGPU (GPU)' : 'WASM (CPU)'}...`,
+                `Đang nạp ${modelName} từ cache...` :
+                `Đang tải ${modelName} (${dtypeConfig}) với ${deviceType === 'webgpu' ? 'WebGPU' : 'WASM'}...`,
             progress: 10
         });
+
+        console.log(`📦 Loading model: ${modelId} with device=${deviceType}, dtype=${dtypeConfig}`);
 
         // Create text generation pipeline with detected device (WebGPU or WASM)
         generator = await pipeline('text-generation', modelId, {
@@ -146,14 +185,16 @@ async function initialize(modelId) {
             progress_callback: (progress) => {
                 if (progress.status === 'downloading') {
                     const percent = progress.progress ? Math.round(progress.progress) : 0;
+                    const fileName = progress.file?.split('/').pop() || 'model';
                     sendMessage('loading', {
-                        message: `Đang tải: ${progress.file || 'model'}...`,
-                        progress: 10 + (percent * 0.8)
+                        message: `Đang tải: ${fileName}...`,
+                        progress: 10 + (percent * 0.75),
+                        detail: `${percent}%`
                     });
                 } else if (progress.status === 'loading') {
                     sendMessage('loading', {
                         message: 'Đang nạp mô hình vào bộ nhớ...',
-                        progress: 90
+                        progress: 88
                     });
                 } else if (progress.status === 'ready') {
                     sendMessage('loading', {
@@ -169,24 +210,32 @@ async function initialize(modelId) {
         // Warmup: Run inference to compile shaders and warm up JIT
         // This makes the first real inference much faster
         sendMessage('loading', {
-            message: 'Đang tối ưu hóa cho ' + (deviceType === 'webgpu' ? 'GPU' : 'CPU') + '...',
-            progress: 95
+            message: `Đang tối ưu hóa ${modelName} cho ${deviceType === 'webgpu' ? 'GPU' : 'CPU'}...`,
+            progress: 92
         });
+
         try {
-            // Warmup with a short generation to compile shaders/JIT
+            // Warmup with multiple short generations to fully warm up pipeline
+            console.log('🔥 Starting warmup...');
+            const warmupStart = performance.now();
+
             await generator([{ role: 'user', content: 'Hi' }], {
-                max_new_tokens: 5,  // Generate a few tokens to warm up the full pipeline
+                max_new_tokens: 8,  // Generate enough tokens to warm up the full pipeline
                 do_sample: false,
                 use_cache: true
             });
-            console.log('✓ Model warmup complete');
+
+            const warmupTime = Math.round(performance.now() - warmupStart);
+            console.log(`✓ Model warmup complete in ${warmupTime}ms`);
         } catch (e) {
             console.warn('Warmup failed (non-critical):', e);
         }
 
         sendMessage('ready', {
-            message: 'Mô hình đã sẵn sàng!',
-            modelId
+            message: `${modelName} đã sẵn sàng!`,
+            modelId,
+            device: deviceType,
+            dtype: dtypeConfig
         });
 
     } catch (error) {
