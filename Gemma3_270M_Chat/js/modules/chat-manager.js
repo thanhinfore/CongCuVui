@@ -98,13 +98,13 @@ export class ChatManager {
     /**
      * Build prompt from conversation history
      * Using simple format for ONNX model compatibility
+     * Optimized: limit context to reduce inference time
      */
     buildPrompt(userMessage) {
         const settings = this.settingsManager.getSettings();
         const systemPrompt = settings.systemPrompt || 'Bạn là trợ lý AI thông minh và hữu ích.';
 
         // Simple prompt format for better ONNX compatibility
-        // The ONNX model may not properly handle special tokens
         let prompt = '';
 
         // Add system instruction
@@ -112,9 +112,9 @@ export class ChatManager {
             prompt += `### Hướng dẫn:\n${systemPrompt}\n\n`;
         }
 
-        // Add conversation history (last 6 messages for context)
-        // Make sure to keep pairs of user/assistant to maintain alternation
-        const recentMessages = this.messages.slice(-6);
+        // OPTIMIZATION: Limit to last 4 messages (2 turns) for faster inference
+        // More context = slower generation. 270M model works best with shorter context
+        const recentMessages = this.messages.slice(-4);
 
         // Find a valid starting point (must start with user message)
         let startIdx = 0;
