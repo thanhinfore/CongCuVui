@@ -23,7 +23,7 @@ let isLoading = false;
 let isGenerating = false;
 let shouldStop = false;
 let deviceType = 'wasm'; // Will be auto-detected
-let dtypeConfig = 'q4'; // Default to q4 quantization
+let dtypeConfig = 'fp32'; // gemma-3-270m-it-ONNX only supports fp32
 
 /**
  * Send message to main thread
@@ -39,7 +39,7 @@ function sendMessage(type, data, id = null) {
 /**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
- * Optimized dtype selection for each device
+ * Note: gemma-3-270m-it-ONNX only supports fp32
  */
 async function detectDevice() {
     // Try to detect WebGPU support
@@ -51,14 +51,14 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                // Use q4f16 for WebGPU - FP16 compute is faster on GPU
-                // q4f16 = 4-bit weights with FP16 compute (best for GPU)
-                dtypeConfig = 'q4f16';
+                // gemma-3-270m-it-ONNX only has fp32 variant
+                // WebGPU will still accelerate fp32 computations on GPU
+                dtypeConfig = 'fp32';
 
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'q4f16',
-                    message: '⚡ Sử dụng WebGPU (GPU) với q4f16 - Tốc độ cao nhất!'
+                    dtype: 'fp32',
+                    message: '⚡ Sử dụng WebGPU (GPU) - Tốc độ cao!'
                 });
                 return;
             }
@@ -69,12 +69,12 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
-    // Use q4 for WASM - 4-bit quantization is optimal for CPU
-    dtypeConfig = 'q4';
+    // gemma-3-270m-it-ONNX only has fp32 variant
+    dtypeConfig = 'fp32';
 
     sendMessage('deviceInfo', {
         device: 'WASM (CPU)',
-        dtype: 'q4',
+        dtype: 'fp32',
         message: 'Sử dụng WASM (CPU). Tip: Dùng trình duyệt hỗ trợ WebGPU để tăng tốc!'
     });
 }
