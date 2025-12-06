@@ -1,47 +1,63 @@
 /* ===================================
    Gemma 3 Chat - Main Styles
+   Modern UI with Glassmorphism
    ================================== */
 
 :root {
     /* Light Mode Colors */
     --primary-color: #6366f1;
     --primary-hover: #4f46e5;
-    --primary-light: #e0e7ff;
-    --background: #ffffff;
-    --background-secondary: #f9fafb;
-    --surface: #ffffff;
-    --surface-hover: #f3f4f6;
-    --text-primary: #111827;
-    --text-secondary: #6b7280;
-    --border: #e5e7eb;
+    --primary-light: rgba(99, 102, 241, 0.1);
+    --primary-glow: rgba(99, 102, 241, 0.3);
+    --secondary-color: #ec4899;
+    --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+    --background: #f8fafc;
+    --background-secondary: #ffffff;
+    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    --surface: rgba(255, 255, 255, 0.8);
+    --surface-solid: #ffffff;
+    --surface-hover: rgba(255, 255, 255, 0.9);
+    --glass: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border: rgba(226, 232, 240, 0.8);
     --border-focus: #6366f1;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --shadow-lg: rgba(0, 0, 0, 0.15);
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-lg: rgba(0, 0, 0, 0.12);
+    --shadow-colored: rgba(99, 102, 241, 0.25);
     --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.1);
     --warning: #f59e0b;
     --error: #ef4444;
-    --overlay: rgba(0, 0, 0, 0.5);
+    --error-light: rgba(239, 68, 68, 0.1);
+    --overlay: rgba(15, 23, 42, 0.6);
 
     /* Spacing */
-    --header-height: 64px;
+    --header-height: 70px;
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
+    --spacing-2xl: 48px;
 
     /* Border Radius */
-    --radius-sm: 6px;
-    --radius-md: 10px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 24px;
+    --radius-2xl: 32px;
+    --radius-full: 9999px;
 
     /* Transitions */
-    --transition-fast: 150ms ease;
-    --transition-base: 250ms ease;
-    --transition-slow: 350ms ease;
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     /* Z-index */
+    --z-background: -1;
     --z-header: 100;
     --z-settings: 200;
     --z-overlay: 190;
@@ -52,18 +68,26 @@
 body.dark-mode {
     --primary-color: #818cf8;
     --primary-hover: #6366f1;
-    --primary-light: #312e81;
+    --primary-light: rgba(129, 140, 248, 0.15);
+    --primary-glow: rgba(129, 140, 248, 0.4);
+    --secondary-color: #f472b6;
+    --accent-gradient: linear-gradient(135deg, #818cf8, #a78bfa, #f472b6);
     --background: #0f172a;
     --background-secondary: #1e293b;
-    --surface: #1e293b;
-    --surface-hover: #334155;
+    --background-gradient: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    --surface: rgba(30, 41, 59, 0.8);
+    --surface-solid: #1e293b;
+    --surface-hover: rgba(51, 65, 85, 0.9);
+    --glass: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(71, 85, 105, 0.4);
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
-    --border: #334155;
+    --border: rgba(71, 85, 105, 0.6);
     --border-focus: #818cf8;
     --shadow: rgba(0, 0, 0, 0.3);
     --shadow-lg: rgba(0, 0, 0, 0.5);
-    --overlay: rgba(0, 0, 0, 0.7);
+    --shadow-colored: rgba(129, 140, 248, 0.3);
+    --overlay: rgba(0, 0, 0, 0.75);
 }
 
 /* ===================================
@@ -78,11 +102,96 @@ body.dark-mode {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--background);
+    background: var(--background);
     color: var(--text-primary);
     line-height: 1.6;
     overflow: hidden;
-    transition: background-color var(--transition-base), color var(--transition-base);
+    transition: background var(--transition-base), color var(--transition-base);
+    position: relative;
+}
+
+/* Animated Background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--background-gradient);
+    opacity: 0.03;
+    z-index: var(--z-background);
+    pointer-events: none;
+}
+
+body.dark-mode::before {
+    opacity: 0.15;
+}
+
+/* Floating Orbs Background */
+.background-orbs {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-background);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: float 20s ease-in-out infinite;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--primary-color);
+    top: -200px;
+    right: -100px;
+    animation-delay: 0s;
+}
+
+.orb-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--secondary-color);
+    bottom: -150px;
+    left: -100px;
+    animation-delay: -5s;
+}
+
+.orb-3 {
+    width: 200px;
+    height: 200px;
+    background: #8b5cf6;
+    top: 50%;
+    left: 50%;
+    animation-delay: -10s;
+}
+
+body.dark-mode .orb {
+    opacity: 0.2;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(30px, -30px) scale(1.05);
+    }
+    50% {
+        transform: translate(-20px, 20px) scale(0.95);
+    }
+    75% {
+        transform: translate(-30px, -20px) scale(1.02);
+    }
 }
 
 /* ===================================
@@ -91,14 +200,17 @@ body {
 
 .app-header {
     height: var(--header-height);
-    background-color: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: var(--z-header);
-    transition: background-color var(--transition-base), border-color var(--transition-base);
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 30px var(--shadow);
 }
 
 .header-content {
@@ -130,13 +242,25 @@ body {
 }
 
 .model-badge {
-    padding: 4px 10px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    padding: 6px 14px;
+    background: var(--accent-gradient);
     color: white;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px var(--shadow-colored);
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 15px var(--shadow-colored);
+    }
+    50% {
+        box-shadow: 0 4px 25px var(--primary-glow);
+    }
 }
 
 .header-actions {
@@ -149,22 +273,30 @@ body {
    ================================== */
 
 .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border: none;
-    background: transparent;
+    background: var(--surface);
     border-radius: var(--radius-md);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color var(--transition-fast);
+    transition: all var(--transition-fast);
     color: var(--text-secondary);
+    border: 1px solid var(--border);
 }
 
 .icon-btn:hover {
-    background-color: var(--surface-hover);
-    color: var(--text-primary);
+    background: var(--surface-hover);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+    border-color: var(--primary-light);
+}
+
+.icon-btn:active {
+    transform: translateY(0);
 }
 
 .icon-btn svg {
@@ -204,17 +336,21 @@ body.dark-mode .icon-btn .moon-icon {
 
 .model-status {
     padding: var(--spacing-md) var(--spacing-lg);
-    background: linear-gradient(135deg, var(--primary-light), var(--surface));
-    border-bottom: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--glass-border);
     transition: all var(--transition-base);
 }
 
 .model-status.success {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--surface));
+    background: linear-gradient(135deg, var(--success-light), var(--glass));
+    border-bottom-color: rgba(16, 185, 129, 0.3);
 }
 
 .model-status.error {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), var(--surface));
+    background: linear-gradient(135deg, var(--error-light), var(--glass));
+    border-bottom-color: rgba(239, 68, 68, 0.3);
 }
 
 .status-content {
@@ -271,10 +407,37 @@ body.dark-mode .icon-btn .moon-icon {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
+    background: var(--accent-gradient);
     border-radius: 100px;
     width: 0%;
     transition: width var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 .progress-text {
@@ -292,20 +455,34 @@ body.dark-mode .icon-btn .moon-icon {
 .settings-panel {
     position: fixed;
     top: 0;
-    right: -400px;
-    width: 400px;
+    right: -420px;
+    width: 420px;
     height: 100vh;
-    background-color: var(--surface);
-    border-left: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid var(--glass-border);
     z-index: var(--z-settings);
-    transition: right var(--transition-base);
+    transition: right var(--transition-slow);
     display: flex;
     flex-direction: column;
-    box-shadow: -4px 0 16px var(--shadow);
+    box-shadow: -8px 0 40px var(--shadow-lg);
 }
 
 .settings-panel.open {
     right: 0;
+}
+
+.settings-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: var(--accent-gradient);
+    opacity: 0.05;
+    pointer-events: none;
 }
 
 .settings-header {
