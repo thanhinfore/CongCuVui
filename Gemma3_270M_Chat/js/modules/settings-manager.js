@@ -17,7 +17,7 @@ export class SettingsManager {
         return {
             temperature: 0.7,  // Higher for more creative and diverse responses
             topP: 0.9,
-            maxTokens: 256,   // Balanced token limit
+            maxTokens: 1024,   // Increased for longer content generation (1000+ words)
             systemPrompt: 'Bạn là Gemma, trợ lý AI thông minh và thân thiện. Hãy trả lời ngắn gọn, rõ ràng và hữu ích bằng tiếng Việt.',
             darkMode: false
         };
@@ -239,9 +239,9 @@ export class SettingsManager {
             validated.topP = Math.max(0, Math.min(1, parseFloat(settings.topP)));
         }
 
-        // Max Tokens: 64-2048
+        // Max Tokens: 64-4096
         if (settings.maxTokens !== undefined) {
-            validated.maxTokens = Math.max(64, Math.min(2048, parseInt(settings.maxTokens)));
+            validated.maxTokens = Math.max(64, Math.min(4096, parseInt(settings.maxTokens)));
         }
 
         // System Prompt: string
