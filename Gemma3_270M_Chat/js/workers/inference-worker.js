@@ -1,15 +1,16 @@
 /**
  * Inference Worker
  * Handles model loading and inference in a Web Worker to prevent blocking the main thread
+ * Optimized for maximum inference speed
  */
 
-// Import Transformers.js using ES modules (requires worker to be loaded with type: 'module')
-import { pipeline, env, TextStreamer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.0';
+// Import Transformers.js using ES modules - latest version for best performance
+import { pipeline, env, TextStreamer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2';
 
 // Import model cache for persistent caching
 import { ModelCache } from '../modules/model-cache.js';
 
-// Configure transformers.js
+// Configure transformers.js for optimal performance
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
@@ -22,7 +23,7 @@ let isLoading = false;
 let isGenerating = false;
 let shouldStop = false;
 let deviceType = 'wasm'; // Will be auto-detected
-let dtypeConfig = 'fp32';
+let dtypeConfig = 'q4'; // Default to q4 quantization
 
 /**
  * Send message to main thread
@@ -38,7 +39,7 @@ function sendMessage(type, data, id = null) {
 /**
  * Detect device - Auto-detect WebGPU or fallback to WASM
  * WebGPU provides significant speedup (GPU acceleration)
- * Using q4 (4-bit quantization) for speed
+ * Optimized dtype selection for each device
  */
 async function detectDevice() {
     // Try to detect WebGPU support
@@ -50,13 +51,14 @@ async function detectDevice() {
             const adapter = await navigator.gpu?.requestAdapter();
             if (adapter) {
                 deviceType = 'webgpu';
-                // Use q4 for speed - 4-bit quantization is faster than fp32
-                dtypeConfig = 'q4';
+                // Use q4f16 for WebGPU - FP16 compute is faster on GPU
+                // q4f16 = 4-bit weights with FP16 compute (best for GPU)
+                dtypeConfig = 'q4f16';
 
                 sendMessage('deviceInfo', {
                     device: 'WebGPU (GPU)',
-                    dtype: 'q4',
-                    message: '⚡ Sử dụng WebGPU (GPU) với q4 - Tốc độ cao!'
+                    dtype: 'q4f16',
+                    message: '⚡ Sử dụng WebGPU (GPU) với q4f16 - Tốc độ cao nhất!'
                 });
                 return;
             }
@@ -67,6 +69,7 @@ async function detectDevice() {
 
     // Fallback to WASM if WebGPU not available
     deviceType = 'wasm';
+    // Use q4 for WASM - 4-bit quantization is optimal for CPU
     dtypeConfig = 'q4';
 
     sendMessage('deviceInfo', {
@@ -163,22 +166,22 @@ async function initialize(modelId) {
 
         isLoading = false;
 
-        // Warmup: Run a quick inference to compile WebGPU shaders
+        // Warmup: Run inference to compile shaders and warm up JIT
         // This makes the first real inference much faster
-        if (deviceType === 'webgpu') {
-            sendMessage('loading', {
-                message: 'Đang tối ưu hóa GPU...',
-                progress: 95
+        sendMessage('loading', {
+            message: 'Đang tối ưu hóa cho ' + (deviceType === 'webgpu' ? 'GPU' : 'CPU') + '...',
+            progress: 95
+        });
+        try {
+            // Warmup with a short generation to compile shaders/JIT
+            await generator([{ role: 'user', content: 'Hi' }], {
+                max_new_tokens: 5,  // Generate a few tokens to warm up the full pipeline
+                do_sample: false,
+                use_cache: true
             });
-            try {
-                await generator([{ role: 'user', content: 'Hi' }], {
-                    max_new_tokens: 1,
-                    do_sample: false
-                });
-                console.log('✓ GPU warmup complete');
-            } catch (e) {
-                console.warn('Warmup failed (non-critical):', e);
-            }
+            console.log('✓ Model warmup complete');
+        } catch (e) {
+            console.warn('Warmup failed (non-critical):', e);
         }
 
         sendMessage('ready', {
@@ -226,6 +229,7 @@ function cleanGeneratedText(text) {
 
 /**
  * Generate text response with real streaming
+ * Optimized for maximum inference speed
  */
 async function generate(id, prompt, options) {
     if (!generator) {
@@ -251,14 +255,10 @@ async function generate(id, prompt, options) {
         } = options;
 
         // Parse the prompt to extract conversation history
-        // The prompt format is:
-        // ### Hướng dẫn:\n{system}\n\n
-        // ### Người dùng:\n{msg}\n\n### Trợ lý:\n{msg}\n\n
-        // ### Người dùng:\n{current}\n\n### Trợ lý:\n
-
+        // Optimized: simplified parsing with minimal regex operations
         const messages = [];
 
-        // Extract system prompt
+        // Extract system prompt (single regex)
         const systemMatch = prompt.match(/### Hướng dẫn:\n([^\n#]+)/s);
         const systemPrompt = systemMatch ? systemMatch[1].trim() : 'Bạn là Gemma, trợ lý AI thông minh.';
         messages.push({ role: 'system', content: systemPrompt });
@@ -278,63 +278,55 @@ async function generate(id, prompt, options) {
         const userMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
 
         // Fix message alternation: ensure roles alternate properly
-        // Remove consecutive messages with same role (keep the last one)
+        // Optimized: single pass with direct array manipulation
         const fixedMessages = [];
-        for (let i = 0; i < messages.length; i++) {
-            const msg = messages[i];
+        let lastRole = null;
 
-            // Always keep system message at start
+        for (const msg of messages) {
             if (msg.role === 'system') {
+                // System message goes first
                 if (fixedMessages.length === 0 || fixedMessages[0].role !== 'system') {
                     fixedMessages.unshift(msg);
                 }
                 continue;
             }
 
-            // For user/assistant messages, check alternation
-            const lastNonSystem = fixedMessages.filter(m => m.role !== 'system').pop();
-
-            if (!lastNonSystem) {
-                // First non-system message must be user
+            if (lastRole === null) {
+                // First non-system must be user
                 if (msg.role === 'user') {
                     fixedMessages.push(msg);
+                    lastRole = 'user';
                 }
-            } else if (lastNonSystem.role !== msg.role) {
-                // Different role - good, add it
+            } else if (lastRole !== msg.role) {
                 fixedMessages.push(msg);
+                lastRole = msg.role;
             } else {
-                // Same role - replace the last one with current (keep latest)
-                const lastIdx = fixedMessages.lastIndexOf(lastNonSystem);
-                fixedMessages[lastIdx] = msg;
+                // Same role - replace last message
+                fixedMessages[fixedMessages.length - 1] = msg;
             }
         }
 
-        // Ensure the last message is from user (required for generation)
-        const nonSystemMessages = fixedMessages.filter(m => m.role !== 'system');
-        if (nonSystemMessages.length === 0 || nonSystemMessages[nonSystemMessages.length - 1].role !== 'user') {
-            // Add the user message if missing
+        // Ensure last message is from user
+        if (lastRole !== 'user') {
             fixedMessages.push({ role: 'user', content: userMessage });
         }
 
         console.log('📝 User message:', userMessage);
-        console.log('📨 Fixed messages:', JSON.stringify(fixedMessages, null, 2));
 
         // Generate with streaming callback
         const generationStart = performance.now();
         let fullResponse = '';
         let tokenCount = 0;
 
-        // Use streamer for real-time token output
-        // Optimized: skip_special_tokens handles most cleanup
+        // Optimized streamer: minimal processing in callback
         const streamer = new TextStreamer(generator.tokenizer, {
             skip_prompt: true,
             skip_special_tokens: true,
             callback_function: (text) => {
-                if (shouldStop) return;
-                if (!text) return;
+                if (shouldStop || !text) return;
 
-                // Quick check for special tokens (rare with skip_special_tokens)
-                if (text.includes('<unused') || text.includes('<')) {
+                // Fast path: most tokens don't have special chars
+                if (text.charCodeAt(0) === 60) { // '<' character
                     text = text.replace(/<[^>]+>/g, '');
                     if (!text) return;
                 }
@@ -350,15 +342,16 @@ async function generate(id, prompt, options) {
         });
 
         // Generate using MESSAGES ARRAY (official Gemma 3 format)
-        // Optimized for maximum speed
+        // Optimized generation config for maximum speed
         const output = await generator(fixedMessages, {
             max_new_tokens,
             temperature,
             top_p,
             do_sample: temperature > 0,
-            num_beams: 1,           // No beam search (faster)
-            use_cache: true,        // Enable KV cache
-            early_stopping: true,   // Stop as soon as EOS
+            num_beams: 1,               // Greedy/sampling is faster than beam search
+            use_cache: true,            // KV cache for faster autoregressive generation
+            early_stopping: true,       // Stop immediately on EOS token
+            repetition_penalty: 1.1,    // Prevent repetitive outputs
             streamer
         });
 
