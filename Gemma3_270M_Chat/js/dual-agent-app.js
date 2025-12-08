@@ -561,6 +561,7 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         : `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải PHẢN ĐỐI quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`;
 
     // Build messages array for chat completion API
+    // IMPORTANT: After system, messages MUST alternate user/assistant/user/assistant
     const messages = [
         {
             role: 'system',
@@ -568,20 +569,46 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         }
     ];
 
-    // Add conversation history
+    // Build alternating history starting with 'user'
+    // LM Studio requires: system -> user -> assistant -> user -> assistant -> ...
     const recentHistory = history.slice(-6);
-    for (const msg of recentHistory) {
+
+    // Collect user and assistant messages separately
+    const userMessages = recentHistory.filter(m => m.role === 'user').map(m => m.content);
+    const assistantMessages = recentHistory.filter(m => m.role === 'assistant').map(m => m.content);
+
+    // Build proper alternating sequence: user, assistant, user, assistant...
+    const maxPairs = Math.max(userMessages.length, assistantMessages.length);
+    for (let i = 0; i < maxPairs; i++) {
+        // Add user message first (if exists)
+        if (i < userMessages.length) {
+            messages.push({ role: 'user', content: userMessages[i] });
+        }
+        // Then add assistant message (if exists)
+        if (i < assistantMessages.length) {
+            // Only add if we have a user message before it
+            if (i < userMessages.length) {
+                messages.push({ role: 'assistant', content: assistantMessages[i] });
+            }
+        }
+    }
+
+    // Add current input as user message
+    // Check if last message is already user (not system)
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === 'user') {
+        // Replace to avoid consecutive user messages
+        lastMsg.content = inputMessage;
+    } else if (lastMsg.role === 'assistant' || lastMsg.role === 'system') {
+        // Add new user message after assistant or system
         messages.push({
-            role: msg.role === 'assistant' ? 'assistant' : 'user',
-            content: msg.content
+            role: 'user',
+            content: inputMessage
         });
     }
 
-    // Add current message
-    messages.push({
-        role: 'user',
-        content: inputMessage
-    });
+    // Debug log
+    console.log(`[${agent}] Messages to API:`, messages.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
     try {
         // Show typing indicator
