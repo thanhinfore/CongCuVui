@@ -1040,6 +1040,148 @@ body::before {
 }
 
 /* ============================================
+   Markdown Styles in Messages
+   ============================================ */
+.message-bubble .md-paragraph {
+    margin: 0;
+    padding: 0;
+}
+
+.message-bubble .md-paragraph + .md-paragraph {
+    margin-top: 0.75rem;
+}
+
+.message-bubble .md-bold {
+    font-weight: 700;
+    color: inherit;
+}
+
+.message-bubble .md-italic {
+    font-style: italic;
+    opacity: 0.95;
+}
+
+.message-bubble .md-strike {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.message-bubble .md-code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    padding: 0.2em 0.5em;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e879f9;
+}
+
+.message-bubble .md-code-block {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.message-bubble .md-h2,
+.message-bubble .md-h3,
+.message-bubble .md-h4 {
+    font-weight: 700;
+    margin: 1rem 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.message-bubble .md-h2 {
+    font-size: 1.25em;
+    color: var(--agent-a-tertiary);
+}
+
+.message-bubble .md-h3 {
+    font-size: 1.1em;
+    color: var(--agent-b-tertiary);
+}
+
+.message-bubble .md-h4 {
+    font-size: 1em;
+    opacity: 0.9;
+}
+
+.message-bubble .md-list {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    list-style: none;
+}
+
+.message-bubble .md-list-item {
+    position: relative;
+    margin: 0.35rem 0;
+    padding-left: 0.5rem;
+}
+
+.message-bubble .md-list-item::before {
+    content: '•';
+    position: absolute;
+    left: -1rem;
+    color: var(--agent-a-primary);
+    font-weight: bold;
+}
+
+.agent-b .message-bubble .md-list-item::before {
+    color: var(--agent-b-primary);
+}
+
+.message-bubble .md-quote {
+    margin: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--agent-a-primary);
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.agent-b .message-bubble .md-quote {
+    border-left-color: var(--agent-b-primary);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.message-bubble .md-hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    margin: 1rem 0;
+}
+
+/* Agent-specific markdown styling */
+.agent-a .message-bubble.outgoing .md-code {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #c4b5fd;
+}
+
+.agent-b .message-bubble.outgoing .md-code {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fcd34d;
+}
+
+.agent-a .message-bubble.outgoing .md-code-block {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+.agent-b .message-bubble.outgoing .md-code-block {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ============================================
    Chat Divider - Animated
    ============================================ */
 .chat-divider {
