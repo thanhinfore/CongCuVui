@@ -1,13 +1,13 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
- * Version: 2.1.0 - Fixed message alternation for LM Studio API
+ * Version: 2.2.0 - Filter empty messages and deduplicate
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -483,9 +483,20 @@ async function runConversationLoop(initialMessage, maxTurns) {
 
         try {
             // Generate response from current speaker
-            const response = await generateResponse(speaker, lastMessage);
+            let response = await generateResponse(speaker, lastMessage);
 
             if (shouldStopConversation) break;
+
+            // Clean up and validate response
+            response = (response || '').trim();
+
+            // Skip empty responses - don't add to history or UI
+            if (!response || response.length === 0) {
+                console.warn(`[${speaker}] Empty response received, skipping`);
+                // Switch speaker anyway to avoid infinite loop
+                currentSpeaker = listener;
+                continue;
+            }
 
             // Add response to speaker's chat as outgoing
             const speakerName = speaker === 'A' ? elements.agentAName.value : elements.agentBName.value;
@@ -494,7 +505,7 @@ async function runConversationLoop(initialMessage, maxTurns) {
             // Add response to listener's chat as incoming
             addMessageToChat(listener, response, 'incoming', speakerName);
 
-            // Update history
+            // Update history (only non-empty responses)
             if (speaker === 'A') {
                 agentAHistory.push({ role: 'assistant', content: response });
                 agentBHistory.push({ role: 'user', content: response });
@@ -558,6 +569,7 @@ function generateResponse(agent, inputMessage) {
 /**
  * Validate and fix message alternation for LM Studio API
  * Ensures: system -> user -> assistant -> user -> assistant -> ... -> user
+ * Filters out empty messages
  */
 function validateMessageAlternation(messages) {
     if (messages.length === 0) return messages;
@@ -570,34 +582,52 @@ function validateMessageAlternation(messages) {
         result.push(systemMsg);
     }
 
-    // Get non-system messages
-    const nonSystemMsgs = messages.filter(m => m.role !== 'system');
+    // Get non-system messages and FILTER OUT EMPTY CONTENT
+    const nonSystemMsgs = messages.filter(m =>
+        m.role !== 'system' && m.content && m.content.trim().length > 0
+    );
 
-    // Separate user and assistant messages
+    // Separate user and assistant messages (non-empty only)
     const userMsgs = nonSystemMsgs.filter(m => m.role === 'user');
     const assistantMsgs = nonSystemMsgs.filter(m => m.role === 'assistant');
 
+    // Deduplicate consecutive messages with same content
+    const uniqueUserMsgs = [];
+    const uniqueAssistantMsgs = [];
+
+    for (const msg of userMsgs) {
+        if (uniqueUserMsgs.length === 0 || uniqueUserMsgs[uniqueUserMsgs.length - 1].content !== msg.content) {
+            uniqueUserMsgs.push(msg);
+        }
+    }
+    for (const msg of assistantMsgs) {
+        if (uniqueAssistantMsgs.length === 0 || uniqueAssistantMsgs[uniqueAssistantMsgs.length - 1].content !== msg.content) {
+            uniqueAssistantMsgs.push(msg);
+        }
+    }
+
     // Build alternating sequence: user, assistant, user, assistant...
     // Must start with user after system
-    const maxLen = Math.max(userMsgs.length, assistantMsgs.length);
+    const maxLen = Math.max(uniqueUserMsgs.length, uniqueAssistantMsgs.length);
 
     for (let i = 0; i < maxLen; i++) {
         // Add user first
-        if (i < userMsgs.length) {
-            result.push({ role: 'user', content: userMsgs[i].content });
+        if (i < uniqueUserMsgs.length) {
+            result.push({ role: 'user', content: uniqueUserMsgs[i].content });
         }
         // Then assistant (only if we have a user before it)
-        if (i < assistantMsgs.length && i < userMsgs.length) {
-            result.push({ role: 'assistant', content: assistantMsgs[i].content });
+        if (i < uniqueAssistantMsgs.length && i < uniqueUserMsgs.length) {
+            result.push({ role: 'assistant', content: uniqueAssistantMsgs[i].content });
         }
     }
 
     // Ensure last message is user (required for chat completion)
-    if (result.length > 0 && result[result.length - 1].role !== 'user') {
-        // If no user messages, add a placeholder
-        if (userMsgs.length === 0) {
-            result.push({ role: 'user', content: 'Hãy tiếp tục tranh luận.' });
-        }
+    if (result.length === 1 && result[0].role === 'system') {
+        // Only system message, add placeholder user message
+        result.push({ role: 'user', content: 'Hãy bắt đầu tranh luận về chủ đề này.' });
+    } else if (result.length > 1 && result[result.length - 1].role !== 'user') {
+        // Last message is assistant, add placeholder user message
+        result.push({ role: 'user', content: 'Hãy tiếp tục tranh luận.' });
     }
 
     // Final validation: check alternation
