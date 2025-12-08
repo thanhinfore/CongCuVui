@@ -1,13 +1,13 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
- * Version: 2.2.0 - Filter empty messages and deduplicate
+ * Version: 3.0.0 - Premium UI/UX with enhanced message handling
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '3.0.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
