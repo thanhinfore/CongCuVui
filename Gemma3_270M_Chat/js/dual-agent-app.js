@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.2.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 

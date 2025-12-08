@@ -1,40 +1,99 @@
 /**
  * Dual Agent Chat Arena Styles
- * Premium UI/UX Design v3.0
- * Modern glassmorphism with smooth animations
+ * Premium UI/UX Design v3.2
+ * Modern glassmorphism with smooth animations & enhanced effects
  */
 
 /* ============================================
-   CSS Custom Properties - Enhanced Theme
+   CSS Custom Properties - Enhanced Theme v3.2
    ============================================ */
 :root {
-    /* Agent Colors */
+    /* Agent Colors - More Vibrant */
     --agent-a-primary: #6366f1;
     --agent-a-secondary: #8b5cf6;
-    --agent-a-glow: rgba(99, 102, 241, 0.4);
+    --agent-a-tertiary: #c084fc;
+    --agent-a-glow: rgba(99, 102, 241, 0.5);
+    --agent-a-soft: rgba(99, 102, 241, 0.15);
     --agent-b-primary: #f59e0b;
     --agent-b-secondary: #d97706;
-    --agent-b-glow: rgba(245, 158, 11, 0.4);
+    --agent-b-tertiary: #fbbf24;
+    --agent-b-glow: rgba(245, 158, 11, 0.5);
+    --agent-b-soft: rgba(245, 158, 11, 0.15);
 
     /* Enhanced Gradients */
-    --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     --gradient-danger: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
     --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --gradient-agent-a: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    --gradient-agent-b: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    --gradient-agent-a: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #c084fc 100%);
+    --gradient-agent-b: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #fbbf24 100%);
+    --gradient-aurora: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #38ef7d 75%, #667eea 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsla(259, 84%, 68%, 0.3) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsla(22, 100%, 50%, 0.25) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsla(259, 100%, 77%, 0.2) 0px, transparent 50%),
+                     radial-gradient(at 80% 50%, hsla(22, 100%, 65%, 0.2) 0px, transparent 50%),
+                     radial-gradient(at 0% 100%, hsla(259, 84%, 68%, 0.25) 0px, transparent 50%);
 
-    /* Shadows */
-    --shadow-glow-a: 0 0 40px rgba(99, 102, 241, 0.3);
-    --shadow-glow-b: 0 0 40px rgba(245, 158, 11, 0.3);
-    --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.2);
+    /* Enhanced Shadows */
+    --shadow-glow-a: 0 0 40px rgba(99, 102, 241, 0.4), 0 0 80px rgba(139, 92, 246, 0.2);
+    --shadow-glow-b: 0 0 40px rgba(245, 158, 11, 0.4), 0 0 80px rgba(239, 68, 68, 0.2);
+    --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+    --shadow-neon-a: 0 0 5px var(--agent-a-primary), 0 0 20px var(--agent-a-glow), 0 0 40px var(--agent-a-soft);
+    --shadow-neon-b: 0 0 5px var(--agent-b-primary), 0 0 20px var(--agent-b-glow), 0 0 40px var(--agent-b-soft);
 
     /* Animation Timings */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ============================================
+   Enhanced Background Effects
+   ============================================ */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: var(--gradient-mesh);
+    background-size: 200% 200%;
+    animation: meshGradient 20s ease infinite;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.6;
+}
+
+@keyframes meshGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Animated Aurora Lines */
+.background-orbs::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0deg,
+        rgba(99, 102, 241, 0.1) 60deg,
+        transparent 120deg,
+        rgba(245, 158, 11, 0.1) 180deg,
+        transparent 240deg,
+        rgba(139, 92, 246, 0.1) 300deg,
+        transparent 360deg
+    );
+    animation: auroraRotate 30s linear infinite;
+}
+
+@keyframes auroraRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* ============================================
@@ -533,18 +592,26 @@
 }
 
 /* ============================================
-   Agent Panel - Enhanced Design
+   Agent Panel - Enhanced Design v3.2
    ============================================ */
 .agent-panel {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+    backdrop-filter: blur(25px) saturate(150%);
+    -webkit-backdrop-filter: blur(25px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     overflow: hidden;
-    transition: var(--transition-normal);
+    transition: all var(--transition-slow);
     position: relative;
+}
+
+.agent-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
 }
 
 .agent-panel::after {
@@ -553,59 +620,89 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    transition: var(--transition-normal);
+    height: 4px;
+    transition: all var(--transition-normal);
 }
 
 .agent-panel.agent-a {
-    border-radius: 20px 0 0 20px;
-    box-shadow: var(--shadow-card);
+    border-radius: 24px 0 0 24px;
+    box-shadow: var(--shadow-card),
+                inset 0 1px 0 rgba(99, 102, 241, 0.1);
 }
 
 .agent-panel.agent-a::after {
     background: var(--gradient-agent-a);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
 }
 
 .agent-panel.agent-a:hover {
-    box-shadow: var(--shadow-card), var(--shadow-glow-a);
+    box-shadow: var(--shadow-card), var(--shadow-glow-a),
+                inset 0 1px 0 rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.agent-panel.agent-a:hover::after {
+    height: 5px;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.7);
 }
 
 .agent-panel.agent-b {
-    border-radius: 0 20px 20px 0;
-    box-shadow: var(--shadow-card);
+    border-radius: 0 24px 24px 0;
+    box-shadow: var(--shadow-card),
+                inset 0 1px 0 rgba(245, 158, 11, 0.1);
 }
 
 .agent-panel.agent-b::after {
     background: var(--gradient-agent-b);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
 }
 
 .agent-panel.agent-b:hover {
-    box-shadow: var(--shadow-card), var(--shadow-glow-b);
+    box-shadow: var(--shadow-card), var(--shadow-glow-b),
+                inset 0 1px 0 rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.3);
 }
 
-/* Agent Header - Premium */
+.agent-panel.agent-b:hover::after {
+    height: 5px;
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.7);
+}
+
+/* Agent Header - Premium v3.2 */
 .agent-header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.25rem;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.agent-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.5rem;
+    right: 1.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
 }
 
 .agent-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     color: white;
     flex-shrink: 0;
     position: relative;
-    transition: var(--transition-normal);
+    transition: all var(--transition-normal);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .agent-avatar::before {
@@ -850,42 +947,86 @@
 
 .agent-chat-messages .message-bubble {
     padding: 1rem 1.25rem;
-    border-radius: 16px;
+    border-radius: 18px;
     font-size: 0.925rem;
-    line-height: 1.65;
-    transition: var(--transition-normal);
+    line-height: 1.7;
+    transition: all var(--transition-normal);
     position: relative;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.agent-chat-messages .message-bubble::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
 }
 
 .agent-chat-messages .message-bubble:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.01);
 }
 
-/* Outgoing Messages - Agent Specific Colors */
+/* Outgoing Messages - Agent A with Glow Effect */
 .agent-a .message-bubble.outgoing {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.2) 50%, rgba(192, 132, 252, 0.15) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.agent-a .message-bubble.outgoing::before {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
 }
 
 .agent-a .message-bubble.outgoing:hover {
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.35),
+                0 0 40px rgba(139, 92, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(99, 102, 241, 0.6);
 }
 
+.agent-a .message-bubble.outgoing:hover::before {
+    opacity: 1;
+}
+
+/* Outgoing Messages - Agent B with Glow Effect */
 .agent-b .message-bubble.outgoing {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(239, 68, 68, 0.2) 50%, rgba(251, 191, 36, 0.15) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.agent-b .message-bubble.outgoing::before {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
 }
 
 .agent-b .message-bubble.outgoing:hover {
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.25);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.35),
+                0 0 40px rgba(239, 68, 68, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(245, 158, 11, 0.6);
 }
 
-/* Incoming Messages */
+.agent-b .message-bubble.outgoing:hover::before {
+    opacity: 1;
+}
+
+/* Incoming Messages - Subtle Glassmorphism */
 .message-bubble.incoming {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.message-bubble.incoming:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .message-meta {
@@ -1340,7 +1481,7 @@
     color: var(--text-primary);
 }
 
-/* Floating Control Bar */
+/* Floating Control Bar - Enhanced */
 .floating-control-bar {
     position: fixed;
     bottom: 1.5rem;
@@ -1348,41 +1489,123 @@
     transform: translateX(-50%);
     display: flex;
     gap: 0.75rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.98));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 50px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(99, 102, 241, 0.15);
+    padding: 0.875rem 1.75rem;
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(10, 10, 20, 0.98));
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 60px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(99, 102, 241, 0.15),
+                0 0 80px rgba(245, 158, 11, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
     z-index: 100;
-    animation: floatUp 0.5s ease-out;
+    animation: floatUp 0.6s var(--transition-spring);
+}
+
+.floating-control-bar::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+        rgba(99, 102, 241, 0.3) 0%,
+        rgba(139, 92, 246, 0.15) 25%,
+        rgba(245, 158, 11, 0.15) 75%,
+        rgba(239, 68, 68, 0.3) 100%);
+    z-index: -1;
+    opacity: 0.5;
+    animation: borderGlow 4s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
 }
 
 @keyframes floatUp {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(20px);
+        transform: translateX(-50%) translateY(30px) scale(0.9);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateX(-50%) translateY(0) scale(1);
     }
 }
 
 .floating-control-bar .control-btn {
-    width: 50px;
-    height: 50px;
+    width: 54px;
+    height: 54px;
     padding: 0;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-normal);
+}
+
+.floating-control-bar .control-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.floating-control-bar .control-btn:hover::before {
+    opacity: 1;
+}
+
+.floating-control-bar .control-btn:hover {
+    transform: scale(1.15);
+}
+
+.floating-control-bar .control-btn:active {
+    transform: scale(0.95);
 }
 
 .floating-control-bar .control-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Start Button Glow */
+.floating-control-bar .start-btn:not(:disabled) {
+    background: var(--gradient-success);
+    box-shadow: 0 4px 20px rgba(17, 153, 142, 0.4);
+}
+
+.floating-control-bar .start-btn:not(:disabled):hover {
+    box-shadow: 0 6px 30px rgba(17, 153, 142, 0.6),
+                0 0 40px rgba(56, 239, 125, 0.3);
+}
+
+/* Stop Button Glow */
+.floating-control-bar .stop-btn {
+    background: var(--gradient-danger);
+    box-shadow: 0 4px 20px rgba(235, 51, 73, 0.4);
+}
+
+.floating-control-bar .stop-btn:hover {
+    box-shadow: 0 6px 30px rgba(235, 51, 73, 0.6),
+                0 0 40px rgba(244, 92, 67, 0.3);
+}
+
+/* Clear Button */
+.floating-control-bar .clear-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.floating-control-bar .clear-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
