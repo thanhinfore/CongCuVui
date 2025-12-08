@@ -5,10 +5,13 @@
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
+const DEFAULT_API_URL = 'http://192.168.11.32:1234';
 
 // State
 let worker = null;
 let isModelReady = false;
+let isApiReady = false;
+let modelSource = 'local'; // 'local' or 'lmstudio'
 let isConversationRunning = false;
 let shouldStopConversation = false;
 let currentTurn = 0;
@@ -52,6 +55,13 @@ const elements = {
 
     // Direction arrow
     conversationDirection: null,
+
+    // Model Source
+    modelSourceRadios: null,
+    apiConfig: null,
+    apiUrl: null,
+    testApiBtn: null,
+    apiStatus: null,
 
     // Settings
     settingsBtn: null,
@@ -119,6 +129,13 @@ function initElements() {
 
     elements.conversationDirection = document.getElementById('conversationDirection');
 
+    // Model source elements
+    elements.modelSourceRadios = document.querySelectorAll('input[name="modelSource"]');
+    elements.apiConfig = document.getElementById('apiConfig');
+    elements.apiUrl = document.getElementById('apiUrl');
+    elements.testApiBtn = document.getElementById('testApiBtn');
+    elements.apiStatus = document.getElementById('apiStatus');
+
     elements.settingsBtn = document.getElementById('settingsBtn');
     elements.settingsPanel = document.getElementById('settingsPanel');
     elements.closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -147,6 +164,14 @@ function setupEventListeners() {
     elements.maxTurns.addEventListener('change', () => {
         elements.totalTurnsDisplay.textContent = elements.maxTurns.value;
     });
+
+    // Model source selection
+    elements.modelSourceRadios.forEach(radio => {
+        radio.addEventListener('change', handleModelSourceChange);
+    });
+
+    // Test API button
+    elements.testApiBtn.addEventListener('click', testApiConnection);
 
     // Settings panel
     elements.settingsBtn.addEventListener('click', () => {
@@ -200,6 +225,101 @@ function loadDarkMode() {
 }
 
 /**
+ * Handle model source change
+ */
+function handleModelSourceChange(e) {
+    modelSource = e.target.value;
+
+    if (modelSource === 'lmstudio') {
+        elements.apiConfig.style.display = 'flex';
+        // Test API connection automatically
+        testApiConnection();
+    } else {
+        elements.apiConfig.style.display = 'none';
+        // Re-enable start button if local model is ready
+        updateStartButtonState();
+    }
+
+    console.log('Model source changed to:', modelSource);
+}
+
+/**
+ * Update start button state based on model readiness
+ */
+function updateStartButtonState() {
+    if (modelSource === 'local') {
+        elements.startBtn.disabled = !isModelReady;
+    } else {
+        elements.startBtn.disabled = !isApiReady;
+    }
+}
+
+/**
+ * Test API connection to LM Studio
+ */
+async function testApiConnection() {
+    const apiUrl = elements.apiUrl.value.trim();
+
+    elements.apiStatus.textContent = 'Đang kiểm tra...';
+    elements.apiStatus.className = 'api-status loading';
+
+    try {
+        const response = await fetch(`${apiUrl}/v1/models`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const modelCount = data.data?.length || 0;
+            elements.apiStatus.textContent = `OK (${modelCount} model)`;
+            elements.apiStatus.className = 'api-status success';
+            isApiReady = true;
+            updateStartButtonState();
+            updateStatus('ready', `LM Studio sẵn sàng (${modelCount} model)`);
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (error) {
+        console.error('API test failed:', error);
+        elements.apiStatus.textContent = 'Lỗi kết nối';
+        elements.apiStatus.className = 'api-status error';
+        isApiReady = false;
+        updateStartButtonState();
+    }
+}
+
+/**
+ * Call LM Studio API for chat completion
+ */
+async function callLMStudioAPI(messages, settings) {
+    const apiUrl = elements.apiUrl.value.trim();
+
+    const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            messages: messages,
+            temperature: settings.temperature,
+            top_p: settings.top_p,
+            max_tokens: settings.max_new_tokens,
+            stream: false
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || '';
+}
+
+/**
  * Initialize Web Worker for model inference
  */
 function initWorker() {
@@ -238,7 +358,7 @@ function handleWorkerMessage(e) {
         case 'ready':
             isModelReady = true;
             updateStatus('ready', data.message);
-            elements.startBtn.disabled = false;
+            updateStartButtonState();
             if (elements.modelStatusInfo) {
                 elements.modelStatusInfo.textContent = 'Sẵn sàng';
             }
@@ -385,26 +505,89 @@ async function runConversationLoop(initialMessage, maxTurns) {
  * Generate response from an agent
  */
 function generateResponse(agent, inputMessage) {
+    // Get agent's system prompt
+    const systemPrompt = agent === 'A'
+        ? elements.agentAPrompt.value
+        : elements.agentBPrompt.value;
+
+    // Get conversation history for this agent
+    const history = agent === 'A' ? agentAHistory : agentBHistory;
+
+    // Get settings
+    const settings = {
+        temperature: parseFloat(elements.temperature.value),
+        top_p: parseFloat(elements.topP.value),
+        max_new_tokens: parseInt(elements.maxTokens.value)
+    };
+
+    // Update status to speaking
+    setAgentStatus(agent, 'speaking');
+
+    // Use LM Studio API or local model
+    if (modelSource === 'lmstudio') {
+        return generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings);
+    } else {
+        return generateWithLocalModel(agent, systemPrompt, history, inputMessage, settings);
+    }
+}
+
+/**
+ * Generate response using LM Studio API
+ */
+async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
+    // Build debate context
+    const debateContext = agent === 'A'
+        ? `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải ỦNG HỘ quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`
+        : `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải PHẢN ĐỐI quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`;
+
+    // Build messages array for chat completion API
+    const messages = [
+        {
+            role: 'system',
+            content: `${debateContext}\n${systemPrompt}`
+        }
+    ];
+
+    // Add conversation history
+    const recentHistory = history.slice(-6);
+    for (const msg of recentHistory) {
+        messages.push({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: msg.content
+        });
+    }
+
+    // Add current message
+    messages.push({
+        role: 'user',
+        content: inputMessage
+    });
+
+    try {
+        // Show typing indicator
+        updateTypingIndicator(agent, '');
+
+        const response = await callLMStudioAPI(messages, settings);
+
+        // Remove typing indicator
+        removeTypingIndicator(agent);
+
+        return response;
+    } catch (error) {
+        removeTypingIndicator(agent);
+        throw error;
+    }
+}
+
+/**
+ * Generate response using local model (Web Worker)
+ */
+function generateWithLocalModel(agent, systemPrompt, history, inputMessage, settings) {
     return new Promise((resolve, reject) => {
         const messageId = `${agent}-${Date.now()}`;
 
-        // Get agent's system prompt
-        const systemPrompt = agent === 'A'
-            ? elements.agentAPrompt.value
-            : elements.agentBPrompt.value;
-
-        // Get conversation history for this agent
-        const history = agent === 'A' ? agentAHistory : agentBHistory;
-
         // Build prompt with agent context for debate
         const prompt = buildPrompt(systemPrompt, history, inputMessage, agent);
-
-        // Get settings
-        const settings = {
-            temperature: parseFloat(elements.temperature.value),
-            top_p: parseFloat(elements.topP.value),
-            max_new_tokens: parseInt(elements.maxTokens.value)
-        };
 
         // Store resolve/reject for this message
         window[`resolve_${messageId}`] = resolve;
@@ -419,9 +602,6 @@ function generateResponse(agent, inputMessage) {
             prompt: prompt,
             options: settings
         });
-
-        // Update status to speaking
-        setAgentStatus(agent, 'speaking');
     });
 }
 
