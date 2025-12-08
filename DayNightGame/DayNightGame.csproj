@@ -67,7 +67,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="audio.js" />
+    <Content Include="Particle.js" />
+    <Content Include="Player.js" />
+    <Content Include="main.js" />
+    <Content Include="Ball.js" />
+    <Content Include="index.css" />
     <Content Include="index.html" />
+    <Content Include="constants.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
