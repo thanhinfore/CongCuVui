@@ -14,9 +14,9 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '4.0.0';
+const APP_VERSION = '4.1.0';
 
-console.log(`Dual Agent Chat Arena v${APP_VERSION} PRO loaded`);
+console.log(`Dual Agent Chat Arena v${APP_VERSION} with Judge C loaded`);
 
 // State
 let worker = null;
@@ -46,6 +46,18 @@ const MAX_RECENT_PHRASES = 10;
 let debateScores = {
     A: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 },
     B: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 }
+};
+
+// Agent C (Judge) - Total scores for the race
+let judgeScores = {
+    A: 0,
+    B: 0
+};
+
+// Last turn scores for display
+let lastTurnScores = {
+    A: 0,
+    B: 0
 };
 
 // DOM Elements
@@ -125,7 +137,21 @@ const elements = {
 
     // Agent Panels
     agentAPanel: null,
-    agentBPanel: null
+    agentBPanel: null,
+
+    // Agent C (Judge) Elements
+    scoreboardRace: null,
+    scoreA: null,
+    scoreB: null,
+    progressA: null,
+    progressB: null,
+    raceMarker: null,
+    racerA: null,
+    racerB: null,
+    judgeVerdictPanel: null,
+    judgeContent: null,
+    turnScoreA: null,
+    turnScoreB: null
 };
 
 /**
@@ -222,6 +248,20 @@ function initElements() {
     // Agent Panels for speaking effects
     elements.agentAPanel = document.querySelector('.agent-panel.agent-a');
     elements.agentBPanel = document.querySelector('.agent-panel.agent-b');
+
+    // Agent C (Judge) Elements
+    elements.scoreboardRace = document.getElementById('scoreboardRace');
+    elements.scoreA = document.getElementById('scoreA');
+    elements.scoreB = document.getElementById('scoreB');
+    elements.progressA = document.getElementById('progressA');
+    elements.progressB = document.getElementById('progressB');
+    elements.raceMarker = document.getElementById('raceMarker');
+    elements.racerA = document.getElementById('racerA');
+    elements.racerB = document.getElementById('racerB');
+    elements.judgeVerdictPanel = document.getElementById('judgeVerdictPanel');
+    elements.judgeContent = document.getElementById('judgeContent');
+    elements.turnScoreA = document.getElementById('turnScoreA');
+    elements.turnScoreB = document.getElementById('turnScoreB');
 }
 
 /**
@@ -882,6 +922,199 @@ function formatScoresDisplay() {
 `;
 }
 
+// =====================================================
+// AGENT C (JUDGE) - SCORING SYSTEM v4.1
+// =====================================================
+
+/**
+ * Judge C: Score a response on a scale of 1-10
+ * Scoring criteria:
+ * - Logic/Reasoning: 0-3 points
+ * - Evidence/Examples: 0-3 points
+ * - Rebuttal quality: 0-2 points
+ * - Creativity/Engagement: 0-2 points
+ */
+function judgeScoreResponse(agent, response, opponent, turnNumber) {
+    let score = 0;
+    let feedback = [];
+
+    // 1. Logic/Reasoning (0-3 points)
+    let logicScore = 0;
+    if (/vì vậy|do đó|cho nên|bởi vì|bởi lẽ|nguyên nhân/i.test(response)) {
+        logicScore += 1;
+        feedback.push('✓ Có liên kết logic');
+    }
+    if (/nếu.*thì|khi.*sẽ|dẫn đến/i.test(response)) {
+        logicScore += 1;
+        feedback.push('✓ Sử dụng suy luận điều kiện');
+    }
+    if (/mâu thuẫn|phi lý|ngụy biện|sai lầm/i.test(response)) {
+        logicScore += 1;
+        feedback.push('✓ Chỉ ra lỗi logic đối phương');
+    }
+    score += Math.min(logicScore, 3);
+
+    // 2. Evidence/Examples (0-3 points)
+    let evidenceScore = 0;
+    if (/ví dụ|chẳng hạn|cụ thể|trường hợp/i.test(response)) {
+        evidenceScore += 1;
+        feedback.push('✓ Có dẫn chứng/ví dụ');
+    }
+    if (/nghiên cứu|số liệu|thống kê|\d+%/i.test(response)) {
+        evidenceScore += 2;
+        feedback.push('✓ Dẫn chứng có số liệu');
+    }
+    if (/năm \d{4}|thế kỷ|lịch sử/i.test(response)) {
+        evidenceScore += 1;
+        feedback.push('✓ Tham chiếu thời gian');
+    }
+    score += Math.min(evidenceScore, 3);
+
+    // 3. Rebuttal quality (0-2 points)
+    let rebuttalScore = 0;
+    if (/sai!|không đúng!|hoàn toàn ngược lại|không!/i.test(response)) {
+        rebuttalScore += 1;
+        feedback.push('✓ Phản bác trực tiếp');
+    }
+    if (/bạn sai khi|bạn nhầm|đó là ngụy biện/i.test(response)) {
+        rebuttalScore += 1;
+        feedback.push('✓ Chỉ ra sai sót cụ thể');
+    }
+    score += Math.min(rebuttalScore, 2);
+
+    // 4. Creativity/Engagement (0-2 points)
+    let creativityScore = 0;
+    if (/\?$/m.test(response)) {
+        creativityScore += 1;
+        feedback.push('✓ Đặt câu hỏi thách thức');
+    }
+    if (/hãy tưởng tượng|hãy nghĩ|góc nhìn mới/i.test(response)) {
+        creativityScore += 1;
+        feedback.push('✓ Sáng tạo trong diễn đạt');
+    }
+    score += Math.min(creativityScore, 2);
+
+    // Ensure minimum score of 1 and max of 10
+    score = Math.max(1, Math.min(10, score));
+
+    // Generate verdict text
+    let verdict = '';
+    if (score >= 8) {
+        verdict = `🌟 Xuất sắc! ${agent} trình bày rất thuyết phục.`;
+    } else if (score >= 6) {
+        verdict = `👍 Khá tốt! ${agent} có lập luận vững chắc.`;
+    } else if (score >= 4) {
+        verdict = `📝 Trung bình. ${agent} cần thêm dẫn chứng.`;
+    } else {
+        verdict = `⚠️ Yếu. ${agent} cần cải thiện lập luận.`;
+    }
+
+    console.log(`[Judge C] ${agent} scored ${score}/10:`, feedback);
+
+    return {
+        score,
+        feedback,
+        verdict
+    };
+}
+
+/**
+ * Update the scoreboard UI with new scores
+ */
+function updateScoreboard() {
+    if (!elements.scoreA || !elements.scoreB) return;
+
+    // Update score displays
+    elements.scoreA.textContent = judgeScores.A;
+    elements.scoreB.textContent = judgeScores.B;
+
+    // Add animation
+    elements.scoreA.classList.add('score-updated');
+    elements.scoreB.classList.add('score-updated');
+    setTimeout(() => {
+        elements.scoreA.classList.remove('score-updated');
+        elements.scoreB.classList.remove('score-updated');
+    }, 400);
+
+    // Update progress bar
+    const total = judgeScores.A + judgeScores.B;
+    if (total > 0) {
+        const percentA = (judgeScores.A / total) * 100;
+        const percentB = (judgeScores.B / total) * 100;
+        elements.progressA.style.width = `${percentA}%`;
+        elements.progressB.style.width = `${percentB}%`;
+    }
+
+    // Update race marker
+    if (judgeScores.A > judgeScores.B) {
+        elements.raceMarker.textContent = 'A dẫn';
+        elements.raceMarker.style.color = 'var(--agent-a-primary)';
+        elements.racerA.classList.add('leading');
+        elements.racerB.classList.remove('leading');
+    } else if (judgeScores.B > judgeScores.A) {
+        elements.raceMarker.textContent = 'B dẫn';
+        elements.raceMarker.style.color = 'var(--agent-b-primary)';
+        elements.racerB.classList.add('leading');
+        elements.racerA.classList.remove('leading');
+    } else {
+        elements.raceMarker.textContent = 'Hòa';
+        elements.raceMarker.style.color = '';
+        elements.racerA.classList.remove('leading');
+        elements.racerB.classList.remove('leading');
+    }
+
+    // Update turn scores
+    elements.turnScoreA.textContent = lastTurnScores.A > 0 ? `+${lastTurnScores.A}` : '-';
+    elements.turnScoreB.textContent = lastTurnScores.B > 0 ? `+${lastTurnScores.B}` : '-';
+}
+
+/**
+ * Show judge verdict panel with feedback
+ */
+function showJudgeVerdict(agent, result) {
+    if (!elements.judgeVerdictPanel || !elements.judgeContent) return;
+
+    elements.judgeContent.innerHTML = `
+        <p><strong>${agent}:</strong> ${result.verdict}</p>
+        <p class="judge-feedback">${result.feedback.slice(0, 3).join(' | ')}</p>
+    `;
+
+    elements.judgeVerdictPanel.classList.add('active');
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        elements.judgeVerdictPanel.classList.remove('active');
+    }, 3000);
+}
+
+/**
+ * Reset judge scores (called when starting new conversation)
+ */
+function resetJudgeScores() {
+    judgeScores.A = 0;
+    judgeScores.B = 0;
+    lastTurnScores.A = 0;
+    lastTurnScores.B = 0;
+
+    if (elements.scoreA) elements.scoreA.textContent = '0';
+    if (elements.scoreB) elements.scoreB.textContent = '0';
+    if (elements.progressA) elements.progressA.style.width = '50%';
+    if (elements.progressB) elements.progressB.style.width = '50%';
+    if (elements.raceMarker) {
+        elements.raceMarker.textContent = 'VS';
+        elements.raceMarker.style.color = '';
+    }
+    if (elements.racerA) elements.racerA.classList.remove('leading');
+    if (elements.racerB) elements.racerB.classList.remove('leading');
+    if (elements.turnScoreA) elements.turnScoreA.textContent = '-';
+    if (elements.turnScoreB) elements.turnScoreB.textContent = '-';
+    if (elements.judgeContent) {
+        elements.judgeContent.innerHTML = '<p class="judge-waiting">Đang chờ cuộc tranh luận bắt đầu...</p>';
+    }
+
+    console.log('[Judge C] Scores reset');
+}
+
 /**
  * V4.0.1: Generate a topic-specific STRUCTURED debate argument
  * Follows 4-part structure: Tóm tắt - Phản biện - Lập luận - Câu hỏi
@@ -1223,6 +1456,10 @@ async function startConversation() {
     resetAntiRepetition();
     console.log('[V4.0] Anti-repetition tracking reset');
 
+    // V4.1: Reset judge scores for new conversation
+    resetJudgeScores();
+    console.log('[V4.1] Judge scores reset');
+
     // Update UI
     elements.startBtn.style.display = 'none';
     elements.stopBtn.style.display = 'flex';
@@ -1313,8 +1550,18 @@ async function runConversationLoop(initialMessage, maxTurns) {
                 continue;
             }
 
-            // V4.0 PRO: Score the response
+            // V4.0 PRO: Score the response (internal scoring)
             scoreResponse(speaker, response);
+
+            // V4.1: Agent C (Judge) scores the response
+            const judgeResult = judgeScoreResponse(speaker, response, listener, currentTurn);
+            judgeScores[speaker] += judgeResult.score;
+            lastTurnScores[speaker] = judgeResult.score;
+            lastTurnScores[listener] = 0; // Reset other agent's turn score
+
+            // Update scoreboard and show verdict
+            updateScoreboard();
+            showJudgeVerdict(speaker, judgeResult);
 
             // Add response to speaker's chat as outgoing
             const speakerName = speaker === 'A' ? elements.agentAName.value : elements.agentBName.value;
@@ -1786,6 +2033,9 @@ function clearConversation() {
 
     // V4.0 PRO: Reset anti-repetition tracking
     resetAntiRepetition();
+
+    // V4.1: Reset judge scores
+    resetJudgeScores();
 
     // Clear UI
     clearChatUI();

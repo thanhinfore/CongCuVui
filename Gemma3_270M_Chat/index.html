@@ -60,6 +60,31 @@
                 </button>
             </div>
         </div>
+
+        <!-- Scoreboard Race Track -->
+        <div class="scoreboard-race" id="scoreboardRace">
+            <div class="race-track">
+                <div class="racer racer-a" id="racerA">
+                    <span class="racer-avatar">A</span>
+                    <span class="racer-score" id="scoreA">0</span>
+                </div>
+                <div class="race-progress">
+                    <div class="progress-bar-race">
+                        <div class="progress-a" id="progressA" style="width: 50%"></div>
+                        <div class="progress-b" id="progressB" style="width: 50%"></div>
+                    </div>
+                    <div class="race-marker" id="raceMarker">VS</div>
+                </div>
+                <div class="racer racer-b" id="racerB">
+                    <span class="racer-score" id="scoreB">0</span>
+                    <span class="racer-avatar">B</span>
+                </div>
+            </div>
+            <div class="judge-badge" id="judgeBadge">
+                <span class="judge-icon">⚖️</span>
+                <span class="judge-label">Trọng tài C</span>
+            </div>
+        </div>
     </header>
 
     <!-- Model Status Bar (minimal) -->
@@ -151,6 +176,27 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
             </button>
+        </div>
+
+        <!-- Judge Verdict Panel -->
+        <div class="judge-verdict-panel" id="judgeVerdictPanel">
+            <div class="judge-header">
+                <span class="judge-icon">⚖️</span>
+                <span class="judge-title">Trọng tài C - Nhận xét</span>
+            </div>
+            <div class="judge-content" id="judgeContent">
+                <p class="judge-waiting">Đang chờ cuộc tranh luận bắt đầu...</p>
+            </div>
+            <div class="judge-scores">
+                <div class="turn-score turn-score-a">
+                    <span class="turn-label">Lượt này:</span>
+                    <span class="turn-value" id="turnScoreA">-</span>
+                </div>
+                <div class="turn-score turn-score-b">
+                    <span class="turn-label">Lượt này:</span>
+                    <span class="turn-value" id="turnScoreB">-</span>
+                </div>
+            </div>
         </div>
     </div>
 
