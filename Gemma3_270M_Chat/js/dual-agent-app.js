@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.6.0';
+const APP_VERSION = '3.7.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -468,8 +468,11 @@ async function testApiConnection() {
 
 /**
  * Call LM Studio API for chat completion
+ * @param {Array} messages - Chat messages array
+ * @param {Object} settings - Generation settings
+ * @param {string} agent - Agent identifier ('A' or 'B')
  */
-async function callLMStudioAPI(messages, settings) {
+async function callLMStudioAPI(messages, settings, agent) {
     const apiUrl = elements.apiUrl.value.trim();
 
     // First, get the available model
@@ -513,8 +516,9 @@ async function callLMStudioAPI(messages, settings) {
     const data = await response.json();
     const rawResponse = data.choices[0]?.message?.content || '';
 
-    // Filter out agreement phrases
-    return filterAgreementPhrases(rawResponse);
+    // Filter out agreement phrases - Agent A supports, Agent B opposes
+    const isSupport = agent === 'A';
+    return filterAgreementPhrases(rawResponse, currentTopic, isSupport, currentTurn);
 }
 
 /**
@@ -545,62 +549,91 @@ const AGREEMENT_PHRASES = [
 
 /**
  * Patterns that indicate "assistant mode" - generic helper responses
- * These should be completely replaced with debate starters
+ * These indicate the model is NOT debating and needs full replacement
  */
 const ASSISTANT_MODE_PATTERNS = [
-    /^tôi hiểu (rõ |và )?/i,
-    /^tôi sẵn sàng/i,
-    /^tôi sẽ (giúp|hỗ trợ)/i,
-    /^tôi có thể giúp/i,
-    /^vâng, tôi/i,
-    /^được rồi,/i,
-    /^chắc chắn rồi/i,
+    // Apology patterns (very common in assistant mode)
+    /tôi xin lỗi/i,
+    /xin lỗi vì/i,
+
+    // Understanding/ready to help
+    /tôi hiểu/i,
+    /tôi sẵn sàng/i,
+    /tôi sẽ (giúp|hỗ trợ|cố gắng)/i,
+    /tôi có thể giúp/i,
+    /để tôi (giúp|hỗ trợ)/i,
+
+    // Affirmative responses
+    /^vâng/i,
+    /^được rồi/i,
+    /^chắc chắn/i,
     /^tất nhiên/i,
-    /^rất vui được/i,
+    /^rất vui/i,
+
+    // Helper phrases (anywhere in text)
     /sẵn sàng hỗ trợ/i,
-    /xây dựng (một )?câu trả lời/i,
-    /giúp bạn (với|trong)/i,
-    /hãy bắt đầu/i,
-    /để tôi giúp/i
+    /hỗ trợ bạn/i,
+    /giúp bạn/i,
+    /cung cấp.*phản hồi/i,
+    /xây dựng.*câu trả lời/i,
+    /cho tôi biết thêm/i,
+    /vui lòng cho/i,
+    /cung cấp thông tin/i,
+
+    // Meta-conversation (talking about the conversation)
+    /phản hồi (thiếu sót|của bạn)/i,
+    /tình huống bạn gặp/i,
+    /vấn đề (bạn|này)/i,
+    /câu trả lời đúng hay sai/i,
+    /khó khăn.*giải quyết/i
 ];
 
 /**
- * Filter and replace agreement phrases in response
- * Also detects "assistant mode" and forces debate language
+ * Generate a topic-specific debate argument
+ * Used when model returns assistant-mode response
  */
-function filterAgreementPhrases(text) {
+function generateDebateArgument(topic, isSupport, turnNumber) {
+    // Different argument templates based on turn number for variety
+    const supportArgs = [
+        `Sai hoàn toàn! "${topic}" là điều cần thiết vì nó mang lại lợi ích rõ ràng cho xã hội. Những người phản đối không hiểu được tiềm năng thực sự của vấn đề này. Bạn có dẫn chứng cụ thể nào để phản bác không?`,
+        `Không thể chấp nhận lập luận đó! Thực tế cho thấy "${topic}" đã và đang tạo ra những thay đổi tích cực. Phản đối mà không có bằng chứng chỉ là bảo thủ. Hãy đưa ra số liệu cụ thể!`,
+        `Bạn đang nhầm lẫn nghiêm trọng! Lịch sử chứng minh rằng những tiến bộ như "${topic}" luôn bị phản đối ban đầu nhưng sau đó trở thành tiêu chuẩn. Bạn muốn đứng về phía nào của lịch sử?`,
+        `Lập luận của bạn thiếu logic! "${topic}" không chỉ là xu hướng mà là giải pháp cho nhiều vấn đề hiện tại. Hãy chỉ ra cụ thể điểm nào sai thay vì phản đối chung chung!`,
+        `Hoàn toàn ngược lại! Các chuyên gia hàng đầu đều ủng hộ "${topic}". Phản đối mà không có chuyên môn chỉ là định kiến. Bạn dựa vào nguồn nào để phản bác?`
+    ];
+
+    const opposeArgs = [
+        `Sai lầm nguy hiểm! "${topic}" có vẻ hấp dẫn nhưng ẩn chứa nhiều rủi ro mà người ủng hộ cố tình bỏ qua. Bạn có tính đến hậu quả lâu dài không?`,
+        `Không đồng ý! Những người ủng hộ "${topic}" đang bị mù quáng bởi lợi ích ngắn hạn. Thực tế cho thấy nhiều trường hợp thất bại thảm hại. Bạn giải thích thế nào về những thất bại đó?`,
+        `Lập luận đó quá ngây thơ! "${topic}" nghe có vẻ tốt trên lý thuyết nhưng thực tế hoàn toàn khác. Bạn đã bao giờ nghĩ đến những người bị ảnh hưởng tiêu cực chưa?`,
+        `Hoàn toàn sai! Ủng hộ "${topic}" mà không xem xét mặt trái là vô trách nhiệm. Có bao nhiêu ví dụ thất bại mà bạn đang cố tình phớt lờ?`,
+        `Bạn đang tự lừa dối mình! "${topic}" đã gây ra nhiều vấn đề ở những nơi áp dụng. Thay vì mù quáng ủng hộ, hãy nhìn vào thực tế!`
+    ];
+
+    const args = isSupport ? supportArgs : opposeArgs;
+    const index = turnNumber % args.length;
+    return args[index];
+}
+
+/**
+ * Filter and replace agreement phrases in response
+ * Also detects "assistant mode" and generates debate arguments
+ */
+function filterAgreementPhrases(text, topic, isSupport, turnNumber) {
     if (!text) return text;
 
     let filtered = text;
 
-    // FIRST: Check for assistant-mode responses (must replace entirely)
+    // Check for assistant-mode responses
     const isAssistantMode = ASSISTANT_MODE_PATTERNS.some(pattern => pattern.test(filtered));
+
     if (isAssistantMode) {
-        // Extract any actual content after the assistant preamble
-        // Try to find the first sentence that's not assistant-speak
-        const sentences = filtered.split(/[.!?]+/).filter(s => s.trim().length > 10);
-        let actualContent = '';
-
-        for (const sentence of sentences) {
-            const sentenceLower = sentence.toLowerCase().trim();
-            const isHelperSentence = ASSISTANT_MODE_PATTERNS.some(p => p.test(sentenceLower));
-            if (!isHelperSentence && !sentenceLower.includes('sẵn sàng') && !sentenceLower.includes('hỗ trợ')) {
-                actualContent = sentence.trim();
-                break;
-            }
-        }
-
-        if (actualContent) {
-            // Start with disagreement + actual content
-            filtered = 'Không đồng ý! ' + actualContent;
-        } else {
-            // If no actual content, create a generic debate starter
-            // This forces the response to be argumentative
-            filtered = `Hoàn toàn sai! Quan điểm này thiếu cơ sở và tôi sẽ chứng minh tại sao.`;
-        }
+        // Model is in assistant mode - generate a real debate argument
+        console.log('[Filter] Assistant mode detected, generating debate argument');
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0);
     }
 
-    // Apply all replacement patterns
+    // Apply all replacement patterns for agreement phrases
     for (const { pattern, replacement } of AGREEMENT_PHRASES) {
         filtered = filtered.replace(pattern, replacement);
     }
@@ -1045,7 +1078,7 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         // Show typing indicator
         updateTypingIndicator(agent, '');
 
-        const response = await callLMStudioAPI(validatedMessages, settings);
+        const response = await callLMStudioAPI(validatedMessages, settings, agent);
 
         // Remove typing indicator
         removeTypingIndicator(agent);
@@ -1152,7 +1185,9 @@ function handleComplete(id, data) {
 
     if (resolve) {
         // Filter agreement phrases from local model response
-        const filteredText = filterAgreementPhrases(data.text);
+        // Agent A supports, Agent B opposes
+        const isSupport = agent === 'A';
+        const filteredText = filterAgreementPhrases(data.text, currentTopic, isSupport, currentTurn);
         resolve(filteredText);
     }
 
