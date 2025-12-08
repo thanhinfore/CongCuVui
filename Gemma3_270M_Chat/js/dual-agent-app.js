@@ -31,7 +31,7 @@ const elements = {
     startBtn: null,
     stopBtn: null,
     clearBtn: null,
-    initialMessage: null,
+    discussionTopic: null,
     maxTurns: null,
     turnDelay: null,
     currentTurnDisplay: null,
@@ -100,7 +100,7 @@ function initElements() {
     elements.startBtn = document.getElementById('startConversationBtn');
     elements.stopBtn = document.getElementById('stopConversationBtn');
     elements.clearBtn = document.getElementById('clearConversationBtn');
-    elements.initialMessage = document.getElementById('initialMessage');
+    elements.discussionTopic = document.getElementById('discussionTopic');
     elements.maxTurns = document.getElementById('maxTurns');
     elements.turnDelay = document.getElementById('turnDelay');
     elements.currentTurnDisplay = document.getElementById('currentTurn');
@@ -303,15 +303,16 @@ async function startConversation() {
         clearChatUI();
     }
 
-    // Get initial message
-    const initialMessage = elements.initialMessage.value.trim() || 'Xin chào!';
-    const maxTurns = parseInt(elements.maxTurns.value) || 10;
+    // Get discussion topic
+    const topic = elements.discussionTopic.value.trim() || 'Hãy bắt đầu cuộc tranh luận!';
+    const maxTurns = parseInt(elements.maxTurns.value) || 100;
 
-    // Add initial message to Agent A's chat as incoming (from "user"/topic)
-    addMessageToChat('A', initialMessage, 'incoming', 'Chủ đề');
+    // Add topic to both chat panels
+    addMessageToChat('A', topic, 'incoming', 'Chủ đề');
+    addMessageToChat('B', topic, 'incoming', 'Chủ đề');
 
-    // Agent A responds first to the initial topic
-    await runConversationLoop(initialMessage, maxTurns);
+    // Agent A responds first to the topic
+    await runConversationLoop(topic, maxTurns);
 }
 
 /**
