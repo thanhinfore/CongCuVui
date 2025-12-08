@@ -215,12 +215,12 @@ async function initialize(modelId) {
         });
 
         try {
-            // Warmup with multiple short generations to fully warm up pipeline
-            console.log('🔥 Starting warmup...');
+            // Quick warmup with minimal tokens - just compile shaders
+            console.log('🔥 Starting quick warmup...');
             const warmupStart = performance.now();
 
             await generator([{ role: 'user', content: 'Hi' }], {
-                max_new_tokens: 8,  // Generate enough tokens to warm up the full pipeline
+                max_new_tokens: 1,  // Minimal - just trigger shader compilation
                 do_sample: false,
                 use_cache: true
             });
@@ -228,7 +228,7 @@ async function initialize(modelId) {
             const warmupTime = Math.round(performance.now() - warmupStart);
             console.log(`✓ Model warmup complete in ${warmupTime}ms`);
         } catch (e) {
-            console.warn('Warmup failed (non-critical):', e);
+            console.warn('Warmup skipped (non-critical):', e);
         }
 
         sendMessage('ready', {
