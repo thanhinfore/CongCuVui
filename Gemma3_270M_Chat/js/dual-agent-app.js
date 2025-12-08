@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.4.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -39,6 +39,7 @@ const elements = {
     startBtn: null,
     stopBtn: null,
     clearBtn: null,
+    copyBtn: null,
     discussionTopic: null,
     maxTurns: null,
     turnDelay: null,
@@ -126,6 +127,7 @@ function initElements() {
     elements.startBtn = document.getElementById('startConversationBtn');
     elements.stopBtn = document.getElementById('stopConversationBtn');
     elements.clearBtn = document.getElementById('clearConversationBtn');
+    elements.copyBtn = document.getElementById('copyConversationBtn');
     elements.discussionTopic = document.getElementById('discussionTopic');
     elements.maxTurns = document.getElementById('maxTurns');
     elements.turnDelay = document.getElementById('turnDelay');
@@ -186,6 +188,7 @@ function setupEventListeners() {
     elements.startBtn.addEventListener('click', startConversation);
     elements.stopBtn.addEventListener('click', stopConversation);
     elements.clearBtn.addEventListener('click', clearConversation);
+    elements.copyBtn.addEventListener('click', copyConversation);
 
     // Max turns update
     elements.maxTurns.addEventListener('change', () => {
@@ -1043,6 +1046,96 @@ function clearConversation() {
     // Clear UI
     clearChatUI();
     elements.currentTurnDisplay.textContent = '0';
+}
+
+/**
+ * Copy conversation to clipboard
+ */
+async function copyConversation() {
+    const agentAName = elements.agentAName.value || 'Agent A';
+    const agentBName = elements.agentBName.value || 'Agent B';
+
+    // Build conversation text
+    let conversationText = '';
+
+    // Add header
+    conversationText += '═══════════════════════════════════════\n';
+    conversationText += '🤖 AI AGENT CHAT ARENA - CUỘC TRANH LUẬN\n';
+    conversationText += '═══════════════════════════════════════\n\n';
+
+    if (currentTopic) {
+        conversationText += `📌 Chủ đề: ${currentTopic}\n`;
+        conversationText += `👤 ${agentAName} vs 👤 ${agentBName}\n`;
+        conversationText += `📊 Số lượt: ${currentTurn}\n`;
+        conversationText += '\n───────────────────────────────────────\n\n';
+    }
+
+    // Get messages from Agent A panel (contains the full conversation)
+    const messagesA = elements.agentAMessages.querySelectorAll('.chat-message:not(.typing-message)');
+
+    messagesA.forEach((msg, index) => {
+        const bubble = msg.querySelector('.message-bubble');
+        const meta = msg.querySelector('.message-meta');
+
+        if (bubble && meta) {
+            const senderName = meta.querySelector('.sender-name')?.textContent || '';
+            const time = meta.querySelector('.message-time')?.textContent || '';
+            const content = bubble.textContent.trim();
+
+            if (senderName === 'Chủ đề') {
+                // Skip topic message as we already have it in header
+                return;
+            }
+
+            // Determine emoji based on sender
+            const emoji = senderName === agentAName ? '🔵' : '🟠';
+
+            conversationText += `${emoji} [${senderName}] (${time})\n`;
+            conversationText += `${content}\n\n`;
+        }
+    });
+
+    conversationText += '───────────────────────────────────────\n';
+    conversationText += '🔗 Powered by AI Agent Chat Arena\n';
+
+    try {
+        await navigator.clipboard.writeText(conversationText);
+
+        // Visual feedback
+        showCopyFeedback(true);
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        showCopyFeedback(false);
+    }
+}
+
+/**
+ * Show copy feedback
+ */
+function showCopyFeedback(success) {
+    const btn = elements.copyBtn;
+    const originalHTML = btn.innerHTML;
+
+    if (success) {
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        `;
+        btn.classList.add('copy-success');
+    } else {
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        `;
+        btn.classList.add('copy-error');
+    }
+
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('copy-success', 'copy-error');
+    }, 2000);
 }
 
 /**
