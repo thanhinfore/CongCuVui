@@ -1,15 +1,22 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
- * Version: 3.1.0 - Chat-Focused UI with Configuration Modal
+ * Version: 4.0.0 PRO - Complete Debate System Overhaul
+ *
+ * FIXES:
+ * - CoT filtering (strips <think> tags)
+ * - Hardcoded stance anchoring (A=PRO, B=CON)
+ * - Semantic anti-repetition with hash tracking
+ * - Forced 4-part debate structure
+ * - Scoring engine for logic/evidence/rebuttal/creativity
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.8.0';
+const APP_VERSION = '4.0.0';
 
-console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
+console.log(`Dual Agent Chat Arena v${APP_VERSION} PRO loaded`);
 
 // State
 let worker = null;
@@ -25,6 +32,21 @@ let currentSpeaker = 'A'; // 'A' or 'B'
 let agentAHistory = [];
 let agentBHistory = [];
 let currentTopic = ''; // Store the discussion topic
+
+// =====================================================
+// V4.0 PRO: ANTI-REPETITION & SCORING SYSTEM
+// =====================================================
+
+// Track content hashes to prevent repetition
+let contentHashes = new Set();
+let recentPhrases = []; // Last 10 key phrases
+const MAX_RECENT_PHRASES = 10;
+
+// Debate scores for each agent
+let debateScores = {
+    A: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 },
+    B: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 }
+};
 
 // DOM Elements
 const elements = {
@@ -612,6 +634,235 @@ const DEBATE_AGREEMENT_PATTERNS = [
 let usedSupportArgs = [];
 let usedOpposeArgs = [];
 
+// =====================================================
+// V4.0 PRO: CORE FILTERING & ANTI-REPETITION
+// =====================================================
+
+/**
+ * Strip Chain-of-Thought (CoT) tags from model output
+ * Removes <think>...</think> and similar reasoning tags
+ */
+function stripCoT(text) {
+    if (!text) return '';
+
+    // Remove <think>...</think> tags and their content
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+    // Remove <reasoning>...</reasoning> tags
+    cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+
+    // Remove <internal>...</internal> tags
+    cleaned = cleaned.replace(/<internal>[\s\S]*?<\/internal>/gi, '');
+
+    // Remove orphaned opening tags without closing
+    cleaned = cleaned.replace(/<think>[\s\S]*$/gi, '');
+
+    // Clean up excessive whitespace left behind
+    cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
+
+    return cleaned;
+}
+
+/**
+ * Generate a simple content hash for repetition detection
+ */
+function hashContent(text) {
+    const normalized = text.toLowerCase()
+        .replace(/[^a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 200);
+
+    // Simple hash
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i++) {
+        const char = normalized.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return hash.toString();
+}
+
+/**
+ * Extract key phrases from text for similarity checking
+ */
+function extractKeyPhrases(text) {
+    const phrases = [];
+    // Extract sentences that contain key debate markers
+    const sentences = text.split(/[.!?]/);
+    for (const s of sentences) {
+        const trimmed = s.trim();
+        if (trimmed.length > 20 && trimmed.length < 150) {
+            phrases.push(trimmed.toLowerCase());
+        }
+    }
+    return phrases.slice(0, 3); // Top 3 phrases
+}
+
+/**
+ * Check if content is too similar to recent outputs
+ */
+function isTooSimilar(text) {
+    const hash = hashContent(text);
+
+    // Check exact hash match
+    if (contentHashes.has(hash)) {
+        console.log('[AntiRepeat] Exact hash match detected');
+        return true;
+    }
+
+    // Check phrase overlap
+    const newPhrases = extractKeyPhrases(text);
+    let overlapCount = 0;
+    for (const phrase of newPhrases) {
+        for (const recent of recentPhrases) {
+            if (phrase.includes(recent) || recent.includes(phrase)) {
+                overlapCount++;
+            }
+        }
+    }
+
+    if (overlapCount >= 2) {
+        console.log('[AntiRepeat] High phrase overlap detected:', overlapCount);
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Register content in anti-repetition tracking
+ */
+function registerContent(text) {
+    const hash = hashContent(text);
+    contentHashes.add(hash);
+
+    const phrases = extractKeyPhrases(text);
+    recentPhrases.push(...phrases);
+
+    // Keep only recent phrases
+    while (recentPhrases.length > MAX_RECENT_PHRASES) {
+        recentPhrases.shift();
+    }
+}
+
+/**
+ * Reset anti-repetition tracking (call when starting new conversation)
+ */
+function resetAntiRepetition() {
+    contentHashes.clear();
+    recentPhrases = [];
+    usedSupportArgs = [];
+    usedOpposeArgs = [];
+    debateScores = {
+        A: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 },
+        B: { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 }
+    };
+}
+
+// =====================================================
+// V4.0 PRO: SCORING ENGINE
+// =====================================================
+
+/**
+ * Score patterns for each category
+ */
+const SCORE_PATTERNS = {
+    logic: [
+        { pattern: /vì vậy|do đó|cho nên|bởi vì|bởi lẽ/i, points: 1 },
+        { pattern: /nếu.*thì|khi.*sẽ/i, points: 1 },
+        { pattern: /nguyên nhân|hậu quả|kết quả/i, points: 1 },
+        { pattern: /mâu thuẫn|logic|phi lý|ngụy biện/i, points: 2 },
+        { pattern: /suy luận|lập luận|luận điểm/i, points: 1 }
+    ],
+    evidence: [
+        { pattern: /theo nghiên cứu|theo số liệu|thống kê/i, points: 2 },
+        { pattern: /ví dụ|chẳng hạn|cụ thể/i, points: 1 },
+        { pattern: /\d+%|\d+ triệu|\d+ tỷ/i, points: 2 },
+        { pattern: /năm \d{4}|thế kỷ/i, points: 1 },
+        { pattern: /trường hợp|vụ việc|sự kiện/i, points: 1 }
+    ],
+    rebuttal: [
+        { pattern: /sai!|không đúng!|hoàn toàn ngược lại/i, points: 1 },
+        { pattern: /phản bác|bác bỏ|phủ nhận/i, points: 2 },
+        { pattern: /tuy nhiên|ngược lại|trái lại/i, points: 1 },
+        { pattern: /bạn sai khi|bạn nhầm lẫn/i, points: 2 },
+        { pattern: /đó là ngụy biện|lỗi logic/i, points: 2 }
+    ],
+    creativity: [
+        { pattern: /hãy tưởng tượng|hãy nghĩ xem/i, points: 1 },
+        { pattern: /góc nhìn mới|quan điểm khác/i, points: 2 },
+        { pattern: /ẩn dụ|so sánh như/i, points: 1 },
+        { pattern: /câu hỏi.*\?$/i, points: 1 },
+        { pattern: /thách thức|chứng minh/i, points: 1 }
+    ]
+};
+
+/**
+ * Score a response and update agent scores
+ */
+function scoreResponse(agent, text) {
+    if (!text) return;
+
+    const scores = { logic: 0, evidence: 0, rebuttal: 0, creativity: 0 };
+
+    for (const [category, patterns] of Object.entries(SCORE_PATTERNS)) {
+        for (const { pattern, points } of patterns) {
+            const matches = text.match(new RegExp(pattern, 'gi'));
+            if (matches) {
+                scores[category] += points * matches.length;
+            }
+        }
+    }
+
+    // Update agent scores
+    for (const [category, points] of Object.entries(scores)) {
+        debateScores[agent][category] += points;
+    }
+
+    console.log(`[Scoring] ${agent}:`, scores);
+    return scores;
+}
+
+/**
+ * Get current debate scores
+ */
+function getDebateScores() {
+    const totalA = Object.values(debateScores.A).reduce((a, b) => a + b, 0);
+    const totalB = Object.values(debateScores.B).reduce((a, b) => a + b, 0);
+
+    return {
+        A: { ...debateScores.A, total: totalA },
+        B: { ...debateScores.B, total: totalB },
+        leader: totalA > totalB ? 'A' : totalB > totalA ? 'B' : 'Tie'
+    };
+}
+
+/**
+ * Format scores for display
+ */
+function formatScoresDisplay() {
+    const scores = getDebateScores();
+
+    return `
+📊 ĐIỂM TRANH LUẬN:
+
+🔵 Agent A (ỦNG HỘ): ${scores.A.total} điểm
+   - Logic: ${scores.A.logic}
+   - Dẫn chứng: ${scores.A.evidence}
+   - Phản biện: ${scores.A.rebuttal}
+   - Sáng tạo: ${scores.A.creativity}
+
+🟠 Agent B (PHẢN ĐỐI): ${scores.B.total} điểm
+   - Logic: ${scores.B.logic}
+   - Dẫn chứng: ${scores.B.evidence}
+   - Phản biện: ${scores.B.rebuttal}
+   - Sáng tạo: ${scores.B.creativity}
+
+🏆 Dẫn đầu: ${scores.leader === 'Tie' ? 'Hòa' : `Agent ${scores.leader}`}
+`;
+}
+
 /**
  * Generate a topic-specific STRUCTURED debate argument
  * Follows 4-part structure: Tóm tắt - Phản biện - Lập luận - Câu hỏi
@@ -772,29 +1023,47 @@ function generateDebateArgument(topic, isSupport, turnNumber, lastOpponentMessag
 }
 
 /**
- * Filter and replace agreement phrases in response
- * Also detects "assistant mode" and "debate agreement mode"
+ * V4.0 PRO: Complete response filtering pipeline
+ * 1. Strip CoT tags
+ * 2. Check for assistant mode
+ * 3. Check for debate agreement
+ * 4. Check for repetition
+ * 5. Apply phrase replacements
+ * 6. Register content for anti-repetition
  */
 function filterAgreementPhrases(text, topic, isSupport, turnNumber, lastMessage) {
     if (!text) return text;
 
-    let filtered = text;
+    // STEP 1: Strip Chain-of-Thought tags
+    let filtered = stripCoT(text);
 
-    // FIRST: Check for assistant-mode responses
+    if (!filtered || filtered.length < 10) {
+        console.log('[Filter] Empty after CoT strip, generating argument');
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
+    }
+
+    // STEP 2: Check for assistant-mode responses
     const isAssistantMode = ASSISTANT_MODE_PATTERNS.some(pattern => pattern.test(filtered));
     if (isAssistantMode) {
         console.log('[Filter] Assistant mode detected, generating structured debate argument');
         return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
     }
 
-    // SECOND: Check for debate agreement - agent is debating but agreeing with opponent
+    // STEP 3: Check for debate agreement - agent is debating but agreeing with opponent
     const isDebateAgreement = DEBATE_AGREEMENT_PATTERNS.some(pattern => pattern.test(filtered));
     if (isDebateAgreement) {
         console.log('[Filter] Debate agreement detected, generating counter argument');
         return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
     }
 
-    // Apply all replacement patterns for agreement phrases
+    // STEP 4: Check for repetition
+    if (isTooSimilar(filtered)) {
+        console.log('[Filter] Repetition detected, generating fresh argument');
+        // Force a different argument by using turn+10 offset
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + 10, lastMessage);
+    }
+
+    // STEP 5: Apply all replacement patterns for agreement phrases
     for (const { pattern, replacement } of AGREEMENT_PHRASES) {
         filtered = filtered.replace(pattern, replacement);
     }
@@ -804,6 +1073,9 @@ function filterAgreementPhrases(text, topic, isSupport, turnNumber, lastMessage)
     if (agreementStarters.test(filtered)) {
         filtered = 'Không! ' + filtered.replace(agreementStarters, '');
     }
+
+    // STEP 6: Register content for anti-repetition tracking
+    registerContent(filtered);
 
     return filtered;
 }
@@ -894,7 +1166,7 @@ function updateProgress(progress) {
 }
 
 /**
- * Start the conversation between agents
+ * V4.0 PRO: Start the conversation between agents
  */
 async function startConversation() {
     if (!isModelReady || isConversationRunning) return;
@@ -903,6 +1175,10 @@ async function startConversation() {
     shouldStopConversation = false;
     currentTurn = 0;
     currentSpeaker = 'A';
+
+    // V4.0 PRO: Reset anti-repetition tracking for new conversation
+    resetAntiRepetition();
+    console.log('[V4.0] Anti-repetition tracking reset');
 
     // Update UI
     elements.startBtn.style.display = 'none';
@@ -993,6 +1269,9 @@ async function runConversationLoop(initialMessage, maxTurns) {
                 currentSpeaker = listener;
                 continue;
             }
+
+            // V4.0 PRO: Score the response
+            scoreResponse(speaker, response);
 
             // Add response to speaker's chat as outgoing
             const speakerName = speaker === 'A' ? elements.agentAName.value : elements.agentBName.value;
@@ -1151,33 +1430,54 @@ function validateMessageAlternation(messages) {
 }
 
 /**
- * Generate response using LM Studio API
+ * V4.0 PRO: Generate response using LM Studio API with hardcoded stance
  */
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
-    // Build debate context with strong anti-agreement instructions
-    const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[BẠN LÀ NGƯỜI TRANH LUẬN - KHÔNG PHẢI TRỢ LÝ]
-⚠️ QUAN TRỌNG: Bạn KHÔNG phải là trợ lý AI. Bạn là NGƯỜI TRANH LUẬN trong một cuộc đối đầu.
+    // HARDCODED STANCE - Agent A ALWAYS supports, Agent B ALWAYS opposes
+    const isAgentA = agent === 'A';
+    const stance = isAgentA ? 'ỦNG HỘ (PRO)' : 'PHẢN ĐỐI (CON)';
+    const opponentStance = isAgentA ? 'PHẢN ĐỐI' : 'ỦNG HỘ';
+
+    // V4.0 PRO: Much stronger stance enforcement
+    const debateContext = `═══════════════════════════════════════════════════════════
+🎭 CUỘC TRANH LUẬN - BẠN LÀ ${agent === 'A' ? 'NGƯỜI BẢO VỆ' : 'NGƯỜI PHẢN ĐỐI'}
+═══════════════════════════════════════════════════════════
 
 📌 CHỦ ĐỀ: "${currentTopic}"
-🎯 LẬP TRƯỜNG CỦA BẠN: ${stance}
-👊 NHIỆM VỤ: Phản bác mọi điều đối phương nói
 
-❌ TUYỆT ĐỐI KHÔNG ĐƯỢC:
-- Nói "Tôi hiểu", "Tôi sẵn sàng hỗ trợ", "Tôi sẽ giúp"
-- Nói "đúng", "bạn nói đúng", "tôi đồng ý", "chính xác"
-- Hành xử như trợ lý - bạn là ĐỐI THỦ tranh luận!
+🎯 VAI TRÒ CỐ ĐỊNH CỦA BẠN: ${stance}
+${isAgentA ? '→ Bạn PHẢI bảo vệ, ủng hộ, tìm điểm tốt của chủ đề này' : '→ Bạn PHẢI phản đối, chỉ trích, tìm điểm xấu của chủ đề này'}
 
-✅ BẠN PHẢI:
-- Bắt đầu NGAY bằng: "Sai!", "Không!", "Hoàn toàn ngược lại!"
-- Chỉ ra LỖI LOGIC trong lập luận đối phương
-- Đưa DẪN CHỨNG cụ thể để phản bác
-- Kết thúc bằng CÂU HỎI thách thức
+👊 ĐỐI THỦ CỦA BẠN: ${opponentStance}
+${isAgentA ? '→ Họ sẽ chỉ trích - bạn phải bảo vệ!' : '→ Họ sẽ bảo vệ - bạn phải phản bác!'}
 
-📋 CẤU TRÚC:
-1. "Sai rồi!" + lý do phản đối
-2. Dẫn chứng/ví dụ chứng minh đối phương sai
-3. "Bạn giải thích thế nào về...?" (thách thức)`;
+═══════════════════════════════════════════════════════════
+⛔ CẤM TUYỆT ĐỐI (vi phạm = thất bại):
+═══════════════════════════════════════════════════════════
+❌ KHÔNG BAO GIỜ nói: "Tôi đồng ý", "Bạn đúng", "Chính xác"
+❌ KHÔNG BAO GIỜ nói: "Tôi hiểu", "Tôi sẵn sàng hỗ trợ"
+❌ KHÔNG chuyển sang lập trường đối phương
+❌ KHÔNG thỏa hiệp hoặc nhượng bộ
+
+═══════════════════════════════════════════════════════════
+✅ BẠN BẮT BUỘC PHẢI (theo cấu trúc 4 phần):
+═══════════════════════════════════════════════════════════
+
+**1. TÓM TẮT:** [1 câu tóm tắt luận điểm đối phương vừa nói]
+
+**2. PHẢN BIỆN:** [Chỉ ra 1-2 lỗi logic/sai lầm trong luận điểm đó]
+   - Bắt đầu bằng: "Sai!", "Không đúng!", "Hoàn toàn ngược lại!"
+
+**3. LẬP LUẬN CỦA TÔI:** [Đưa ra 1 luận điểm MỚI ${isAgentA ? 'ủng hộ' : 'phản đối'} "${currentTopic}"]
+   - Kèm dẫn chứng/ví dụ cụ thể
+   - ${isAgentA ? 'Chỉ ra LỢI ÍCH, ĐIỂM MẠNH' : 'Chỉ ra RỦI RO, ĐIỂM YẾU'}
+
+**4. CÂU HỎI:** [Kết thúc bằng 1 câu hỏi thách thức đối phương]
+
+═══════════════════════════════════════════════════════════
+💡 GHI NHỚ: Bạn là ${isAgentA ? 'LUẬT SƯ BẢO VỆ' : 'CÔNG TỐ VIÊN'}!
+Mục tiêu: ${isAgentA ? 'Bảo vệ "${currentTopic}" bằng mọi giá!' : 'Kết tội "${currentTopic}" bằng mọi giá!'}
+═══════════════════════════════════════════════════════════`;
 
     // Build messages array for chat completion API
     // IMPORTANT: After system, messages MUST alternate user/assistant/user/assistant
@@ -1278,21 +1578,21 @@ function generateWithLocalModel(agent, systemPrompt, history, inputMessage, sett
 }
 
 /**
- * Build prompt for the model with debate context
+ * V4.0 PRO: Build prompt for local model with hardcoded stance
  */
 function buildPrompt(systemPrompt, history, currentMessage, agent) {
-    // Strong anti-agreement debate context - EXPLICITLY not an assistant
-    const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[BẠN LÀ NGƯỜI TRANH LUẬN - KHÔNG PHẢI TRỢ LÝ]
-⚠️ Bạn KHÔNG phải trợ lý AI. Bạn là ĐỐI THỦ trong cuộc tranh luận.
+    // HARDCODED STANCE - Agent A ALWAYS supports, Agent B ALWAYS opposes
+    const isAgentA = agent === 'A';
+    const stance = isAgentA ? 'ỦNG HỘ (PRO)' : 'PHẢN ĐỐI (CON)';
+
+    const debateContext = `[${agent === 'A' ? 'NGƯỜI BẢO VỆ' : 'NGƯỜI PHẢN ĐỐI'} - KHÔNG PHẢI TRỢ LÝ]
 
 📌 CHỦ ĐỀ: "${currentTopic}"
-🎯 LẬP TRƯỜNG: ${stance}
+🎯 LẬP TRƯỜNG CỐ ĐỊNH: ${stance}
+${isAgentA ? '→ BẢO VỆ chủ đề bằng mọi giá!' : '→ PHẢN BÁC chủ đề bằng mọi giá!'}
 
-❌ KHÔNG ĐƯỢC: Nói "Tôi hiểu", "Tôi sẵn sàng", "Tôi sẽ giúp"
-❌ KHÔNG ĐƯỢC: Nói "đúng", "đồng ý", "bạn có lý"
-✅ PHẢI: Bắt đầu bằng "Sai!", "Không!", "Ngược lại!"
-✅ PHẢI: Tìm lỗi logic, đưa dẫn chứng phản bác`;
+⛔ CẤM: "Tôi đồng ý", "Bạn đúng", "Tôi hiểu", "Tôi sẵn sàng"
+✅ PHẢI: "Sai!", "Không!", + phản biện + dẫn chứng + câu hỏi`;
 
     let prompt = `### Hướng dẫn:\n${debateContext}\n${systemPrompt}\n\n`;
 
@@ -1306,10 +1606,10 @@ function buildPrompt(systemPrompt, history, currentMessage, agent) {
         }
     }
 
-    // Add current message with anti-agreement instruction
+    // Add current message with stance-specific instruction
     prompt += `### Đối phương nói:\n${currentMessage}\n\n`;
-    prompt += `### [PHẢN BÁC NGAY! Bạn là đối thủ, không phải trợ lý!]\n`;
-    prompt += `### Bạn (bắt đầu bằng "Sai!" hoặc "Không đúng!"):\n`;
+    prompt += `### [${isAgentA ? 'BẢO VỆ chủ đề!' : 'PHẢN BÁC chủ đề!'} - Không được đồng ý!]\n`;
+    prompt += `### Bạn (${stance}):\n`;
 
     return prompt;
 }
@@ -1393,7 +1693,7 @@ function stopConversation() {
 }
 
 /**
- * End the conversation
+ * V4.0 PRO: End the conversation and show scores
  */
 function endConversation() {
     isConversationRunning = false;
@@ -1413,10 +1713,21 @@ function endConversation() {
     // Remove any typing indicators
     removeTypingIndicator('A');
     removeTypingIndicator('B');
+
+    // V4.0 PRO: Log final scores
+    if (currentTurn > 0) {
+        console.log('[V4.0] Final debate scores:');
+        console.log(formatScoresDisplay());
+
+        // Show scores in chat
+        const scoresDisplay = formatScoresDisplay();
+        addMessageToChat('A', scoresDisplay, 'incoming', '📊 Kết quả');
+        addMessageToChat('B', scoresDisplay, 'incoming', '📊 Kết quả');
+    }
 }
 
 /**
- * Clear conversation
+ * V4.0 PRO: Clear conversation with tracking reset
  */
 function clearConversation() {
     // Stop if running
@@ -1429,6 +1740,9 @@ function clearConversation() {
     agentBHistory = [];
     currentTurn = 0;
     currentTopic = '';
+
+    // V4.0 PRO: Reset anti-repetition tracking
+    resetAntiRepetition();
 
     // Clear UI
     clearChatUI();
