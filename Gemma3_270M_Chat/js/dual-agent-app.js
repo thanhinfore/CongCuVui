@@ -297,22 +297,42 @@ async function testApiConnection() {
 async function callLMStudioAPI(messages, settings) {
     const apiUrl = elements.apiUrl.value.trim();
 
+    // First, get the available model
+    let modelId = 'local-model';
+    try {
+        const modelsResponse = await fetch(`${apiUrl}/v1/models`);
+        if (modelsResponse.ok) {
+            const modelsData = await modelsResponse.json();
+            if (modelsData.data && modelsData.data.length > 0) {
+                modelId = modelsData.data[0].id;
+            }
+        }
+    } catch (e) {
+        console.warn('Could not fetch model list, using default');
+    }
+
+    const requestBody = {
+        model: modelId,
+        messages: messages,
+        temperature: settings.temperature,
+        max_tokens: settings.max_new_tokens,
+        stream: false
+    };
+
+    console.log('API Request:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(`${apiUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            messages: messages,
-            temperature: settings.temperature,
-            top_p: settings.top_p,
-            max_tokens: settings.max_new_tokens,
-            stream: false
-        })
+        body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
