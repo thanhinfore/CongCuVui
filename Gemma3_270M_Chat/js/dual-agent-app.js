@@ -17,6 +17,7 @@ let currentSpeaker = 'A'; // 'A' or 'B'
 // Conversation history for each agent
 let agentAHistory = [];
 let agentBHistory = [];
+let currentTopic = ''; // Store the discussion topic
 
 // DOM Elements
 const elements = {
@@ -303,16 +304,16 @@ async function startConversation() {
         clearChatUI();
     }
 
-    // Get discussion topic
-    const topic = elements.discussionTopic.value.trim() || 'Hãy bắt đầu cuộc tranh luận!';
+    // Get discussion topic and store it
+    currentTopic = elements.discussionTopic.value.trim() || 'Hãy bắt đầu cuộc tranh luận!';
     const maxTurns = parseInt(elements.maxTurns.value) || 100;
 
     // Add topic to both chat panels
-    addMessageToChat('A', topic, 'incoming', 'Chủ đề');
-    addMessageToChat('B', topic, 'incoming', 'Chủ đề');
+    addMessageToChat('A', currentTopic, 'incoming', 'Chủ đề');
+    addMessageToChat('B', currentTopic, 'incoming', 'Chủ đề');
 
     // Agent A responds first to the topic
-    await runConversationLoop(topic, maxTurns);
+    await runConversationLoop(currentTopic, maxTurns);
 }
 
 /**
@@ -395,8 +396,8 @@ function generateResponse(agent, inputMessage) {
         // Get conversation history for this agent
         const history = agent === 'A' ? agentAHistory : agentBHistory;
 
-        // Build prompt
-        const prompt = buildPrompt(systemPrompt, history, inputMessage);
+        // Build prompt with agent context for debate
+        const prompt = buildPrompt(systemPrompt, history, inputMessage, agent);
 
         // Get settings
         const settings = {
@@ -425,23 +426,28 @@ function generateResponse(agent, inputMessage) {
 }
 
 /**
- * Build prompt for the model
+ * Build prompt for the model with debate context
  */
-function buildPrompt(systemPrompt, history, currentMessage) {
-    let prompt = `### Hướng dẫn:\n${systemPrompt}\n\n`;
+function buildPrompt(systemPrompt, history, currentMessage, agent) {
+    // Strong anti-agreement prefix
+    const debateContext = agent === 'A'
+        ? `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải ỦNG HỘ quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`
+        : `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải PHẢN ĐỐI quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`;
+
+    let prompt = `### Hướng dẫn:\n${debateContext}\n${systemPrompt}\n\n`;
 
     // Add conversation history (last 4 messages for context)
     const recentHistory = history.slice(-4);
     for (const msg of recentHistory) {
         if (msg.role === 'user') {
-            prompt += `### Người dùng:\n${msg.content}\n\n`;
+            prompt += `### Đối phương nói:\n${msg.content}\n\n`;
         } else {
-            prompt += `### Trợ lý:\n${msg.content}\n\n`;
+            prompt += `### Bạn đã nói:\n${msg.content}\n\n`;
         }
     }
 
-    // Add current message
-    prompt += `### Người dùng:\n${currentMessage}\n\n### Trợ lý:\n`;
+    // Add current message with debate instruction
+    prompt += `### Đối phương nói:\n${currentMessage}\n\n### Bạn phản bác (KHÔNG đồng ý, chỉ ra điểm sai):\n`;
 
     return prompt;
 }
@@ -553,6 +559,7 @@ function clearConversation() {
     agentAHistory = [];
     agentBHistory = [];
     currentTurn = 0;
+    currentTopic = '';
 
     // Clear UI
     clearChatUI();
