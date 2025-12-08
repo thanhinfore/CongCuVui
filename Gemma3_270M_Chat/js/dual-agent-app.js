@@ -1,11 +1,15 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
+ * Version: 2.1.0 - Fixed message alternation for LM Studio API
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
+const APP_VERSION = '2.1.0';
+
+console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
 // State
 let worker = null;
@@ -552,6 +556,75 @@ function generateResponse(agent, inputMessage) {
 }
 
 /**
+ * Validate and fix message alternation for LM Studio API
+ * Ensures: system -> user -> assistant -> user -> assistant -> ... -> user
+ */
+function validateMessageAlternation(messages) {
+    if (messages.length === 0) return messages;
+
+    const result = [];
+
+    // Always keep system message first
+    const systemMsg = messages.find(m => m.role === 'system');
+    if (systemMsg) {
+        result.push(systemMsg);
+    }
+
+    // Get non-system messages
+    const nonSystemMsgs = messages.filter(m => m.role !== 'system');
+
+    // Separate user and assistant messages
+    const userMsgs = nonSystemMsgs.filter(m => m.role === 'user');
+    const assistantMsgs = nonSystemMsgs.filter(m => m.role === 'assistant');
+
+    // Build alternating sequence: user, assistant, user, assistant...
+    // Must start with user after system
+    const maxLen = Math.max(userMsgs.length, assistantMsgs.length);
+
+    for (let i = 0; i < maxLen; i++) {
+        // Add user first
+        if (i < userMsgs.length) {
+            result.push({ role: 'user', content: userMsgs[i].content });
+        }
+        // Then assistant (only if we have a user before it)
+        if (i < assistantMsgs.length && i < userMsgs.length) {
+            result.push({ role: 'assistant', content: assistantMsgs[i].content });
+        }
+    }
+
+    // Ensure last message is user (required for chat completion)
+    if (result.length > 0 && result[result.length - 1].role !== 'user') {
+        // If no user messages, add a placeholder
+        if (userMsgs.length === 0) {
+            result.push({ role: 'user', content: 'Hãy tiếp tục tranh luận.' });
+        }
+    }
+
+    // Final validation: check alternation
+    let isValid = true;
+    for (let i = 1; i < result.length; i++) {
+        const prev = result[i - 1].role;
+        const curr = result[i].role;
+
+        if (i === 1 && prev === 'system' && curr !== 'user') {
+            isValid = false;
+            console.warn('Validation failed: first message after system must be user');
+        }
+        if (prev !== 'system' && prev === curr) {
+            isValid = false;
+            console.warn(`Validation failed: consecutive ${curr} messages at index ${i}`);
+        }
+    }
+
+    if (!isValid) {
+        console.warn('Message array before validation:', messages);
+        console.warn('Message array after validation:', result);
+    }
+
+    return result;
+}
+
+/**
  * Generate response using LM Studio API
  */
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
@@ -607,14 +680,17 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         });
     }
 
+    // Validate and fix message alternation before sending
+    const validatedMessages = validateMessageAlternation(messages);
+
     // Debug log
-    console.log(`[${agent}] Messages to API:`, messages.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
+    console.log(`[${agent}] v${APP_VERSION} Messages to API:`, validatedMessages.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
     try {
         // Show typing indicator
         updateTypingIndicator(agent, '');
 
-        const response = await callLMStudioAPI(messages, settings);
+        const response = await callLMStudioAPI(validatedMessages, settings);
 
         // Remove typing indicator
         removeTypingIndicator(agent);
