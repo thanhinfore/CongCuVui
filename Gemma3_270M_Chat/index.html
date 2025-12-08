@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trợ Lý Học Tập AI - Gemma 3 270M</title>
+    <title>AI Agent Chat Arena - Dual Agent Conversation</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/chat.css">
+    <link rel="stylesheet" href="css/dual-agent.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -23,10 +24,10 @@
         <div class="header-content">
             <div class="logo">
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                 </svg>
-                <h1>Trợ Lý Học Tập AI</h1>
-                <span class="model-badge">270M</span>
+                <h1>AI Agent Arena</h1>
+                <span class="model-badge">Dual Chat</span>
             </div>
             <div class="header-actions">
                 <button id="settingsBtn" class="icon-btn" title="Cài đặt">
@@ -43,17 +44,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                 </button>
-                <button id="clearHistoryBtn" class="icon-btn" title="Xóa lịch sử">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <div class="app-container">
+    <div class="app-container dual-agent-mode">
         <!-- Model Status Bar -->
         <div id="modelStatus" class="model-status">
             <div class="status-content">
@@ -70,49 +66,101 @@
             </div>
         </div>
 
-        <!-- Chat Container -->
-        <div class="chat-container">
-            <div id="chatMessages" class="chat-messages">
-                <!-- Welcome Message -->
-                <div class="welcome-message">
-                    <div class="welcome-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-row">
+                <div class="initial-message-group">
+                    <label for="initialMessage">Chủ đề khởi đầu:</label>
+                    <input type="text" id="initialMessage" placeholder="VD: Hãy tranh luận về việc AI có thể thay thế con người không?" value="Xin chào! Hãy bắt đầu cuộc trò chuyện của chúng ta.">
+                </div>
+                <div class="control-buttons">
+                    <button id="startConversationBtn" class="control-btn start-btn" disabled>
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
                         </svg>
+                        Bắt đầu
+                    </button>
+                    <button id="stopConversationBtn" class="control-btn stop-btn" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="6" width="12" height="12" rx="1"/>
+                        </svg>
+                        Dừng
+                    </button>
+                    <button id="clearConversationBtn" class="control-btn clear-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Xóa
+                    </button>
+                </div>
+            </div>
+            <div class="turn-settings">
+                <label>
+                    <span>Số lượt tối đa:</span>
+                    <input type="number" id="maxTurns" min="1" max="100" value="10">
+                </label>
+                <label>
+                    <span>Độ trễ giữa lượt (ms):</span>
+                    <input type="number" id="turnDelay" min="0" max="5000" step="100" value="500">
+                </label>
+                <div class="turn-counter">
+                    Lượt: <span id="currentTurn">0</span> / <span id="totalTurns">10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dual Agent Chat Container -->
+        <div class="dual-chat-container">
+            <!-- Agent A Panel -->
+            <div class="agent-panel agent-a">
+                <div class="agent-header">
+                    <div class="agent-avatar agent-a-avatar">A</div>
+                    <input type="text" class="agent-name" id="agentAName" value="Agent A" placeholder="Tên Agent">
+                    <div class="agent-status" id="agentAStatus">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Chờ</span>
                     </div>
-                    <h2>Chào mừng đến với Trợ Lý Học Tập AI!</h2>
-                    <p>Tôi là trợ lý giảng dạy thông minh, sẵn sàng hỗ trợ bạn học tập hiệu quả. Mô hình AI Gemma 3 270M đang chạy hoàn toàn trên trình duyệt của bạn.</p>
-                    <p class="welcome-note">💡 <strong>Gợi ý:</strong> Hãy đặt câu hỏi về bất kỳ chủ đề nào bạn muốn học, yêu cầu giải thích khái niệm, hoặc nhờ tôi tạo bài tập thực hành!</p>
-                    <p class="welcome-note">Lần đầu sử dụng, mô hình sẽ được tải xuống (~200-300MB). Dữ liệu của bạn luôn được bảo mật và không gửi đi đâu cả.</p>
+                </div>
+                <div class="agent-prompt-section">
+                    <label for="agentAPrompt">Instruction Prompt:</label>
+                    <textarea id="agentAPrompt" class="agent-prompt" rows="4" placeholder="Mô tả vai trò và cách hành xử của Agent A...">Bạn là một nhà khoa học lạc quan, tin vào tiềm năng của công nghệ AI. Hãy đưa ra các lập luận ủng hộ việc phát triển AI, dựa trên các bằng chứng khoa học và lợi ích cho nhân loại. Trả lời ngắn gọn, súc tích trong 2-3 câu.</textarea>
+                </div>
+                <div class="agent-chat-messages" id="agentAChatMessages">
+                    <div class="empty-chat-message">
+                        <p>Cuộc trò chuyện sẽ hiển thị ở đây...</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Input Area -->
-            <div class="chat-input-container">
-                <div class="input-wrapper">
-                    <textarea
-                        id="messageInput"
-                        class="message-input"
-                        placeholder="Đặt câu hỏi hoặc yêu cầu giải thích bất kỳ chủ đề nào..."
-                        rows="1"
-                        maxlength="2000"
-                    ></textarea>
-                    <div class="input-actions">
-                        <button id="stopBtn" class="stop-btn" style="display: none;" title="Dừng tạo">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <rect x="6" y="6" width="12" height="12" rx="1" />
-                            </svg>
-                        </button>
-                        <button id="sendBtn" class="send-btn" disabled title="Gửi tin nhắn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                        </button>
+            <!-- Center Divider with Arrow -->
+            <div class="chat-divider">
+                <div class="divider-line"></div>
+                <div class="divider-arrow" id="conversationDirection">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </div>
+                <div class="divider-line"></div>
+            </div>
+
+            <!-- Agent B Panel -->
+            <div class="agent-panel agent-b">
+                <div class="agent-header">
+                    <div class="agent-avatar agent-b-avatar">B</div>
+                    <input type="text" class="agent-name" id="agentBName" value="Agent B" placeholder="Tên Agent">
+                    <div class="agent-status" id="agentBStatus">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Chờ</span>
                     </div>
                 </div>
-                <div class="input-footer">
-                    <span class="char-count"><span id="charCount">0</span>/2000</span>
-                    <span class="shortcuts-hint">Shift + Enter để xuống dòng • Enter để gửi</span>
+                <div class="agent-prompt-section">
+                    <label for="agentBPrompt">Instruction Prompt:</label>
+                    <textarea id="agentBPrompt" class="agent-prompt" rows="4" placeholder="Mô tả vai trò và cách hành xử của Agent B...">Bạn là một triết gia thận trọng, lo ngại về rủi ro của AI. Hãy đưa ra các lập luận phản biện, nêu lên những nguy cơ tiềm ẩn và câu hỏi đạo đức về AI. Trả lời ngắn gọn, súc tích trong 2-3 câu.</textarea>
+                </div>
+                <div class="agent-chat-messages" id="agentBChatMessages">
+                    <div class="empty-chat-message">
+                        <p>Cuộc trò chuyện sẽ hiển thị ở đây...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,7 +168,7 @@
         <!-- Settings Panel -->
         <div id="settingsPanel" class="settings-panel">
             <div class="settings-header">
-                <h3>Cài đặt</h3>
+                <h3>Cài đặt Model</h3>
                 <button id="closeSettingsBtn" class="icon-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -131,10 +179,10 @@
                 <div class="setting-group">
                     <label for="temperature">
                         Temperature
-                        <span class="setting-value" id="temperatureValue">0.5</span>
+                        <span class="setting-value" id="temperatureValue">0.7</span>
                     </label>
-                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.5">
-                    <p class="setting-description">Độ sáng tạo của mô hình. Cao hơn = ngẫu nhiên hơn.</p>
+                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    <p class="setting-description">Độ sáng tạo của mô hình. Cao hơn = đa dạng hơn.</p>
                 </div>
 
                 <div class="setting-group">
@@ -149,33 +197,14 @@
                 <div class="setting-group">
                     <label for="maxTokens">
                         Max Tokens
-                        <span class="setting-value" id="maxTokensValue">1024</span>
+                        <span class="setting-value" id="maxTokensValue">256</span>
                     </label>
-                    <input type="range" id="maxTokens" min="64" max="4096" step="64" value="1024">
-                    <p class="setting-description">Độ dài tối đa của phản hồi. Tăng lên để viết nội dung dài hơn.</p>
+                    <input type="range" id="maxTokens" min="64" max="1024" step="64" value="256">
+                    <p class="setting-description">Độ dài tối đa của mỗi phản hồi.</p>
                 </div>
 
                 <div class="setting-group">
-                    <label for="systemPrompt">System Prompt</label>
-                    <textarea id="systemPrompt" rows="8" placeholder="Hướng dẫn cho AI...">Bạn là trợ lý giảng dạy thông minh, kiên nhẫn và nhiệt tình. Nhiệm vụ của bạn là hướng dẫn và giúp đỡ học viên học tập hiệu quả. Hãy:
-
-- Giải thích rõ ràng, dễ hiểu với ví dụ cụ thể
-- Kiên nhẫn trả lời mọi câu hỏi, dù đơn giản hay phức tạp
-- Khuyến khích tư duy phản biện và tự học
-- Sử dụng ngôn ngữ thân thiện, động viên học viên
-- Chia nhỏ kiến thức phức tạp thành các bước dễ hiểu
-- Đưa ra bài tập thực hành khi phù hợp
-
-Hãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đưa ra đáp án.</textarea>
-                    <p class="setting-description">Hướng dẫn vai trò và phong cách trả lời cho AI.</p>
-                </div>
-
-                <div class="setting-group">
-                    <button id="resetSettingsBtn" class="reset-btn">Đặt lại mặc định</button>
-                </div>
-
-                <div class="setting-group">
-                    <h4>Thông tin</h4>
+                    <h4>Thông tin Model</h4>
                     <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">Model:</span>
@@ -189,10 +218,6 @@ Hãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đ
                             <span class="info-label">Trạng thái:</span>
                             <span class="info-value" id="modelStatusInfo">Chưa tải</span>
                         </div>
-                        <div class="info-item" id="performanceStatsContainer" style="display: none;">
-                            <span class="info-label">Hiệu suất:</span>
-                            <span class="info-value" id="performanceStats">-</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -203,6 +228,6 @@ Hãy luôn nhớ: mục tiêu là giúp học viên hiểu sâu, không chỉ đ
     <div id="overlay" class="overlay"></div>
 
     <!-- Scripts -->
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/dual-agent-app.js"></script>
 </body>
 </html>
