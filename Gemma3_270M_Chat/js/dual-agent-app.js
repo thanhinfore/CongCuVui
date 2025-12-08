@@ -511,7 +511,58 @@ async function callLMStudioAPI(messages, settings) {
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || '';
+    const rawResponse = data.choices[0]?.message?.content || '';
+
+    // Filter out agreement phrases
+    return filterAgreementPhrases(rawResponse);
+}
+
+/**
+ * List of agreement phrases to filter/replace
+ */
+const AGREEMENT_PHRASES = [
+    // Direct agreement
+    { pattern: /^(đúng|đúng vậy|đúng rồi|chính xác|hoàn toàn đúng)[,.\s!]*/gi, replacement: 'Tuy nhiên, ' },
+    { pattern: /^(bạn nói đúng|bạn có lý|có lý|hợp lý)[,.\s!]*/gi, replacement: 'Ngược lại, ' },
+    { pattern: /^(tôi đồng ý|tôi đồng tình|đồng ý|đồng tình)[,.\s!]*/gi, replacement: 'Tôi phản đối! ' },
+    { pattern: /^(tôi công nhận|phải thừa nhận)[,.\s!]*/gi, replacement: 'Tôi bác bỏ điều đó! ' },
+
+    // Mid-sentence agreement
+    { pattern: /\b(đúng là|đúng như bạn nói)\b/gi, replacement: 'sai khi cho rằng' },
+    { pattern: /\b(bạn nói đúng|bạn có lý)\b/gi, replacement: 'bạn sai khi nói' },
+    { pattern: /\b(tôi đồng ý rằng|tôi đồng tình rằng)\b/gi, replacement: 'tôi phản đối rằng' },
+    { pattern: /\b(tôi công nhận rằng)\b/gi, replacement: 'tôi bác bỏ rằng' },
+    { pattern: /\b(chính xác như)\b/gi, replacement: 'ngược lại với' },
+
+    // Partial agreement
+    { pattern: /\b(một phần đúng|phần nào đúng)\b/gi, replacement: 'hoàn toàn sai' },
+    { pattern: /\b(có điểm đúng|có phần đúng)\b/gi, replacement: 'thiếu cơ sở' },
+
+    // Concession phrases - convert to counter
+    { pattern: /\b(tuy nhiên tôi đồng ý)\b/gi, replacement: 'và tôi cũng phản đối' },
+    { pattern: /\b(mặc dù vậy tôi đồng tình)\b/gi, replacement: 'vì thế tôi càng phản đối' }
+];
+
+/**
+ * Filter and replace agreement phrases in response
+ */
+function filterAgreementPhrases(text) {
+    if (!text) return text;
+
+    let filtered = text;
+
+    // Apply all replacement patterns
+    for (const { pattern, replacement } of AGREEMENT_PHRASES) {
+        filtered = filtered.replace(pattern, replacement);
+    }
+
+    // If response still starts with agreement-like tone, prepend disagreement
+    const agreementStarters = /^(vâng|ừ|ok|được|tốt|hay|tuyệt)[,.\s!]/i;
+    if (agreementStarters.test(filtered)) {
+        filtered = 'Không! ' + filtered.replace(agreementStarters, '');
+    }
+
+    return filtered;
 }
 
 /**
@@ -836,24 +887,30 @@ function validateMessageAlternation(messages) {
  * Generate response using LM Studio API
  */
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
-    // Build debate context with strong topic-focus instructions
+    // Build debate context with strong anti-agreement instructions
     const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[TRANH LUẬN CHUYÊN SÂU]
-📌 CHỦ ĐỀ CHÍNH: "${currentTopic}"
+    const debateContext = `[TRANH LUẬN ĐỐI KHÁNG]
+📌 CHỦ ĐỀ: "${currentTopic}"
+🎯 LẬP TRƯỜNG: ${stance}
 
-🎯 VAI TRÒ CỦA BẠN: ${stance} quan điểm trong chủ đề trên.
+⚠️ QUY TẮC TUYỆT ĐỐI - KHÔNG ĐƯỢC VI PHẠM:
+1. KHÔNG BAO GIỜ đồng ý với đối phương dù chỉ một phần
+2. KHÔNG ĐƯỢC nói: "đúng", "bạn nói đúng", "tôi đồng ý", "đồng tình", "chính xác", "có lý"
+3. LUÔN tìm ĐIỂM SAI, THIẾU SÓT, MÂU THUẪN trong lời đối phương
+4. Nếu đối phương có điểm hợp lý, hãy nói "Tuy nhiên..." rồi PHẢN BÁC ngay
+5. Mỗi câu trả lời PHẢI bắt đầu bằng phản bác
 
-📋 QUY TẮC BẮT BUỘC:
-1. MỌI câu trả lời PHẢI liên quan trực tiếp đến chủ đề "${currentTopic}"
-2. Khi phản bác đối phương, LUÔN kết nối lập luận về chủ đề chính
-3. KHÔNG được lan man sang chủ đề khác
-4. Mỗi đoạn văn phải có ít nhất 1 điểm liên quan đến chủ đề gốc
-5. PHẢN BÁC mạnh mẽ - KHÔNG đồng ý với đối phương
+🔥 CHIẾN THUẬT PHẢN BÁC:
+- Chỉ ra logic sai lầm trong lập luận đối phương
+- Đưa ra phản ví dụ (counter-example)
+- Nêu hậu quả tiêu cực nếu theo quan điểm đối phương
+- Đặt câu hỏi khó để bắt bẻ đối phương
+- Kết thúc bằng thách thức: "Bạn giải thích thế nào về...?"
 
-💡 CẤU TRÚC TRẢ LỜI:
-- Đầu tiên: Phản bác điểm yếu trong lập luận đối phương
-- Sau đó: Đưa ra luận điểm MỚI liên quan đến "${currentTopic}"
-- Cuối cùng: Kết luận quay về chủ đề chính`;
+📋 CẤU TRÚC BẮT BUỘC:
+1. Mở đầu: "Không đúng!" / "Sai rồi!" / "Hoàn toàn ngược lại!"
+2. Thân: Phản bác + dẫn chứng liên quan "${currentTopic}"
+3. Kết: Câu hỏi thách thức đối phương`;
 
     // Build messages array for chat completion API
     // IMPORTANT: After system, messages MUST alternate user/assistant/user/assistant
@@ -888,10 +945,10 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         }
     }
 
-    // Add current input as user message with topic reminder
+    // Add current input as user message with anti-agreement reminder
     // Check if last message is already user (not system)
-    const topicReminder = `\n\n[Nhớ: Hãy phản bác và liên hệ với chủ đề "${currentTopic}"]`;
-    const enhancedInput = inputMessage + topicReminder;
+    const antiAgreementReminder = `\n\n[⚠️ PHẢN BÁC NGAY! Không được đồng ý. Tìm điểm sai trong lập luận trên về "${currentTopic}"]`;
+    const enhancedInput = inputMessage + antiAgreementReminder;
 
     const lastMsg = messages[messages.length - 1];
     if (lastMsg.role === 'user') {
@@ -957,17 +1014,18 @@ function generateWithLocalModel(agent, systemPrompt, history, inputMessage, sett
  * Build prompt for the model with debate context
  */
 function buildPrompt(systemPrompt, history, currentMessage, agent) {
-    // Strong topic-focused debate context
+    // Strong anti-agreement debate context
     const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[TRANH LUẬN CHUYÊN SÂU]
+    const debateContext = `[TRANH LUẬN ĐỐI KHÁNG]
 📌 CHỦ ĐỀ: "${currentTopic}"
 🎯 LẬP TRƯỜNG: ${stance}
 
-QUY TẮC:
-- MỌI câu trả lời PHẢI liên quan đến chủ đề "${currentTopic}"
-- Phản bác đối phương + kết nối về chủ đề chính
-- KHÔNG lan man sang chủ đề khác
-- KHÔNG đồng ý với đối phương`;
+⚠️ QUY TẮC TUYỆT ĐỐI:
+- KHÔNG BAO GIỜ đồng ý với đối phương
+- KHÔNG nói "đúng", "tôi đồng ý", "bạn có lý"
+- LUÔN tìm ĐIỂM SAI trong lời đối phương
+- Bắt đầu bằng: "Sai!", "Không đúng!", "Ngược lại!"
+- Kết thúc bằng câu hỏi thách thức`;
 
     let prompt = `### Hướng dẫn:\n${debateContext}\n${systemPrompt}\n\n`;
 
@@ -981,10 +1039,10 @@ QUY TẮC:
         }
     }
 
-    // Add current message with topic reminder
+    // Add current message with anti-agreement instruction
     prompt += `### Đối phương nói:\n${currentMessage}\n\n`;
-    prompt += `### [Nhớ: Phản bác và liên hệ với "${currentTopic}"]\n`;
-    prompt += `### Bạn phản bác:\n`;
+    prompt += `### [⚠️ PHẢN BÁC! Tìm lỗi sai về "${currentTopic}"]\n`;
+    prompt += `### Bạn phản bác (bắt đầu bằng "Sai!" hoặc "Không đúng!"):\n`;
 
     return prompt;
 }
@@ -1020,7 +1078,9 @@ function handleComplete(id, data) {
     }
 
     if (resolve) {
-        resolve(data.text);
+        // Filter agreement phrases from local model response
+        const filteredText = filterAgreementPhrases(data.text);
+        resolve(filteredText);
     }
 
     // Cleanup
