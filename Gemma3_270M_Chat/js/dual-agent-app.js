@@ -836,17 +836,31 @@ function validateMessageAlternation(messages) {
  * Generate response using LM Studio API
  */
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
-    // Build debate context
-    const debateContext = agent === 'A'
-        ? `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải ỦNG HỘ quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`
-        : `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải PHẢN ĐỐI quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`;
+    // Build debate context with strong topic-focus instructions
+    const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
+    const debateContext = `[TRANH LUẬN CHUYÊN SÂU]
+📌 CHỦ ĐỀ CHÍNH: "${currentTopic}"
+
+🎯 VAI TRÒ CỦA BẠN: ${stance} quan điểm trong chủ đề trên.
+
+📋 QUY TẮC BẮT BUỘC:
+1. MỌI câu trả lời PHẢI liên quan trực tiếp đến chủ đề "${currentTopic}"
+2. Khi phản bác đối phương, LUÔN kết nối lập luận về chủ đề chính
+3. KHÔNG được lan man sang chủ đề khác
+4. Mỗi đoạn văn phải có ít nhất 1 điểm liên quan đến chủ đề gốc
+5. PHẢN BÁC mạnh mẽ - KHÔNG đồng ý với đối phương
+
+💡 CẤU TRÚC TRẢ LỜI:
+- Đầu tiên: Phản bác điểm yếu trong lập luận đối phương
+- Sau đó: Đưa ra luận điểm MỚI liên quan đến "${currentTopic}"
+- Cuối cùng: Kết luận quay về chủ đề chính`;
 
     // Build messages array for chat completion API
     // IMPORTANT: After system, messages MUST alternate user/assistant/user/assistant
     const messages = [
         {
             role: 'system',
-            content: `${debateContext}\n${systemPrompt}`
+            content: `${debateContext}\n\n${systemPrompt}`
         }
     ];
 
@@ -874,17 +888,20 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
         }
     }
 
-    // Add current input as user message
+    // Add current input as user message with topic reminder
     // Check if last message is already user (not system)
+    const topicReminder = `\n\n[Nhớ: Hãy phản bác và liên hệ với chủ đề "${currentTopic}"]`;
+    const enhancedInput = inputMessage + topicReminder;
+
     const lastMsg = messages[messages.length - 1];
     if (lastMsg.role === 'user') {
         // Replace to avoid consecutive user messages
-        lastMsg.content = inputMessage;
+        lastMsg.content = enhancedInput;
     } else if (lastMsg.role === 'assistant' || lastMsg.role === 'system') {
         // Add new user message after assistant or system
         messages.push({
             role: 'user',
-            content: inputMessage
+            content: enhancedInput
         });
     }
 
@@ -940,10 +957,17 @@ function generateWithLocalModel(agent, systemPrompt, history, inputMessage, sett
  * Build prompt for the model with debate context
  */
 function buildPrompt(systemPrompt, history, currentMessage, agent) {
-    // Strong anti-agreement prefix
-    const debateContext = agent === 'A'
-        ? `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải ỦNG HỘ quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`
-        : `[TRANH LUẬN] Chủ đề: "${currentTopic}"\nBạn phải PHẢN ĐỐI quan điểm này. KHÔNG ĐƯỢC đồng ý với đối phương. Phải PHẢN BÁC và chỉ ra họ SAI.`;
+    // Strong topic-focused debate context
+    const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
+    const debateContext = `[TRANH LUẬN CHUYÊN SÂU]
+📌 CHỦ ĐỀ: "${currentTopic}"
+🎯 LẬP TRƯỜNG: ${stance}
+
+QUY TẮC:
+- MỌI câu trả lời PHẢI liên quan đến chủ đề "${currentTopic}"
+- Phản bác đối phương + kết nối về chủ đề chính
+- KHÔNG lan man sang chủ đề khác
+- KHÔNG đồng ý với đối phương`;
 
     let prompt = `### Hướng dẫn:\n${debateContext}\n${systemPrompt}\n\n`;
 
@@ -957,8 +981,10 @@ function buildPrompt(systemPrompt, history, currentMessage, agent) {
         }
     }
 
-    // Add current message with debate instruction
-    prompt += `### Đối phương nói:\n${currentMessage}\n\n### Bạn phản bác (KHÔNG đồng ý, chỉ ra điểm sai):\n`;
+    // Add current message with topic reminder
+    prompt += `### Đối phương nói:\n${currentMessage}\n\n`;
+    prompt += `### [Nhớ: Phản bác và liên hệ với "${currentTopic}"]\n`;
+    prompt += `### Bạn phản bác:\n`;
 
     return prompt;
 }
