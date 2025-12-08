@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.5.0';
+const APP_VERSION = '3.6.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -544,12 +544,61 @@ const AGREEMENT_PHRASES = [
 ];
 
 /**
+ * Patterns that indicate "assistant mode" - generic helper responses
+ * These should be completely replaced with debate starters
+ */
+const ASSISTANT_MODE_PATTERNS = [
+    /^tôi hiểu (rõ |và )?/i,
+    /^tôi sẵn sàng/i,
+    /^tôi sẽ (giúp|hỗ trợ)/i,
+    /^tôi có thể giúp/i,
+    /^vâng, tôi/i,
+    /^được rồi,/i,
+    /^chắc chắn rồi/i,
+    /^tất nhiên/i,
+    /^rất vui được/i,
+    /sẵn sàng hỗ trợ/i,
+    /xây dựng (một )?câu trả lời/i,
+    /giúp bạn (với|trong)/i,
+    /hãy bắt đầu/i,
+    /để tôi giúp/i
+];
+
+/**
  * Filter and replace agreement phrases in response
+ * Also detects "assistant mode" and forces debate language
  */
 function filterAgreementPhrases(text) {
     if (!text) return text;
 
     let filtered = text;
+
+    // FIRST: Check for assistant-mode responses (must replace entirely)
+    const isAssistantMode = ASSISTANT_MODE_PATTERNS.some(pattern => pattern.test(filtered));
+    if (isAssistantMode) {
+        // Extract any actual content after the assistant preamble
+        // Try to find the first sentence that's not assistant-speak
+        const sentences = filtered.split(/[.!?]+/).filter(s => s.trim().length > 10);
+        let actualContent = '';
+
+        for (const sentence of sentences) {
+            const sentenceLower = sentence.toLowerCase().trim();
+            const isHelperSentence = ASSISTANT_MODE_PATTERNS.some(p => p.test(sentenceLower));
+            if (!isHelperSentence && !sentenceLower.includes('sẵn sàng') && !sentenceLower.includes('hỗ trợ')) {
+                actualContent = sentence.trim();
+                break;
+            }
+        }
+
+        if (actualContent) {
+            // Start with disagreement + actual content
+            filtered = 'Không đồng ý! ' + actualContent;
+        } else {
+            // If no actual content, create a generic debate starter
+            // This forces the response to be argumentative
+            filtered = `Hoàn toàn sai! Quan điểm này thiếu cơ sở và tôi sẽ chứng minh tại sao.`;
+        }
+    }
 
     // Apply all replacement patterns
     for (const { pattern, replacement } of AGREEMENT_PHRASES) {
@@ -674,15 +723,39 @@ async function startConversation() {
     }
 
     // Get discussion topic and store it
-    currentTopic = elements.discussionTopic.value.trim() || 'Hãy bắt đầu cuộc tranh luận!';
+    currentTopic = elements.discussionTopic.value.trim() || 'AI có nên được trao quyền tự quyết định?';
     const maxTurns = parseInt(elements.maxTurns.value) || 100;
 
     // Add topic to both chat panels
     addMessageToChat('A', currentTopic, 'incoming', 'Chủ đề');
     addMessageToChat('B', currentTopic, 'incoming', 'Chủ đề');
 
-    // Agent A responds first to the topic
-    await runConversationLoop(currentTopic, maxTurns);
+    // Create a strong debate opener for Agent A (the first speaker)
+    const debateOpener = generateDebateOpener(currentTopic, 'A');
+
+    // Agent A starts with a strong argumentative statement
+    await runConversationLoop(debateOpener, maxTurns);
+}
+
+/**
+ * Generate a strong debate opening statement based on topic and stance
+ * Creates an ACTUAL argument (not instruction) to force debate mode
+ */
+function generateDebateOpener(topic, agent) {
+    // IMPORTANT: This creates an actual provocative argument, NOT an instruction
+    // Agent A is supposed to SUPPORT the topic, so the opener OPPOSES it
+    // This forces Agent A to counter-argue (defend the topic)
+
+    return `[ĐỐI PHƯƠNG TRANH LUẬN]
+
+"${topic}" - Quan điểm này HOÀN TOÀN SAI LẦM!
+
+Tôi phản đối mạnh mẽ vì:
+1. Không có bằng chứng thực tế nào chứng minh điều này đúng
+2. Quan điểm này mâu thuẫn với logic cơ bản
+3. Nếu thực hiện theo hướng này, hậu quả sẽ rất nghiêm trọng
+
+Đây là tư duy thiếu sâu sắc và nguy hiểm. Tôi thách thức bạn phản bác được các luận điểm trên!`;
 }
 
 /**
@@ -889,28 +962,28 @@ function validateMessageAlternation(messages) {
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
     // Build debate context with strong anti-agreement instructions
     const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[TRANH LUẬN ĐỐI KHÁNG]
+    const debateContext = `[BẠN LÀ NGƯỜI TRANH LUẬN - KHÔNG PHẢI TRỢ LÝ]
+⚠️ QUAN TRỌNG: Bạn KHÔNG phải là trợ lý AI. Bạn là NGƯỜI TRANH LUẬN trong một cuộc đối đầu.
+
 📌 CHỦ ĐỀ: "${currentTopic}"
-🎯 LẬP TRƯỜNG: ${stance}
+🎯 LẬP TRƯỜNG CỦA BẠN: ${stance}
+👊 NHIỆM VỤ: Phản bác mọi điều đối phương nói
 
-⚠️ QUY TẮC TUYỆT ĐỐI - KHÔNG ĐƯỢC VI PHẠM:
-1. KHÔNG BAO GIỜ đồng ý với đối phương dù chỉ một phần
-2. KHÔNG ĐƯỢC nói: "đúng", "bạn nói đúng", "tôi đồng ý", "đồng tình", "chính xác", "có lý"
-3. LUÔN tìm ĐIỂM SAI, THIẾU SÓT, MÂU THUẪN trong lời đối phương
-4. Nếu đối phương có điểm hợp lý, hãy nói "Tuy nhiên..." rồi PHẢN BÁC ngay
-5. Mỗi câu trả lời PHẢI bắt đầu bằng phản bác
+❌ TUYỆT ĐỐI KHÔNG ĐƯỢC:
+- Nói "Tôi hiểu", "Tôi sẵn sàng hỗ trợ", "Tôi sẽ giúp"
+- Nói "đúng", "bạn nói đúng", "tôi đồng ý", "chính xác"
+- Hành xử như trợ lý - bạn là ĐỐI THỦ tranh luận!
 
-🔥 CHIẾN THUẬT PHẢN BÁC:
-- Chỉ ra logic sai lầm trong lập luận đối phương
-- Đưa ra phản ví dụ (counter-example)
-- Nêu hậu quả tiêu cực nếu theo quan điểm đối phương
-- Đặt câu hỏi khó để bắt bẻ đối phương
-- Kết thúc bằng thách thức: "Bạn giải thích thế nào về...?"
+✅ BẠN PHẢI:
+- Bắt đầu NGAY bằng: "Sai!", "Không!", "Hoàn toàn ngược lại!"
+- Chỉ ra LỖI LOGIC trong lập luận đối phương
+- Đưa DẪN CHỨNG cụ thể để phản bác
+- Kết thúc bằng CÂU HỎI thách thức
 
-📋 CẤU TRÚC BẮT BUỘC:
-1. Mở đầu: "Không đúng!" / "Sai rồi!" / "Hoàn toàn ngược lại!"
-2. Thân: Phản bác + dẫn chứng liên quan "${currentTopic}"
-3. Kết: Câu hỏi thách thức đối phương`;
+📋 CẤU TRÚC:
+1. "Sai rồi!" + lý do phản đối
+2. Dẫn chứng/ví dụ chứng minh đối phương sai
+3. "Bạn giải thích thế nào về...?" (thách thức)`;
 
     // Build messages array for chat completion API
     // IMPORTANT: After system, messages MUST alternate user/assistant/user/assistant
@@ -1014,18 +1087,18 @@ function generateWithLocalModel(agent, systemPrompt, history, inputMessage, sett
  * Build prompt for the model with debate context
  */
 function buildPrompt(systemPrompt, history, currentMessage, agent) {
-    // Strong anti-agreement debate context
+    // Strong anti-agreement debate context - EXPLICITLY not an assistant
     const stance = agent === 'A' ? 'ỦNG HỘ' : 'PHẢN ĐỐI';
-    const debateContext = `[TRANH LUẬN ĐỐI KHÁNG]
+    const debateContext = `[BẠN LÀ NGƯỜI TRANH LUẬN - KHÔNG PHẢI TRỢ LÝ]
+⚠️ Bạn KHÔNG phải trợ lý AI. Bạn là ĐỐI THỦ trong cuộc tranh luận.
+
 📌 CHỦ ĐỀ: "${currentTopic}"
 🎯 LẬP TRƯỜNG: ${stance}
 
-⚠️ QUY TẮC TUYỆT ĐỐI:
-- KHÔNG BAO GIỜ đồng ý với đối phương
-- KHÔNG nói "đúng", "tôi đồng ý", "bạn có lý"
-- LUÔN tìm ĐIỂM SAI trong lời đối phương
-- Bắt đầu bằng: "Sai!", "Không đúng!", "Ngược lại!"
-- Kết thúc bằng câu hỏi thách thức`;
+❌ KHÔNG ĐƯỢC: Nói "Tôi hiểu", "Tôi sẵn sàng", "Tôi sẽ giúp"
+❌ KHÔNG ĐƯỢC: Nói "đúng", "đồng ý", "bạn có lý"
+✅ PHẢI: Bắt đầu bằng "Sai!", "Không!", "Ngược lại!"
+✅ PHẢI: Tìm lỗi logic, đưa dẫn chứng phản bác`;
 
     let prompt = `### Hướng dẫn:\n${debateContext}\n${systemPrompt}\n\n`;
 
@@ -1041,8 +1114,8 @@ function buildPrompt(systemPrompt, history, currentMessage, agent) {
 
     // Add current message with anti-agreement instruction
     prompt += `### Đối phương nói:\n${currentMessage}\n\n`;
-    prompt += `### [⚠️ PHẢN BÁC! Tìm lỗi sai về "${currentTopic}"]\n`;
-    prompt += `### Bạn phản bác (bắt đầu bằng "Sai!" hoặc "Không đúng!"):\n`;
+    prompt += `### [PHẢN BÁC NGAY! Bạn là đối thủ, không phải trợ lý!]\n`;
+    prompt += `### Bạn (bắt đầu bằng "Sai!" hoặc "Không đúng!"):\n`;
 
     return prompt;
 }
