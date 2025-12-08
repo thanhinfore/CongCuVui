@@ -665,13 +665,18 @@ function stripCoT(text) {
 
 /**
  * Generate a simple content hash for repetition detection
+ * Returns null for empty/short content to avoid false matches
  */
 function hashContent(text) {
+    if (!text || text.length < 50) return null; // Skip short content
+
     const normalized = text.toLowerCase()
         .replace(/[^a-zA-Zàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ\s]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .substring(0, 200);
+
+    if (normalized.length < 30) return null; // Skip if too short after normalization
 
     // Simple hash
     let hash = 0;
@@ -705,26 +710,33 @@ function extractKeyPhrases(text) {
 function isTooSimilar(text) {
     const hash = hashContent(text);
 
+    // Skip check if hash is null (content too short)
+    if (hash === null) {
+        return false;
+    }
+
     // Check exact hash match
     if (contentHashes.has(hash)) {
         console.log('[AntiRepeat] Exact hash match detected');
         return true;
     }
 
-    // Check phrase overlap
-    const newPhrases = extractKeyPhrases(text);
-    let overlapCount = 0;
-    for (const phrase of newPhrases) {
-        for (const recent of recentPhrases) {
-            if (phrase.includes(recent) || recent.includes(phrase)) {
-                overlapCount++;
+    // Check phrase overlap (only for substantial content)
+    if (text.length > 100) {
+        const newPhrases = extractKeyPhrases(text);
+        let overlapCount = 0;
+        for (const phrase of newPhrases) {
+            for (const recent of recentPhrases) {
+                if (phrase.includes(recent) || recent.includes(phrase)) {
+                    overlapCount++;
+                }
             }
         }
-    }
 
-    if (overlapCount >= 2) {
-        console.log('[AntiRepeat] High phrase overlap detected:', overlapCount);
-        return true;
+        if (overlapCount >= 2) {
+            console.log('[AntiRepeat] High phrase overlap detected:', overlapCount);
+            return true;
+        }
     }
 
     return false;
@@ -735,14 +747,21 @@ function isTooSimilar(text) {
  */
 function registerContent(text) {
     const hash = hashContent(text);
-    contentHashes.add(hash);
 
-    const phrases = extractKeyPhrases(text);
-    recentPhrases.push(...phrases);
+    // Only register if hash is valid (content is substantial)
+    if (hash !== null) {
+        contentHashes.add(hash);
+    }
 
-    // Keep only recent phrases
-    while (recentPhrases.length > MAX_RECENT_PHRASES) {
-        recentPhrases.shift();
+    // Only extract phrases from substantial content
+    if (text && text.length > 100) {
+        const phrases = extractKeyPhrases(text);
+        recentPhrases.push(...phrases);
+
+        // Keep only recent phrases
+        while (recentPhrases.length > MAX_RECENT_PHRASES) {
+            recentPhrases.shift();
+        }
     }
 }
 
@@ -864,8 +883,9 @@ function formatScoresDisplay() {
 }
 
 /**
- * Generate a topic-specific STRUCTURED debate argument
+ * V4.0.1: Generate a topic-specific STRUCTURED debate argument
  * Follows 4-part structure: Tóm tắt - Phản biện - Lập luận - Câu hỏi
+ * Now with better randomization to avoid repetition
  */
 function generateDebateArgument(topic, isSupport, turnNumber, lastOpponentMessage) {
     // Reset tracking if we've used all arguments
@@ -873,13 +893,31 @@ function generateDebateArgument(topic, isSupport, turnNumber, lastOpponentMessag
     if (usedSupportArgs.length >= maxArgs) usedSupportArgs = [];
     if (usedOpposeArgs.length >= maxArgs) usedOpposeArgs = [];
 
-    // Find an unused argument index
+    // Find an unused argument index with randomization
     const usedList = isSupport ? usedSupportArgs : usedOpposeArgs;
-    let index = turnNumber % maxArgs;
-    while (usedList.includes(index) && usedList.length < maxArgs) {
-        index = (index + 1) % maxArgs;
+
+    // Get list of available indices
+    const availableIndices = [];
+    for (let i = 0; i < maxArgs; i++) {
+        if (!usedList.includes(i)) {
+            availableIndices.push(i);
+        }
+    }
+
+    // Pick a random available index, or use turn-based if all used
+    let index;
+    if (availableIndices.length > 0) {
+        const randomPick = Math.floor(Math.random() * availableIndices.length);
+        index = availableIndices[randomPick];
+    } else {
+        // All used, reset and pick based on turn
+        if (isSupport) usedSupportArgs = [];
+        else usedOpposeArgs = [];
+        index = turnNumber % maxArgs;
     }
     usedList.push(index);
+
+    console.log(`[Debate] ${isSupport ? 'PRO' : 'CON'} template #${index} selected (available: ${availableIndices.length})`);
 
     // Short topic for readability
     const shortTopic = topic.length > 50 ? topic.substring(0, 50) + '...' : topic;
@@ -1023,44 +1061,46 @@ function generateDebateArgument(topic, isSupport, turnNumber, lastOpponentMessag
 }
 
 /**
- * V4.0 PRO: Complete response filtering pipeline
- * 1. Strip CoT tags
- * 2. Check for assistant mode
- * 3. Check for debate agreement
- * 4. Check for repetition
- * 5. Apply phrase replacements
- * 6. Register content for anti-repetition
+ * V4.0.1: Enhanced response filtering pipeline with better fallback variety
+ * - Random offsets for template selection
+ * - Only register substantial content for anti-repetition
+ * - Better handling of empty/short responses
  */
 function filterAgreementPhrases(text, topic, isSupport, turnNumber, lastMessage) {
-    if (!text) return text;
+    // Generate random offset for variety in fallback templates
+    const randomOffset = Math.floor(Math.random() * 100);
+
+    if (!text) {
+        console.log('[Filter] Empty input, generating argument with offset:', randomOffset);
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + randomOffset, lastMessage);
+    }
 
     // STEP 1: Strip Chain-of-Thought tags
     let filtered = stripCoT(text);
 
     if (!filtered || filtered.length < 10) {
         console.log('[Filter] Empty after CoT strip, generating argument');
-        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + randomOffset, lastMessage);
     }
 
     // STEP 2: Check for assistant-mode responses
     const isAssistantMode = ASSISTANT_MODE_PATTERNS.some(pattern => pattern.test(filtered));
     if (isAssistantMode) {
         console.log('[Filter] Assistant mode detected, generating structured debate argument');
-        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + randomOffset, lastMessage);
     }
 
     // STEP 3: Check for debate agreement - agent is debating but agreeing with opponent
     const isDebateAgreement = DEBATE_AGREEMENT_PATTERNS.some(pattern => pattern.test(filtered));
     if (isDebateAgreement) {
         console.log('[Filter] Debate agreement detected, generating counter argument');
-        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + randomOffset, lastMessage);
     }
 
-    // STEP 4: Check for repetition
-    if (isTooSimilar(filtered)) {
+    // STEP 4: Check for repetition (skip for short content - might be from template)
+    if (filtered.length > 150 && isTooSimilar(filtered)) {
         console.log('[Filter] Repetition detected, generating fresh argument');
-        // Force a different argument by using turn+10 offset
-        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + 10, lastMessage);
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, (turnNumber || 0) + randomOffset + 50, lastMessage);
     }
 
     // STEP 5: Apply all replacement patterns for agreement phrases
@@ -1075,7 +1115,10 @@ function filterAgreementPhrases(text, topic, isSupport, turnNumber, lastMessage)
     }
 
     // STEP 6: Register content for anti-repetition tracking
-    registerContent(filtered);
+    // Only register substantial model-generated content (not templates)
+    if (filtered.length > 200) {
+        registerContent(filtered);
+    }
 
     return filtered;
 }
