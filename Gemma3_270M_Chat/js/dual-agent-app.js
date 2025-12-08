@@ -1,13 +1,13 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
- * Version: 3.0.0 - Premium UI/UX with enhanced message handling
+ * Version: 3.1.0 - Chat-Focused UI with Configuration Modal
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.1.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -50,27 +50,38 @@ const elements = {
     agentAPrompt: null,
     agentAMessages: null,
     agentAStatus: null,
+    agentANameDisplay: null,
 
     // Agent B
     agentBName: null,
     agentBPrompt: null,
     agentBMessages: null,
     agentBStatus: null,
+    agentBNameDisplay: null,
 
     // Direction arrow
     conversationDirection: null,
 
     // Model Source
     modelSourceRadios: null,
-    apiConfig: null,
+    apiConfigSection: null,
     apiUrl: null,
     testApiBtn: null,
     apiStatus: null,
 
-    // Settings
-    settingsBtn: null,
-    settingsPanel: null,
-    closeSettingsBtn: null,
+    // Configuration Modal
+    configBtn: null,
+    configModal: null,
+    closeConfigBtn: null,
+    applyConfigBtn: null,
+    configTabs: null,
+    configPanes: null,
+
+    // Header Topic Display
+    topicDisplay: null,
+    topicText: null,
+
+    // Overlay & Theme
     overlay: null,
     temperature: null,
     temperatureValue: null,
@@ -125,24 +136,36 @@ function initElements() {
     elements.agentAPrompt = document.getElementById('agentAPrompt');
     elements.agentAMessages = document.getElementById('agentAChatMessages');
     elements.agentAStatus = document.getElementById('agentAStatus');
+    elements.agentANameDisplay = document.getElementById('agentANameDisplay');
 
     elements.agentBName = document.getElementById('agentBName');
     elements.agentBPrompt = document.getElementById('agentBPrompt');
     elements.agentBMessages = document.getElementById('agentBChatMessages');
     elements.agentBStatus = document.getElementById('agentBStatus');
+    elements.agentBNameDisplay = document.getElementById('agentBNameDisplay');
 
     elements.conversationDirection = document.getElementById('conversationDirection');
 
     // Model source elements
     elements.modelSourceRadios = document.querySelectorAll('input[name="modelSource"]');
-    elements.apiConfig = document.getElementById('apiConfig');
+    elements.apiConfigSection = document.getElementById('apiConfigSection');
     elements.apiUrl = document.getElementById('apiUrl');
     elements.testApiBtn = document.getElementById('testApiBtn');
     elements.apiStatus = document.getElementById('apiStatus');
 
-    elements.settingsBtn = document.getElementById('settingsBtn');
-    elements.settingsPanel = document.getElementById('settingsPanel');
-    elements.closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    // Configuration Modal elements
+    elements.configBtn = document.getElementById('configBtn');
+    elements.configModal = document.getElementById('configModal');
+    elements.closeConfigBtn = document.getElementById('closeConfigBtn');
+    elements.applyConfigBtn = document.getElementById('applyConfigBtn');
+    elements.configTabs = document.querySelectorAll('.config-tab');
+    elements.configPanes = document.querySelectorAll('.tab-pane');
+
+    // Header Topic Display
+    elements.topicDisplay = document.getElementById('topicDisplay');
+    elements.topicText = document.getElementById('topicText');
+
+    // Settings and theme
     elements.overlay = document.getElementById('overlay');
     elements.temperature = document.getElementById('temperature');
     elements.temperatureValue = document.getElementById('temperatureValue');
@@ -177,14 +200,31 @@ function setupEventListeners() {
     // Test API button
     elements.testApiBtn.addEventListener('click', testApiConnection);
 
-    // Settings panel
-    elements.settingsBtn.addEventListener('click', () => {
-        elements.settingsPanel.classList.add('active');
-        elements.overlay.classList.add('active');
+    // Configuration Modal events
+    elements.configBtn.addEventListener('click', () => openConfigModal());
+    elements.closeConfigBtn.addEventListener('click', closeConfigModal);
+    elements.applyConfigBtn.addEventListener('click', applyConfigAndClose);
+
+    // Topic display click - open modal on Topic tab
+    elements.topicDisplay.addEventListener('click', () => openConfigModal('topic'));
+
+    // Tab switching
+    elements.configTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            switchConfigTab(tabName);
+        });
     });
 
-    elements.closeSettingsBtn.addEventListener('click', closeSettings);
-    elements.overlay.addEventListener('click', closeSettings);
+    // Agent name input sync - update display when name changes
+    elements.agentAName.addEventListener('input', syncAgentNameDisplays);
+    elements.agentBName.addEventListener('input', syncAgentNameDisplays);
+
+    // Topic input sync - update header display when topic changes
+    elements.discussionTopic.addEventListener('input', syncTopicDisplay);
+
+    // Overlay click closes modal
+    elements.overlay.addEventListener('click', closeConfigModal);
 
     // Settings sliders
     elements.temperature.addEventListener('input', (e) => {
@@ -201,14 +241,120 @@ function setupEventListeners() {
 
     // Dark mode toggle
     elements.darkModeToggle.addEventListener('click', toggleDarkMode);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+
+    // Initialize displays
+    syncTopicDisplay();
+    syncAgentNameDisplays();
 }
 
 /**
- * Close settings panel
+ * Open configuration modal
+ * @param {string} tabName - Optional tab to open (topic, agents, model, settings)
  */
-function closeSettings() {
-    elements.settingsPanel.classList.remove('active');
+function openConfigModal(tabName = 'topic') {
+    elements.configModal.classList.add('active');
+    elements.overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Switch to specified tab
+    switchConfigTab(tabName);
+}
+
+/**
+ * Close configuration modal
+ */
+function closeConfigModal() {
+    elements.configModal.classList.remove('active');
     elements.overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+/**
+ * Apply configuration and close modal
+ */
+function applyConfigAndClose() {
+    // Sync all displays
+    syncTopicDisplay();
+    syncAgentNameDisplays();
+
+    // Close modal
+    closeConfigModal();
+}
+
+/**
+ * Switch between config tabs
+ * @param {string} tabName - Tab to switch to
+ */
+function switchConfigTab(tabName) {
+    // Update tab buttons
+    elements.configTabs.forEach(tab => {
+        if (tab.getAttribute('data-tab') === tabName) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    // Update tab panes
+    elements.configPanes.forEach(pane => {
+        const paneId = pane.id.replace('Pane', '').toLowerCase();
+        if (paneId === tabName) {
+            pane.classList.add('active');
+        } else {
+            pane.classList.remove('active');
+        }
+    });
+}
+
+/**
+ * Sync topic display in header with textarea content
+ */
+function syncTopicDisplay() {
+    const topic = elements.discussionTopic.value.trim();
+    if (topic) {
+        // Truncate if too long for display
+        const maxLength = 60;
+        const displayText = topic.length > maxLength
+            ? topic.substring(0, maxLength) + '...'
+            : topic;
+        elements.topicText.textContent = displayText;
+    } else {
+        elements.topicText.textContent = 'Nhấp để thêm chủ đề...';
+    }
+}
+
+/**
+ * Sync agent name displays with input values
+ */
+function syncAgentNameDisplays() {
+    elements.agentANameDisplay.textContent = elements.agentAName.value || 'Agent A';
+    elements.agentBNameDisplay.textContent = elements.agentBName.value || 'Agent B';
+}
+
+/**
+ * Handle keyboard shortcuts
+ * @param {KeyboardEvent} e
+ */
+function handleKeyboardShortcuts(e) {
+    // Escape to close modal
+    if (e.key === 'Escape') {
+        if (elements.configModal.classList.contains('active')) {
+            closeConfigModal();
+        }
+    }
+
+    // Ctrl/Cmd + , to open config
+    if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        if (elements.configModal.classList.contains('active')) {
+            closeConfigModal();
+        } else {
+            openConfigModal();
+        }
+    }
 }
 
 /**
@@ -235,11 +381,11 @@ function handleModelSourceChange(e) {
     modelSource = e.target.value;
 
     if (modelSource === 'lmstudio') {
-        elements.apiConfig.style.display = 'flex';
+        elements.apiConfigSection.style.display = 'block';
         // Test API connection automatically
         testApiConnection();
     } else {
-        elements.apiConfig.style.display = 'none';
+        elements.apiConfigSection.style.display = 'none';
         // Re-enable start button if local model is ready
         updateStartButtonState();
     }
