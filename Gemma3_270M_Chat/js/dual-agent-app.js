@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.7.0';
+const APP_VERSION = '3.8.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -589,48 +589,209 @@ const ASSISTANT_MODE_PATTERNS = [
 ];
 
 /**
- * Generate a topic-specific debate argument
- * Used when model returns assistant-mode response
+ * Patterns that indicate AGREEMENT in debate context - must be replaced
+ * These are different from assistant-mode - the model IS debating but agreeing
  */
-function generateDebateArgument(topic, isSupport, turnNumber) {
-    // Different argument templates based on turn number for variety
+const DEBATE_AGREEMENT_PATTERNS = [
+    /tôi (hoàn toàn |)đồng ý (với bạn|với quan điểm|rằng)/i,
+    /tôi (hoàn toàn |)đồng tình/i,
+    /bạn (hoàn toàn |)đúng/i,
+    /bạn đã đúng/i,
+    /lập luận của bạn.*đúng/i,
+    /phản bác.*chính xác/i,
+    /tôi nhất trí/i,
+    /tôi công nhận/i,
+    /bạn nói rất đúng/i,
+    /quan điểm.*hợp lý/i,
+    /tôi thừa nhận/i
+];
+
+/**
+ * Track used argument indices to avoid repetition
+ */
+let usedSupportArgs = [];
+let usedOpposeArgs = [];
+
+/**
+ * Generate a topic-specific STRUCTURED debate argument
+ * Follows 4-part structure: Tóm tắt - Phản biện - Lập luận - Câu hỏi
+ */
+function generateDebateArgument(topic, isSupport, turnNumber, lastOpponentMessage) {
+    // Reset tracking if we've used all arguments
+    const maxArgs = 8;
+    if (usedSupportArgs.length >= maxArgs) usedSupportArgs = [];
+    if (usedOpposeArgs.length >= maxArgs) usedOpposeArgs = [];
+
+    // Find an unused argument index
+    const usedList = isSupport ? usedSupportArgs : usedOpposeArgs;
+    let index = turnNumber % maxArgs;
+    while (usedList.includes(index) && usedList.length < maxArgs) {
+        index = (index + 1) % maxArgs;
+    }
+    usedList.push(index);
+
+    // Short topic for readability
+    const shortTopic = topic.length > 50 ? topic.substring(0, 50) + '...' : topic;
+
+    // SUPPORT arguments (Agent A) - structured format
     const supportArgs = [
-        `Sai hoàn toàn! "${topic}" là điều cần thiết vì nó mang lại lợi ích rõ ràng cho xã hội. Những người phản đối không hiểu được tiềm năng thực sự của vấn đề này. Bạn có dẫn chứng cụ thể nào để phản bác không?`,
-        `Không thể chấp nhận lập luận đó! Thực tế cho thấy "${topic}" đã và đang tạo ra những thay đổi tích cực. Phản đối mà không có bằng chứng chỉ là bảo thủ. Hãy đưa ra số liệu cụ thể!`,
-        `Bạn đang nhầm lẫn nghiêm trọng! Lịch sử chứng minh rằng những tiến bộ như "${topic}" luôn bị phản đối ban đầu nhưng sau đó trở thành tiêu chuẩn. Bạn muốn đứng về phía nào của lịch sử?`,
-        `Lập luận của bạn thiếu logic! "${topic}" không chỉ là xu hướng mà là giải pháp cho nhiều vấn đề hiện tại. Hãy chỉ ra cụ thể điểm nào sai thay vì phản đối chung chung!`,
-        `Hoàn toàn ngược lại! Các chuyên gia hàng đầu đều ủng hộ "${topic}". Phản đối mà không có chuyên môn chỉ là định kiến. Bạn dựa vào nguồn nào để phản bác?`
+        `**Tóm tắt:** Đối phương cho rằng "${shortTopic}" có nhiều rủi ro và cần giám sát chặt chẽ.
+
+**Phản biện:** Đó là tư duy bảo thủ! Mọi tiến bộ công nghệ ban đầu đều bị phản đối vì "rủi ro", nhưng lịch sử cho thấy những lo ngại này thường bị thổi phồng.
+
+**Lập luận của tôi:** "${shortTopic}" mang lại hiệu quả cao hơn đáng kể so với phương pháp truyền thống. Ví dụ cụ thể: tự động hóa đã tăng năng suất 40% trong nhiều ngành công nghiệp. Giám sát quá mức sẽ kìm hãm sáng tạo và làm chậm tiến bộ.
+
+**Câu hỏi:** Bạn có thể chỉ ra một trường hợp cụ thể nào mà việc hạn chế tiến bộ thực sự mang lại lợi ích lâu dài không?`,
+
+        `**Tóm tắt:** Bạn lo ngại về tác động tiêu cực và thiếu kiểm soát.
+
+**Phản biện:** Lo ngại đó thiếu cơ sở! Bạn đang đánh đồng "ít giám sát" với "không kiểm soát". Thực tế, các hệ thống hiện đại có cơ chế tự điều chỉnh rất hiệu quả.
+
+**Lập luận của tôi:** Lợi ích của "${shortTopic}" vượt xa rủi ro: tiết kiệm thời gian, giảm chi phí, tăng độ chính xác. Nhiều quốc gia tiên tiến đã áp dụng thành công với kết quả tích cực. Phản đối chỉ vì sợ thay đổi là thiếu tầm nhìn.
+
+**Câu hỏi:** Nếu bạn phản đối tiến bộ vì "rủi ro tiềm ẩn", vậy bạn đề xuất giải pháp thay thế nào hiệu quả hơn?`,
+
+        `**Tóm tắt:** Đối phương nhấn mạnh cần có sự giám sát của con người trong mọi quyết định.
+
+**Phản biện:** Đó là lập luận ngây thơ! Con người cũng mắc sai lầm - thậm chí nhiều hơn máy móc trong các tác vụ lặp đi lặp lại. Sự giám sát 100% là không khả thi và không cần thiết.
+
+**Lập luận của tôi:** "${shortTopic}" cho phép tối ưu hóa quy trình, loại bỏ thiên kiến chủ quan, và đưa ra quyết định dựa trên dữ liệu khách quan. Các nghiên cứu cho thấy hệ thống tự động có tỷ lệ lỗi thấp hơn 30% so với quy trình thủ công.
+
+**Câu hỏi:** Bạn có bằng chứng nào cho thấy giám sát 100% thực sự hiệu quả hơn so với hệ thống tự động có kiểm soát không?`,
+
+        `**Tóm tắt:** Bạn cho rằng cần thận trọng và xem xét kỹ trước khi áp dụng.
+
+**Phản biện:** "Thận trọng" không có nghĩa là đứng yên! Trong khi bạn "xem xét kỹ", đối thủ cạnh tranh đã tiến xa. Sự chần chừ có cái giá của nó.
+
+**Lập luận của tôi:** "${shortTopic}" không phải là lựa chọn mà là xu hướng tất yếu. Những ai không thích ứng sẽ bị tụt lại. Thay vì phản đối, chúng ta nên tập trung vào việc triển khai có trách nhiệm.
+
+**Câu hỏi:** Bạn có sẵn sàng chấp nhận việc bị tụt hậu so với thế giới chỉ vì muốn "thận trọng" không?`,
+
+        `**Tóm tắt:** Đối phương lo ngại về đạo đức và trách nhiệm giải trình.
+
+**Phản biện:** Đây là lo ngại hợp lý nhưng không phải lý do để phản đối hoàn toàn! Chúng ta có thể xây dựng khung đạo đức song song với việc triển khai.
+
+**Lập luận của tôi:** "${shortTopic}" có thể được thiết kế với các nguyên tắc đạo đức ngay từ đầu (ethics by design). Việc chờ đợi "khung đạo đức hoàn hảo" trước khi hành động là không thực tế - đạo đức phát triển cùng công nghệ.
+
+**Câu hỏi:** Theo bạn, bao lâu nữa chúng ta mới có "khung đạo đức hoàn hảo" để bắt đầu? 10 năm? 50 năm? Hay mãi mãi?`,
+
+        `**Tóm tắt:** Bạn đề cập đến các trường hợp thất bại và hậu quả không mong muốn.
+
+**Phản biện:** Những thất bại đó là bài học, không phải lý do từ bỏ! Mọi công nghệ mới đều có giai đoạn "growing pains". Internet ban đầu cũng đầy lỗi và nguy hiểm.
+
+**Lập luận của tôi:** Tỷ lệ thành công của "${shortTopic}" cao hơn nhiều so với tỷ lệ thất bại. Tập trung vào thất bại mà bỏ qua hàng triệu thành công là thiên kiến xác nhận (confirmation bias).
+
+**Câu hỏi:** Bạn có thể so sánh tỷ lệ thất bại với tỷ lệ thành công một cách khách quan không, thay vì chỉ cherry-pick các trường hợp tiêu cực?`,
+
+        `**Tóm tắt:** Đối phương cho rằng cần bảo vệ quyền lợi của những người bị ảnh hưởng.
+
+**Phản biện:** Tôi đồng ý cần bảo vệ mọi người, nhưng cách bảo vệ tốt nhất là TIẾN BỘ có kiểm soát, không phải ĐỨNG YÊN! Sự trì trệ cũng gây hại cho nhiều người.
+
+**Lập luận của tôi:** "${shortTopic}" sẽ tạo ra nhiều cơ hội mới hơn số việc làm bị mất. Thay vì chống lại tiến bộ, chúng ta nên đầu tư vào đào tạo lại và chuyển đổi nghề nghiệp.
+
+**Câu hỏi:** Bạn có giải pháp nào tốt hơn để bảo vệ mọi người mà không cần kìm hãm tiến bộ không?`,
+
+        `**Tóm tắt:** Bạn nhấn mạnh sự phức tạp và cần nghiên cứu thêm.
+
+**Phản biện:** "Nghiên cứu thêm" thường là cái cớ để trì hoãn! Chúng ta đã có đủ dữ liệu để hành động. Chờ đợi sự hoàn hảo là kẻ thù của tiến bộ.
+
+**Lập luận của tôi:** "${shortTopic}" đã được nghiên cứu kỹ lưỡng và có đủ bằng chứng về lợi ích. Tiếp tục trì hoãn chỉ làm mất cơ hội và lãng phí nguồn lực.
+
+**Câu hỏi:** Bao nhiêu nghiên cứu là "đủ" theo tiêu chuẩn của bạn? Bạn có thể định lượng được không?`
     ];
 
+    // OPPOSE arguments (Agent B) - structured format
     const opposeArgs = [
-        `Sai lầm nguy hiểm! "${topic}" có vẻ hấp dẫn nhưng ẩn chứa nhiều rủi ro mà người ủng hộ cố tình bỏ qua. Bạn có tính đến hậu quả lâu dài không?`,
-        `Không đồng ý! Những người ủng hộ "${topic}" đang bị mù quáng bởi lợi ích ngắn hạn. Thực tế cho thấy nhiều trường hợp thất bại thảm hại. Bạn giải thích thế nào về những thất bại đó?`,
-        `Lập luận đó quá ngây thơ! "${topic}" nghe có vẻ tốt trên lý thuyết nhưng thực tế hoàn toàn khác. Bạn đã bao giờ nghĩ đến những người bị ảnh hưởng tiêu cực chưa?`,
-        `Hoàn toàn sai! Ủng hộ "${topic}" mà không xem xét mặt trái là vô trách nhiệm. Có bao nhiêu ví dụ thất bại mà bạn đang cố tình phớt lờ?`,
-        `Bạn đang tự lừa dối mình! "${topic}" đã gây ra nhiều vấn đề ở những nơi áp dụng. Thay vì mù quáng ủng hộ, hãy nhìn vào thực tế!`
+        `**Tóm tắt:** Đối phương cho rằng "${shortTopic}" mang lại hiệu quả và tiến bộ.
+
+**Phản biện:** Hiệu quả không phải giá trị duy nhất! Bạn đang bỏ qua chi phí ẩn: mất việc làm, bất bình đẳng gia tăng, rủi ro an ninh. "Tiến bộ" mà gây hại cho nhiều người thì không phải tiến bộ thực sự.
+
+**Lập luận của tôi:** Nhiều hệ thống tự động đã thể hiện thiên kiến nghiêm trọng - từ thuật toán tuyển dụng phân biệt giới tính đến hệ thống nhận diện khuôn mặt sai lệch với người da màu. Không có giám sát, những thiên kiến này sẽ lan rộng.
+
+**Câu hỏi:** Bạn sẽ giải thích thế nào với những người mất việc làm vì "${shortTopic}"? "Xin lỗi, đây là tiến bộ"?`,
+
+        `**Tóm tắt:** Bạn cho rằng lo ngại về rủi ro là "bảo thủ" và thiếu tầm nhìn.
+
+**Phản biện:** Sai! Đánh giá rủi ro cẩn thận không phải bảo thủ mà là THÔNG MINH. Những người "tầm nhìn xa" mà bỏ qua hậu quả đã gây ra nhiều thảm họa trong lịch sử.
+
+**Lập luận của tôi:** Hãy nhìn vào khủng hoảng tài chính 2008 - các hệ thống tự động giao dịch đã khuếch đại sự sụp đổ. Hay tai nạn xe tự lái gây chết người. "${shortTopic}" cần được kiểm soát chặt chẽ trước khi triển khai rộng.
+
+**Câu hỏi:** Khi xảy ra sự cố nghiêm trọng, AI chịu trách nhiệm hay CON NGƯỜI phải chịu? Bạn có thể trả lời rõ ràng không?`,
+
+        `**Tóm tắt:** Đối phương cho rằng con người cũng mắc sai lầm nên máy móc không tệ hơn.
+
+**Phản biện:** Ngụy biện! Khi CON NGƯỜI sai, chúng ta có thể hỏi lý do, đánh giá động cơ, và xử lý trách nhiệm. Khi AI sai, đó là "hộp đen" - không ai hiểu tại sao, không ai chịu trách nhiệm.
+
+**Lập luận của tôi:** "${shortTopic}" thiếu khả năng giải thích (explainability). Một hệ thống mà chính người tạo ra nó không hiểu tại sao nó đưa ra quyết định X thì làm sao chúng ta tin tưởng được?
+
+**Câu hỏi:** Nếu hệ thống AI từ chối cho bạn vay tiền hoặc chữa bệnh, và không ai có thể giải thích lý do - bạn có chấp nhận không?`,
+
+        `**Tóm tắt:** Bạn cho rằng phản đối là "chần chừ" và sẽ bị tụt hậu.
+
+**Phản biện:** Đây là ngụy biện "chạy theo đám đông"! "Mọi người đều làm" không có nghĩa là đúng. Nhiều quốc gia đã phải trả giá đắt vì áp dụng vội vàng mà không đánh giá kỹ.
+
+**Lập luận của tôi:** Tốc độ không phải tất cả - HƯỚNG ĐI mới quan trọng. "${shortTopic}" cần được triển khai có lộ trình, với cơ chế giám sát và khả năng dừng lại khi cần thiết.
+
+**Câu hỏi:** Bạn có sẵn sàng chịu trách nhiệm cá nhân nếu việc triển khai vội vàng gây ra thảm họa không?`,
+
+        `**Tóm tắt:** Đối phương đề xuất "ethics by design" - xây dựng đạo đức song song với triển khai.
+
+**Phản biện:** Đó là lý thuyết đẹp nhưng THỰC TẾ khác! Các công ty ưu tiên LỢI NHUẬN, không phải đạo đức. Facebook, Google đều có "ethics team" nhưng vẫn lạm dụng dữ liệu người dùng.
+
+**Lập luận của tôi:** Không có sự giám sát BÊN NGOÀI mạnh mẽ, "${shortTopic}" sẽ bị lạm dụng. Tự điều chỉnh (self-regulation) đã thất bại trong mọi ngành công nghiệp - từ thuốc lá đến tài chính.
+
+**Câu hỏi:** Bạn có thể nêu MỘT ví dụ về ngành công nghiệp tự điều chỉnh thành công mà không cần luật pháp can thiệp không?`,
+
+        `**Tóm tắt:** Bạn cho rằng thất bại chỉ là "bài học" và không nên từ bỏ.
+
+**Phản biện:** Những "bài học" đó đã gây thiệt hại THỰC SỰ cho con người thật! Nạn nhân của thuật toán sai lệch không thể "học" lại cuộc sống của họ.
+
+**Lập luận của tôi:** "${shortTopic}" cần được thử nghiệm trong môi trường kiểm soát trước khi triển khai rộng rãi. Tiêu chuẩn "move fast and break things" của Silicon Valley đã gây ra quá nhiều hậu quả.
+
+**Câu hỏi:** Bạn có sẵn sàng để AI quyết định chữa bệnh cho người thân của bạn mà không có bác sĩ giám sát không?`,
+
+        `**Tóm tắt:** Đối phương cho rằng tiến bộ sẽ tạo ra nhiều cơ hội mới hơn việc làm bị mất.
+
+**Phản biện:** Đó là SỰ LẠC QUAN VÔ CĂN CỨ! Các "cơ hội mới" đòi hỏi kỹ năng mà người lao động hiện tại không có. Khoảng cách kỹ năng (skill gap) là vấn đề thực sự.
+
+**Lập luận của tôi:** "${shortTopic}" sẽ làm gia tăng BẤT BÌNH ĐẲNG - những người có kỹ năng cao hưởng lợi, trong khi phần lớn lực lượng lao động bị bỏ lại phía sau.
+
+**Câu hỏi:** Ai sẽ chi trả cho việc đào tạo lại hàng triệu lao động? Công ty hay người dân?`,
+
+        `**Tóm tắt:** Bạn hỏi bao nhiêu nghiên cứu là "đủ" và cho rằng chúng ta đã có đủ dữ liệu.
+
+**Phản biện:** Dữ liệu về lợi ích NGẮN HẠN không đủ! Chúng ta chưa có dữ liệu về tác động DÀI HẠN lên xã hội, tâm lý, và cấu trúc việc làm.
+
+**Lập luận của tôi:** "${shortTopic}" tương tự như biến đổi khí hậu - tác động tích lũy theo thời gian và khó đảo ngược khi đã xảy ra. Cần áp dụng NGUYÊN TẮC PHÒNG NGỪA (precautionary principle).
+
+**Câu hỏi:** Bạn có thể dự đoán chính xác xã hội sẽ như thế nào sau 20 năm nếu triển khai "${shortTopic}" ồ ạt không?`
     ];
 
     const args = isSupport ? supportArgs : opposeArgs;
-    const index = turnNumber % args.length;
-    return args[index];
+    return args[index % args.length];
 }
 
 /**
  * Filter and replace agreement phrases in response
- * Also detects "assistant mode" and generates debate arguments
+ * Also detects "assistant mode" and "debate agreement mode"
  */
-function filterAgreementPhrases(text, topic, isSupport, turnNumber) {
+function filterAgreementPhrases(text, topic, isSupport, turnNumber, lastMessage) {
     if (!text) return text;
 
     let filtered = text;
 
-    // Check for assistant-mode responses
+    // FIRST: Check for assistant-mode responses
     const isAssistantMode = ASSISTANT_MODE_PATTERNS.some(pattern => pattern.test(filtered));
-
     if (isAssistantMode) {
-        // Model is in assistant mode - generate a real debate argument
-        console.log('[Filter] Assistant mode detected, generating debate argument');
-        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0);
+        console.log('[Filter] Assistant mode detected, generating structured debate argument');
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
+    }
+
+    // SECOND: Check for debate agreement - agent is debating but agreeing with opponent
+    const isDebateAgreement = DEBATE_AGREEMENT_PATTERNS.some(pattern => pattern.test(filtered));
+    if (isDebateAgreement) {
+        console.log('[Filter] Debate agreement detected, generating counter argument');
+        return generateDebateArgument(topic || 'vấn đề này', isSupport !== false, turnNumber || 0, lastMessage);
     }
 
     // Apply all replacement patterns for agreement phrases
