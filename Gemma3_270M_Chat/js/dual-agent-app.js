@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -1079,7 +1079,7 @@ function addMessageToChat(agent, message, type, senderName) {
 
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = `message-bubble ${type}`;
-    bubbleDiv.textContent = message;
+    bubbleDiv.innerHTML = parseMarkdown(message);
 
     const metaDiv = document.createElement('div');
     metaDiv.className = 'message-meta';
@@ -1124,7 +1124,7 @@ function updateTypingIndicator(agent, partialText) {
 
     const bubbleDiv = typingDiv.querySelector('.typing-bubble');
     if (partialText) {
-        bubbleDiv.textContent = partialText;
+        bubbleDiv.innerHTML = parseMarkdown(partialText);
     } else {
         bubbleDiv.innerHTML = `
             <div class="typing-indicator">
@@ -1182,6 +1182,66 @@ function updateDirectionArrow(speaker) {
     } else {
         arrow.className = 'divider-arrow to-left';
     }
+}
+
+/**
+ * Parse markdown to HTML
+ * Supports: **bold**, *italic*, `code`, ~~strikethrough~~, [links](url), line breaks
+ */
+function parseMarkdown(text) {
+    if (!text) return '';
+
+    // Escape HTML to prevent XSS
+    let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Code blocks (```code```)
+    html = html.replace(/```([\s\S]*?)```/g, '<pre class="md-code-block">$1</pre>');
+
+    // Inline code (`code`)
+    html = html.replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
+
+    // Bold (**text** or __text__)
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong class="md-bold">$1</strong>');
+    html = html.replace(/__([^_]+)__/g, '<strong class="md-bold">$1</strong>');
+
+    // Italic (*text* or _text_)
+    html = html.replace(/\*([^*]+)\*/g, '<em class="md-italic">$1</em>');
+    html = html.replace(/_([^_]+)_/g, '<em class="md-italic">$1</em>');
+
+    // Strikethrough (~~text~~)
+    html = html.replace(/~~([^~]+)~~/g, '<del class="md-strike">$1</del>');
+
+    // Headers (# ## ###)
+    html = html.replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>');
+    html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>');
+
+    // Bullet lists (- item or * item)
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li class="md-list-item">$1</li>');
+    html = html.replace(/(<li class="md-list-item">.*<\/li>\n?)+/g, '<ul class="md-list">$&</ul>');
+
+    // Numbered lists (1. item)
+    html = html.replace(/^\d+\. (.+)$/gm, '<li class="md-list-item">$1</li>');
+
+    // Blockquotes (> text)
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>');
+
+    // Horizontal rules (--- or ***)
+    html = html.replace(/^(---|\*\*\*)$/gm, '<hr class="md-hr">');
+
+    // Line breaks (double space + newline or double newline)
+    html = html.replace(/\n\n/g, '</p><p class="md-paragraph">');
+    html = html.replace(/\n/g, '<br>');
+
+    // Wrap in paragraph if not already wrapped
+    if (!html.startsWith('<')) {
+        html = '<p class="md-paragraph">' + html + '</p>';
+    }
+
+    return html;
 }
 
 /**
