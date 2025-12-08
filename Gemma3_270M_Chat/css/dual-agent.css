@@ -2925,3 +2925,290 @@ body::before {
         height: 44px;
     }
 }
+
+/* ============================================
+   AGENT C - SCOREBOARD & JUDGE PANEL v4.1
+   ============================================ */
+
+/* Scoreboard Race Track */
+.scoreboard-race {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-secondary);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.race-track {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    max-width: 600px;
+}
+
+.racer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.racer-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.racer-a .racer-avatar {
+    background: var(--gradient-agent-a);
+    color: white;
+    box-shadow: var(--shadow-neon-a);
+}
+
+.racer-b .racer-avatar {
+    background: var(--gradient-agent-b);
+    color: white;
+    box-shadow: var(--shadow-neon-b);
+}
+
+.racer-score {
+    font-size: 1.5rem;
+    font-weight: 800;
+    min-width: 40px;
+    text-align: center;
+}
+
+.racer-a .racer-score {
+    color: var(--agent-a-primary);
+    text-shadow: 0 0 10px var(--agent-a-glow);
+}
+
+.racer-b .racer-score {
+    color: var(--agent-b-primary);
+    text-shadow: 0 0 10px var(--agent-b-glow);
+}
+
+.race-progress {
+    flex: 1;
+    position: relative;
+}
+
+.progress-bar-race {
+    display: flex;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    position: relative;
+}
+
+.progress-a {
+    background: var(--gradient-agent-a);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.progress-b {
+    background: var(--gradient-agent-b);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.race-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 1;
+}
+
+.judge-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.judge-icon {
+    font-size: 1.2rem;
+}
+
+.judge-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* Judge Verdict Panel */
+.judge-verdict-panel {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 16px;
+    padding: 1rem;
+    width: 90%;
+    max-width: 600px;
+    z-index: 100;
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.2), var(--shadow-elevated);
+    display: none;
+}
+
+.judge-verdict-panel.active {
+    display: block;
+    animation: judgeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes judgeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.judge-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.judge-header .judge-icon {
+    font-size: 1.5rem;
+}
+
+.judge-title {
+    font-weight: 600;
+    color: #10b981;
+}
+
+.judge-content {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.judge-content p {
+    margin: 0;
+}
+
+.judge-waiting {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.judge-scores {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.turn-score {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.turn-score-a {
+    border: 1px solid var(--agent-a-soft);
+}
+
+.turn-score-b {
+    border: 1px solid var(--agent-b-soft);
+}
+
+.turn-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.turn-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.turn-score-a .turn-value {
+    color: var(--agent-a-primary);
+}
+
+.turn-score-b .turn-value {
+    color: var(--agent-b-primary);
+}
+
+/* Score animation */
+@keyframes scorePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+.score-updated {
+    animation: scorePop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Leader highlight */
+.racer.leading .racer-avatar {
+    animation: leaderPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes leaderPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+    50% {
+        box-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .scoreboard-race {
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+
+    .race-track {
+        width: 100%;
+    }
+
+    .judge-badge {
+        order: -1;
+    }
+
+    .judge-verdict-panel {
+        width: 95%;
+        bottom: 70px;
+    }
+}
