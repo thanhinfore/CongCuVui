@@ -1,11 +1,11 @@
 /**
  * Dual Agent Chat Arena Styles
- * Premium UI/UX Design v3.2
- * Modern glassmorphism with smooth animations & enhanced effects
+ * Premium UI/UX Design v3.5
+ * Dopamine Boost Edition - Maximum engagement effects
  */
 
 /* ============================================
-   CSS Custom Properties - Enhanced Theme v3.2
+   CSS Custom Properties - Dopamine Theme v3.5
    ============================================ */
 :root {
     /* Agent Colors - More Vibrant */
@@ -14,11 +14,13 @@
     --agent-a-tertiary: #c084fc;
     --agent-a-glow: rgba(99, 102, 241, 0.5);
     --agent-a-soft: rgba(99, 102, 241, 0.15);
+    --agent-a-intense: rgba(99, 102, 241, 0.8);
     --agent-b-primary: #f59e0b;
     --agent-b-secondary: #d97706;
     --agent-b-tertiary: #fbbf24;
     --agent-b-glow: rgba(245, 158, 11, 0.5);
     --agent-b-soft: rgba(245, 158, 11, 0.15);
+    --agent-b-intense: rgba(239, 68, 68, 0.8);
 
     /* Enhanced Gradients */
     --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
@@ -33,6 +35,8 @@
                      radial-gradient(at 0% 50%, hsla(259, 100%, 77%, 0.2) 0px, transparent 50%),
                      radial-gradient(at 80% 50%, hsla(22, 100%, 65%, 0.2) 0px, transparent 50%),
                      radial-gradient(at 0% 100%, hsla(259, 84%, 68%, 0.25) 0px, transparent 50%);
+    --gradient-fire: linear-gradient(135deg, #ff6b35 0%, #f7931e 25%, #ffcc02 50%, #f7931e 75%, #ff6b35 100%);
+    --gradient-electric: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #ff006e 100%);
 
     /* Enhanced Shadows */
     --shadow-glow-a: 0 0 40px rgba(99, 102, 241, 0.4), 0 0 80px rgba(139, 92, 246, 0.2);
@@ -41,6 +45,8 @@
     --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
     --shadow-neon-a: 0 0 5px var(--agent-a-primary), 0 0 20px var(--agent-a-glow), 0 0 40px var(--agent-a-soft);
     --shadow-neon-b: 0 0 5px var(--agent-b-primary), 0 0 20px var(--agent-b-glow), 0 0 40px var(--agent-b-soft);
+    --shadow-intense-a: 0 0 10px var(--agent-a-primary), 0 0 30px var(--agent-a-glow), 0 0 60px var(--agent-a-intense), 0 0 100px var(--agent-a-soft);
+    --shadow-intense-b: 0 0 10px var(--agent-b-primary), 0 0 30px var(--agent-b-glow), 0 0 60px var(--agent-b-intense), 0 0 100px var(--agent-b-soft);
 
     /* Animation Timings */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -48,6 +54,423 @@
     --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-spring: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-elastic: 800ms cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}
+
+/* ============================================
+   Dopamine Boost Animations
+   ============================================ */
+@keyframes pulseGlow {
+    0%, 100% {
+        filter: brightness(1);
+        transform: scale(1);
+    }
+    50% {
+        filter: brightness(1.2);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes speakingPulse {
+    0%, 100% {
+        box-shadow: var(--shadow-card);
+    }
+    25% {
+        box-shadow: var(--shadow-card), 0 0 30px var(--agent-a-glow);
+    }
+    50% {
+        box-shadow: var(--shadow-card), 0 0 50px var(--agent-a-intense);
+    }
+    75% {
+        box-shadow: var(--shadow-card), 0 0 30px var(--agent-a-glow);
+    }
+}
+
+@keyframes speakingPulseB {
+    0%, 100% {
+        box-shadow: var(--shadow-card);
+    }
+    25% {
+        box-shadow: var(--shadow-card), 0 0 30px var(--agent-b-glow);
+    }
+    50% {
+        box-shadow: var(--shadow-card), 0 0 50px var(--agent-b-intense);
+    }
+    75% {
+        box-shadow: var(--shadow-card), 0 0 30px var(--agent-b-glow);
+    }
+}
+
+@keyframes avatarBounce {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.1) rotate(-5deg); }
+    50% { transform: scale(1.15) rotate(0deg); }
+    75% { transform: scale(1.1) rotate(5deg); }
+}
+
+@keyframes messageSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+    50% {
+        transform: translateY(-5px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes messagePop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    60% {
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+@keyframes turnCounterPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+@keyframes intensityPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+@keyframes borderFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes glowBreathe {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+        border-color: rgba(99, 102, 241, 0.6);
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 10px currentColor; }
+    50% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+}
+
+/* ============================================
+   Speaking Agent States - Dopamine Effects
+   ============================================ */
+.agent-panel.speaking {
+    z-index: 10;
+}
+
+.agent-panel.agent-a.speaking {
+    animation: speakingPulse 1.5s ease-in-out infinite;
+    border-color: var(--agent-a-primary) !important;
+}
+
+.agent-panel.agent-b.speaking {
+    animation: speakingPulseB 1.5s ease-in-out infinite;
+    border-color: var(--agent-b-primary) !important;
+}
+
+.agent-panel.speaking::after {
+    height: 6px !important;
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+}
+
+.agent-panel.agent-a.speaking::after {
+    background: linear-gradient(90deg,
+        var(--agent-a-primary),
+        var(--agent-a-tertiary),
+        var(--agent-a-primary),
+        var(--agent-a-tertiary),
+        var(--agent-a-primary));
+}
+
+.agent-panel.agent-b.speaking::after {
+    background: linear-gradient(90deg,
+        var(--agent-b-primary),
+        var(--agent-b-tertiary),
+        var(--agent-b-primary),
+        var(--agent-b-tertiary),
+        var(--agent-b-primary));
+}
+
+/* Speaking Avatar Animation */
+.agent-panel.speaking .agent-avatar {
+    animation: avatarBounce 0.6s ease-in-out infinite;
+}
+
+.agent-panel.agent-a.speaking .agent-avatar {
+    box-shadow: var(--shadow-intense-a);
+}
+
+.agent-panel.agent-b.speaking .agent-avatar {
+    box-shadow: var(--shadow-intense-b);
+}
+
+/* Speaking Status Indicator */
+.agent-panel.speaking .agent-status {
+    animation: pulseGlow 1s ease-in-out infinite;
+}
+
+.agent-panel.speaking .status-dot {
+    width: 12px !important;
+    height: 12px !important;
+    animation: pulseGlow 0.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Message Entrance Animations
+   ============================================ */
+.chat-message {
+    animation: messageSlideIn 0.4s var(--transition-spring) forwards;
+}
+
+.chat-message:nth-child(odd) {
+    animation-name: messagePop;
+}
+
+.chat-message .message-bubble {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shimmer effect on new messages */
+.chat-message:last-child .message-bubble::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent);
+    animation: shimmer 1s ease-out forwards;
+    pointer-events: none;
+}
+
+/* ============================================
+   Turn Counter - Dopamine Feedback
+   ============================================ */
+.turn-counter-mini {
+    position: relative;
+    font-weight: 700;
+    transition: all var(--transition-bounce);
+}
+
+.turn-counter-mini.updated {
+    animation: turnCounterPop 0.3s var(--transition-elastic);
+    color: var(--agent-a-primary);
+}
+
+.turn-counter-mini.milestone {
+    animation: turnCounterPop 0.5s var(--transition-elastic);
+    color: #fbbf24 !important;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+}
+
+/* ============================================
+   Intensity Meter
+   ============================================ */
+.intensity-meter {
+    position: fixed;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 50;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.intensity-bar {
+    width: 8px;
+    height: 20px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
+}
+
+.intensity-bar.active {
+    animation: intensityPulse 0.5s ease-in-out infinite;
+}
+
+.intensity-bar.level-1.active { background: #22c55e; }
+.intensity-bar.level-2.active { background: #84cc16; }
+.intensity-bar.level-3.active { background: #eab308; }
+.intensity-bar.level-4.active { background: #f97316; }
+.intensity-bar.level-5.active { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+
+/* ============================================
+   Milestone Celebration Overlay
+   ============================================ */
+.milestone-celebration {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.milestone-celebration.active {
+    opacity: 1;
+}
+
+.milestone-badge {
+    padding: 1.5rem 3rem;
+    background: var(--gradient-fire);
+    background-size: 200% 200%;
+    animation: borderFlow 2s linear infinite;
+    border-radius: 20px;
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(0);
+    animation: milestonePop 0.6s var(--transition-elastic) forwards;
+}
+
+@keyframes milestonePop {
+    0% { transform: scale(0) rotate(-10deg); }
+    60% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Confetti Container */
+.confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 199;
+    overflow: hidden;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confettiFall 3s linear forwards;
+}
+
+.confetti:nth-child(odd) { background: var(--agent-a-primary); }
+.confetti:nth-child(even) { background: var(--agent-b-primary); }
+.confetti:nth-child(3n) { background: #22c55e; border-radius: 50%; }
+.confetti:nth-child(4n) { background: #f472b6; transform: rotate(45deg); }
+.confetti:nth-child(5n) { background: #fbbf24; }
+
+/* ============================================
+   Direction Arrow - Battle Style
+   ============================================ */
+.divider-arrow {
+    transition: all 0.3s var(--transition-bounce);
+}
+
+.divider-arrow.to-right {
+    animation: arrowPulseRight 0.8s ease-in-out infinite;
+}
+
+.divider-arrow.to-left {
+    animation: arrowPulseLeft 0.8s ease-in-out infinite;
+}
+
+@keyframes arrowPulseRight {
+    0%, 100% {
+        transform: translateX(0) scale(1);
+        filter: drop-shadow(0 0 5px var(--agent-a-glow));
+    }
+    50% {
+        transform: translateX(5px) scale(1.1);
+        filter: drop-shadow(0 0 15px var(--agent-a-intense));
+    }
+}
+
+@keyframes arrowPulseLeft {
+    0%, 100% {
+        transform: translateX(0) scale(1) rotate(180deg);
+        filter: drop-shadow(0 0 5px var(--agent-b-glow));
+    }
+    50% {
+        transform: translateX(-5px) scale(1.1) rotate(180deg);
+        filter: drop-shadow(0 0 15px var(--agent-b-intense));
+    }
+}
+
+/* ============================================
+   Spark Effects on Interaction
+   ============================================ */
+.spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sparkle 0.6s ease-out forwards;
+}
+
+.spark.agent-a { background: var(--agent-a-primary); box-shadow: 0 0 6px var(--agent-a-primary); }
+.spark.agent-b { background: var(--agent-b-primary); box-shadow: 0 0 6px var(--agent-b-primary); }
+
+/* ============================================
+   Battle Mode Header Effects
+   ============================================ */
+.conversation-active .app-header {
+    background: linear-gradient(180deg,
+        rgba(20, 20, 30, 0.98) 0%,
+        rgba(20, 20, 30, 0.9) 100%);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+    animation: glowBreathe 3s ease-in-out infinite;
+}
+
+.conversation-active .topic-display {
+    animation: textGlow 2s ease-in-out infinite;
 }
 
 /* ============================================

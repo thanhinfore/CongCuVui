@@ -7,7 +7,7 @@
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '3.4.0';
+const APP_VERSION = '3.5.0';
 
 console.log(`Dual Agent Chat Arena v${APP_VERSION} loaded`);
 
@@ -92,7 +92,18 @@ const elements = {
     maxTokensValue: null,
     deviceInfo: null,
     modelStatusInfo: null,
-    darkModeToggle: null
+    darkModeToggle: null,
+
+    // Dopamine Boost Elements
+    intensityMeter: null,
+    intensityBars: null,
+    milestoneCelebration: null,
+    milestoneBadge: null,
+    confettiContainer: null,
+
+    // Agent Panels
+    agentAPanel: null,
+    agentBPanel: null
 };
 
 /**
@@ -178,6 +189,17 @@ function initElements() {
     elements.deviceInfo = document.getElementById('deviceInfo');
     elements.modelStatusInfo = document.getElementById('modelStatusInfo');
     elements.darkModeToggle = document.getElementById('darkModeToggle');
+
+    // Dopamine Boost Elements
+    elements.intensityMeter = document.getElementById('intensityMeter');
+    elements.intensityBars = document.querySelectorAll('.intensity-bar');
+    elements.milestoneCelebration = document.getElementById('milestoneCelebration');
+    elements.milestoneBadge = document.getElementById('milestoneBadge');
+    elements.confettiContainer = document.getElementById('confettiContainer');
+
+    // Agent Panels for speaking effects
+    elements.agentAPanel = document.querySelector('.agent-panel.agent-a');
+    elements.agentBPanel = document.querySelector('.agent-panel.agent-b');
 }
 
 /**
@@ -592,6 +614,9 @@ async function startConversation() {
     elements.startBtn.style.display = 'none';
     elements.stopBtn.style.display = 'flex';
 
+    // Activate dopamine boost state
+    setConversationActiveState(true);
+
     // Clear previous messages if starting fresh
     if (agentAHistory.length === 0 && agentBHistory.length === 0) {
         clearChatUI();
@@ -618,6 +643,10 @@ async function runConversationLoop(initialMessage, maxTurns) {
     while (currentTurn < maxTurns && !shouldStopConversation) {
         currentTurn++;
         elements.currentTurnDisplay.textContent = currentTurn;
+
+        // Update intensity meter and check milestones
+        updateIntensityMeter(currentTurn, maxTurns);
+        checkMilestone(currentTurn);
 
         // Determine which agent speaks
         const speaker = currentSpeaker;
@@ -1019,6 +1048,9 @@ function endConversation() {
     elements.startBtn.style.display = 'flex';
     elements.stopBtn.style.display = 'none';
 
+    // Deactivate dopamine boost state
+    setConversationActiveState(false);
+
     // Reset agent status
     setAgentStatus('A', 'waiting');
     setAgentStatus('B', 'waiting');
@@ -1186,6 +1218,9 @@ function addMessageToChat(agent, message, type, senderName) {
 
     messagesContainer.appendChild(messageDiv);
 
+    // Trigger entrance animation
+    triggerMessageAnimation(messageDiv);
+
     // Scroll to bottom
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -1248,8 +1283,21 @@ function removeTypingIndicator(agent) {
  */
 function setAgentStatus(agent, status) {
     const statusElement = agent === 'A' ? elements.agentAStatus : elements.agentBStatus;
+    const panelElement = agent === 'A' ? elements.agentAPanel : elements.agentBPanel;
 
     statusElement.className = `agent-status ${status}`;
+
+    // Toggle speaking class on panel for dopamine glow effects
+    if (panelElement) {
+        if (status === 'speaking' || status === 'thinking') {
+            panelElement.classList.add('speaking');
+            // Remove speaking from other panel
+            const otherPanel = agent === 'A' ? elements.agentBPanel : elements.agentAPanel;
+            if (otherPanel) otherPanel.classList.remove('speaking');
+        } else {
+            panelElement.classList.remove('speaking');
+        }
+    }
 
     const statusText = statusElement.querySelector('.status-text');
     switch (status) {
@@ -1345,6 +1393,164 @@ function formatTime(date) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+// ===========================================
+// DOPAMINE BOOST EFFECTS
+// ===========================================
+
+/**
+ * Update intensity meter based on conversation progress
+ */
+function updateIntensityMeter(turn, maxTurns) {
+    if (!elements.intensityMeter || !elements.intensityBars) return;
+
+    // Calculate intensity level (1-5) based on turn progress
+    const progress = turn / maxTurns;
+    let level = Math.ceil(progress * 5);
+    level = Math.max(1, Math.min(5, level));
+
+    // Update intensity bars
+    elements.intensityBars.forEach((bar, index) => {
+        const barLevel = 5 - index; // level-5 is first, level-1 is last
+        if (barLevel <= level) {
+            bar.classList.add('active');
+        } else {
+            bar.classList.remove('active');
+        }
+    });
+
+    // Show intensity meter when conversation is active
+    elements.intensityMeter.classList.add('active');
+}
+
+/**
+ * Hide intensity meter
+ */
+function hideIntensityMeter() {
+    if (elements.intensityMeter) {
+        elements.intensityMeter.classList.remove('active');
+        elements.intensityBars.forEach(bar => bar.classList.remove('active'));
+    }
+}
+
+/**
+ * Check and trigger milestone celebration
+ */
+function checkMilestone(turn) {
+    const milestones = [10, 25, 50, 75, 100, 150, 200];
+
+    if (milestones.includes(turn)) {
+        showMilestoneCelebration(turn);
+        createConfetti();
+        triggerTurnCounterPop();
+    }
+}
+
+/**
+ * Show milestone celebration overlay
+ */
+function showMilestoneCelebration(turn) {
+    if (!elements.milestoneCelebration || !elements.milestoneBadge) return;
+
+    // Set milestone text with emojis based on turn count
+    let emoji = '🔥';
+    if (turn >= 100) emoji = '🏆';
+    else if (turn >= 75) emoji = '💎';
+    else if (turn >= 50) emoji = '⚡';
+    else if (turn >= 25) emoji = '🚀';
+
+    elements.milestoneBadge.textContent = `${emoji} ${turn} LƯỢT! ${emoji}`;
+
+    // Show celebration
+    elements.milestoneCelebration.classList.add('active');
+
+    // Hide after animation
+    setTimeout(() => {
+        elements.milestoneCelebration.classList.remove('active');
+    }, 2000);
+}
+
+/**
+ * Create confetti particles
+ */
+function createConfetti() {
+    if (!elements.confettiContainer) return;
+
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7dc6f', '#bb8fce', '#82e0aa', '#f8b500', '#e74c3c'];
+    const particleCount = 50;
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'confetti-particle';
+
+        // Random properties
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.5;
+        const duration = 2 + Math.random() * 2;
+        const size = 6 + Math.random() * 8;
+        const rotation = Math.random() * 360;
+
+        particle.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background: ${color};
+            left: ${left}%;
+            top: -20px;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+            transform: rotate(${rotation}deg);
+            animation: confettiFall ${duration}s ease-out ${delay}s forwards;
+            pointer-events: none;
+        `;
+
+        elements.confettiContainer.appendChild(particle);
+
+        // Remove particle after animation
+        setTimeout(() => {
+            particle.remove();
+        }, (duration + delay) * 1000);
+    }
+}
+
+/**
+ * Trigger turn counter pop animation
+ */
+function triggerTurnCounterPop() {
+    const turnCounter = document.querySelector('.turn-counter');
+    if (turnCounter) {
+        turnCounter.classList.add('milestone');
+        setTimeout(() => {
+            turnCounter.classList.remove('milestone');
+        }, 600);
+    }
+}
+
+/**
+ * Add entrance animation to message
+ */
+function triggerMessageAnimation(messageElement) {
+    if (!messageElement) return;
+
+    messageElement.classList.add('new-message');
+
+    // Remove class after animation
+    setTimeout(() => {
+        messageElement.classList.remove('new-message');
+    }, 600);
+}
+
+/**
+ * Start conversation active state (body glow, header effects)
+ */
+function setConversationActiveState(active) {
+    if (active) {
+        document.body.classList.add('conversation-active');
+    } else {
+        document.body.classList.remove('conversation-active');
+        hideIntensityMeter();
+    }
 }
 
 /**
