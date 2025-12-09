@@ -65,11 +65,103 @@ let lastTurnScores = {
 
 // =====================================================
 // V4.2.0: KNOWLEDGE EXPLORATION MODE
+// V4.2.1: Enhanced with 5W1H Framework
 // =====================================================
 
 /**
+ * 5W1H Question Framework - Core questions for deep exploration
+ * Each W/H maps to specific inquiry types for comprehensive knowledge
+ */
+const QUESTION_5W1H = {
+    WHAT: {
+        id: 'what',
+        name: 'WHAT - Cái gì',
+        nameEn: 'What',
+        description: 'Bản chất, định nghĩa, đặc điểm',
+        templates: [
+            '{topic} là gì? Định nghĩa chính xác như thế nào?',
+            'Đặc điểm cốt lõi của {topic} là gì?',
+            'Các thành phần/yếu tố cấu thành {topic} là gì?',
+            'Sự khác biệt giữa {topic} với các khái niệm tương tự là gì?',
+            'Kết quả/sản phẩm của {topic} là gì?'
+        ],
+        markers: ['là gì', 'bao gồm', 'định nghĩa', 'bản chất', 'đặc điểm', 'khái niệm', 'thành phần']
+    },
+    WHY: {
+        id: 'why',
+        name: 'WHY - Tại sao',
+        nameEn: 'Why',
+        description: 'Nguyên nhân, lý do, mục đích',
+        templates: [
+            'Tại sao {topic} lại quan trọng/cần thiết?',
+            'Nguyên nhân gốc rễ dẫn đến {topic} là gì?',
+            'Mục đích chính của {topic} là gì?',
+            'Tại sao người ta ủng hộ/phản đối {topic}?',
+            'Động lực nào thúc đẩy {topic}?'
+        ],
+        markers: ['tại sao', 'vì sao', 'nguyên nhân', 'lý do', 'mục đích', 'động lực', 'do đâu']
+    },
+    WHO: {
+        id: 'who',
+        name: 'WHO - Ai',
+        nameEn: 'Who',
+        description: 'Chủ thể, đối tượng, các bên liên quan',
+        templates: [
+            'Ai là người/tổ chức chính liên quan đến {topic}?',
+            'Ai được hưởng lợi từ {topic}?',
+            'Ai bị ảnh hưởng tiêu cực bởi {topic}?',
+            'Ai có quyền quyết định về {topic}?',
+            'Ai chịu trách nhiệm cho {topic}?'
+        ],
+        markers: ['ai', 'người nào', 'tổ chức', 'đối tượng', 'chủ thể', 'bên liên quan', 'trách nhiệm']
+    },
+    WHEN: {
+        id: 'when',
+        name: 'WHEN - Khi nào',
+        nameEn: 'When',
+        description: 'Thời gian, thời điểm, tiến trình',
+        templates: [
+            '{topic} xuất hiện/bắt đầu từ khi nào?',
+            'Khi nào {topic} đạt đỉnh/suy thoái?',
+            'Tiến trình phát triển của {topic} như thế nào theo thời gian?',
+            'Khi nào là thời điểm thích hợp để áp dụng {topic}?',
+            'Trong tương lai, {topic} sẽ phát triển như thế nào?'
+        ],
+        markers: ['khi nào', 'thời điểm', 'thời gian', 'lịch sử', 'tiến trình', 'tương lai', 'giai đoạn']
+    },
+    WHERE: {
+        id: 'where',
+        name: 'WHERE - Ở đâu',
+        nameEn: 'Where',
+        description: 'Địa điểm, phạm vi, bối cảnh',
+        templates: [
+            '{topic} diễn ra/tồn tại ở đâu?',
+            'Phạm vi ảnh hưởng của {topic} là gì?',
+            '{topic} phổ biến ở những nơi/lĩnh vực nào?',
+            'Bối cảnh nào phù hợp để áp dụng {topic}?',
+            'Nguồn gốc địa lý/văn hóa của {topic} là gì?'
+        ],
+        markers: ['ở đâu', 'địa điểm', 'phạm vi', 'lĩnh vực', 'bối cảnh', 'nơi nào', 'khu vực']
+    },
+    HOW: {
+        id: 'how',
+        name: 'HOW - Như thế nào',
+        nameEn: 'How',
+        description: 'Phương pháp, cách thức, quy trình',
+        templates: [
+            '{topic} hoạt động/vận hành như thế nào?',
+            'Cách thức triển khai {topic} là gì?',
+            '{topic} tác động đến xã hội/cá nhân như thế nào?',
+            'Làm thế nào để tối ưu hóa/cải thiện {topic}?',
+            'Quy trình/bước đi để thực hiện {topic} là gì?'
+        ],
+        markers: ['như thế nào', 'làm sao', 'cách nào', 'phương pháp', 'quy trình', 'cơ chế', 'bằng cách']
+    }
+};
+
+/**
  * Topic Dimension System - Structured aspects to explore
- * Each dimension represents a different angle of analysis
+ * Each dimension now maps to specific 5W1H questions
  */
 const TOPIC_DIMENSIONS = [
     {
@@ -77,75 +169,95 @@ const TOPIC_DIMENSIONS = [
         name: 'Định nghĩa & Khái niệm',
         nameEn: 'Definition & Concepts',
         prompt: 'Định nghĩa rõ ràng khái niệm, phạm vi, và các thuật ngữ liên quan',
-        questions: ['Khái niệm này được định nghĩa như thế nào?', 'Phạm vi của vấn đề này là gì?', 'Có những thuật ngữ quan trọng nào cần làm rõ?']
+        questions: ['Khái niệm này được định nghĩa như thế nào?', 'Phạm vi của vấn đề này là gì?', 'Có những thuật ngữ quan trọng nào cần làm rõ?'],
+        primary5W1H: ['WHAT'],
+        secondary5W1H: ['WHERE']
     },
     {
         id: 'benefits',
         name: 'Lợi ích & Ưu điểm',
         nameEn: 'Benefits & Advantages',
         prompt: 'Phân tích các lợi ích, ưu điểm, và giá trị mang lại',
-        questions: ['Lợi ích chính là gì?', 'Ai được hưởng lợi?', 'Giá trị tạo ra như thế nào?']
+        questions: ['Lợi ích chính là gì?', 'Ai được hưởng lợi?', 'Giá trị tạo ra như thế nào?'],
+        primary5W1H: ['WHAT', 'WHO'],
+        secondary5W1H: ['HOW']
     },
     {
         id: 'risks',
         name: 'Rủi ro & Nhược điểm',
         nameEn: 'Risks & Disadvantages',
         prompt: 'Xác định các rủi ro, hạn chế, và tác động tiêu cực tiềm ẩn',
-        questions: ['Rủi ro chính là gì?', 'Ai bị ảnh hưởng tiêu cực?', 'Hậu quả có thể xảy ra?']
+        questions: ['Rủi ro chính là gì?', 'Ai bị ảnh hưởng tiêu cực?', 'Hậu quả có thể xảy ra?'],
+        primary5W1H: ['WHAT', 'WHO'],
+        secondary5W1H: ['WHY']
     },
     {
         id: 'historical',
         name: 'Bối cảnh Lịch sử',
         nameEn: 'Historical Context',
         prompt: 'Khám phá nguồn gốc, sự phát triển, và các tiền lệ lịch sử',
-        questions: ['Vấn đề này bắt nguồn từ đâu?', 'Đã phát triển như thế nào qua thời gian?', 'Có tiền lệ nào tương tự?']
+        questions: ['Vấn đề này bắt nguồn từ đâu?', 'Đã phát triển như thế nào qua thời gian?', 'Có tiền lệ nào tương tự?'],
+        primary5W1H: ['WHEN', 'WHERE'],
+        secondary5W1H: ['WHY']
     },
     {
         id: 'stakeholders',
         name: 'Các bên liên quan',
         nameEn: 'Stakeholders',
         prompt: 'Nhận diện và phân tích lợi ích của các bên liên quan',
-        questions: ['Ai là các bên liên quan chính?', 'Mỗi bên có lợi ích gì?', 'Có xung đột lợi ích nào?']
+        questions: ['Ai là các bên liên quan chính?', 'Mỗi bên có lợi ích gì?', 'Có xung đột lợi ích nào?'],
+        primary5W1H: ['WHO'],
+        secondary5W1H: ['WHY', 'WHAT']
     },
     {
         id: 'ethics',
         name: 'Đạo đức & Giá trị',
         nameEn: 'Ethics & Values',
         prompt: 'Xem xét các khía cạnh đạo đức, giá trị, và trách nhiệm',
-        questions: ['Vấn đề đạo đức chính là gì?', 'Giá trị nào bị ảnh hưởng?', 'Trách nhiệm thuộc về ai?']
+        questions: ['Vấn đề đạo đức chính là gì?', 'Giá trị nào bị ảnh hưởng?', 'Trách nhiệm thuộc về ai?'],
+        primary5W1H: ['WHY', 'WHO'],
+        secondary5W1H: ['WHAT']
     },
     {
         id: 'practical',
         name: 'Ứng dụng Thực tiễn',
         nameEn: 'Practical Applications',
         prompt: 'Phân tích cách áp dụng trong thực tế và các ví dụ cụ thể',
-        questions: ['Áp dụng như thế nào trong thực tế?', 'Có ví dụ thành công nào?', 'Thách thức triển khai là gì?']
+        questions: ['Áp dụng như thế nào trong thực tế?', 'Có ví dụ thành công nào?', 'Thách thức triển khai là gì?'],
+        primary5W1H: ['HOW', 'WHERE'],
+        secondary5W1H: ['WHEN']
     },
     {
         id: 'future',
         name: 'Tương lai & Xu hướng',
         nameEn: 'Future & Trends',
         prompt: 'Dự đoán xu hướng, kịch bản tương lai, và tác động dài hạn',
-        questions: ['Xu hướng phát triển là gì?', 'Tác động dài hạn sẽ ra sao?', 'Cần chuẩn bị gì cho tương lai?']
+        questions: ['Xu hướng phát triển là gì?', 'Tác động dài hạn sẽ ra sao?', 'Cần chuẩn bị gì cho tương lai?'],
+        primary5W1H: ['WHEN', 'HOW'],
+        secondary5W1H: ['WHAT']
     },
     {
         id: 'alternatives',
         name: 'Phương án Thay thế',
         nameEn: 'Alternatives',
         prompt: 'Khám phá các giải pháp thay thế và so sánh ưu nhược điểm',
-        questions: ['Có giải pháp thay thế nào?', 'So sánh các phương án như thế nào?', 'Phương án tối ưu là gì?']
+        questions: ['Có giải pháp thay thế nào?', 'So sánh các phương án như thế nào?', 'Phương án tối ưu là gì?'],
+        primary5W1H: ['WHAT', 'HOW'],
+        secondary5W1H: ['WHY']
     },
     {
         id: 'evidence',
         name: 'Bằng chứng & Dữ liệu',
         nameEn: 'Evidence & Data',
         prompt: 'Xem xét các bằng chứng, nghiên cứu, và dữ liệu hỗ trợ',
-        questions: ['Có nghiên cứu nào hỗ trợ?', 'Dữ liệu cho thấy điều gì?', 'Bằng chứng có đáng tin không?']
+        questions: ['Có nghiên cứu nào hỗ trợ?', 'Dữ liệu cho thấy điều gì?', 'Bằng chứng có đáng tin không?'],
+        primary5W1H: ['WHAT', 'WHERE'],
+        secondary5W1H: ['WHEN', 'WHO']
     }
 ];
 
 /**
- * Knowledge Exploration State
+ * Knowledge Exploration State - Enhanced with 5W1H tracking
  */
 let knowledgeExploration = {
     enabled: true,
@@ -159,7 +271,16 @@ let knowledgeExploration = {
     evidences: [],
     questions: [],
     keyTerms: [],
-    turnData: [] // Detailed data per turn
+    turnData: [],
+    // V4.2.1: 5W1H tracking
+    coverage5W1H: {
+        WHAT: { count: 0, answers: [] },
+        WHY: { count: 0, answers: [] },
+        WHO: { count: 0, answers: [] },
+        WHEN: { count: 0, answers: [] },
+        WHERE: { count: 0, answers: [] },
+        HOW: { count: 0, answers: [] }
+    }
 };
 
 /**
@@ -178,9 +299,108 @@ function resetKnowledgeExploration() {
         evidences: [],
         questions: [],
         keyTerms: [],
-        turnData: []
+        turnData: [],
+        coverage5W1H: {
+            WHAT: { count: 0, answers: [] },
+            WHY: { count: 0, answers: [] },
+            WHO: { count: 0, answers: [] },
+            WHEN: { count: 0, answers: [] },
+            WHERE: { count: 0, answers: [] },
+            HOW: { count: 0, answers: [] }
+        }
     };
-    console.log('[Knowledge] Exploration state reset');
+    console.log('[Knowledge] Exploration state reset with 5W1H tracking');
+}
+
+/**
+ * Get 5W1H question suggestions for current turn
+ */
+function get5W1HQuestions(topic, turnNumber) {
+    const dimension = getCurrentDimension(turnNumber);
+    const primaryWH = dimension.primary5W1H || ['WHAT'];
+    const secondaryWH = dimension.secondary5W1H || ['HOW'];
+
+    // Rotate through 5W1H based on turn
+    const allWH = [...primaryWH, ...secondaryWH];
+    const focusWH = allWH[turnNumber % allWH.length];
+
+    const whData = QUESTION_5W1H[focusWH];
+    if (!whData) return null;
+
+    // Get a template and fill with topic
+    const templateIndex = turnNumber % whData.templates.length;
+    const question = whData.templates[templateIndex].replace('{topic}', topic);
+
+    return {
+        type: focusWH,
+        name: whData.name,
+        question: question,
+        description: whData.description
+    };
+}
+
+/**
+ * Analyze response for 5W1H coverage
+ */
+function analyze5W1HCoverage(response, turnNumber) {
+    const coverage = {};
+
+    for (const [key, whData] of Object.entries(QUESTION_5W1H)) {
+        const markers = whData.markers;
+        let found = false;
+        let matchedContent = [];
+
+        for (const marker of markers) {
+            const regex = new RegExp(`[^.]*${marker}[^.]*\\.`, 'gi');
+            const matches = response.match(regex);
+            if (matches) {
+                found = true;
+                matchedContent.push(...matches);
+            }
+        }
+
+        if (found) {
+            coverage[key] = {
+                found: true,
+                content: matchedContent.slice(0, 2) // Top 2 matches
+            };
+
+            // Update global tracking
+            knowledgeExploration.coverage5W1H[key].count++;
+            knowledgeExploration.coverage5W1H[key].answers.push({
+                turn: turnNumber,
+                content: matchedContent[0] || ''
+            });
+        } else {
+            coverage[key] = { found: false, content: [] };
+        }
+    }
+
+    return coverage;
+}
+
+/**
+ * Get 5W1H coverage summary
+ */
+function get5W1HCoverageSummary() {
+    const summary = {};
+    let totalCovered = 0;
+
+    for (const [key, data] of Object.entries(knowledgeExploration.coverage5W1H)) {
+        summary[key] = {
+            count: data.count,
+            covered: data.count > 0,
+            percentage: Math.min(100, data.count * 20) // 5 mentions = 100%
+        };
+        if (data.count > 0) totalCovered++;
+    }
+
+    summary.totalCoverage = Math.round((totalCovered / 6) * 100);
+    summary.missingAspects = Object.entries(summary)
+        .filter(([key, val]) => key !== 'totalCoverage' && key !== 'missingAspects' && !val.covered)
+        .map(([key]) => QUESTION_5W1H[key]?.name || key);
+
+    return summary;
 }
 
 // DOM Elements
@@ -1273,8 +1493,8 @@ function getCurrentDimension(turnNumber) {
 }
 
 /**
- * Get dimension context for system prompt
- * Guides agents to explore specific aspects of the topic
+ * V4.2.1: Get dimension context for system prompt with 5W1H guidance
+ * Guides agents to explore specific aspects using 5W1H framework
  */
 function getDimensionContext(turnNumber, isAgentA) {
     const dimension = getCurrentDimension(turnNumber);
@@ -1285,30 +1505,50 @@ function getDimensionContext(turnNumber, isAgentA) {
         knowledgeExploration.exploredDimensions.push(dimension.id);
     }
 
+    // Get 5W1H focus for this turn
+    const whFocus = get5W1HQuestions(currentTopic, turnNumber);
+    const primary5W1H = dimension.primary5W1H || ['WHAT'];
+    const whLabels = primary5W1H.map(w => QUESTION_5W1H[w]?.name || w).join(', ');
+
     const focusText = isAgentA
         ? `Bạn CẦN đưa ra quan điểm ỦNG HỘ về khía cạnh: "${dimension.name}"`
         : `Bạn CẦN đưa ra quan điểm PHẢN ĐỐI về khía cạnh: "${dimension.name}"`;
 
     const guidingQuestions = dimension.questions.map((q, i) => `   ${i + 1}. ${q}`).join('\n');
 
+    // Build 5W1H specific guidance
+    const whGuidance = whFocus ? `
+📊 CÂU HỎI 5W1H CẦN TRẢ LỜI:
+   🎯 ${whFocus.name}: ${whFocus.question}
+   💭 Trọng tâm: ${whFocus.description}` : '';
+
+    // Get coverage summary to suggest missing aspects
+    const coverage = get5W1HCoverageSummary();
+    const missingHint = coverage.missingAspects.length > 0
+        ? `\n   ⚠️ Chưa khám phá: ${coverage.missingAspects.slice(0, 2).join(', ')}`
+        : '';
+
     return `
 ═══════════════════════════════════════════════════════════
 🔬 CHẾ ĐỘ KHÁM PHÁ KIẾN THỨC - Lượt ${turnNumber}
 ═══════════════════════════════════════════════════════════
 📐 KHÍA CẠNH ĐANG KHÁM PHÁ: ${dimension.name} (${dimension.nameEn})
+🔑 GÓC NHÌN 5W1H: ${whLabels}
 
 📋 HƯỚNG DẪN: ${dimension.prompt}
+${whGuidance}${missingHint}
 
 ❓ CÂU HỎI GỢI Ý:
 ${guidingQuestions}
 
 🎯 ${focusText}
 
-💡 YÊU CẦU ĐẶC BIỆT:
+💡 YÊU CẦU ĐẶC BIỆT CHO KHÁM PHÁ TRI THỨC:
+   - TRẢ LỜI câu hỏi 5W1H ở trên trong phản hồi của bạn
    - Đưa ra THÔNG TIN CỤ THỂ, có giá trị cho việc nghiên cứu
-   - Sử dụng VÍ DỤ THỰC TẾ và DẪN CHỨNG
+   - Sử dụng VÍ DỤ THỰC TẾ và DẪN CHỨNG (số liệu, năm, địa điểm)
    - Đề cập đến NGUỒN THAM KHẢO nếu có thể
-   - Phân tích SÂU thay vì chỉ nêu ý kiến chung chung
+   - KẾT THÚC bằng 1 câu hỏi 5W1H mới để đối phương trả lời
 ═══════════════════════════════════════════════════════════`;
 }
 
@@ -1404,6 +1644,14 @@ function extractKnowledge(agent, response, turnNumber) {
         }
     }
 
+    // V4.2.1: Analyze 5W1H coverage
+    const whCoverage = analyze5W1HCoverage(response, turnNumber);
+    turnData.extracted.coverage5W1H = whCoverage;
+
+    // Count how many W/H aspects were covered in this response
+    const coveredAspects = Object.values(whCoverage).filter(v => v.found).length;
+    turnData.extracted.whCoveredCount = coveredAspects;
+
     // Add insight if substantial content was extracted
     if (turnData.extracted.claims.length > 0 || turnData.extracted.evidence.length > 0) {
         const insight = `[${dimension.name}] ${agent === 'A' ? 'PRO' : 'CON'}: ${turnData.extracted.claims[0] || turnData.extracted.evidence[0] || 'Đã khám phá'}`;
@@ -1413,11 +1661,18 @@ function extractKnowledge(agent, response, turnNumber) {
     // Store turn data
     knowledgeExploration.turnData.push(turnData);
 
+    // Log with 5W1H info
+    const whCovered = Object.entries(whCoverage)
+        .filter(([_, v]) => v.found)
+        .map(([k]) => k)
+        .join(', ');
+
     console.log(`[Knowledge] Turn ${turnNumber} extracted:`, {
         claims: turnData.extracted.claims.length,
         evidence: turnData.extracted.evidence.length,
         questions: turnData.extracted.questions.length,
-        terms: turnData.extracted.keyTerms.length
+        terms: turnData.extracted.keyTerms.length,
+        '5W1H': whCovered || 'none'
     });
 
     return turnData;
@@ -1461,6 +1716,18 @@ function generateKnowledgeExport() {
             questions: knowledgeExploration.questions,
             keyTerms: knowledgeExploration.keyTerms,
             insights: knowledgeExploration.insights
+        },
+        // V4.2.1: 5W1H coverage data
+        exploration5W1H: {
+            framework: Object.fromEntries(
+                Object.entries(QUESTION_5W1H).map(([key, val]) => [key, {
+                    name: val.name,
+                    description: val.description,
+                    coverage: knowledgeExploration.coverage5W1H[key]
+                }])
+            ),
+            summary: get5W1HCoverageSummary(),
+            answersByType: knowledgeExploration.coverage5W1H
         },
         conversation: {
             turns: knowledgeExploration.turnData,
@@ -1566,6 +1833,20 @@ ${data.knowledge.questions.slice(0, 10).map((q, i) => `${i + 1}. ${q.text}`).joi
 ## Thuật ngữ quan trọng
 ${data.knowledge.keyTerms.slice(0, 20).join(', ') || 'Không có'}
 
+## Phân tích 5W1H (${data.exploration5W1H.summary.totalCoverage}% độ phủ)
+
+| Câu hỏi | Mô tả | Đã trả lời |
+|---------|-------|------------|
+| WHAT - Cái gì | Bản chất, định nghĩa | ${data.exploration5W1H.summary.WHAT?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.WHAT?.count || 0} lần) |
+| WHY - Tại sao | Nguyên nhân, mục đích | ${data.exploration5W1H.summary.WHY?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.WHY?.count || 0} lần) |
+| WHO - Ai | Chủ thể, đối tượng | ${data.exploration5W1H.summary.WHO?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.WHO?.count || 0} lần) |
+| WHEN - Khi nào | Thời gian, tiến trình | ${data.exploration5W1H.summary.WHEN?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.WHEN?.count || 0} lần) |
+| WHERE - Ở đâu | Địa điểm, phạm vi | ${data.exploration5W1H.summary.WHERE?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.WHERE?.count || 0} lần) |
+| HOW - Như thế nào | Phương pháp, cách thức | ${data.exploration5W1H.summary.HOW?.covered ? '✅' : '⬜'} (${data.exploration5W1H.summary.HOW?.count || 0} lần) |
+
+### Khía cạnh chưa được khám phá:
+${data.exploration5W1H.summary.missingAspects?.join(', ') || 'Tất cả đã được khám phá!'}
+
 ## Tóm tắt
 ${data.summary.overview}
 
@@ -1574,7 +1855,7 @@ ${data.summary.balance}
 ${data.summary.evidenceQuality}
 
 ---
-*Xuất từ AI Agent Arena v${APP_VERSION} - Knowledge Exploration Mode*
+*Xuất từ AI Agent Arena v${APP_VERSION} - Knowledge Exploration Mode với 5W1H Framework*
 `;
 
     const blob = new Blob([md], { type: 'text/markdown' });
@@ -1600,21 +1881,30 @@ function updateDimensionIndicator(turnNumber) {
     const dimension = getCurrentDimension(turnNumber);
     const indicator = document.getElementById('dimensionIndicator');
 
+    // V4.2.1: Get 5W1H focus
+    const whFocus = get5W1HQuestions(currentTopic, turnNumber);
+    const whLabel = whFocus ? whFocus.type : 'WHAT';
+    const coverage = get5W1HCoverageSummary();
+
     if (indicator) {
         indicator.innerHTML = `
             <span class="dimension-icon">🔬</span>
             <span class="dimension-name">${dimension.name}</span>
-            <span class="dimension-progress">${knowledgeExploration.exploredDimensions.length}/${TOPIC_DIMENSIONS.length}</span>
+            <span class="wh-badge">${whLabel}</span>
+            <span class="dimension-progress">${coverage.totalCoverage}% 5W1H</span>
         `;
-        indicator.title = dimension.prompt;
+        indicator.title = `${dimension.prompt}\n\n5W1H: ${whFocus?.question || ''}`;
     }
 
-    // Update judge panel with dimension info
+    // Update judge panel with dimension and 5W1H info
     const judgeContent = document.getElementById('judgeContent');
     if (judgeContent && !judgeContent.classList.contains('has-verdict')) {
+        const whQuestion = whFocus ? `<p class="wh-question">❓ ${whFocus.question}</p>` : '';
         judgeContent.innerHTML = `
             <p class="dimension-focus">🔬 Đang khám phá: <strong>${dimension.name}</strong></p>
             <p class="dimension-hint">${dimension.prompt}</p>
+            ${whQuestion}
+            <p class="coverage-hint">📊 Độ phủ 5W1H: ${coverage.totalCoverage}%</p>
         `;
     }
 }
