@@ -130,5 +130,28 @@ No migration needed. Simply update and the responsive improvements will apply au
 
 ---
 
+## V16.1 - Mobile Fixes
+
+### Bug Fixes
+- **Fixed mobile panel switching**: Panels now correctly show/hide when switching tabs
+- **Fixed mobile-view class management**: Body class is properly added/removed based on screen size
+- **Fixed v13 tabs on mobile**: Changed from vertical to horizontal scrollable layout
+- **Fixed action button position**: Now correctly positioned above mobile tab bar
+- **Fixed header auto-hide**: Smooth hide/show on scroll with scrolled shadow effect
+
+### CSS Improvements
+- Added critical `!important` overrides for panel visibility
+- Added `body.mobile-view` scoped styles for better specificity
+- Fixed iOS Safari 100vh issue with `-webkit-fill-available`
+- Improved touch targets to 44px minimum
+
+### JavaScript Improvements
+- Mobile handler now initializes on all devices but manages itself based on screen size
+- Added `resetPanelsForDesktop()` method for clean desktop/mobile transitions
+- Improved `handleResize()` to prevent duplicate state changes
+- Added device capability detection and optimization
+
+---
+
 ## Credits
 Developed by SMCC Team

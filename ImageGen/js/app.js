@@ -80,9 +80,9 @@ class ImageTextApp {
 
             this.setupGlobalMethods();
 
-            if (window.innerWidth <= 768) {
-                this.components.mobile.init();
-            }
+            // V16: Always initialize mobile handler, it will manage itself based on screen size
+            this.components.mobile.init();
+            this.components.mobile.applyDeviceOptimizations();
 
             this.setupEventListeners();
             this.setupV11EventListeners(); // V11 specific
@@ -703,12 +703,9 @@ class ImageTextApp {
     }
 
     handleResize() {
-        const isMobile = window.innerWidth <= 768;
-
-        if (isMobile && !this.components.mobile.initialized) {
-            this.components.mobile.init();
-        } else if (!isMobile && this.components.mobile.initialized) {
-            this.components.mobile.destroy();
+        // V16: Mobile handler manages its own state based on screen size
+        if (this.components.mobile && this.components.mobile.handleResize) {
+            this.components.mobile.handleResize();
         }
     }
 
