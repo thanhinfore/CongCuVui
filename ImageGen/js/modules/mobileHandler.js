@@ -40,15 +40,6 @@ export class MobileHandler {
         // Create mobile tabs if they don't exist
         this.createMobileTabs();
 
-        // Setup initial state
-        this.setActivePanel('control');
-
-        // Setup event listeners
-        this.setupEventListeners();
-
-        // Add mobile-specific classes
-        document.body.classList.add('mobile-view');
-
         // Handle virtual keyboard
         this.handleVirtualKeyboard();
 
@@ -61,8 +52,30 @@ export class MobileHandler {
         // Set viewport height CSS variable for mobile browsers
         this.setViewportHeight();
 
+        // V16: Check if mobile and apply initial state
+        if (this.isMobile()) {
+            document.body.classList.add('mobile-view');
+            this.setupEventListeners();
+            this.setActivePanel(localStorage.getItem('activeMobilePanel') || 'control');
+        } else {
+            // Desktop: ensure both panels are visible
+            document.body.classList.remove('mobile-view');
+            this.resetPanelsForDesktop();
+        }
+
         this.initialized = true;
         console.log('Mobile handler V16 initialized');
+    }
+
+    resetPanelsForDesktop() {
+        if (this.panels.control) {
+            this.panels.control.classList.remove('panel-active', 'panel-inactive');
+            this.panels.control.style.display = '';
+        }
+        if (this.panels.preview) {
+            this.panels.preview.classList.remove('panel-active', 'panel-inactive');
+            this.panels.preview.style.display = '';
+        }
     }
 
     setViewportHeight() {
@@ -97,20 +110,16 @@ export class MobileHandler {
         const isMobile = window.innerWidth <= this.mobileBreakpoint;
 
         if (isMobile) {
-            document.body.classList.add('mobile-view');
-            if (!this.initialized) {
-                this.init();
+            if (!document.body.classList.contains('mobile-view')) {
+                document.body.classList.add('mobile-view');
+                // Setup mobile panel state
+                this.setActivePanel(this.activePanel || 'control');
             }
         } else {
-            document.body.classList.remove('mobile-view');
-            // On desktop, show both panels
-            if (this.panels.control) {
-                this.panels.control.classList.remove('panel-active', 'panel-inactive');
-                this.panels.control.style.display = '';
-            }
-            if (this.panels.preview) {
-                this.panels.preview.classList.remove('panel-active', 'panel-inactive');
-                this.panels.preview.style.display = '';
+            if (document.body.classList.contains('mobile-view')) {
+                document.body.classList.remove('mobile-view');
+                // Reset to desktop view
+                this.resetPanelsForDesktop();
             }
         }
 

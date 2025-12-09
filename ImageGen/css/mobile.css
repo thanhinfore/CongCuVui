@@ -762,3 +762,109 @@
         border: 2px solid white;
     }
 }
+
+/* 15. Critical Mobile Panel Fixes - V16 Enhanced
+   ===================================================== */
+
+/* Ensure panels work correctly with mobile-view class */
+body.mobile-view .control-panel,
+body.mobile-view .preview-panel {
+    display: none !important;
+}
+
+body.mobile-view .control-panel.panel-active,
+body.mobile-view .preview-panel.panel-active {
+    display: block !important;
+}
+
+/* Mobile tabs must be visible */
+body.mobile-view .mobile-tabs {
+    display: flex !important;
+}
+
+/* Hide mobile tabs on desktop */
+body:not(.mobile-view) .mobile-tabs {
+    display: none !important;
+}
+
+/* Desktop panels should always be visible */
+body:not(.mobile-view) .control-panel,
+body:not(.mobile-view) .preview-panel {
+    display: block !important;
+}
+
+/* Fix content grid for mobile */
+body.mobile-view .content-grid {
+    display: block !important;
+    padding: 0 !important;
+}
+
+/* Fix main content padding */
+body.mobile-view .main-content {
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Action section positioning */
+body.mobile-view .action-section {
+    position: fixed !important;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+}
+
+/* V13 Section groups mobile */
+body.mobile-view .v13-section-group {
+    margin-bottom: 12px;
+    border-radius: 16px;
+}
+
+/* Control panel content scrollable */
+body.mobile-view .control-panel {
+    min-height: auto;
+    max-height: none;
+    overflow-y: auto;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--color-background, #f8fafc);
+}
+
+/* Preview panel full width */
+body.mobile-view .preview-panel {
+    min-height: auto;
+    padding: 0;
+    background: var(--color-background, #f8fafc);
+}
+
+body.mobile-view .canvas-container {
+    padding: 12px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 16. Fix for iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+    body.mobile-view {
+        min-height: -webkit-fill-available;
+    }
+
+    body.mobile-view .app-container {
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* 17. Ensure header is always visible and functional */
+body.mobile-view .app-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100 !important;
+}
+
+body.mobile-view .app-header.hidden {
+    transform: translateY(-100%);
+}
+
+body.mobile-view .app-header.scrolled {
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
