@@ -1,22 +1,25 @@
 /**
  * Dual Agent Chat Arena
  * Main application for two AI agents chatting with each other
- * Version: 4.0.0 PRO - Complete Debate System Overhaul
+ * Version: 4.2.0 - Knowledge Exploration Mode
  *
- * FIXES:
- * - CoT filtering (strips <think> tags)
- * - Hardcoded stance anchoring (A=PRO, B=CON)
- * - Semantic anti-repetition with hash tracking
- * - Forced 4-part debate structure
- * - Scoring engine for logic/evidence/rebuttal/creativity
+ * FEATURES:
+ * v4.0.0: CoT filtering, stance anchoring, anti-repetition, scoring
+ * v4.1.0: Agent C (Judge) with live scoring and race track
+ * v4.2.0: Knowledge Exploration Mode
+ *   - Topic dimension system (definition, benefits, risks, history, etc.)
+ *   - Progressive deepening mechanism
+ *   - Knowledge extraction and tracking
+ *   - Structured export for AI consumption (JSON)
+ *   - Insight tracking per turn
  */
 
 // Configuration
 const MODEL_ID = 'onnx-community/gemma-3-270m-it-ONNX';
 const DEFAULT_API_URL = 'http://192.168.11.32:1234';
-const APP_VERSION = '4.1.0';
+const APP_VERSION = '4.2.0';
 
-console.log(`Dual Agent Chat Arena v${APP_VERSION} with Judge C loaded`);
+console.log(`Dual Agent Chat Arena v${APP_VERSION} - Knowledge Exploration Mode loaded`);
 
 // State
 let worker = null;
@@ -59,6 +62,126 @@ let lastTurnScores = {
     A: 0,
     B: 0
 };
+
+// =====================================================
+// V4.2.0: KNOWLEDGE EXPLORATION MODE
+// =====================================================
+
+/**
+ * Topic Dimension System - Structured aspects to explore
+ * Each dimension represents a different angle of analysis
+ */
+const TOPIC_DIMENSIONS = [
+    {
+        id: 'definition',
+        name: 'Định nghĩa & Khái niệm',
+        nameEn: 'Definition & Concepts',
+        prompt: 'Định nghĩa rõ ràng khái niệm, phạm vi, và các thuật ngữ liên quan',
+        questions: ['Khái niệm này được định nghĩa như thế nào?', 'Phạm vi của vấn đề này là gì?', 'Có những thuật ngữ quan trọng nào cần làm rõ?']
+    },
+    {
+        id: 'benefits',
+        name: 'Lợi ích & Ưu điểm',
+        nameEn: 'Benefits & Advantages',
+        prompt: 'Phân tích các lợi ích, ưu điểm, và giá trị mang lại',
+        questions: ['Lợi ích chính là gì?', 'Ai được hưởng lợi?', 'Giá trị tạo ra như thế nào?']
+    },
+    {
+        id: 'risks',
+        name: 'Rủi ro & Nhược điểm',
+        nameEn: 'Risks & Disadvantages',
+        prompt: 'Xác định các rủi ro, hạn chế, và tác động tiêu cực tiềm ẩn',
+        questions: ['Rủi ro chính là gì?', 'Ai bị ảnh hưởng tiêu cực?', 'Hậu quả có thể xảy ra?']
+    },
+    {
+        id: 'historical',
+        name: 'Bối cảnh Lịch sử',
+        nameEn: 'Historical Context',
+        prompt: 'Khám phá nguồn gốc, sự phát triển, và các tiền lệ lịch sử',
+        questions: ['Vấn đề này bắt nguồn từ đâu?', 'Đã phát triển như thế nào qua thời gian?', 'Có tiền lệ nào tương tự?']
+    },
+    {
+        id: 'stakeholders',
+        name: 'Các bên liên quan',
+        nameEn: 'Stakeholders',
+        prompt: 'Nhận diện và phân tích lợi ích của các bên liên quan',
+        questions: ['Ai là các bên liên quan chính?', 'Mỗi bên có lợi ích gì?', 'Có xung đột lợi ích nào?']
+    },
+    {
+        id: 'ethics',
+        name: 'Đạo đức & Giá trị',
+        nameEn: 'Ethics & Values',
+        prompt: 'Xem xét các khía cạnh đạo đức, giá trị, và trách nhiệm',
+        questions: ['Vấn đề đạo đức chính là gì?', 'Giá trị nào bị ảnh hưởng?', 'Trách nhiệm thuộc về ai?']
+    },
+    {
+        id: 'practical',
+        name: 'Ứng dụng Thực tiễn',
+        nameEn: 'Practical Applications',
+        prompt: 'Phân tích cách áp dụng trong thực tế và các ví dụ cụ thể',
+        questions: ['Áp dụng như thế nào trong thực tế?', 'Có ví dụ thành công nào?', 'Thách thức triển khai là gì?']
+    },
+    {
+        id: 'future',
+        name: 'Tương lai & Xu hướng',
+        nameEn: 'Future & Trends',
+        prompt: 'Dự đoán xu hướng, kịch bản tương lai, và tác động dài hạn',
+        questions: ['Xu hướng phát triển là gì?', 'Tác động dài hạn sẽ ra sao?', 'Cần chuẩn bị gì cho tương lai?']
+    },
+    {
+        id: 'alternatives',
+        name: 'Phương án Thay thế',
+        nameEn: 'Alternatives',
+        prompt: 'Khám phá các giải pháp thay thế và so sánh ưu nhược điểm',
+        questions: ['Có giải pháp thay thế nào?', 'So sánh các phương án như thế nào?', 'Phương án tối ưu là gì?']
+    },
+    {
+        id: 'evidence',
+        name: 'Bằng chứng & Dữ liệu',
+        nameEn: 'Evidence & Data',
+        prompt: 'Xem xét các bằng chứng, nghiên cứu, và dữ liệu hỗ trợ',
+        questions: ['Có nghiên cứu nào hỗ trợ?', 'Dữ liệu cho thấy điều gì?', 'Bằng chứng có đáng tin không?']
+    }
+];
+
+/**
+ * Knowledge Exploration State
+ */
+let knowledgeExploration = {
+    enabled: true,
+    currentDimensionIndex: 0,
+    exploredDimensions: [],
+    insights: [],
+    claims: {
+        pro: [],
+        con: []
+    },
+    evidences: [],
+    questions: [],
+    keyTerms: [],
+    turnData: [] // Detailed data per turn
+};
+
+/**
+ * Reset knowledge exploration state
+ */
+function resetKnowledgeExploration() {
+    knowledgeExploration = {
+        enabled: true,
+        currentDimensionIndex: 0,
+        exploredDimensions: [],
+        insights: [],
+        claims: {
+            pro: [],
+            con: []
+        },
+        evidences: [],
+        questions: [],
+        keyTerms: [],
+        turnData: []
+    };
+    console.log('[Knowledge] Exploration state reset');
+}
 
 // DOM Elements
 const elements = {
@@ -151,7 +274,12 @@ const elements = {
     judgeVerdictPanel: null,
     judgeContent: null,
     turnScoreA: null,
-    turnScoreB: null
+    turnScoreB: null,
+
+    // V4.2: Knowledge Exploration Elements
+    exportJSONBtn: null,
+    exportMDBtn: null,
+    dimensionIndicator: null
 };
 
 /**
@@ -262,6 +390,11 @@ function initElements() {
     elements.judgeContent = document.getElementById('judgeContent');
     elements.turnScoreA = document.getElementById('turnScoreA');
     elements.turnScoreB = document.getElementById('turnScoreB');
+
+    // V4.2: Knowledge Exploration Elements
+    elements.exportJSONBtn = document.getElementById('exportJSONBtn');
+    elements.exportMDBtn = document.getElementById('exportMDBtn');
+    elements.dimensionIndicator = document.getElementById('dimensionIndicator');
 }
 
 /**
@@ -273,6 +406,14 @@ function setupEventListeners() {
     elements.stopBtn.addEventListener('click', stopConversation);
     elements.clearBtn.addEventListener('click', clearConversation);
     elements.copyBtn.addEventListener('click', copyConversation);
+
+    // V4.2: Export buttons
+    if (elements.exportJSONBtn) {
+        elements.exportJSONBtn.addEventListener('click', exportKnowledgeJSON);
+    }
+    if (elements.exportMDBtn) {
+        elements.exportMDBtn.addEventListener('click', exportKnowledgeMarkdown);
+    }
 
     // Max turns update
     elements.maxTurns.addEventListener('change', () => {
@@ -1115,6 +1256,369 @@ function resetJudgeScores() {
     console.log('[Judge C] Scores reset');
 }
 
+// =====================================================
+// V4.2.0: KNOWLEDGE EXPLORATION FUNCTIONS
+// =====================================================
+
+/**
+ * Get current dimension for exploration based on turn number
+ * Uses progressive deepening - cycles through dimensions
+ */
+function getCurrentDimension(turnNumber) {
+    // Each dimension gets 2 turns (one from each agent) before moving on
+    const cycleLength = TOPIC_DIMENSIONS.length * 2;
+    const dimensionIndex = Math.floor((turnNumber - 1) / 2) % TOPIC_DIMENSIONS.length;
+
+    return TOPIC_DIMENSIONS[dimensionIndex];
+}
+
+/**
+ * Get dimension context for system prompt
+ * Guides agents to explore specific aspects of the topic
+ */
+function getDimensionContext(turnNumber, isAgentA) {
+    const dimension = getCurrentDimension(turnNumber);
+    const isNewDimension = (turnNumber - 1) % 2 === 0;
+
+    // Track explored dimensions
+    if (isNewDimension && !knowledgeExploration.exploredDimensions.includes(dimension.id)) {
+        knowledgeExploration.exploredDimensions.push(dimension.id);
+    }
+
+    const focusText = isAgentA
+        ? `Bạn CẦN đưa ra quan điểm ỦNG HỘ về khía cạnh: "${dimension.name}"`
+        : `Bạn CẦN đưa ra quan điểm PHẢN ĐỐI về khía cạnh: "${dimension.name}"`;
+
+    const guidingQuestions = dimension.questions.map((q, i) => `   ${i + 1}. ${q}`).join('\n');
+
+    return `
+═══════════════════════════════════════════════════════════
+🔬 CHẾ ĐỘ KHÁM PHÁ KIẾN THỨC - Lượt ${turnNumber}
+═══════════════════════════════════════════════════════════
+📐 KHÍA CẠNH ĐANG KHÁM PHÁ: ${dimension.name} (${dimension.nameEn})
+
+📋 HƯỚNG DẪN: ${dimension.prompt}
+
+❓ CÂU HỎI GỢI Ý:
+${guidingQuestions}
+
+🎯 ${focusText}
+
+💡 YÊU CẦU ĐẶC BIỆT:
+   - Đưa ra THÔNG TIN CỤ THỂ, có giá trị cho việc nghiên cứu
+   - Sử dụng VÍ DỤ THỰC TẾ và DẪN CHỨNG
+   - Đề cập đến NGUỒN THAM KHẢO nếu có thể
+   - Phân tích SÂU thay vì chỉ nêu ý kiến chung chung
+═══════════════════════════════════════════════════════════`;
+}
+
+/**
+ * Extract knowledge from a response
+ * Parses claims, evidence, questions, and key terms
+ */
+function extractKnowledge(agent, response, turnNumber) {
+    const dimension = getCurrentDimension(turnNumber);
+    const isProStance = agent === 'A';
+
+    const turnData = {
+        turn: turnNumber,
+        agent: agent,
+        stance: isProStance ? 'pro' : 'con',
+        dimension: dimension.id,
+        dimensionName: dimension.name,
+        timestamp: new Date().toISOString(),
+        content: response,
+        extracted: {
+            claims: [],
+            evidence: [],
+            questions: [],
+            keyTerms: []
+        }
+    };
+
+    // Extract claims (sentences with strong assertions)
+    const claimPatterns = [
+        /(?:tôi cho rằng|theo tôi|rõ ràng là|thực tế cho thấy|không thể phủ nhận)([^.!?]+[.!?])/gi,
+        /(?:điều này chứng minh|kết luận là|vì vậy|do đó)([^.!?]+[.!?])/gi,
+        /(?:lý do chính|nguyên nhân|hậu quả)([^.!?]+[.!?])/gi
+    ];
+
+    for (const pattern of claimPatterns) {
+        const matches = response.matchAll(pattern);
+        for (const match of matches) {
+            const claim = match[0].trim();
+            if (claim.length > 20 && claim.length < 300) {
+                turnData.extracted.claims.push(claim);
+                if (isProStance) {
+                    knowledgeExploration.claims.pro.push({ turn: turnNumber, text: claim, dimension: dimension.id });
+                } else {
+                    knowledgeExploration.claims.con.push({ turn: turnNumber, text: claim, dimension: dimension.id });
+                }
+            }
+        }
+    }
+
+    // Extract evidence (references to data, studies, examples)
+    const evidencePatterns = [
+        /(?:theo nghiên cứu|số liệu cho thấy|thống kê|dữ liệu)([^.!?]+[.!?])/gi,
+        /(?:ví dụ|trường hợp|năm \d{4})([^.!?]+[.!?])/gi,
+        /(?:\d+%|\d+ triệu|\d+ tỷ)([^.!?]*[.!?])/gi
+    ];
+
+    for (const pattern of evidencePatterns) {
+        const matches = response.matchAll(pattern);
+        for (const match of matches) {
+            const evidence = match[0].trim();
+            if (evidence.length > 15 && evidence.length < 250) {
+                turnData.extracted.evidence.push(evidence);
+                knowledgeExploration.evidences.push({ turn: turnNumber, agent, text: evidence, dimension: dimension.id });
+            }
+        }
+    }
+
+    // Extract questions raised
+    const questionMatches = response.matchAll(/([^.!?\n]*\?)/g);
+    for (const match of questionMatches) {
+        const question = match[1].trim();
+        if (question.length > 10 && question.length < 200) {
+            turnData.extracted.questions.push(question);
+            knowledgeExploration.questions.push({ turn: turnNumber, agent, text: question, dimension: dimension.id });
+        }
+    }
+
+    // Extract key terms (capitalized concepts or quoted terms)
+    const termPatterns = [
+        /"([^"]+)"/g,  // Quoted terms
+        /\*\*([^*]+)\*\*/g,  // Bold terms
+        /(?:khái niệm|thuật ngữ|gọi là) ([^\s,.]+)/gi
+    ];
+
+    for (const pattern of termPatterns) {
+        const matches = response.matchAll(pattern);
+        for (const match of matches) {
+            const term = match[1].trim();
+            if (term.length > 2 && term.length < 50 && !knowledgeExploration.keyTerms.includes(term)) {
+                turnData.extracted.keyTerms.push(term);
+                knowledgeExploration.keyTerms.push(term);
+            }
+        }
+    }
+
+    // Add insight if substantial content was extracted
+    if (turnData.extracted.claims.length > 0 || turnData.extracted.evidence.length > 0) {
+        const insight = `[${dimension.name}] ${agent === 'A' ? 'PRO' : 'CON'}: ${turnData.extracted.claims[0] || turnData.extracted.evidence[0] || 'Đã khám phá'}`;
+        knowledgeExploration.insights.push(insight);
+    }
+
+    // Store turn data
+    knowledgeExploration.turnData.push(turnData);
+
+    console.log(`[Knowledge] Turn ${turnNumber} extracted:`, {
+        claims: turnData.extracted.claims.length,
+        evidence: turnData.extracted.evidence.length,
+        questions: turnData.extracted.questions.length,
+        terms: turnData.extracted.keyTerms.length
+    });
+
+    return turnData;
+}
+
+/**
+ * Generate structured export data for AI consumption
+ */
+function generateKnowledgeExport() {
+    const exportData = {
+        metadata: {
+            version: APP_VERSION,
+            exportedAt: new Date().toISOString(),
+            topic: currentTopic,
+            totalTurns: currentTurn,
+            agentA: elements.agentAName?.value || 'Agent A',
+            agentB: elements.agentBName?.value || 'Agent B',
+            scores: {
+                judge: { ...judgeScores },
+                debate: { ...debateScores }
+            }
+        },
+        dimensions: {
+            explored: knowledgeExploration.exploredDimensions,
+            total: TOPIC_DIMENSIONS.length,
+            coverage: Math.round((knowledgeExploration.exploredDimensions.length / TOPIC_DIMENSIONS.length) * 100) + '%',
+            details: TOPIC_DIMENSIONS.map(d => ({
+                id: d.id,
+                name: d.name,
+                nameEn: d.nameEn,
+                explored: knowledgeExploration.exploredDimensions.includes(d.id)
+            }))
+        },
+        knowledge: {
+            claims: {
+                pro: knowledgeExploration.claims.pro,
+                con: knowledgeExploration.claims.con,
+                total: knowledgeExploration.claims.pro.length + knowledgeExploration.claims.con.length
+            },
+            evidences: knowledgeExploration.evidences,
+            questions: knowledgeExploration.questions,
+            keyTerms: knowledgeExploration.keyTerms,
+            insights: knowledgeExploration.insights
+        },
+        conversation: {
+            turns: knowledgeExploration.turnData,
+            fullHistory: {
+                agentA: agentAHistory,
+                agentB: agentBHistory
+            }
+        },
+        summary: generateKnowledgeSummary()
+    };
+
+    return exportData;
+}
+
+/**
+ * Generate a text summary of the knowledge exploration
+ */
+function generateKnowledgeSummary() {
+    const proClaims = knowledgeExploration.claims.pro.length;
+    const conClaims = knowledgeExploration.claims.con.length;
+
+    return {
+        overview: `Cuộc tranh luận về "${currentTopic}" đã khám phá ${knowledgeExploration.exploredDimensions.length}/${TOPIC_DIMENSIONS.length} khía cạnh trong ${currentTurn} lượt.`,
+        balance: proClaims > conClaims
+            ? `Bên ỦNG HỘ đưa ra nhiều luận điểm hơn (${proClaims} vs ${conClaims})`
+            : proClaims < conClaims
+                ? `Bên PHẢN ĐỐI đưa ra nhiều luận điểm hơn (${conClaims} vs ${proClaims})`
+                : `Hai bên cân bằng về số luận điểm (${proClaims} mỗi bên)`,
+        evidenceQuality: knowledgeExploration.evidences.length > currentTurn * 0.5
+            ? 'Tranh luận có nhiều dẫn chứng cụ thể'
+            : 'Tranh luận cần thêm dẫn chứng',
+        keyQuestions: knowledgeExploration.questions.slice(0, 5),
+        importantTerms: knowledgeExploration.keyTerms.slice(0, 10),
+        dimensionsCovered: knowledgeExploration.exploredDimensions.map(id => {
+            const dim = TOPIC_DIMENSIONS.find(d => d.id === id);
+            return dim ? dim.name : id;
+        })
+    };
+}
+
+/**
+ * Export knowledge as JSON file download
+ */
+function exportKnowledgeJSON() {
+    const exportData = generateKnowledgeExport();
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    a.href = url;
+    a.download = `knowledge-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('[Knowledge] Exported JSON:', exportData);
+    return exportData;
+}
+
+/**
+ * Export knowledge as formatted markdown for readability
+ */
+function exportKnowledgeMarkdown() {
+    const data = generateKnowledgeExport();
+
+    let md = `# Báo cáo Khám phá Kiến thức
+
+## Thông tin chung
+- **Chủ đề:** ${data.metadata.topic}
+- **Số lượt:** ${data.metadata.totalTurns}
+- **Thời gian:** ${new Date(data.metadata.exportedAt).toLocaleString('vi-VN')}
+- **Agent A:** ${data.metadata.agentA} (ỦNG HỘ)
+- **Agent B:** ${data.metadata.agentB} (PHẢN ĐỐI)
+
+## Điểm số
+- Agent A: ${data.metadata.scores.judge.A} điểm
+- Agent B: ${data.metadata.scores.judge.B} điểm
+
+## Các khía cạnh đã khám phá (${data.dimensions.coverage})
+${data.dimensions.details.filter(d => d.explored).map(d => `- ✅ ${d.name} (${d.nameEn})`).join('\n')}
+
+### Chưa khám phá:
+${data.dimensions.details.filter(d => !d.explored).map(d => `- ⬜ ${d.name}`).join('\n') || 'Tất cả đã được khám phá!'}
+
+## Luận điểm chính
+
+### Bên ỦNG HỘ (${data.knowledge.claims.pro.length} luận điểm):
+${data.knowledge.claims.pro.slice(0, 10).map((c, i) => `${i + 1}. ${c.text}`).join('\n') || 'Không có'}
+
+### Bên PHẢN ĐỐI (${data.knowledge.claims.con.length} luận điểm):
+${data.knowledge.claims.con.slice(0, 10).map((c, i) => `${i + 1}. ${c.text}`).join('\n') || 'Không có'}
+
+## Dẫn chứng & Bằng chứng (${data.knowledge.evidences.length})
+${data.knowledge.evidences.slice(0, 10).map((e, i) => `${i + 1}. [${e.agent}] ${e.text}`).join('\n') || 'Không có dẫn chứng cụ thể'}
+
+## Câu hỏi được đặt ra (${data.knowledge.questions.length})
+${data.knowledge.questions.slice(0, 10).map((q, i) => `${i + 1}. ${q.text}`).join('\n') || 'Không có câu hỏi'}
+
+## Thuật ngữ quan trọng
+${data.knowledge.keyTerms.slice(0, 20).join(', ') || 'Không có'}
+
+## Tóm tắt
+${data.summary.overview}
+
+${data.summary.balance}
+
+${data.summary.evidenceQuality}
+
+---
+*Xuất từ AI Agent Arena v${APP_VERSION} - Knowledge Exploration Mode*
+`;
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    a.href = url;
+    a.download = `knowledge-report-${timestamp}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('[Knowledge] Exported Markdown report');
+    return md;
+}
+
+/**
+ * Update dimension indicator UI (shows current exploration focus)
+ */
+function updateDimensionIndicator(turnNumber) {
+    const dimension = getCurrentDimension(turnNumber);
+    const indicator = document.getElementById('dimensionIndicator');
+
+    if (indicator) {
+        indicator.innerHTML = `
+            <span class="dimension-icon">🔬</span>
+            <span class="dimension-name">${dimension.name}</span>
+            <span class="dimension-progress">${knowledgeExploration.exploredDimensions.length}/${TOPIC_DIMENSIONS.length}</span>
+        `;
+        indicator.title = dimension.prompt;
+    }
+
+    // Update judge panel with dimension info
+    const judgeContent = document.getElementById('judgeContent');
+    if (judgeContent && !judgeContent.classList.contains('has-verdict')) {
+        judgeContent.innerHTML = `
+            <p class="dimension-focus">🔬 Đang khám phá: <strong>${dimension.name}</strong></p>
+            <p class="dimension-hint">${dimension.prompt}</p>
+        `;
+    }
+}
+
 /**
  * V4.0.1: Generate a topic-specific STRUCTURED debate argument
  * Follows 4-part structure: Tóm tắt - Phản biện - Lập luận - Câu hỏi
@@ -1460,6 +1964,10 @@ async function startConversation() {
     resetJudgeScores();
     console.log('[V4.1] Judge scores reset');
 
+    // V4.2: Reset knowledge exploration state
+    resetKnowledgeExploration();
+    console.log('[V4.2] Knowledge exploration reset');
+
     // Update UI
     elements.startBtn.style.display = 'none';
     elements.stopBtn.style.display = 'flex';
@@ -1522,6 +2030,9 @@ async function runConversationLoop(initialMessage, maxTurns) {
         updateIntensityMeter(currentTurn, maxTurns);
         checkMilestone(currentTurn);
 
+        // V4.2: Update dimension indicator for knowledge exploration
+        updateDimensionIndicator(currentTurn);
+
         // Determine which agent speaks
         const speaker = currentSpeaker;
         const listener = speaker === 'A' ? 'B' : 'A';
@@ -1562,6 +2073,9 @@ async function runConversationLoop(initialMessage, maxTurns) {
             // Update scoreboard and show verdict
             updateScoreboard();
             showJudgeVerdict(speaker, judgeResult);
+
+            // V4.2: Extract knowledge for structured export
+            extractKnowledge(speaker, response, currentTurn);
 
             // Add response to speaker's chat as outgoing
             const speakerName = speaker === 'A' ? elements.agentAName.value : elements.agentBName.value;
@@ -1720,7 +2234,7 @@ function validateMessageAlternation(messages) {
 }
 
 /**
- * V4.0 PRO: Generate response using LM Studio API with hardcoded stance
+ * V4.2.0: Generate response using LM Studio API with hardcoded stance + knowledge exploration
  */
 async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, settings) {
     // HARDCODED STANCE - Agent A ALWAYS supports, Agent B ALWAYS opposes
@@ -1728,7 +2242,10 @@ async function generateWithLMStudio(agent, systemPrompt, history, inputMessage, 
     const stance = isAgentA ? 'ỦNG HỘ (PRO)' : 'PHẢN ĐỐI (CON)';
     const opponentStance = isAgentA ? 'PHẢN ĐỐI' : 'ỦNG HỘ';
 
-    // V4.0 PRO: Much stronger stance enforcement
+    // V4.2.0: Get dimension context for knowledge exploration
+    const dimensionContext = getDimensionContext(currentTurn, isAgentA);
+
+    // V4.0 PRO: Much stronger stance enforcement + V4.2 dimension guidance
     const debateContext = `═══════════════════════════════════════════════════════════
 🎭 CUỘC TRANH LUẬN - BẠN LÀ ${agent === 'A' ? 'NGƯỜI BẢO VỆ' : 'NGƯỜI PHẢN ĐỐI'}
 ═══════════════════════════════════════════════════════════
@@ -1740,6 +2257,8 @@ ${isAgentA ? '→ Bạn PHẢI bảo vệ, ủng hộ, tìm điểm tốt của 
 
 👊 ĐỐI THỦ CỦA BẠN: ${opponentStance}
 ${isAgentA ? '→ Họ sẽ chỉ trích - bạn phải bảo vệ!' : '→ Họ sẽ bảo vệ - bạn phải phản bác!'}
+
+${dimensionContext}
 
 ═══════════════════════════════════════════════════════════
 ⛔ CẤM TUYỆT ĐỐI (vi phạm = thất bại):
@@ -1761,12 +2280,14 @@ ${isAgentA ? '→ Họ sẽ chỉ trích - bạn phải bảo vệ!' : '→ Họ
 **3. LẬP LUẬN CỦA TÔI:** [Đưa ra 1 luận điểm MỚI ${isAgentA ? 'ủng hộ' : 'phản đối'} "${currentTopic}"]
    - Kèm dẫn chứng/ví dụ cụ thể
    - ${isAgentA ? 'Chỉ ra LỢI ÍCH, ĐIỂM MẠNH' : 'Chỉ ra RỦI RO, ĐIỂM YẾU'}
+   - TẬP TRUNG vào khía cạnh đang khám phá ở trên!
 
 **4. CÂU HỎI:** [Kết thúc bằng 1 câu hỏi thách thức đối phương]
 
 ═══════════════════════════════════════════════════════════
 💡 GHI NHỚ: Bạn là ${isAgentA ? 'LUẬT SƯ BẢO VỆ' : 'CÔNG TỐ VIÊN'}!
 Mục tiêu: ${isAgentA ? 'Bảo vệ "${currentTopic}" bằng mọi giá!' : 'Kết tội "${currentTopic}" bằng mọi giá!'}
+Hãy đưa ra THÔNG TIN CỤ THỂ và DẪN CHỨNG để làm giàu kiến thức!
 ═══════════════════════════════════════════════════════════`;
 
     // Build messages array for chat completion API
@@ -2036,6 +2557,9 @@ function clearConversation() {
 
     // V4.1: Reset judge scores
     resetJudgeScores();
+
+    // V4.2: Reset knowledge exploration
+    resetKnowledgeExploration();
 
     // Clear UI
     clearChatUI();
