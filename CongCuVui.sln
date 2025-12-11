@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LamComic", "LamComic\LamCom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DayNightGame", "DayNightGame\DayNightGame.csproj", "{AACC1E20-E40E-4794-854A-3A29A1E5EB99}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdeaChooser", "IdeaChooser\IdeaChooser.csproj", "{C8A93D99-BE23-4D91-9182-E30E7A221FA0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AACC1E20-E40E-4794-854A-3A29A1E5EB99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

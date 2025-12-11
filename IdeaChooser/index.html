@@ -1,0 +1,628 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Content Alchemist - Tạo Prompt Evergreen Đỉnh Cao</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Bảng màu hiện đại */
+            --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            --secondary-gradient: linear-gradient(135deg, #3B82F6 0%, #2DD4BF 100%);
+            --bg-body: #F3F4F6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --success: #10B981;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Main Container */
+        .app-container {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 850px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .app-header h1 {
+                margin: 0;
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+            }
+
+            .app-header p {
+                margin: 10px 0 0 0;
+                opacity: 0.9;
+                font-size: 16px;
+            }
+
+        /* Decorative background shapes */
+        .header-shape {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .shape-1 {
+            width: 200px;
+            height: 200px;
+            top: -50px;
+            left: -50px;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            bottom: -30px;
+            right: -30px;
+        }
+
+        /* Content Body */
+        .app-body {
+            padding: 40px;
+        }
+
+        /* Steps Sections */
+        .step-section {
+            margin-bottom: 35px;
+            opacity: 1;
+            transition: all 0.4s ease;
+        }
+
+            /* UX: Làm mờ các bước chưa đến lượt */
+            .step-section.inactive {
+                opacity: 0.5;
+                pointer-events: none;
+                filter: grayscale(1);
+            }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            background: var(--primary-gradient);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+
+        /* Inputs & Selects Styling */
+        .input-group {
+            position: relative;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+            background-color: #F9FAFB;
+            appearance: none; /* Remove default arrow for select */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 20px;
+        }
+
+        input[type="text"] {
+            background-image: none;
+        }
+            /* No arrow for text input */
+
+            input[type="text"]:focus, select:focus {
+                outline: none;
+                border-color: #8b5cf6; /* Purple focus */
+                box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+                background-color: #fff;
+            }
+
+        input::placeholder {
+            color: #9CA3AF;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+            .generate-btn:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+                filter: brightness(1.1);
+            }
+
+            .generate-btn:disabled {
+                background: var(--text-muted);
+                cursor: not-allowed;
+                opacity: 0.7;
+                box-shadow: none;
+            }
+
+        /* Output Area - UX: Ẩn mặc định */
+        .output-container {
+            margin-top: 40px;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 40px;
+            display: none; /* Hidden by default */
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .output-title {
+            font-weight: 700;
+            font-size: 20px;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .output-wrapper {
+            position: relative;
+            background: #1E293B; /* Dark mode for code area */
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        textarea#promptOutput {
+            width: 100%;
+            height: 350px;
+            padding: 20px;
+            background: transparent;
+            border: none;
+            color: #E2E8F0;
+            font-family: 'Fira Code', monospace; /* Monospace font for code */
+            font-size: 15px;
+            line-height: 1.7;
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(5px);
+        }
+
+            .copy-btn:hover {
+                background: rgba(255,255,255,0.2);
+                border-color: rgba(255,255,255,0.4);
+            }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background: var(--success);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+            #toast.show {
+                visibility: visible;
+                -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+                animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            }
+
+        @-webkit-keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @-webkit-keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .app-body {
+                padding: 25px;
+            }
+
+            .app-header h1 {
+                font-size: 24px;
+            }
+
+            .step-title {
+                font-size: 16px;
+            }
+
+            textarea#promptOutput {
+                height: 250px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-shape shape-1"></div>
+            <div class="header-shape shape-2"></div>
+            <h1>Content Alchemist</h1>
+            <p>Biến ý tưởng thành Prompt nội dung "Evergreen" đỉnh cao chỉ trong 3 bước</p>
+        </header>
+
+        <div class="app-body">
+            <div class="step-section" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Nhập "Nguyên liệu" (Từ khóa/Chủ đề)</div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="keyword" placeholder="Ví dụ: Hiệu ứng cánh bướm, Napoleon, Chủ nghĩa khắc kỷ..." oninput="checkStep1()">
+                </div>
+            </div>
+
+            <div class="step-section inactive" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Chọn Trụ Cột Nội Dung</div>
+                </div>
+                <div class="input-group">
+                    <select id="pillarSelect" onchange="loadTopics(); checkStep2()">
+                        <option value="">-- Hãy chọn nhóm chủ đề --</option>
+                        <option value="tuduy">🧠 Trụ cột 1: Tư duy & Tâm lý (Mental Models)</option>
+                        <option value="lichsu">🏛️ Trụ cột 2: Lịch sử & Chiến lược (History)</option>
+                        <option value="khoahoc">🚀 Trụ cột 3: Khoa học & Vũ trụ (Science)</option>
+                        <option value="vanhoa">🎨 Trụ cột 4: Văn hóa & Triết học (Culture)</option>
+                        <option value="bachkhoa">🌐 Trụ cột 5: Bách khoa toàn thư (General)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="step-section inactive" id="step3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Chọn Công Thức "Evergreen"</div>
+                </div>
+                <div class="input-group">
+                    <select id="topicSelect" onchange="checkBtnState()" disabled>
+                        <option value="">-- Vui lòng chọn Trụ cột trước --</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="generateBtn" class="generate-btn" onclick="generatePrompt()" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" /><path d="M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z" /></svg>
+                Chế Tạo Prompt Ngay
+            </button>
+
+            <div class="output-container" id="outputArea">
+                <div class="output-header">
+                    <div class="output-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        Prompt đã sẵn sàng!
+                    </div>
+                </div>
+                <div class="output-wrapper">
+                    <button class="copy-btn" onclick="copyToClipboard()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Sao chép
+                    </button>
+                    <textarea id="promptOutput" readonly spellcheck="false"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Đã sao chép Prompt thành công!
+    </div>
+
+    <script>
+        // --- DỮ LIỆU PROMPT (Đã sửa lỗi escape string) ---
+        const data = {
+            "tuduy": [
+                { name: "🧠 Mô hình tư duy (Mental Models) - Giải thích đơn giản", prompt: "Đóng vai chuyên gia tâm lý học và tư duy logic. Hãy giải thích mô hình tư duy '{keyword}'. \n\n[YÊU CẦU ĐẦU RA]:\n1. Định nghĩa đơn giản (ELI5 - Giải thích như cho đứa trẻ 5 tuổi) để ai cũng hiểu.\n2. Lấy 2 ví dụ thực tế đối lập: Người BÌNH THƯỜNG xử lý tình huống thế nào vs Người áp dụng mô hình '{keyword}' xử lý thế nào. Sự khác biệt về kết quả là gì?\n3. Gợi ý Visual (Quan trọng): Mô tả chi tiết một sơ đồ khối (flowchart) hoặc hình minh họa so sánh trực quan (Before/After) để tôi có thể đưa cho AI vẽ hoặc designer làm. Cần mô tả màu sắc, bố cục rõ ràng." },
+                { name: "🤔 Thiên kiến nhận thức (Cognitive Biases) - Tại sao ta sai?", prompt: "Đóng vai nhà khoa học hành vi hài hước. Hãy phân tích thiên kiến nhận thức '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Tại sao não bộ lại mắc lỗi này (giải thích dựa trên cơ chế tiến hóa hoặc tiết kiệm năng lượng của não)?\n2. 3 ví dụ 'đau thương' trong đời sống/mua sắm/đầu tư mà ai cũng từng gặp phải vì thiên kiến này.\n3. Gợi ý Visual: Mô tả một bức tranh biếm họa (comic strip 3 khung) hoặc ý tưởng cho một 'meme' hài hước để châm biếm tình huống này." },
+                { name: "🕵️ Tâm lý học hành vi ứng dụng", prompt: "Đóng vai chuyên gia đàm phán và bậc thầy giao tiếp. Hãy giải thích hiện tượng tâm lý '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Cơ chế hoạt động ngầm của nó (Nó đánh vào tử huyệt cảm xúc nào?).\n2. Hướng dẫn hành động (Actionable Tips): 3 cách áp dụng nó ngay lập tức vào công việc/cuộc sống để có lợi thế.\n3. Gợi ý Visual: Một biểu đồ ẩn dụ (metaphor). Ví dụ: so sánh nó với tảng băng trôi, hoặc hiệu ứng domino. Mô tả kỹ hình ảnh đó." }
+            ],
+            "lichsu": [
+                { name: "👑 Bài học xương máu từ Đế chế/Vĩ nhân", prompt: "Đóng vai một sử gia kể chuyện lôi cuốn (storyteller). Hãy kể về '{keyword}' nhưng dưới góc nhìn bài học quản trị/lãnh đạo hiện đại.\n\n[YÊU CẦU ĐẦU RA]:\n1. Hook: Một sự kiện kịch tính hoặc một nghịch lý liên quan đến '{keyword}' để thu hút sự chú ý.\n2. Phân tích cốt tử: Điểm mấu chốt nào dẫn đến thành công tột đỉnh hoặc thất bại thảm hại của họ?\n3. Bài học rút ra: 3 điều mà một CEO hoặc người trẻ thời nay có thể học và áp dụng.\n4. Gợi ý Visual: Mô tả một chân dung nhân vật đầy uy quyền với 3 trích dẫn (quotes) đắt giá nhất của họ được làm nổi bật xung quanh." },
+                { name: "⚔️ Mổ xẻ Binh pháp & Chiến lược kinh điển", prompt: "Đóng vai chiến lược gia quân sự đại tài. Hãy mổ xẻ chiến lược/trận đánh '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Bối cảnh thế trận: Tương quan lực lượng Bên A vs Bên B (Nhấn mạnh bên yếu thắng bên mạnh nếu có).\n2. Điểm 'lật kèo' (Turning point): Quyết định chiến lược nào đã thay đổi tất cả? Tại sao nó thiên tài?\n3. Ứng dụng thương trường: Áp dụng tư duy chiến lược này vào cạnh tranh kinh doanh ngày nay thế nào?\n4. Gợi ý Visual: Mô tả một bản đồ chiến thuật (Tactical Map) với các mũi tên di chuyển, hoặc mô hình sa bàn 3D thể hiện thế gọng kìm/bao vây." },
+                { name: "🤫 Hồ sơ mật / Sự thật ngầm hiểu", prompt: "Đóng vai thám tử chuyên điều tra lịch sử. Hãy tiết lộ những sự thật ít người biết (untold stories) về '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Lời đồn đại chúng: Mọi người thường nghĩ gì sai về '{keyword}'?\n2. Sự thật trần trụi: Hé lộ 3-5 sự thật bất ngờ, có bằng chứng sử liệu, đi ngược lại đám đông.\n3. Gợi ý Visual: Dạng bài 'Top 5 sự thật bạn đã bị lừa' hoặc hình ảnh so sánh chia đôi màn hình: 'Phim ảnh' vs 'Thực tế lịch sử'." }
+            ],
+            "khoahoc": [
+                { name: "🌌 Vũ trụ & Thiên văn - Góc nhìn choáng ngợp", prompt: "Đóng vai nhà vật lý thiên văn nổi tiếng (với giọng văn đầy cảm hứng như Carl Sagan hoặc Neil deGrasse Tyson). Hãy giải thích về '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Sử dụng một phép so sánh đại chúng (analogy) cực kỳ sáng tạo để mô tả độ lớn/phức tạp của nó (Ví dụ: nếu vũ trụ là đại dương thì Trái Đất là gì?).\n2. Viễn cảnh: Điều điên rồ gì sẽ xảy ra nếu con người tiếp cận hoặc rơi vào '{keyword}'?\n3. Gợi ý Visual: Mô tả một bức ảnh vũ trụ phong cách siêu thực (Surrealism/Sci-fi art) hoặc ý tưởng cho video so sánh kích thước (Scale comparison) để tạo hiệu ứng 'Wow'." },
+                { name: "🤖 Công nghệ vị lai (Futurism 2050)", prompt: "Đóng vai nhà tương lai học (Futurist). Hãy dự đoán bức tranh thế giới khi công nghệ '{keyword}' phổ biến trong 20-50 năm tới.\n\n[YÊU CẦU ĐẦU RA]:\n1. Một ngày bình thường: Mô tả 1 ngày của một người bình thường sống trong thời đại đó. Họ ăn gì, di chuyển thế nào, giao tiếp ra sao với '{keyword}'?\n2. Hai mặt của đồng xu: Phân tích cơ hội lớn nhất và rủi ro đạo đức đáng sợ nhất mà nó mang lại.\n3. Gợi ý Visual: Mô tả một bức tranh phong cách Cyberpunk (nếu công nghệ tối tăm) hoặc Solarpunk (nếu công nghệ xanh/tích cực) thể hiện thành phố tương lai." },
+                { name: "⚙️ Cơ chế hoạt động (How it works - ELI5)", prompt: "Đóng vai kỹ sư trưởng tài ba. Hãy giải thích cơ chế hoạt động của '{keyword}' cho một đứa trẻ 10 tuổi tò mò.\n\n[YÊU CẦU ĐẦU RA]:\n1. Phá băng: Dùng một vật dụng gần gũi trong nhà để so sánh với '{keyword}'.\n2. Quy trình 3 bước: Giải thích quy trình hoạt động từng bước (Step-by-step) đơn giản hóa tối đa, loại bỏ thuật ngữ chuyên ngành.\n3. Gợi ý Visual: Mô tả hình ảnh mặt cắt (Cutaway view) hoặc sơ đồ giải phẫu 'bùng nổ' (Exploded view) cho thấy các linh kiện bên trong." }
+            ],
+            "vanhoa": [
+                { name: "🌿 Triết học đời sống (Ứng dụng giảm stress)", prompt: "Đóng vai một triết gia thông thái và bình thản. Hãy bàn về khái niệm triết học '{keyword}' dưới góc độ ứng dụng cho người hiện đại bận rộn.\n\n[YÊU CẦU ĐẦU RA]:\n1. Bản chất cốt lõi: Định nghĩa nó trong 1 câu đắt giá.\n2. Hướng dẫn thực hành (Practical Guide): 3 bài tập nhỏ hoặc thói quen hàng ngày để áp dụng '{keyword}' vào việc giảm stress, tìm sự bình yên nội tại.\n3. Gợi ý Visual: Hình ảnh phong cách tối giản (Minimalist), Zen, thiên nhiên (núi non, mặt hồ) kèm một câu trích dẫn (Quote) kiểu typography đẹp mắt." },
+                { name: "🎨 Giải mã Nghệ thuật & Biểu tượng ẩn", prompt: "Đóng vai nhà phê bình nghệ thuật có gu. Hãy giải mã ý nghĩa tầng sâu của tác phẩm/biểu tượng '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Cái nhìn đầu tiên: Người thường thấy gì?\n2. Soi kính hiển vi: Chỉ ra 3 chi tiết ẩn (Hidden details/Easter eggs) mà 90% mọi người bỏ qua và ý nghĩa của chúng.\n3. Thông điệp ngầm của tác giả là gì?\n4. Gợi ý Visual: Hình ảnh tác phẩm gốc với các vòng tròn đỏ phóng to (Zoom in) vào các chi tiết ẩn kèm chú thích nổi bật." },
+                { name: "📜 Nguồn gốc từ ngữ & Phong tục (Etymology)", prompt: "Đóng vai nhà ngôn ngữ học và khảo cổ văn hóa. Hãy kể câu chuyện về nguồn gốc của '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Hành trình thời gian: Nó bắt nguồn từ đâu, thời kỳ nào, nền văn hóa nào?\n2. Sự biến đổi thú vị: Ý nghĩa của nó đã thay đổi 'một trời một vực' như thế nào từ xưa đến nay?\n3. Gợi ý Visual: Infographic dạng dòng thời gian (Timeline road) hoặc bản đồ địa lý thể hiện sự lan truyền của nó." }
+            ],
+            "bachkhoa": [
+                { name: "💸 Kinh tế học hài hước (Freakonomics)", prompt: "Đóng vai nhà kinh tế học hài hước, thích phá vỡ các quy tắc. Hãy giải thích hiện tượng '{keyword}' qua lăng kính kinh tế học hành vi.\n\n[YÊU CẦU ĐẦU RA]:\n1. Câu hỏi hóc búa: Tại sao nó lại đắt/rẻ/khan hiếm một cách vô lý như vậy? (Đặt câu hỏi kích thích tò mò).\n2. Giải mã nghịch lý: Chỉ ra động cơ ngầm (incentive) hoặc quy luật cung cầu ẩn đằng sau mà ít ai nhận ra.\n3. Gợi ý Visual: Biểu đồ đơn giản hóa với icon vui nhộn, hoặc hình ảnh so sánh giá trị gây sốc (Ví dụ: Giá 1 ly cafe vs Giá 1kg cafe thô)." },
+                { name: "📊 Dữ liệu lạ & Thống kê biết nói", prompt: "Đóng vai chuyên gia phân tích dữ liệu đại tài. Hãy cung cấp các số liệu thống kê thú vị, ít biết về '{keyword}'.\n\n[YÊU CẦU ĐẦU RA]:\n1. Những con số biết nói: Tổng hợp 5-7 số liệu thống kê gây 'sốc', bất ngờ hoặc đi ngược lại trực giác về '{keyword}'.\n2. Nhận định (Insight): Xu hướng đằng sau các con số đó là gì? Nó báo hiệu điều gì cho tương lai?\n3. Gợi ý Visual: Mô tả chi tiết một Infographic dạng 'Data is Beautiful' (Biểu đồ cột màu sắc, biểu đồ nhiệt, hoặc đám mây từ khóa) thật bắt mắt." }
+            ]
+        };
+
+        // --- CÁC HÀM XỬ LÝ UX (Progressive Disclosure) ---
+
+        // Kiểm tra Bước 1 để mở Bước 2
+        function checkStep1() {
+            const keyword = document.getElementById("keyword").value;
+            const step2 = document.getElementById("step2");
+            if (keyword.trim().length > 1) {
+                step2.classList.remove("inactive");
+            } else {
+                step2.classList.add("inactive");
+                // Nếu quay lại xóa keyword thì reset các bước sau
+                document.getElementById("pillarSelect").selectedIndex = 0;
+                resetStep3();
+            }
+            checkStep2(); // Kiểm tra lại các nút
+        }
+
+        // Load topic và kiểm tra Bước 2 để mở Bước 3
+        function loadTopics() {
+            const pillar = document.getElementById("pillarSelect").value;
+            const topicSelect = document.getElementById("topicSelect");
+            const step3 = document.getElementById("step3");
+
+            topicSelect.innerHTML = '<option value="">-- Chọn dạng bài --</option>';
+
+            if (pillar && data[pillar]) {
+                topicSelect.disabled = false;
+                step3.classList.remove("inactive");
+                data[pillar].forEach(topic => {
+                    const option = document.createElement("option");
+                    option.value = topic.prompt;
+                    option.text = topic.name;
+                    topicSelect.add(option);
+                });
+            } else {
+                resetStep3();
+            }
+            checkStep2();
+        }
+
+        // Kiểm tra bước 2 để đảm bảo nút Generate chỉ sáng khi cần
+        function checkStep2() {
+            checkBtnState();
+        }
+
+        // Reset bước 3 khi thay đổi bước 2
+        function resetStep3() {
+            const topicSelect = document.getElementById("topicSelect");
+            const step3 = document.getElementById("step3");
+            topicSelect.disabled = true;
+            topicSelect.innerHTML = '<option value="">-- Vui lòng chọn Trụ cột trước --</option>';
+            step3.classList.add("inactive");
+            checkBtnState();
+        }
+
+        // Kiểm tra toàn bộ để bật nút Generate
+        function checkBtnState() {
+            const keyword = document.getElementById("keyword").value;
+            const pillar = document.getElementById("pillarSelect").value;
+            const topicPrompt = document.getElementById("topicSelect").value;
+            const generateBtn = document.getElementById("generateBtn");
+
+            if (keyword.trim().length > 0 && pillar && topicPrompt && !document.getElementById("topicSelect").disabled) {
+                generateBtn.disabled = false;
+            } else {
+                generateBtn.disabled = true;
+            }
+        }
+
+        // --- HÀM TẠO & COPY ---
+
+        function generatePrompt() {
+            const keyword = document.getElementById("keyword").value;
+            const template = document.getElementById("topicSelect").value;
+            const outputArea = document.getElementById("outputArea");
+            const outputTextarea = document.getElementById("promptOutput");
+
+            // Hiệu ứng loading giả cho nút bấm
+            const btn = document.getElementById("generateBtn");
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-loader spinning"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> Đang chế tạo...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                // Tạo prompt final
+                const finalPrompt = template.replace(/{keyword}/g, keyword.toUpperCase());
+                outputTextarea.value = finalPrompt;
+
+                // Hiện kết quả và cuộn xuống
+                outputArea.style.display = "block";
+                outputArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Reset nút bấm
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }, 800); // Giả vờ delay 0.8s cho chuyên nghiệp
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("promptOutput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+            navigator.clipboard.writeText(copyText.value).then(function () {
+                showToast();
+            }, function (err) {
+                // Fallback for older browsers
+                document.execCommand("copy");
+                showToast();
+            });
+        }
+
+        function showToast() {
+            var x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
+        }
+
+        // CSS cho hiệu ứng loading quay vòng
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = '.spinning { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }';
+        document.getElementsByTagName('head')[0].appendChild(style);
+    </script>
+
+</body>
+</html>
