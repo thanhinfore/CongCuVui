@@ -43,10 +43,21 @@ function handleMobileToolbarToggle() {
 
 // Cập nhật hàm tạo nội dung panel để thêm kiểm tra lỗi và log
 function updateMobilePanelContent() {
+    // Đảm bảo lấy lại tham chiếu DOM mới nhất
+    if (!panelContent) {
+        panelContent = document.querySelector('.panel-content');
+    }
+    if (!mobileToolsPanel) {
+        mobileToolsPanel = document.getElementById('mobileToolsPanel');
+    }
+
     if (!panelContent || !mobileToolsPanel) {
         console.error('Panel content hoặc mobile tools panel không tồn tại');
         return;
     }
+
+    // Lấy currentMode từ window để đảm bảo lấy giá trị mới nhất
+    const activeMode = window.currentMode || currentMode;
 
     if (!mobileToolsPanel.classList.contains('active') && !document.body.classList.contains('panel-open')) {
         console.log('Đang cập nhật panel khi nó chưa active');
@@ -58,7 +69,7 @@ function updateMobilePanelContent() {
 
     try {
         // Thêm lại các nút công cụ
-        const toolButtons = document.querySelector('.tool-buttons');
+        const toolButtons = document.querySelector('.controls-panel .tool-buttons');
         if (toolButtons) {
             const clonedButtons = toolButtons.cloneNode(true);
             panelContent.appendChild(clonedButtons);
@@ -68,7 +79,7 @@ function updateMobilePanelContent() {
         }
 
         // Thêm lại nút lịch sử
-        const historyControls = document.querySelector('.history-controls');
+        const historyControls = document.querySelector('.controls-panel .history-controls');
         if (historyControls) {
             const clonedHistory = historyControls.cloneNode(true);
             panelContent.appendChild(clonedHistory);
@@ -77,22 +88,24 @@ function updateMobilePanelContent() {
             console.error('Không tìm thấy .history-controls');
         }
 
-        // Đánh dấu nút công cụ đang active
-        const activeToolButton = panelContent.querySelector(`#${currentMode}ModeButton`);
-        if (activeToolButton) {
-            activeToolButton.classList.add('active');
-            console.log('Đã đánh dấu nút active:', currentMode);
+        // Đánh dấu nút công cụ đang active (nếu có mode được chọn)
+        if (activeMode) {
+            const activeToolButton = panelContent.querySelector(`#${activeMode}ModeButton`);
+            if (activeToolButton) {
+                activeToolButton.classList.add('active');
+                console.log('Đã đánh dấu nút active:', activeMode);
+            }
         } else {
-            console.log('Không tìm thấy nút active cho mode:', currentMode);
+            console.log('Chưa có mode nào được chọn, hiển thị panel mặc định');
         }
 
         // Hiển thị panel tùy chọn tương ứng với chế độ hiện tại
         let optionsPanel = null;
-        if (currentMode === 'erase') {
+        if (activeMode === 'erase') {
             optionsPanel = document.getElementById('eraseOptions');
-        } else if (currentMode === 'text') {
+        } else if (activeMode === 'text') {
             optionsPanel = document.getElementById('textOptions');
-        } else if (currentMode === 'select') {
+        } else if (activeMode === 'select') {
             optionsPanel = document.getElementById('selectOptions');
         }
 
@@ -101,8 +114,8 @@ function updateMobilePanelContent() {
             clonedOptionsPanel.classList.remove('hidden');
             panelContent.appendChild(clonedOptionsPanel);
             console.log('Đã thêm panel tùy chọn:', optionsPanel.id);
-        } else {
-            console.log('Không tìm thấy panel tùy chọn cho mode:', currentMode);
+        } else if (activeMode) {
+            console.log('Không tìm thấy panel tùy chọn cho mode:', activeMode);
         }
 
         // Đảm bảo panel có đủ kích thước tối thiểu
