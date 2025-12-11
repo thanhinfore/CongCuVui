@@ -7,12 +7,18 @@ let originalSetupMobileEventListeners = null;
 function syncFontSizeInputs() {
     console.log('Syncing font size inputs...');
 
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+
     // Lấy input fontSize từ panel mobile và panel chính
-    const mobileFontSizeInput = document.querySelector('.panel-content #fontSize');
-    const mainFontSizeInput = document.getElementById('fontSize');
+    const mobileFontSizeInput = currentPanelContent ? currentPanelContent.querySelector('#fontSize') : null;
+    const mainFontSizeInput = document.querySelector('.controls-panel #fontSize') || document.getElementById('fontSize');
 
     if (!mobileFontSizeInput || !mainFontSizeInput) {
-        console.log('Font size inputs not found');
+        // Không phải lỗi nếu chưa có mode text được chọn
+        if (window.currentMode === 'text') {
+            console.log('Font size inputs not found for text mode');
+        }
         return;
     }
 
@@ -88,14 +94,17 @@ function applyFontSizeToSelectedText(size) {
 function enhanceOtherInputs() {
     console.log('Enhancing other inputs...');
 
-    if (!window.panelContent) {
-        console.log('Panel content not found');
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+
+    if (!currentPanelContent) {
+        // Không phải lỗi nếu panel chưa mở
         return;
     }
 
     // Xử lý input màu sắc văn bản
-    const mobileTextColorInput = window.panelContent.querySelector('#textColor');
-    const mainTextColorInput = document.getElementById('textColor');
+    const mobileTextColorInput = currentPanelContent.querySelector('#textColor');
+    const mainTextColorInput = document.querySelector('.controls-panel #textColor') || document.getElementById('textColor');
 
     if (mobileTextColorInput && mainTextColorInput) {
         mobileTextColorInput.addEventListener('input', function () {
@@ -117,8 +126,8 @@ function enhanceOtherInputs() {
     }
 
     // Xử lý input font chữ
-    const mobileFontFamilyInput = window.panelContent.querySelector('#fontFamily');
-    const mainFontFamilyInput = document.getElementById('fontFamily');
+    const mobileFontFamilyInput = currentPanelContent.querySelector('#fontFamily');
+    const mainFontFamilyInput = document.querySelector('.controls-panel #fontFamily') || document.getElementById('fontFamily');
 
     if (mobileFontFamilyInput && mainFontFamilyInput) {
         mobileFontFamilyInput.addEventListener('change', function () {
@@ -148,8 +157,11 @@ function enhanceOtherInputs() {
 function safeEnhancedSetupMobileEventListeners() {
     console.log('Setting up enhanced mobile event listeners safely...');
 
-    if (!window.panelContent) {
-        console.log('Panel content not found');
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+
+    if (!currentPanelContent) {
+        console.log('Panel content not found, skipping enhanced listeners');
         return;
     }
 

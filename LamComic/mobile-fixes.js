@@ -116,50 +116,61 @@ function setupMobileHelper() {
 
 // Sửa lỗi 3: Cải tiến hàm handleMobilePanelClose để lưu nội dung text khi đóng panel
 function handleMobilePanelClose() {
-    // Đồng bộ giá trị textarea trước khi đóng panel
-    const mobileTextContent = panelContent.querySelector('#textContent');
-    const mainTextContent = document.getElementById('textContent');
+    // Lấy DOM elements mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+    const currentMobileToolsPanel = document.getElementById('mobileToolsPanel');
+    const activeMode = window.currentMode || currentMode;
 
-    if (mobileTextContent && mainTextContent && currentMode === 'text') {
-        mainTextContent.value = mobileTextContent.value;
+    // Đồng bộ giá trị textarea trước khi đóng panel
+    if (currentPanelContent) {
+        const mobileTextContent = currentPanelContent.querySelector('#textContent');
+        const mainTextContent = document.querySelector('.controls-panel #textContent') || document.getElementById('textContent');
+
+        if (mobileTextContent && mainTextContent && activeMode === 'text') {
+            mainTextContent.value = mobileTextContent.value;
+        }
     }
 
     // Đồng bộ các tùy chọn khác
     syncMobileOptionsToMain();
 
     // Đóng panel
-    mobileToolsPanel.classList.remove('active');
+    if (currentMobileToolsPanel) {
+        currentMobileToolsPanel.classList.remove('active');
+    }
     document.body.classList.remove('panel-open');
 }
 
 // Thêm hàm mới để đồng bộ tùy chọn từ mobile panel về main panel
 function syncMobileOptionsToMain() {
-    if (!panelContent) return;
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+    if (!currentPanelContent) return;
 
     // Đồng bộ màu chữ
-    const mobileTextColor = panelContent.querySelector('#textColor');
-    const mainTextColor = document.getElementById('textColor');
+    const mobileTextColor = currentPanelContent.querySelector('#textColor');
+    const mainTextColor = document.querySelector('.controls-panel #textColor') || document.getElementById('textColor');
     if (mobileTextColor && mainTextColor) {
         mainTextColor.value = mobileTextColor.value;
     }
 
     // Đồng bộ cỡ chữ
-    const mobileFontSize = panelContent.querySelector('#fontSize');
-    const mainFontSize = document.getElementById('fontSize');
+    const mobileFontSize = currentPanelContent.querySelector('#fontSize');
+    const mainFontSize = document.querySelector('.controls-panel #fontSize') || document.getElementById('fontSize');
     if (mobileFontSize && mainFontSize) {
         mainFontSize.value = mobileFontSize.value;
     }
 
     // Đồng bộ font chữ
-    const mobileFontFamily = panelContent.querySelector('#fontFamily');
-    const mainFontFamily = document.getElementById('fontFamily');
+    const mobileFontFamily = currentPanelContent.querySelector('#fontFamily');
+    const mainFontFamily = document.querySelector('.controls-panel #fontFamily') || document.getElementById('fontFamily');
     if (mobileFontFamily && mainFontFamily) {
         mainFontFamily.value = mobileFontFamily.value;
     }
 
     // Đồng bộ căn lề
-    const mobileAlignOptions = panelContent.querySelectorAll('input[name="textAlign"]');
-    const mainAlignOptions = document.querySelectorAll('input[name="textAlign"]');
+    const mobileAlignOptions = currentPanelContent.querySelectorAll('input[name="textAlign"]');
+    const mainAlignOptions = document.querySelectorAll('.controls-panel input[name="textAlign"]');
 
     if (mobileAlignOptions.length > 0 && mainAlignOptions.length > 0) {
         mobileAlignOptions.forEach((opt, index) => {
@@ -170,8 +181,8 @@ function syncMobileOptionsToMain() {
     }
 
     // Đồng bộ màu xóa
-    const mobileEraseColor = panelContent.querySelector('#eraseColor');
-    const mainEraseColor = document.getElementById('eraseColor');
+    const mobileEraseColor = currentPanelContent.querySelector('#eraseColor');
+    const mainEraseColor = document.querySelector('.controls-panel #eraseColor') || document.getElementById('eraseColor');
     if (mobileEraseColor && mainEraseColor) {
         mainEraseColor.value = mobileEraseColor.value;
     }
@@ -179,25 +190,33 @@ function syncMobileOptionsToMain() {
 
 // Cập nhật lại hàm setupMobileEventListeners để hỗ trợ đồng bộ hai chiều
 function setupMobileEventListeners() {
-    if (!panelContent) return;
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+    const currentMobileToolsPanel = document.getElementById('mobileToolsPanel');
+
+    if (!currentPanelContent) return;
 
     // Add click handlers to cloned tool buttons
-    const mobileToolButtons = panelContent.querySelectorAll('.tool-btn');
+    const mobileToolButtons = currentPanelContent.querySelectorAll('.tool-btn');
     mobileToolButtons.forEach(btn => {
         btn.addEventListener('click', function () {
             const id = this.id;
-            const originalButton = document.getElementById(id);
+            const originalButton = document.querySelector('.controls-panel #' + id) || document.getElementById(id);
             if (originalButton) {
                 // Nhấn nút gốc để kích hoạt logic chế độ tương ứng
                 originalButton.click();
 
                 // Sau khi kích hoạt nút, cập nhật lại panel mobile với nội dung mới
-                updateMobilePanelContent();
+                if (typeof updateMobilePanelContent === 'function') {
+                    updateMobilePanelContent();
+                }
 
                 // Không đóng panel khi nhấn vào công cụ vì cần hiển thị tùy chọn
                 // Chỉ đóng panel nếu là nút reset hoặc save
                 if (id === 'resetButton' || id === 'saveButton') {
-                    mobileToolsPanel.classList.remove('active');
+                    if (currentMobileToolsPanel) {
+                        currentMobileToolsPanel.classList.remove('active');
+                    }
                     document.body.classList.remove('panel-open');
                 }
             }
@@ -205,11 +224,11 @@ function setupMobileEventListeners() {
     });
 
     // Add click handlers to cloned history buttons
-    const mobileHistoryButtons = panelContent.querySelectorAll('.history-btn');
+    const mobileHistoryButtons = currentPanelContent.querySelectorAll('.history-btn');
     mobileHistoryButtons.forEach(btn => {
         btn.addEventListener('click', function () {
             const id = this.id;
-            const originalButton = document.getElementById(id);
+            const originalButton = document.querySelector('.controls-panel #' + id) || document.getElementById(id);
             if (originalButton) {
                 originalButton.click();
             }
@@ -217,10 +236,10 @@ function setupMobileEventListeners() {
     });
 
     // Thêm event listeners cho các input text trong panel mobile
-    const mobileTextContent = panelContent.querySelector('#textContent');
+    const mobileTextContent = currentPanelContent.querySelector('#textContent');
     if (mobileTextContent) {
         mobileTextContent.addEventListener('input', function () {
-            const mainTextContent = document.getElementById('textContent');
+            const mainTextContent = document.querySelector('.controls-panel #textContent') || document.getElementById('textContent');
             if (mainTextContent) {
                 mainTextContent.value = this.value;
             }
@@ -228,47 +247,65 @@ function setupMobileEventListeners() {
     }
 
     // Setup number inputs in mobile panel
-    setupNumberInputs(panelContent);
+    if (typeof setupNumberInputs === 'function') {
+        setupNumberInputs(currentPanelContent);
+    }
 
     // Setup color pickers in mobile panel
-    setupColorInputs(panelContent);
+    if (typeof setupColorInputs === 'function') {
+        setupColorInputs(currentPanelContent);
+    }
 }
 
-// Thêm hàm mới để cập nhật nội dung panel mobile dựa trên chế độ hiện tại
-function updateMobilePanelContent() {
-    if (!panelContent || !mobileToolsPanel || !mobileToolsPanel.classList.contains('active')) return;
+// Hàm updateMobilePanelContent được định nghĩa trong panel-content-fix.js
+// Giữ lại để tương thích ngược nếu panel-content-fix.js không load
+function updateMobilePanelContentFallback() {
+    // Lấy panel content mới nhất
+    const currentPanelContent = document.querySelector('.panel-content');
+    const currentMobileToolsPanel = document.getElementById('mobileToolsPanel');
+
+    if (!currentPanelContent || !currentMobileToolsPanel || !currentMobileToolsPanel.classList.contains('active')) return;
+
+    // Lấy mode hiện tại từ window
+    const activeMode = window.currentMode || currentMode;
 
     // Xóa nội dung hiện tại
-    panelContent.innerHTML = '';
+    currentPanelContent.innerHTML = '';
 
     // Thêm lại các nút công cụ
-    const toolButtons = document.querySelector('.tool-buttons').cloneNode(true);
-    panelContent.appendChild(toolButtons);
+    const toolButtons = document.querySelector('.controls-panel .tool-buttons');
+    if (toolButtons) {
+        currentPanelContent.appendChild(toolButtons.cloneNode(true));
+    }
 
     // Thêm lại nút lịch sử
-    const historyControls = document.querySelector('.history-controls').cloneNode(true);
-    panelContent.appendChild(historyControls);
+    const historyControls = document.querySelector('.controls-panel .history-controls');
+    if (historyControls) {
+        currentPanelContent.appendChild(historyControls.cloneNode(true));
+    }
 
-    // Đánh dấu nút công cụ đang active
-    const activeToolButton = panelContent.querySelector(`#${currentMode}ModeButton`);
-    if (activeToolButton) {
-        activeToolButton.classList.add('active');
+    // Đánh dấu nút công cụ đang active (nếu có mode)
+    if (activeMode) {
+        const activeToolButton = currentPanelContent.querySelector(`#${activeMode}ModeButton`);
+        if (activeToolButton) {
+            activeToolButton.classList.add('active');
+        }
     }
 
     // Hiển thị panel tùy chọn tương ứng với chế độ hiện tại
     let optionsPanel = null;
-    if (currentMode === 'erase') {
+    if (activeMode === 'erase') {
         optionsPanel = document.getElementById('eraseOptions');
-    } else if (currentMode === 'text') {
+    } else if (activeMode === 'text') {
         optionsPanel = document.getElementById('textOptions');
-    } else if (currentMode === 'select') {
+    } else if (activeMode === 'select') {
         optionsPanel = document.getElementById('selectOptions');
     }
 
     if (optionsPanel) {
         const clonedOptionsPanel = optionsPanel.cloneNode(true);
         clonedOptionsPanel.classList.remove('hidden');
-        panelContent.appendChild(clonedOptionsPanel);
+        currentPanelContent.appendChild(clonedOptionsPanel);
     }
 
     // Thiết lập lại event listeners cho các phần tử vừa thêm
@@ -281,15 +318,21 @@ function setupCanvasPanelEvents() {
     if (!canvasPanel) return;
 
     canvasPanel.addEventListener('click', function (e) {
+        // Lấy DOM elements mới nhất
+        const currentMobileToolsPanel = document.getElementById('mobileToolsPanel');
+        const currentPanelContent = document.querySelector('.panel-content');
+        const currentCanvas = document.getElementById('imageCanvas');
+        const activeMode = window.currentMode || currentMode;
+
         // Chỉ đóng panel mobile nếu đang mở và đang ở chế độ text
-        if (isMobileDevice &&
-            mobileToolsPanel &&
-            mobileToolsPanel.classList.contains('active') &&
-            currentMode === 'text') {
+        if (window.isMobileDevice &&
+            currentMobileToolsPanel &&
+            currentMobileToolsPanel.classList.contains('active') &&
+            activeMode === 'text') {
 
             // Kiểm tra nội dung text trước khi đóng
-            const mobileTextContent = panelContent.querySelector('#textContent');
-            const mainTextContent = document.getElementById('textContent');
+            const mobileTextContent = currentPanelContent ? currentPanelContent.querySelector('#textContent') : null;
+            const mainTextContent = document.querySelector('.controls-panel #textContent') || document.getElementById('textContent');
 
             // Chỉ đóng panel khi đã có text
             if (mobileTextContent && mobileTextContent.value.trim() !== '') {
@@ -299,20 +342,26 @@ function setupCanvasPanelEvents() {
                 }
 
                 // Đóng panel
-                handleMobilePanelClose();
+                if (typeof handleMobilePanelClose === 'function') {
+                    handleMobilePanelClose();
+                }
 
                 // Tạo text mới trên canvas
-                const pos = {
-                    x: canvas.width / 2 - 100, // Đặt mặc định ở giữa canvas
-                    y: canvas.height / 2 - 50
-                };
+                if (currentCanvas) {
+                    const pos = {
+                        x: currentCanvas.width / 2 - 100, // Đặt mặc định ở giữa canvas
+                        y: currentCanvas.height / 2 - 50
+                    };
 
-                handleInteractionStart({
-                    type: 'mousedown',
-                    clientX: pos.x,
-                    clientY: pos.y,
-                    preventDefault: function () { }
-                });
+                    if (typeof handleInteractionStart === 'function') {
+                        handleInteractionStart({
+                            type: 'mousedown',
+                            clientX: pos.x,
+                            clientY: pos.y,
+                            preventDefault: function () { }
+                        });
+                    }
+                }
             }
         }
     });
