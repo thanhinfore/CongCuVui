@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11222.15 d18.0
+VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageGen", "ImageGen\ImageGen.csproj", "{55A6CF30-795F-4CA0-B556-92677C753971}"
 EndProject
@@ -44,6 +44,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DayNightGame", "DayNightGame\DayNightGame.csproj", "{AACC1E20-E40E-4794-854A-3A29A1E5EB99}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdeaChooser", "IdeaChooser\IdeaChooser.csproj", "{C8A93D99-BE23-4D91-9182-E30E7A221FA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Datalac.com", "Datalac.com\Datalac.com.csproj", "{9D2BD960-20B1-4EBF-A600-79D3425E643A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +133,10 @@ Global
 		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8A93D99-BE23-4D91-9182-E30E7A221FA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D2BD960-20B1-4EBF-A600-79D3425E643A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D2BD960-20B1-4EBF-A600-79D3425E643A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D2BD960-20B1-4EBF-A600-79D3425E643A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D2BD960-20B1-4EBF-A600-79D3425E643A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
