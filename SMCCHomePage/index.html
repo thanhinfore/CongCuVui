@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMCC - Social Media Command Center | Nền tảng Phân tích Dữ liệu Mạng xã hội</title>
+    <meta name="description" content="SMCC - Lắng nghe Xã hội">
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <header class="header" id="header">
+        <nav class="nav container">
+            <a href="#" class="nav__logo">
+                <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC Logo" width="210" height="83">
+            </a>
+            <ul class="nav__menu" id="navMenu">
+                <li><a href="#features" class="nav__link">Tính năng</a></li>
+                <li><a href="#applications" class="nav__link">Ứng dụng</a></li>
+                <li><a href="#pricing" class="nav__link">Bảng giá</a></li>
+                <li><a href="#why-us" class="nav__link">Tại sao chọn SMCC</a></li>
+                <li><a href="#contact" class="nav__link">Liên hệ</a></li>
+            </ul>
+            <a href="/Administrator/Login.aspx" class="btn btn--primary nav__login">Đăng nhập</a>
+            <button class="nav__toggle" id="navToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero__bg">
+            <div class="hero__shape hero__shape--1"></div>
+            <div class="hero__shape hero__shape--2"></div>
+            <div class="hero__shape hero__shape--3"></div>
+        </div>
+        <div class="container hero__container">
+            <div class="hero__content">
+                <p class="hero__subtitle">Social Media Command Center</p>
+                <h1 class="hero__title">
+                    <span class="hero__title-line">Lắng nghe</span>
+                    <span class="hero__title-line hero__title-accent">Dư luận Xã hội</span>
+                    <span class="hero__title-line">Bằng Trí tuệ Nhân tạo</span>
+                </h1>
+                <p class="hero__description">
+                    Nền tảng Social Listening & Data Analytics hàng đầu Việt Nam. 
+                    Thu thập, phân tích và trực quan hóa dữ liệu mạng xã hội theo thời gian thực.
+                </p>
+                <div class="hero__actions">
+                    <a href="https://m.me/smcc.vn" target="_blank" rel="noopener" class="btn btn--primary btn--lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                        Liên hệ
+                    </a>
+                    <a href="about_smcc.pdf" target="_blank" class="btn btn--outline btn--lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        Tìm hiểu thêm
+                    </a>
+                </div>
+            </div>
+            <div class="hero__visual">
+                <div class="hero__dashboard">
+                    <div class="dashboard__header">
+                        <div class="dashboard__dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="dashboard__title">SMCC Dashboard</span>
+                    </div>
+                    <div class="dashboard__content">
+                        <div class="dashboard__chart">
+                            <div class="chart__bar" style="--height: 60%; --delay: 0.1s"></div>
+                            <div class="chart__bar" style="--height: 80%; --delay: 0.2s"></div>
+                            <div class="chart__bar" style="--height: 45%; --delay: 0.3s"></div>
+                            <div class="chart__bar" style="--height: 90%; --delay: 0.4s"></div>
+                            <div class="chart__bar" style="--height: 70%; --delay: 0.5s"></div>
+                            <div class="chart__bar" style="--height: 55%; --delay: 0.6s"></div>
+                            <div class="chart__bar" style="--height: 85%; --delay: 0.7s"></div>
+                        </div>
+                        <div class="dashboard__metrics">
+                            <div class="metric">
+                                <span class="metric__value positive">+24%</span>
+                                <span class="metric__label">Sentiment</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric__value">1.2M</span>
+                                <span class="metric__label">Mentions</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric__value">89%</span>
+                                <span class="metric__label">Reach</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero__floating hero__floating--1">
+                    <span class="floating__icon">📊</span>
+                    <span class="floating__text">Real-time Analytics</span>
+                </div>
+                <div class="hero__floating hero__floating--2">
+                    <span class="floating__icon">🎯</span>
+                    <span class="floating__text">AI-Powered</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero__scroll">
+            <span>Khám phá</span>
+            <div class="scroll-indicator"></div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats__grid">
+                <div class="stat">
+                    <span class="stat__number" data-target="13">0</span>
+                    <span class="stat__plus">+</span>
+                    <span class="stat__label">Năm kinh nghiệm</span>
+                    <span class="stat__desc">Phát triển từ 2012</span>
+                </div>
+                <div class="stat">
+                    <span class="stat__number" data-target="40000">0</span>
+                    <span class="stat__plus">+</span>
+                    <span class="stat__label">Người dùng</span>
+                    <span class="stat__desc">Trên toàn quốc</span>
+                </div>
+                <div class="stat">
+                    <span class="stat__number" data-target="2000">0</span>
+                    <span class="stat__plus">+</span>
+                    <span class="stat__label">Doanh nghiệp</span>
+                    <span class="stat__desc">Đã triển khai</span>
+                </div>
+                <div class="stat">
+                    <span class="stat__number" data-target="99.9">0</span>
+                    <span class="stat__plus">%</span>
+                    <span class="stat__label">Uptime</span>
+                    <span class="stat__desc">Ổn định 24/7</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__label">Tính năng</span>
+                <h2 class="section__title">Giải pháp Toàn diện cho<br>Social Listening</h2>
+                <p class="section__desc">Công nghệ AI tiên tiến, tối ưu hóa cho tiếng Việt và thị trường Việt Nam</p>
+            </div>
+            <div class="features__grid">
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">Thu thập Đa nguồn</h3>
+                    <p class="feature__desc">Facebook, diễn đàn, báo điện tử và hơn 100 nguồn dữ liệu Việt Nam. Cập nhật hàng triệu mẩu tin mỗi ngày.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">AI & NLP Tiếng Việt</h3>
+                    <p class="feature__desc">Phân tích ngữ nghĩa, sắc thái cảm xúc và xu hướng. Hiểu sâu tiếng lóng, ngữ cảnh văn hóa Việt Nam.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">Dashboard Trực quan</h3>
+                    <p class="feature__desc">Biểu đồ xu hướng, word cloud, phân tích demographic. Xuất báo cáo Excel, PDF theo nhu cầu.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">Cảnh báo Khủng hoảng</h3>
+                    <p class="feature__desc">Phát hiện sớm làn sóng tiêu cực bất thường. Theo dõi real-time, phản ứng kịp thời trước 24-48 giờ.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">Bảo mật & Tuân thủ</h3>
+                    <p class="feature__desc">Privacy-by-Design, tuân thủ Luật BVDLCN 2025. Ẩn danh hóa dữ liệu, mã hóa thông tin định danh.</p>
+                </article>
+                <article class="feature">
+                    <div class="feature__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature__title">AI Thế hệ mới</h3>
+                    <p class="feature__desc">Tích hợp chatbot hiện đại, Data Labeling cho mô hình AI riêng. Insight và báo cáo tự động.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Applications Section -->
+    <section class="applications" id="applications">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__label">Ứng dụng</span>
+                <h2 class="section__title">Đa dạng Lĩnh vực Ứng dụng</h2>
+            </div>
+            <div class="applications__tabs">
+                <button class="tab active" data-tab="marketing">
+                    <span class="tab__icon">📈</span>
+                    <span class="tab__text">Marketing</span>
+                </button>
+                <button class="tab" data-tab="pr">
+                    <span class="tab__icon">🚨</span>
+                    <span class="tab__text">PR & Khủng hoảng</span>
+                </button>
+                <button class="tab" data-tab="research">
+                    <span class="tab__icon">🔬</span>
+                    <span class="tab__text">Nghiên cứu</span>
+                </button>
+                <button class="tab" data-tab="customer">
+                    <span class="tab__icon">💬</span>
+                    <span class="tab__text">Khách hàng</span>
+                </button>
+            </div>
+            <div class="applications__content">
+                <div class="tab-content active" id="marketing">
+                    <div class="tab-content__inner">
+                        <div class="tab-content__text">
+                            <h3>Marketing & Truyền thông</h3>
+                            <ul class="check-list">
+                                <li>Đo lường hiệu quả chiến dịch: buzz, reach, engagement</li>
+                                <li>Phân tích đối thủ cạnh tranh: share of voice, sentiment</li>
+                                <li>Insight người tiêu dùng: nhu cầu, thị hiếu, pain points</li>
+                                <li>Influencer tracking: nhận diện và đánh giá KOLs/KOCs</li>
+                            </ul>
+                        </div>
+                        <div class="tab-content__visual">
+                            <div class="visual-card">
+                                <div class="visual-card__icon">📊</div>
+                                <span class="visual-card__label">Campaign ROI</span>
+                                <span class="visual-card__value">+32%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="pr">
+                    <div class="tab-content__inner">
+                        <div class="tab-content__text">
+                            <h3>PR & Quản trị Khủng hoảng</h3>
+                            <ul class="check-list">
+                                <li>Cảnh báo sớm: phát hiện làn sóng tiêu cực bất thường</li>
+                                <li>Tracking real-time: theo dõi diễn biến khủng hoảng</li>
+                                <li>Đánh giá tác động: mức độ lan truyền và ảnh hưởng</li>
+                                <li>Báo cáo post-crisis: phân tích và rút kinh nghiệm</li>
+                            </ul>
+                        </div>
+                        <div class="tab-content__visual">
+                            <div class="visual-card visual-card--alert">
+                                <div class="visual-card__icon">🚨</div>
+                                <span class="visual-card__label">Early Warning</span>
+                                <span class="visual-card__value">24-48h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="research">
+                    <div class="tab-content__inner">
+                        <div class="tab-content__text">
+                            <h3>Nghiên cứu Thị trường</h3>
+                            <ul class="check-list">
+                                <li>Trend analysis: phát hiện xu hướng thị trường mới nổi</li>
+                                <li>Product research: phản ứng thị trường với sản phẩm mới</li>
+                                <li>Industry insights: phân tích động thái ngành</li>
+                                <li>Y tế, truyền thông, xã hội học, quản lý nhà nước</li>
+                            </ul>
+                        </div>
+                        <div class="tab-content__visual">
+                            <div class="visual-card visual-card--research">
+                                <div class="visual-card__icon">🔬</div>
+                                <span class="visual-card__label">Cost Saving</span>
+                                <span class="visual-card__value">30-50%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="customer">
+                    <div class="tab-content__inner">
+                        <div class="tab-content__text">
+                            <h3>Chăm sóc Khách hàng</h3>
+                            <ul class="check-list">
+                                <li>Lắng nghe phản hồi: thu thập ý kiến từ nhiều kênh</li>
+                                <li>Phân tích sentiment: đo lường mức độ hài lòng</li>
+                                <li>Cải thiện dịch vụ: xác định điểm cần cải thiện</li>
+                                <li>Customer journey mapping từ social data</li>
+                            </ul>
+                        </div>
+                        <div class="tab-content__visual">
+                            <div class="visual-card visual-card--customer">
+                                <div class="visual-card__icon">💬</div>
+                                <span class="visual-card__label">Efficiency</span>
+                                <span class="visual-card__value">60-70%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Awards Section -->
+    <section class="awards">
+        <div class="container">
+            <div class="section__header section__header--light">
+                <span class="section__label">Thành tựu</span>
+                <h2 class="section__title">Giải thưởng & Ghi nhận</h2>
+            </div>
+            <div class="awards__grid">
+                <div class="award">
+                    <div class="award__icon">🏆</div>
+                    <h4 class="award__title">Giải Nhất Nhân tài Đất Việt 2016</h4>
+                    <p class="award__desc">Lĩnh vực CNTT - Hệ thống Triển vọng</p>
+                </div>
+                <div class="award">
+                    <div class="award__icon">🎖️</div>
+                    <h4 class="award__title">Bằng khen Thủ tướng Chính phủ</h4>
+                    <p class="award__desc">Đóng góp phòng chống COVID-19</p>
+                </div>
+                <div class="award">
+                    <div class="award__icon">⭐</div>
+                    <h4 class="award__title">Gương khởi nghiệp Thủ đô 2017</h4>
+                    <p class="award__desc">Thành Đoàn Hà Nội vinh danh</p>
+                </div>
+                <div class="award">
+                    <div class="award__icon">📜</div>
+                    <h4 class="award__title">Bằng khen các Bộ, ngành</h4>
+                    <p class="award__desc">Bộ TT&TT, Bộ Y tế, Bộ KH&CN</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__label">Bảng giá</span>
+                <h2 class="section__title">Định giá Linh hoạt Theo quy mô</h2>
+                <p class="section__desc">Mua càng nhiều, giá mỗi tài khoản càng rẻ — Tiết kiệm đến 40%</p>
+            </div>
+            <div class="pricing__table-wrapper">
+                <table class="pricing__table">
+                    <thead>
+                        <tr>
+                            <th>Số lượng tài khoản</th>
+                            <th>Đơn giá/tháng</th>
+                            <th class="hide-mobile">Chiết khấu</th>
+                            <th class="hide-mobile">Tiết kiệm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="pricing__tier">1 - 4</span>
+                                <span class="pricing__tier-label">Starter</span>
+                            </td>
+                            <td><span class="pricing__price">2.000.000 ₫</span></td>
+                            <td class="hide-mobile"><span class="pricing__discount pricing__discount--base">Giá gốc</span></td>
+                            <td class="hide-mobile"><span class="pricing__save">—</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="pricing__tier">5 - 9</span>
+                                <span class="pricing__tier-label">Team</span>
+                            </td>
+                            <td><span class="pricing__price">1.800.000 ₫</span></td>
+                            <td class="hide-mobile"><span class="pricing__discount">10%</span></td>
+                            <td class="hide-mobile"><span class="pricing__save">200.000 ₫</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="pricing__tier">10 - 19</span>
+                                <span class="pricing__tier-label">Business</span>
+                            </td>
+                            <td><span class="pricing__price">1.600.000 ₫</span></td>
+                            <td class="hide-mobile"><span class="pricing__discount">20%</span></td>
+                            <td class="hide-mobile"><span class="pricing__save">400.000 ₫</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="pricing__tier">20 - 49</span>
+                                <span class="pricing__tier-label">Corporate</span>
+                            </td>
+                            <td><span class="pricing__price">1.400.000 ₫</span></td>
+                            <td class="hide-mobile"><span class="pricing__discount">30%</span></td>
+                            <td class="hide-mobile"><span class="pricing__save">600.000 ₫</span></td>
+                        </tr>
+                        <tr class="pricing__row--highlight">
+                            <td>
+                                <span class="pricing__tier">50+</span>
+                                <span class="pricing__tier-label">Enterprise</span>
+                            </td>
+                            <td><span class="pricing__price">1.200.000 ₫</span></td>
+                            <td class="hide-mobile"><span class="pricing__discount">40%</span></td>
+                            <td class="hide-mobile"><span class="pricing__save pricing__save--best">800.000 ₫</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="pricing__note">* Giá chưa bao gồm VAT 8%. Thanh toán theo năm được chiết khấu thêm 15-20%.</p>
+            <div class="pricing__cta">
+                <a href="https://m.me/smcc.vn" target="_blank" rel="noopener" class="btn btn--primary btn--lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                    </svg>
+                    Nhận báo giá chi tiết
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Us Section -->
+    <section class="why-us" id="why-us">
+        <div class="container">
+            <div class="section__header">
+                <span class="section__label">Lợi thế</span>
+                <h2 class="section__title">Tại sao chọn SMCC?</h2>
+            </div>
+            <div class="comparison">
+                <div class="comparison__col comparison__col--smcc">
+                    <h3 class="comparison__title">
+                        <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC" height="32">
+                    </h3>
+                    <ul class="comparison__list">
+                        <li class="comparison__item comparison__item--yes">
+                            <span class="comparison__icon">✓</span>
+                            <span>Hỗ trợ Tiếng Việt & đa ngôn ngữ</span>
+                        </li>
+                        <li class="comparison__item comparison__item--yes">
+                            <span class="comparison__icon">✓</span>
+                            <span>100+ nguồn Việt Nam (forum, báo)</span>
+                        </li>
+                        <li class="comparison__item comparison__item--yes">
+                            <span class="comparison__icon">✓</span>
+                            <span>Tuân thủ Luật BVDLCN Việt Nam</span>
+                        </li>
+                        <li class="comparison__item comparison__item--yes">
+                            <span class="comparison__icon">✓</span>
+                            <span>Hỗ trợ tiếng Việt, đội ngũ tại VN</span>
+                        </li>
+                        <li class="comparison__item comparison__item--yes">
+                            <span class="comparison__icon">✓</span>
+                            <span>Giá cạnh tranh (~2 triệu VNĐ/user)</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="comparison__vs">VS</div>
+                <div class="comparison__col comparison__col--other">
+                    <h3 class="comparison__title">Công cụ nước ngoài</h3>
+                    <ul class="comparison__list">
+                        <li class="comparison__item comparison__item--no">
+                            <span class="comparison__icon">✗</span>
+                            <span>Chủ yếu hỗ trợ tiếng Anh</span>
+                        </li>
+                        <li class="comparison__item comparison__item--no">
+                            <span class="comparison__icon">✗</span>
+                            <span>Thiếu nguồn địa phương Việt Nam</span>
+                        </li>
+                        <li class="comparison__item comparison__item--maybe">
+                            <span class="comparison__icon">?</span>
+                            <span>Chưa điều chỉnh theo luật VN</span>
+                        </li>
+                        <li class="comparison__item comparison__item--no">
+                            <span class="comparison__icon">✗</span>
+                            <span>Hỗ trợ tiếng Anh, múi giờ khác</span>
+                        </li>
+                        <li class="comparison__item comparison__item--no">
+                            <span class="comparison__icon">$</span>
+                            <span>$100-300/user (2.4-7.2 triệu)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="roi">
+                <h3 class="roi__title">ROI Kỳ vọng</h3>
+                <div class="roi__grid">
+                    <div class="roi__item">
+                        <span class="roi__value">60-70%</span>
+                        <span class="roi__label">Giảm thời gian thu thập dữ liệu</span>
+                    </div>
+                    <div class="roi__item">
+                        <span class="roi__value">24-48h</span>
+                        <span class="roi__label">Phát hiện sớm khủng hoảng</span>
+                    </div>
+                    <div class="roi__item">
+                        <span class="roi__value">20-30%</span>
+                        <span class="roi__label">Tăng hiệu quả Marketing</span>
+                    </div>
+                    <div class="roi__item">
+                        <span class="roi__value">30-50%</span>
+                        <span class="roi__label">Tiết kiệm chi phí nghiên cứu</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact__inner">
+                <div class="contact__info">
+                    <span class="section__label">Liên hệ</span>
+                    <h2 class="contact__title">Bắt đầu hành trình<br>làm chủ Dữ liệu</h2>
+                    <p class="contact__desc">Đội ngũ tư vấn sẵn sàng hỗ trợ Quý doanh nghiệp triển khai giải pháp phù hợp nhất.</p>
+                    <div class="contact__details">
+                        <a href="https://smcc.vn" target="_blank" class="contact__item">
+                            <span class="contact__icon">🌐</span>
+                            <div>
+                                <span class="contact__label">Website</span>
+                                <span class="contact__value">www.smcc.vn</span>
+                            </div>
+                        </a>
+                        <a href="mailto:contact@smcc.vn" class="contact__item">
+                            <span class="contact__icon">📧</span>
+                            <div>
+                                <span class="contact__label">Email</span>
+                                <span class="contact__value">contact@smcc.vn</span>
+                            </div>
+                        </a>
+                        <div class="contact__item">
+                            <span class="contact__icon">📍</span>
+                            <div>
+                                <span class="contact__label">Địa chỉ</span>
+                                <span class="contact__value">Tòa nhà Golden Palace, 99 Mễ Trì, Từ Liêm, Hà Nội</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://m.me/smcc.vn" target="_blank" rel="noopener" class="btn btn--primary btn--lg contact__cta">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                        Nhắn tin cho chúng tôi
+                    </a>
+                </div>
+                <div class="contact__map">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.0969200944!2d105.77846731493253!3d21.028825985998287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313454b32b842a37%3A0xe91a56573e7f9a11!2sGolden%20Palace!5e0!3m2!1sen!2s!4v1620000000000!5m2!1sen!2s" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0; border-radius: 16px;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__inner">
+                <div class="footer__brand">
+                    <img src="https://smcc.vn/images/smalllogo.png" alt="SMCC Logo" width="180" height="71">
+                    <p>Social Media Command Center<br>Lắng nghe Xã hội với AI & Dữ liệu lớn</p>
+                </div>
+                <div class="footer__links">
+                    <div class="footer__col">
+                        <h4>Sản phẩm</h4>
+                        <a href="#features">Tính năng</a>
+                        <a href="#pricing">Bảng giá</a>
+                        <a href="#applications">Ứng dụng</a>
+                    </div>
+                    <div class="footer__col">
+                        <h4>Công ty</h4>
+                        <a href="about_smcc.pdf" target="_blank">Về chúng tôi</a>
+                        <a href="#why-us">Khách hàng</a>
+                        <a href="#contact">Liên hệ</a>
+                    </div>
+                    <div class="footer__col">
+                        <h4>Hỗ trợ</h4>
+                        <a href="https://m.me/smcc.vn" target="_blank">Chat hỗ trợ</a>
+                        <a href="/Administrator/Login.aspx">Đăng nhập</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p>© 2025 SMCC - INFORE Technology. All rights reserved.</p>
+                <div class="footer__legal">
+                    <a href="#">Điều khoản sử dụng</a>
+                    <a href="#">Chính sách bảo mật</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+</html>
