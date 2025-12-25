@@ -3,760 +3,516 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Bình Dân Học AI - Phong trào phổ cập tri thức AI cho mọi tầng lớp người Việt. Học AI chỉ với 15 phút mỗi ngày.">
+    <meta name="description" content="Bình Dân Học AI - Phong trào phổ cập tri thức AI cho mọi tầng lớp người Việt. Học AI chỉ với 15 phút mỗi ngày. Mục tiêu 6% dân số năm 2026.">
     <meta name="keywords" content="Bình Dân Học AI, học AI, trí tuệ nhân tạo, Việt Nam, Lê Công Thành, InfoRe, LuyenAI">
     <meta name="author" content="InfoRe Technology">
-    <meta property="og:title" content="Bình Dân Học AI - Phổ cập AI cho người Việt">
-    <meta property="og:description" content="Phong trào học AI dành cho mọi người, từ nông dân đến CEO. Mục tiêu 6% dân số năm 2026.">
-    <meta property="og:image" content="og-image.jpg">
-    <meta property="og:url" content="https://binhdanhocai.vn">
+    <meta property="og:title" content="Bình Dân Học AI - Ai cũng có thể làm chủ AI">
+    <meta property="og:description" content="Tiếp nối tinh thần Bình dân học vụ, mang tri thức AI đến với 400,000+ người Việt.">
+    <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <title>Bình Dân Học AI - Phổ cập trí tuệ nhân tạo cho người Việt</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Bình Dân Học AI - Ai cũng có thể làm chủ AI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="sr-only">Bỏ qua đến nội dung chính</a>
+
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="navbar" role="navigation" aria-label="Menu chính">
         <div class="container">
-            <a href="#" class="navbar-brand">
-                <div class="navbar-logo">AI</div>
+            <a href="#" class="navbar-brand" aria-label="Bình Dân Học AI - Trang chủ">
+                <div class="navbar-logo" aria-hidden="true">AI</div>
                 <span class="navbar-title">Bình Dân <span>Học AI</span></span>
             </a>
-            <ul class="navbar-menu">
-                <li><a href="#about" class="navbar-link">Giới thiệu</a></li>
-                <li><a href="#features" class="navbar-link">Đặc điểm</a></li>
-                <li><a href="#method" class="navbar-link">Phương pháp</a></li>
-                <li><a href="#community" class="navbar-link">Cộng đồng</a></li>
-                <li><a href="#news" class="navbar-link">Tin tức</a></li>
-                <li><a href="https://luyenai.vn" target="_blank" class="navbar-link navbar-cta">Bắt đầu học</a></li>
+            <ul class="navbar-menu" role="menubar">
+                <li role="none"><a href="#about" class="navbar-link" role="menuitem">Giới thiệu</a></li>
+                <li role="none"><a href="#features" class="navbar-link" role="menuitem">Đặc điểm</a></li>
+                <li role="none"><a href="#method" class="navbar-link" role="menuitem">Phương pháp</a></li>
+                <li role="none"><a href="#community" class="navbar-link" role="menuitem">Cộng đồng</a></li>
+                <li role="none"><a href="#news" class="navbar-link" role="menuitem">Tin tức</a></li>
+                <li role="none"><a href="https://luyenai.vn" target="_blank" rel="noopener" class="navbar-link navbar-cta" role="menuitem">Bắt đầu học</a></li>
             </ul>
-            <button class="mobile-toggle" aria-label="Toggle menu">☰</button>
+            <button class="mobile-toggle" aria-label="Mở menu" aria-expanded="false" aria-controls="navbar-menu">☰</button>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero" id="hero">
-        <div class="hero-decorations">
-            <div class="hero-circle hero-circle-1"></div>
-            <div class="hero-circle hero-circle-2"></div>
-            <span class="hero-star">⭐</span>
-            <span class="hero-star">✨</span>
-            <span class="hero-star">⭐</span>
-        </div>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <span class="hero-badge-dot"></span>
-                    <span class="hero-badge-text">Phong trào toàn quốc</span>
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" id="hero" aria-labelledby="hero-title">
+            <div class="hero-bg" aria-hidden="true">
+                <div class="hero-grid"></div>
+                <div class="hero-orb hero-orb-1"></div>
+                <div class="hero-orb hero-orb-2"></div>
+            </div>
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span class="hero-badge-dot" aria-hidden="true"></span>
+                        <span class="hero-badge-text">Phong trào toàn quốc 2024–2026</span>
+                    </div>
+                    <h1 class="hero-title" id="hero-title">
+                        Bình Dân Học AI
+                        <span class="hero-title-highlight">Ai cũng có thể làm chủ AI</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Tiếp nối tinh thần Bình dân học vụ 80 năm trước, mang tri thức AI đến với mọi tầng lớp người Việt. 
+                        Chỉ 15 phút mỗi ngày để biến AI thành trợ thủ đắc lực.
+                    </p>
+                    <div class="hero-stats" role="list" aria-label="Thống kê">
+                        <div class="hero-stat" role="listitem">
+                            <div class="hero-stat-number" data-counter="400000" aria-label="400 nghìn thành viên">0</div>
+                            <div class="hero-stat-label">Thành viên</div>
+                        </div>
+                        <div class="hero-stat" role="listitem">
+                            <div class="hero-stat-number" data-counter="35" aria-label="35 cộng đồng">0</div>
+                            <div class="hero-stat-label">Cộng đồng tỉnh thành</div>
+                        </div>
+                        <div class="hero-stat" role="listitem">
+                            <div class="hero-stat-number" aria-label="Mục tiêu 6 phần trăm dân số">6%</div>
+                            <div class="hero-stat-label">Mục tiêu dân số 2026</div>
+                        </div>
+                    </div>
+                    <div class="hero-cta">
+                        <a href="https://web.facebook.com/groups/363657942789633" target="_blank" rel="noopener" class="btn btn-primary">
+                            <span>Tham gia cộng đồng</span>
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#about" class="btn btn-secondary">Tìm hiểu thêm</a>
+                    </div>
                 </div>
-                <h1 class="hero-title">
-                    Bình Dân Học AI
-                    <span class="hero-title-highlight">Ai cũng có thể làm chủ AI</span>
-                </h1>
-                <p class="hero-subtitle">
-                    Tiếp nối tinh thần Bình dân học vụ, mang tri thức AI đến với mọi tầng lớp người Việt. 
-                    Chỉ 15 phút mỗi ngày, biến AI thành công cụ lao động hiệu quả.
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about" id="about" aria-labelledby="about-title">
+            <div class="container">
+                <div class="about-grid">
+                    <div class="about-visual scroll-reveal">
+                        <div class="about-image-wrapper">
+                            <div class="about-image-main">
+                                <span class="about-icon-large" aria-hidden="true">🤖</span>
+                            </div>
+                        </div>
+                        <div class="about-floating-card about-card-years">
+                            <div class="about-card-years-number">80</div>
+                            <div class="about-card-years-text">năm sau<br>Bình dân học vụ</div>
+                        </div>
+                        <div class="about-floating-card about-card-members">
+                            <div class="about-card-icon" aria-hidden="true">👥</div>
+                            <div class="about-card-info">
+                                <strong>400K+</strong>
+                                <span>Thành viên</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-content scroll-reveal">
+                        <h2 id="about-title">Hành trình đưa AI đến với số đông người Việt</h2>
+                        <p>
+                            Năm 1945, phong trào <strong>Bình dân học vụ</strong> do Chủ tịch Hồ Chí Minh phát động 
+                            đã giải phóng hàng triệu người Việt khỏi nạn mù chữ, thắp lên hy vọng và ý chí xây dựng đất nước.
+                        </p>
+                        <p>
+                            80 năm sau, <strong>Bình Dân Học AI</strong> tiếp nối tinh thần đó trong kỷ nguyên số — 
+                            mang cơ hội tiếp cận trí tuệ nhân tạo cho mọi tầng lớp: từ nông dân, công nhân, 
+                            người lao động phổ thông đến sinh viên, nội trợ và CEO.
+                        </p>
+                        <blockquote class="about-quote">
+                            <p>Trí tuệ nhân tạo là những 'cỗ xe' mới mẻ và người dân mọi tầng lớp chính là 
+                            những 'tài xế' cần học cách điều khiển để vận hành trên không gian số.</p>
+                            <cite>— Lê Công Thành, CEO InfoRe, Sáng lập Bình Dân Học AI</cite>
+                        </blockquote>
+                        <p>
+                            Không rào cản học thuật, không yêu cầu trình độ nền — 
+                            ai cũng có thể tiếp cận kiến thức một cách miễn phí, đơn giản và dễ hiểu.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features" aria-labelledby="features-title">
+            <div class="container">
+                <header class="section-header scroll-reveal">
+                    <span class="section-eyebrow">Đặc điểm nổi bật</span>
+                    <h2 class="section-title" id="features-title">Học AI theo cách của Bình Dân Học Vụ</h2>
+                    <p class="section-description">
+                        Phương pháp học độc đáo, phù hợp với mọi đối tượng, giúp bạn nắm vững AI 
+                        một cách tự nhiên và hiệu quả.
+                    </p>
+                </header>
+                <div class="features-grid" role="list">
+                    <article class="feature-card scroll-reveal stagger-1" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">⏱️</div>
+                        <h3 class="feature-title">15 phút mỗi ngày</h3>
+                        <p class="feature-description">
+                            Phương pháp Microlearning — học một ít mỗi ngày. Phù hợp với người bận rộn 
+                            nhưng vẫn muốn nâng cao kỹ năng số.
+                        </p>
+                    </article>
+                    <article class="feature-card scroll-reveal stagger-2" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">🎯</div>
+                        <h3 class="feature-title">Học để làm</h3>
+                        <p class="feature-description">
+                            Không lý thuyết suông. Mỗi bài học đều gắn với 
+                            ứng dụng thực tế trong công việc và cuộc sống hàng ngày.
+                        </p>
+                    </article>
+                    <article class="feature-card scroll-reveal stagger-3" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">🤝</div>
+                        <h3 class="feature-title">Dạy để học</h3>
+                        <p class="feature-description">
+                            Áp dụng Feynman Technique — học thông qua việc dạy người khác. 
+                            Ai biết nhiều giúp người biết ít.
+                        </p>
+                    </article>
+                    <article class="feature-card scroll-reveal stagger-4" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">🤖</div>
+                        <h3 class="feature-title">AI chấm điểm tự động</h3>
+                        <p class="feature-description">
+                            Hệ thống chatbot AI ghi nhận và phản hồi bài làm tức thì, 
+                            giúp học viên cải thiện liên tục.
+                        </p>
+                    </article>
+                    <article class="feature-card scroll-reveal stagger-5" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">🆓</div>
+                        <h3 class="feature-title">Hoàn toàn miễn phí</h3>
+                        <p class="feature-description">
+                            Tài nguyên mở phong phú, công nghệ AI mới nhất được chia sẻ tức thì. 
+                            Không rào cản chi phí.
+                        </p>
+                    </article>
+                    <article class="feature-card scroll-reveal stagger-6" role="listitem">
+                        <div class="feature-icon" aria-hidden="true">🌏</div>
+                        <h3 class="feature-title">Cộng đồng toàn quốc</h3>
+                        <p class="feature-description">
+                            35+ cộng đồng tại các tỉnh thành, hỗ trợ học tập theo địa phương. 
+                            Kết nối học viên cùng vùng.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Method Section -->
+        <section class="method" id="method" aria-labelledby="method-title">
+            <div class="container">
+                <header class="section-header scroll-reveal">
+                    <span class="section-eyebrow">Lộ trình học tập</span>
+                    <h2 class="section-title" id="method-title">Bắt đầu hành trình AI của bạn</h2>
+                    <p class="section-description">
+                        Quy trình đơn giản, ai cũng có thể theo được. Từ người mới bắt đầu đến chuyên gia.
+                    </p>
+                </header>
+                <ol class="method-timeline" role="list">
+                    <li class="method-step scroll-reveal">
+                        <div class="method-step-marker" aria-hidden="true">1</div>
+                        <div class="method-step-content">
+                            <h3 class="method-step-title">Tham gia cộng đồng</h3>
+                            <p class="method-step-text">
+                                Tham gia nhóm Facebook "Bình Dân Học AI" hoặc cộng đồng tỉnh/thành của bạn. 
+                                Đọc các bài hướng dẫn cơ bản và làm quen với môi trường học tập.
+                            </p>
+                        </div>
+                    </li>
+                    <li class="method-step scroll-reveal">
+                        <div class="method-step-marker" aria-hidden="true">2</div>
+                        <div class="method-step-content">
+                            <h3 class="method-step-title">Đăng ký tài khoản LuyenAI.vn</h3>
+                            <p class="method-step-text">
+                                Tạo tài khoản trên hệ thống học tập trực tuyến. Nhận nhiệm vụ hàng ngày, 
+                                nộp bài và theo dõi điểm số qua chatbot AI hiện đại.
+                            </p>
+                        </div>
+                    </li>
+                    <li class="method-step scroll-reveal">
+                        <div class="method-step-marker" aria-hidden="true">3</div>
+                        <div class="method-step-content">
+                            <h3 class="method-step-title">Luyện tập 15 phút mỗi ngày</h3>
+                            <p class="method-step-text">
+                                Thực hành các bài tập thực tế: ra lệnh AI, xử lý văn bản, hình ảnh, âm thanh. 
+                                Hệ thống tự động chấm điểm và phản hồi ngay lập tức.
+                            </p>
+                        </div>
+                    </li>
+                    <li class="method-step scroll-reveal">
+                        <div class="method-step-marker" aria-hidden="true">4</div>
+                        <div class="method-step-content">
+                            <h3 class="method-step-title">Ứng dụng vào công việc</h3>
+                            <p class="method-step-text">
+                                Áp dụng kiến thức vào công việc thực tế: tối ưu quy trình, phân tích dữ liệu, 
+                                tạo nội dung, bán hàng... Biến AI thành "trợ thủ" đắc lực.
+                            </p>
+                        </div>
+                    </li>
+                    <li class="method-step scroll-reveal">
+                        <div class="method-step-marker" aria-hidden="true">5</div>
+                        <div class="method-step-content">
+                            <h3 class="method-step-title">Chia sẻ & Dạy người khác</h3>
+                            <p class="method-step-text">
+                                Cam kết dạy lại cho ít nhất 100 người khác. Đây là cách học tốt nhất — 
+                                vừa củng cố kiến thức vừa lan tỏa phong trào đến cộng đồng.
+                            </p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Community Section -->
+        <section class="community" id="community" aria-labelledby="community-title">
+            <div class="container">
+                <header class="section-header scroll-reveal">
+                    <span class="section-eyebrow">Cộng đồng học tập</span>
+                    <h2 class="section-title" id="community-title">Tham gia cộng đồng gần bạn nhất</h2>
+                    <p class="section-description">
+                        35+ cộng đồng học AI trên khắp cả nước. Tìm nhóm tại tỉnh/thành của bạn 
+                        để kết nối và học tập cùng những người cùng địa phương.
+                    </p>
+                </header>
+                
+                <div class="community-hero scroll-reveal">
+                    <h3 class="community-hero-title">🎯 Mục tiêu: Lan tỏa tới 6% dân số Việt Nam năm 2026</h3>
+                    <p class="community-hero-text">
+                        Bình Dân Học AI đang mở rộng cho người dân cả nước. Hãy tham gia và chia sẻ 
+                        để cùng nhau lan tỏa tri thức AI đến mọi miền Tổ quốc!
+                    </p>
+                </div>
+
+                <!-- Search filter - per review -->
+                <div class="community-search scroll-reveal">
+                    <span class="community-search-icon" aria-hidden="true">🔍</span>
+                    <input 
+                        type="search" 
+                        id="community-search" 
+                        placeholder="Tìm kiếm tỉnh/thành của bạn..." 
+                        aria-label="Tìm kiếm cộng đồng theo tỉnh thành"
+                    >
+                </div>
+
+                <p id="no-results" style="display: none; text-align: center; color: var(--gray); padding: var(--space-8);">
+                    Không tìm thấy cộng đồng phù hợp. Vui lòng thử từ khóa khác.
                 </p>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <div class="hero-stat-number" data-counter="400000">0</div>
-                        <div class="hero-stat-label">Thành viên</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-number" data-counter="35">0</div>
-                        <div class="hero-stat-label">Cộng đồng tỉnh/thành</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="hero-stat-number">6%</div>
-                        <div class="hero-stat-label">Mục tiêu dân số 2026</div>
-                    </div>
-                </div>
-                <div class="hero-cta">
-                    <a href="https://web.facebook.com/groups/363657942789633" target="_blank" class="btn btn-primary">
-                        <span>Tham gia ngay</span>
-                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
+                
+                <div class="community-grid">
+                    <!-- Main Community - Featured -->
+                    <a href="https://web.facebook.com/groups/363657942789633" target="_blank" rel="noopener" class="community-main scroll-reveal" aria-label="Bình Dân Học AI - Cộng đồng gốc với hơn 400 nghìn thành viên">
+                        <div class="community-card-icon" aria-hidden="true">🏠</div>
+                        <div class="community-card-content">
+                            <div class="community-card-name">Bình Dân Học AI (Cộng đồng gốc)</div>
+                            <div class="community-card-region">Cộng đồng chính thức • 400K+ thành viên</div>
+                        </div>
+                        <span class="community-badge">Nổi bật</span>
+                        <span class="community-card-arrow" aria-hidden="true">→</span>
                     </a>
-                    <a href="#about" class="btn btn-secondary">
-                        <span>Tìm hiểu thêm</span>
+                    
+                    <!-- Regional Communities -->
+                    <a href="https://web.facebook.com/groups/1683352255766829/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Hà Nội Học AI</div><div class="community-card-region">Thủ đô</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1075863104262168/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">TP Hồ Chí Minh Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/488665503658987/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Đà Nẵng Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1005548954625265/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Hải Phòng Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1068312391525806/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Cần Thơ Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/456770387327674/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Quảng Ninh Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1061624828625907/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Thái Nguyên Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/790361816417043/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Bắc Ninh Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/839376981043889/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Cao Bằng Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/449104794618721/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Lạng Sơn Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1017536793295056/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Lào Cai Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1484367785787879/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Lai Châu Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1195388771803055/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Điện Biên Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/786067340406765/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Sơn La Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/858331086144932/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Tuyên Quang Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1154617945806879/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Phú Thọ Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1301049160855052/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Hưng Yên Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/975811484223779/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Ninh Bình Học AI</div><div class="community-card-region">Miền Bắc</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/326918583708938/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Thanh Hoá Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1026832155522926/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Nghệ An Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/836440994737739/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Hà Tĩnh Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/910293380903920/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Quảng Trị Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/394538489759363/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Huế Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/414879647535143/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Quảng Ngãi Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1887595741740241/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Khánh Hòa Học AI</div><div class="community-card-region">Miền Trung</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/794935262837458/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Gia Lai Học AI</div><div class="community-card-region">Tây Nguyên</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/414957804227862/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Đắk Lắk Học AI</div><div class="community-card-region">Tây Nguyên</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/2581965958662819" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Lâm Đồng Học AI</div><div class="community-card-region">Tây Nguyên</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/dongnaihocai/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Đồng Nai Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1117517535978818/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Tây Ninh Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/3591639397666303/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Đồng Tháp Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/3365842973715521/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Vĩnh Long Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/1203908820743002/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">An Giang Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                    
+                    <a href="https://web.facebook.com/groups/486370417409068/" target="_blank" rel="noopener" class="community-card scroll-reveal"><div class="community-card-icon" aria-hidden="true">📍</div><div class="community-card-content"><div class="community-card-name">Cà Mau Học AI</div><div class="community-card-region">Miền Nam</div></div><span class="community-card-arrow" aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section class="news" id="news" aria-labelledby="news-title">
+            <div class="container">
+                <header class="section-header scroll-reveal">
+                    <span class="section-eyebrow">Báo chí & Truyền thông</span>
+                    <h2 class="section-title" id="news-title">Báo chí nói về Bình Dân Học AI</h2>
+                    <p class="section-description">
+                        Phong trào đã được nhiều cơ quan báo chí lớn đưa tin, ghi nhận những thành tựu 
+                        và tầm ảnh hưởng tích cực đến xã hội.
+                    </p>
+                </header>
+                <div class="news-grid" role="list">
+                    <a href="https://vtv.vn/cong-nghe/binh-dan-hoc-ai-hanh-trinh-dua-ai-den-voi-so-dong-2025051514264252.htm" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">📺</span>
+                            <span class="news-card-source">VTV News</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">"Bình dân học AI": Hành trình đưa AI đến với số đông</h3>
+                            <p class="news-card-excerpt">
+                                Không rào cản học thuật, không yêu cầu kỹ thuật, "Bình dân học AI" khơi dậy tinh thần 
+                                tự học, lan tỏa tri thức và trang bị kỹ năng số cho người Việt.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://www.vietnam.vn/tham-lop-hoc-ai-binh-dan-400-ngan-hoc-vien-o-viet-nam" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">🌏</span>
+                            <span class="news-card-source">Vietnam.vn</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">Thăm lớp học AI bình dân 400 ngàn học viên ở Việt Nam</h3>
+                            <p class="news-card-excerpt">
+                                Giống như Bình dân học vụ thắp sáng tri thức cho hàng triệu người Việt, Bình dân học AI 
+                                hướng tới ánh sáng của kỷ nguyên mới.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://baothainguyen.vn/nghi-quyet-57/202502/gan-300-nguoi-duoc-dao-tao-theo-chuong-trinh-binh-dan-hoc-ai-b8f1935/" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">📰</span>
+                            <span class="news-card-source">Báo Thái Nguyên</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">Gần 300 người được đào tạo theo chương trình "Bình dân học AI"</h3>
+                            <p class="news-card-excerpt">
+                                Hội nghị tập huấn đào tạo học viên nòng cốt cấp tỉnh trong khuôn khổ chương trình 
+                                "Bình dân học AI" giai đoạn 2024 - 2025.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://kinhtedothi.vn/huyen-dan-phuong-thi-dua-cao-diem-phat-trien-cong-dan-so-cuoc-dua-luyen-ai.html" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">🏛️</span>
+                            <span class="news-card-source">Kinh tế Đô thị</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">Huyện Đan Phượng thi đua "Cuộc đua luyện AI"</h3>
+                            <p class="news-card-excerpt">
+                                Triển khai chương trình thi đua ứng dụng trí tuệ nhân tạo nhằm nâng cao kỹ năng số 
+                                cho đội ngũ cán bộ, người lao động.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://www.tinnhanhchungkhoan.vn/bi-quyet-lam-chu-ai-trong-ngan-hang-post381764.html" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">💼</span>
+                            <span class="news-card-source">Tin nhanh CK</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">Bí quyết làm chủ AI trong ngân hàng</h3>
+                            <p class="news-card-excerpt">
+                                AI đang thay đổi ngành ngân hàng. Cách tiếp cận và ứng dụng AI hiệu quả 
+                                cho nhân viên ngành tài chính.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://baothainguyen.vn/nghi-quyet-57/202503/thai-nguyen-55-ngay-dem-tich-cuc-trien-khai-chuong-trinh-binh-dan-hoc-ai-9f51dc4/" target="_blank" rel="noopener" class="news-card scroll-reveal" role="listitem">
+                        <div class="news-card-image">
+                            <span class="news-card-image-icon" aria-hidden="true">🚀</span>
+                            <span class="news-card-source">Báo Thái Nguyên</span>
+                        </div>
+                        <div class="news-card-content">
+                            <h3 class="news-card-title">Thái Nguyên: 55 ngày đêm triển khai Bình dân học AI</h3>
+                            <p class="news-card-excerpt">
+                                Tỉnh Thái Nguyên tích cực triển khai chương trình "Bình dân học AI" với 
+                                mục tiêu 100% cán bộ được đào tạo.
+                            </p>
+                            <span class="news-card-link">Đọc thêm →</span>
+                        </div>
                     </a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- About Section -->
-    <section class="about" id="about">
-        <div class="container">
-            <div class="about-grid">
-                <div class="about-image scroll-hidden">
-                    <div class="about-image-main">
-                        <span class="about-image-icon">🤖</span>
-                    </div>
-                    <div class="about-image-badge">
-                        <div class="about-image-badge-number">80</div>
-                        <div class="about-image-badge-text">năm sau<br>Bình dân học vụ</div>
-                    </div>
-                </div>
-                <div class="about-content scroll-hidden">
-                    <h2>Hành trình đưa AI đến với số đông người Việt</h2>
-                    <p>
-                        Năm 1945, phong trào <strong>Bình dân học vụ</strong> do Chủ tịch Hồ Chí Minh phát động 
-                        đã giải phóng hàng triệu người Việt khỏi nạn mù chữ, thắp lên hy vọng và ý chí xây dựng đất nước.
-                    </p>
-                    <p>
-                        80 năm sau, <strong>Bình Dân Học AI</strong> tiếp nối tinh thần đó trong kỷ nguyên số, 
-                        mang đến cơ hội tiếp cận trí tuệ nhân tạo cho mọi tầng lớp - từ nông dân, công nhân, 
-                        người lao động phổ thông đến sinh viên, nội trợ và CEO.
-                    </p>
-                    <div class="about-quote">
-                        <p>"Trí tuệ nhân tạo là những 'cỗ xe' mới mẻ và người dân mọi tầng lớp chính là 
-                        những 'tài xế' cần học cách điều khiển để vận hành trên không gian số."</p>
-                        <cite>— Lê Công Thành, CEO InfoRe, Sáng lập Bình Dân Học AI</cite>
-                    </div>
-                    <p>
-                        Dự án nhằm giúp mọi người học cách sử dụng AI đơn giản và biến AI thành công cụ 
-                        làm việc hằng ngày hiệu quả. Không rào cản học thuật, không yêu cầu trình độ nền - 
-                        ai cũng có thể tiếp cận kiến thức miễn phí, đơn giản và dễ hiểu.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-header scroll-hidden">
-                <span class="section-eyebrow">Tại sao chọn chúng tôi</span>
-                <h2 class="section-title">Học AI theo cách của Bình Dân Học Vụ</h2>
-                <p class="section-description">
-                    Phương pháp học độc đáo, phù hợp với mọi đối tượng, giúp bạn nắm vững AI 
-                    một cách tự nhiên và hiệu quả.
+        <!-- CTA Section -->
+        <section class="cta" aria-labelledby="cta-title">
+            <div class="container">
+                <h2 class="cta-title scroll-reveal" id="cta-title">Sẵn sàng bắt đầu hành trình AI?</h2>
+                <p class="cta-text scroll-reveal">
+                    Hơn 400,000 người Việt đã tham gia. Chỉ cần 15 phút mỗi ngày, 
+                    bạn sẽ làm chủ AI và biến nó thành công cụ làm việc hiệu quả.
                 </p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">⏱️</div>
-                    <h3 class="feature-title">15 phút mỗi ngày</h3>
-                    <p class="feature-description">
-                        Phương pháp Microlearning - học một ít mỗi ngày. Phù hợp với người bận rộn 
-                        nhưng vẫn muốn nâng cao kỹ năng số trong thời đại AI.
-                    </p>
-                </div>
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">🎯</div>
-                    <h3 class="feature-title">Học để làm</h3>
-                    <p class="feature-description">
-                        Tôn chỉ "Học để làm" - không lý thuyết suông. Mỗi bài học đều gắn với 
-                        ứng dụng thực tế trong công việc và cuộc sống hàng ngày.
-                    </p>
-                </div>
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">🤝</div>
-                    <h3 class="feature-title">Dạy để học</h3>
-                    <p class="feature-description">
-                        Áp dụng Feynman Technique - học thông qua việc dạy người khác. 
-                        Ai biết nhiều giúp người biết ít, tạo cộng đồng học tập năng động.
-                    </p>
-                </div>
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">🤖</div>
-                    <h3 class="feature-title">AI chấm điểm tự động</h3>
-                    <p class="feature-description">
-                        Hệ thống chatbot AI ghi nhận, đánh giá và phản hồi bài làm tức thì, 
-                        giúp học viên theo dõi tiến độ và cải thiện liên tục.
-                    </p>
-                </div>
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">🆓</div>
-                    <h3 class="feature-title">Hoàn toàn miễn phí</h3>
-                    <p class="feature-description">
-                        Tài nguyên mở phong phú, công nghệ AI mới nhất được chia sẻ tức thì. 
-                        Không rào cản chi phí, ai cũng có thể tham gia.
-                    </p>
-                </div>
-                <div class="feature-card scroll-hidden" data-stagger>
-                    <div class="feature-icon">🌏</div>
-                    <h3 class="feature-title">Cộng đồng toàn quốc</h3>
-                    <p class="feature-description">
-                        35+ cộng đồng tại các tỉnh thành, hỗ trợ học tập theo địa phương. 
-                        Kết nối học viên cùng vùng, cùng ngành nghề để học hiệu quả hơn.
-                    </p>
+                <div class="cta-buttons scroll-reveal">
+                    <a href="https://web.facebook.com/groups/363657942789633" target="_blank" rel="noopener" class="btn btn-primary">
+                        Tham gia cộng đồng Facebook
+                    </a>
+                    <a href="https://luyenai.vn" target="_blank" rel="noopener" class="btn btn-secondary">
+                        Truy cập LuyenAI.vn
+                    </a>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Method Section -->
-    <section class="method" id="method">
-        <div class="container">
-            <div class="section-header scroll-hidden">
-                <span class="section-eyebrow">Lộ trình học tập</span>
-                <h2 class="section-title">Bắt đầu hành trình AI của bạn</h2>
-                <p class="section-description">
-                    Quy trình đơn giản, ai cũng có thể theo được. Từ người mới bắt đầu đến chuyên gia.
-                </p>
-            </div>
-            <div class="method-steps">
-                <div class="method-step scroll-hidden">
-                    <div class="method-step-number">1</div>
-                    <div class="method-step-content">
-                        <h3 class="method-step-title">Tham gia cộng đồng</h3>
-                        <p class="method-step-text">
-                            Tham gia nhóm Facebook "Bình Dân Học AI" hoặc cộng đồng tỉnh/thành của bạn. 
-                            Đọc các bài hướng dẫn cơ bản và làm quen với môi trường học tập.
-                        </p>
-                    </div>
-                </div>
-                <div class="method-step scroll-hidden">
-                    <div class="method-step-number">2</div>
-                    <div class="method-step-content">
-                        <h3 class="method-step-title">Đăng ký tài khoản LuyenAI.vn</h3>
-                        <p class="method-step-text">
-                            Tạo tài khoản trên hệ thống học tập trực tuyến. Nhận nhiệm vụ hàng ngày, 
-                            nộp bài và theo dõi điểm số qua chatbot AI hiện đại.
-                        </p>
-                    </div>
-                </div>
-                <div class="method-step scroll-hidden">
-                    <div class="method-step-number">3</div>
-                    <div class="method-step-content">
-                        <h3 class="method-step-title">Luyện tập 15 phút mỗi ngày</h3>
-                        <p class="method-step-text">
-                            Thực hành các bài tập thực tế: ra lệnh AI, xử lý văn bản, hình ảnh, âm thanh. 
-                            Hệ thống tự động chấm điểm và phản hồi kết quả ngay lập tức.
-                        </p>
-                    </div>
-                </div>
-                <div class="method-step scroll-hidden">
-                    <div class="method-step-number">4</div>
-                    <div class="method-step-content">
-                        <h3 class="method-step-title">Ứng dụng vào công việc</h3>
-                        <p class="method-step-text">
-                            Áp dụng kiến thức vào công việc thực tế: tối ưu quy trình, phân tích dữ liệu, 
-                            tạo nội dung, bán hàng... Biến AI thành "trợ thủ" đắc lực hàng ngày.
-                        </p>
-                    </div>
-                </div>
-                <div class="method-step scroll-hidden">
-                    <div class="method-step-number">5</div>
-                    <div class="method-step-content">
-                        <h3 class="method-step-title">Chia sẻ & Dạy người khác</h3>
-                        <p class="method-step-text">
-                            Cam kết dạy lại cho ít nhất 100 người khác. Đây là cách học tốt nhất, 
-                            vừa củng cố kiến thức vừa lan tỏa phong trào đến cộng đồng.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Community Section -->
-    <section class="community" id="community">
-        <div class="container">
-            <div class="section-header scroll-hidden">
-                <span class="section-eyebrow">Cộng đồng</span>
-                <h2 class="section-title">Tham gia cộng đồng gần bạn nhất</h2>
-                <p class="section-description">
-                    35+ cộng đồng học AI trên khắp cả nước. Tìm nhóm tại tỉnh/thành của bạn để kết nối 
-                    và học tập cùng những người cùng địa phương.
-                </p>
-            </div>
-            
-            <div class="community-intro scroll-hidden">
-                <h3 class="community-intro-title">🎯 Mục tiêu: 6% dân số Việt Nam năm 2026</h3>
-                <p class="community-intro-text">
-                    Bình Dân Học AI đang mở rộng cho người dân cả nước. Hãy tham gia và chia sẻ 
-                    để cùng nhau lan tỏa tri thức AI đến mọi miền Tổ quốc!
-                </p>
-            </div>
-            
-            <div class="community-grid">
-                <!-- Main Community -->
-                <a href="https://web.facebook.com/groups/363657942789633" target="_blank" class="community-card community-main scroll-hidden">
-                    <div class="community-card-icon">🏠</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Bình Dân Học AI (Cộng đồng gốc)</div>
-                        <div class="community-card-type">Cộng đồng chính thức • 400K+ thành viên</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <!-- Regional Communities -->
-                <a href="https://web.facebook.com/groups/839376981043889/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Cao Bằng Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/449104794618721/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Lạng Sơn Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1017536793295056/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Lào Cai Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1484367785787879/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Lai Châu Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1195388771803055/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Điện Biên Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/786067340406765/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Sơn La Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/858331086144932/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Tuyên Quang Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1061624828625907/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Thái Nguyên Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1154617945806879/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Phú Thọ Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/790361816417043/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Bắc Ninh Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1301049160855052/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Hưng Yên Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/456770387327674/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Quảng Ninh Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1683352255766829/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Hà Nội Học AI</div>
-                        <div class="community-card-type">Thủ đô</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1005548954625265/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Hải Phòng Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/975811484223779/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Ninh Bình Học AI</div>
-                        <div class="community-card-type">Miền Bắc</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/326918583708938/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Thanh Hoá Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1026832155522926/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Nghệ An Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/836440994737739/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Hà Tĩnh Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/910293380903920/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Quảng Trị Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/394538489759363/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Huế Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/488665503658987/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Đà Nẵng Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/414879647535143/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Quảng Ngãi Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/794935262837458/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Gia Lai Học AI</div>
-                        <div class="community-card-type">Tây Nguyên</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/414957804227862/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Đắk Lắk Học AI</div>
-                        <div class="community-card-type">Tây Nguyên</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/2581965958662819" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Lâm Đồng Học AI</div>
-                        <div class="community-card-type">Tây Nguyên</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1887595741740241/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Khánh Hòa Học AI</div>
-                        <div class="community-card-type">Miền Trung</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/dongnaihocai/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Đồng Nai Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1117517535978818/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Tây Ninh Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1075863104262168/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">TP Hồ Chí Minh Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/3591639397666303/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Đồng Tháp Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/3365842973715521/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Vĩnh Long Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1068312391525806/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Cần Thơ Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/1203908820743002/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">An Giang Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-                
-                <a href="https://web.facebook.com/groups/486370417409068/" target="_blank" class="community-card scroll-hidden">
-                    <div class="community-card-icon">📍</div>
-                    <div class="community-card-content">
-                        <div class="community-card-name">Cà Mau Học AI</div>
-                        <div class="community-card-type">Miền Nam</div>
-                    </div>
-                    <span class="community-card-arrow">→</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- News Section -->
-    <section class="news" id="news">
-        <div class="container">
-            <div class="section-header scroll-hidden">
-                <span class="section-eyebrow">Tin tức & Báo chí</span>
-                <h2 class="section-title">Báo chí nói về Bình Dân Học AI</h2>
-                <p class="section-description">
-                    Phong trào đã được nhiều cơ quan báo chí lớn đưa tin, ghi nhận những thành tựu 
-                    và tầm ảnh hưởng tích cực đến xã hội.
-                </p>
-            </div>
-            <div class="news-grid">
-                <a href="https://vtv.vn/cong-nghe/binh-dan-hoc-ai-hanh-trinh-dua-ai-den-voi-so-dong-2025051514264252.htm" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">📺</span>
-                        <span class="news-card-source">VTV News</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">"Bình dân học AI": Hành trình đưa AI đến với số đông</h3>
-                        <p class="news-card-excerpt">
-                            Không rào cản học thuật, không yêu cầu kỹ thuật, "Bình dân học AI" khơi dậy tinh thần 
-                            tự học, lan tỏa tri thức và trang bị kỹ năng số cho người Việt.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-                
-                <a href="https://www.vietnam.vn/tham-lop-hoc-ai-binh-dan-400-ngan-hoc-vien-o-viet-nam" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">🌏</span>
-                        <span class="news-card-source">Vietnam.vn</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">Thăm lớp học AI bình dân 400 ngàn học viên ở Việt Nam</h3>
-                        <p class="news-card-excerpt">
-                            Giống như Bình dân học vụ thắp sáng tri thức cho hàng triệu người Việt, Bình dân học AI 
-                            hướng tới ánh sáng của kỷ nguyên mới.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-                
-                <a href="https://baothainguyen.vn/nghi-quyet-57/202502/gan-300-nguoi-duoc-dao-tao-theo-chuong-trinh-binh-dan-hoc-ai-b8f1935/" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">📰</span>
-                        <span class="news-card-source">Báo Thái Nguyên</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">Gần 300 người được đào tạo theo chương trình "Bình dân học AI"</h3>
-                        <p class="news-card-excerpt">
-                            Hội nghị tập huấn đào tạo học viên nòng cốt cấp tỉnh trong khuôn khổ chương trình 
-                            "Bình dân học AI" giai đoạn 2024 - 2025.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-                
-                <a href="https://kinhtedothi.vn/huyen-dan-phuong-thi-dua-cao-diem-phat-trien-cong-dan-so-cuoc-dua-luyen-ai.html" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">🏛️</span>
-                        <span class="news-card-source">Kinh tế Đô thị</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">Huyện Đan Phượng thi đua "Cuộc đua luyện AI"</h3>
-                        <p class="news-card-excerpt">
-                            Triển khai chương trình thi đua ứng dụng trí tuệ nhân tạo nhằm nâng cao kỹ năng số 
-                            cho đội ngũ cán bộ, người lao động.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-                
-                <a href="https://www.tinnhanhchungkhoan.vn/bi-quyet-lam-chu-ai-trong-ngan-hang-post381764.html" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">💼</span>
-                        <span class="news-card-source">Tin nhanh Chứng khoán</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">Bí quyết làm chủ AI trong ngân hàng</h3>
-                        <p class="news-card-excerpt">
-                            AI đang thay đổi ngành ngân hàng. Cách tiếp cận và ứng dụng AI hiệu quả 
-                            cho nhân viên ngành tài chính.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-                
-                <a href="https://baothainguyen.vn/nghi-quyet-57/202503/thai-nguyen-55-ngay-dem-tich-cuc-trien-khai-chuong-trinh-binh-dan-hoc-ai-9f51dc4/" target="_blank" class="news-card scroll-hidden">
-                    <div class="news-card-image">
-                        <span class="news-card-image-icon">🚀</span>
-                        <span class="news-card-source">Báo Thái Nguyên</span>
-                    </div>
-                    <div class="news-card-content">
-                        <h3 class="news-card-title">Thái Nguyên: 55 ngày đêm triển khai Bình dân học AI</h3>
-                        <p class="news-card-excerpt">
-                            Tỉnh Thái Nguyên tích cực triển khai chương trình "Bình dân học AI" với 
-                            mục tiêu 100% cán bộ được đào tạo.
-                        </p>
-                        <span class="news-card-link">
-                            Đọc thêm 
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta">
-        <div class="container">
-            <h2 class="cta-title scroll-hidden">Sẵn sàng bắt đầu hành trình AI?</h2>
-            <p class="cta-text scroll-hidden">
-                Hơn 400,000 người Việt đã tham gia. Chỉ cần 15 phút mỗi ngày, 
-                bạn sẽ làm chủ AI và biến nó thành công cụ làm việc hiệu quả.
-            </p>
-            <div class="cta-buttons scroll-hidden">
-                <a href="https://web.facebook.com/groups/363657942789633" target="_blank" class="btn btn-primary">
-                    Tham gia cộng đồng Facebook
-                </a>
-                <a href="https://luyenai.vn" target="_blank" class="btn btn-secondary">
-                    Truy cập LuyenAI.vn
-                </a>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
                     <div class="footer-logo">
-                        <div class="footer-logo-icon">AI</div>
+                        <div class="footer-logo-icon" aria-hidden="true">AI</div>
                         <span class="footer-logo-text">Bình Dân <span>Học AI</span></span>
                     </div>
                     <p class="footer-description">
@@ -764,21 +520,19 @@
                         Tiếp nối tinh thần Bình dân học vụ trong kỷ nguyên số.
                     </p>
                     <div class="footer-social">
-                        <a href="https://web.facebook.com/groups/363657942789633" target="_blank" class="footer-social-link" aria-label="Facebook">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <a href="https://web.facebook.com/groups/363657942789633" target="_blank" rel="noopener" class="footer-social-link" aria-label="Facebook">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                             </svg>
                         </a>
-                        <a href="https://luyenai.vn" target="_blank" class="footer-social-link" aria-label="Website">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="2" y1="12" x2="22" y2="12"/>
-                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        <a href="https://luyenai.vn" target="_blank" rel="noopener" class="footer-social-link" aria-label="Website LuyenAI">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                             </svg>
                         </a>
                     </div>
                 </div>
-                <div class="footer-column">
+                <nav class="footer-column" aria-label="Liên kết nhanh">
                     <h4>Liên kết</h4>
                     <ul class="footer-links">
                         <li><a href="#about">Giới thiệu</a></li>
@@ -787,30 +541,28 @@
                         <li><a href="#community">Cộng đồng</a></li>
                         <li><a href="#news">Tin tức</a></li>
                     </ul>
-                </div>
-                <div class="footer-column">
+                </nav>
+                <nav class="footer-column" aria-label="Cộng đồng lớn">
                     <h4>Cộng đồng lớn</h4>
                     <ul class="footer-links">
-                        <li><a href="https://web.facebook.com/groups/1683352255766829/" target="_blank">Hà Nội Học AI</a></li>
-                        <li><a href="https://web.facebook.com/groups/1075863104262168/" target="_blank">TP.HCM Học AI</a></li>
-                        <li><a href="https://web.facebook.com/groups/488665503658987/" target="_blank">Đà Nẵng Học AI</a></li>
-                        <li><a href="https://web.facebook.com/groups/1068312391525806/" target="_blank">Cần Thơ Học AI</a></li>
-                        <li><a href="https://web.facebook.com/groups/1005548954625265/" target="_blank">Hải Phòng Học AI</a></li>
+                        <li><a href="https://web.facebook.com/groups/1683352255766829/" target="_blank" rel="noopener">Hà Nội Học AI</a></li>
+                        <li><a href="https://web.facebook.com/groups/1075863104262168/" target="_blank" rel="noopener">TP.HCM Học AI</a></li>
+                        <li><a href="https://web.facebook.com/groups/488665503658987/" target="_blank" rel="noopener">Đà Nẵng Học AI</a></li>
+                        <li><a href="https://web.facebook.com/groups/1068312391525806/" target="_blank" rel="noopener">Cần Thơ Học AI</a></li>
+                        <li><a href="https://web.facebook.com/groups/1005548954625265/" target="_blank" rel="noopener">Hải Phòng Học AI</a></li>
                     </ul>
-                </div>
+                </nav>
                 <div class="footer-column">
                     <h4>Liên hệ</h4>
                     <ul class="footer-links">
-                        <li><a href="https://luyenai.vn" target="_blank">LuyenAI.vn</a></li>
-                        <li><a href="https://infore.vn" target="_blank">InfoRe Technology</a></li>
+                        <li><a href="https://luyenai.vn" target="_blank" rel="noopener">LuyenAI.vn</a></li>
+                        <li><a href="https://infore.vn" target="_blank" rel="noopener">InfoRe Technology</a></li>
                         <li><a href="mailto:contact@binhdanhocai.vn">contact@binhdanhocai.vn</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">
-                    © 2025 Bình Dân Học AI. Sáng kiến của InfoRe Technology.
-                </p>
+                <p class="footer-copyright">© 2025 Bình Dân Học AI — Sáng kiến của InfoRe Technology</p>
                 <div class="footer-legal">
                     <a href="#">Điều khoản</a>
                     <a href="#">Chính sách</a>
@@ -818,6 +570,13 @@
             </div>
         </div>
     </footer>
+
+    <!-- Back to Top Button - per review -->
+    <button id="back-to-top" class="back-to-top" aria-label="Quay lại đầu trang" tabindex="0">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+    </button>
 
     <script src="index.js"></script>
 </body>
