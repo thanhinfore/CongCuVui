@@ -1,12 +1,14 @@
 /* =====================================================
    MOBILEHANDLER.JS - Mobile Functionality Module
-   V18 Enhanced - Revolutionary Mobile Experience
+   V19 Enhanced - Multi-Tab Navigation for Mobile
+   5 tabs: Content | Image | Style | Output | Preview
    ===================================================== */
 
 export class MobileHandler {
     constructor() {
         this.initialized = false;
         this.activePanel = 'control';
+        this.activeSection = 'content'; // V19: Track active section
         this.touchStartX = 0;
         this.touchStartY = 0;
         this.touchStartTime = 0;
@@ -20,6 +22,7 @@ export class MobileHandler {
             control: null,
             preview: null
         };
+        this.sections = {}; // V19: Section references
         this.tabs = null;
         this.tabButtons = null;
         this.header = null;
@@ -65,6 +68,14 @@ export class MobileHandler {
         this.header = document.querySelector('.app-header');
         this.fab = document.querySelector('.v17-fab');
 
+        // V19: Get section references
+        this.sections = {
+            content: document.getElementById('mobileSection-content'),
+            background: document.getElementById('mobileSection-background'),
+            style: document.getElementById('mobileSection-style'),
+            output: document.getElementById('mobileSection-output')
+        };
+
         // Create mobile tabs if they don't exist
         this.createMobileTabs();
 
@@ -99,7 +110,9 @@ export class MobileHandler {
         if (this.isMobile()) {
             document.body.classList.add('mobile-view');
             this.setupEventListeners();
-            this.setActivePanel(localStorage.getItem('activeMobilePanel') || 'control');
+            // V19: Restore active section
+            const savedSection = localStorage.getItem('activeMobileSection') || 'content';
+            this.setActiveSection(savedSection);
         } else if (this.isTablet()) {
             document.body.classList.add('tablet-view');
             this.setupEventListeners();
@@ -114,7 +127,7 @@ export class MobileHandler {
         this.setupPerformanceMonitoring();
 
         this.initialized = true;
-        console.log('Mobile handler V18 initialized');
+        console.log('Mobile handler V19 initialized - Multi-tab navigation');
     }
 
     // V17: Get device type
@@ -145,6 +158,16 @@ export class MobileHandler {
             this.panels.preview.style.transform = '';
             this.panels.preview.style.opacity = '';
         }
+
+        // V19: Reset sections for desktop - show all
+        Object.values(this.sections).forEach(section => {
+            if (section) {
+                section.classList.remove('v19-section-active');
+            }
+        });
+
+        // Remove body data attribute
+        delete document.body.dataset.activeSection;
     }
 
     setViewportHeight() {
@@ -232,8 +255,9 @@ export class MobileHandler {
             if (!wasMobile) {
                 document.body.classList.remove('tablet-view');
                 document.body.classList.add('mobile-view');
-                // Setup mobile panel state
-                this.setActivePanel(this.activePanel || 'control');
+                // V19: Setup mobile section state
+                const savedSection = localStorage.getItem('activeMobileSection') || 'content';
+                this.setActiveSection(savedSection);
             }
         } else if (this.isTablet()) {
             if (!wasTablet) {
@@ -499,14 +523,14 @@ export class MobileHandler {
     }
 
     setupEventListeners() {
-        // Tab button clicks
+        // V19: Tab button clicks with section support
         if (this.tabButtons) {
             this.tabButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const panel = button.dataset.panel;
+                    const section = button.dataset.section;
                     this.hapticFeedback('selection');
-                    this.setActivePanel(panel);
+                    this.setActiveSection(section);
                 });
             });
         }
@@ -518,10 +542,10 @@ export class MobileHandler {
         const addTextButton = document.getElementById('addTextButton');
         if (addTextButton) {
             addTextButton.addEventListener('click', () => {
-                // Auto-switch to preview after adding text
+                // V19: Auto-switch to preview section after adding text
                 setTimeout(() => {
                     if (this.isMobile()) {
-                        this.setActivePanel('preview');
+                        this.setActiveSection('preview');
                     }
                 }, 100);
             });
@@ -553,6 +577,9 @@ export class MobileHandler {
     }
 
     setupTouchEvents() {
+        // V19: Section order for swipe navigation
+        const sectionOrder = ['content', 'background', 'style', 'output', 'preview'];
+
         const handleTouchStart = (e) => {
             this.touchStartX = e.touches[0].clientX;
             this.touchStartY = e.touches[0].clientY;
@@ -579,14 +606,17 @@ export class MobileHandler {
             const hasVelocity = velocity > this.gestures.swipeVelocityThreshold;
 
             if (isHorizontalSwipe && (hasDistance || hasVelocity)) {
-                if (deltaX > 0 && this.activePanel === 'preview') {
-                    // Swipe right - go to control panel
+                // V19: Navigate between sections
+                const currentIndex = sectionOrder.indexOf(this.activeSection);
+
+                if (deltaX > 0 && currentIndex > 0) {
+                    // Swipe right - go to previous section
                     this.hapticFeedback('light');
-                    this.setActivePanel('control');
-                } else if (deltaX < 0 && this.activePanel === 'control') {
-                    // Swipe left - go to preview panel
+                    this.setActiveSection(sectionOrder[currentIndex - 1]);
+                } else if (deltaX < 0 && currentIndex < sectionOrder.length - 1) {
+                    // Swipe left - go to next section
                     this.hapticFeedback('light');
-                    this.setActivePanel('preview');
+                    this.setActiveSection(sectionOrder[currentIndex + 1]);
                 }
             }
 
@@ -610,13 +640,75 @@ export class MobileHandler {
         }
     }
 
+    // V19: Set active section (for 5-tab navigation)
+    setActiveSection(section) {
+        if (this.isAnimating) return;
+
+        this.isAnimating = true;
+        this.activeSection = section;
+
+        // Determine which panel to show based on section
+        const panel = section === 'preview' ? 'preview' : 'control';
+        this.activePanel = panel;
+
+        // Update body data attribute for CSS targeting
+        document.body.dataset.activeSection = section;
+
+        // Update tab buttons
+        if (this.tabButtons) {
+            this.tabButtons.forEach(button => {
+                const isActive = button.dataset.section === section;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-selected', isActive);
+            });
+        }
+
+        // Update sections visibility
+        Object.entries(this.sections).forEach(([key, sectionEl]) => {
+            if (sectionEl) {
+                if (key === section) {
+                    sectionEl.classList.add('v19-section-active');
+                } else {
+                    sectionEl.classList.remove('v19-section-active');
+                }
+            }
+        });
+
+        // Update panels
+        if (section === 'preview') {
+            this.showPanel(this.panels.preview, 'right');
+            this.hidePanel(this.panels.control, 'left');
+
+            // Trigger render when switching to preview
+            if (window.renderImages) {
+                setTimeout(() => {
+                    window.renderImages();
+                }, 150);
+            }
+        } else {
+            this.showPanel(this.panels.control, 'left');
+            this.hidePanel(this.panels.preview, 'right');
+        }
+
+        // Scroll to top smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Save active section preference
+        localStorage.setItem('activeMobileSection', section);
+
+        // Reset animation lock
+        setTimeout(() => {
+            this.isAnimating = false;
+        }, 300);
+    }
+
     setActivePanel(panel) {
         if (this.isAnimating) return;
 
         this.isAnimating = true;
         this.activePanel = panel;
 
-        // Update tab buttons
+        // Update tab buttons (legacy support)
         if (this.tabButtons) {
             this.tabButtons.forEach(button => {
                 const isActive = button.dataset.panel === panel;

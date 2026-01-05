@@ -1,0 +1,367 @@
+/* =====================================================
+   V19 MOBILE TABS - Multi-Tab Navigation for Mobile
+   Optimized UX with 5 specialized tabs
+   ===================================================== */
+
+/* ===== V19 MOBILE NAVIGATION - 5 TABS ===== */
+@media (max-width: 768px) {
+    /* Bottom Navigation Container */
+    .v19-mobile-tabs {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        z-index: 1000;
+    }
+
+    /* Tab Button Base Style */
+    .v19-mobile-tabs .tab-button {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 6px 2px;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        position: relative;
+        min-width: 0;
+    }
+
+    .v19-mobile-tabs .tab-button svg {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+
+    .v19-mobile-tabs .tab-button span {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        line-height: 1.2;
+    }
+
+    /* Active Tab State */
+    .v19-mobile-tabs .tab-button.active {
+        color: #3b82f6;
+    }
+
+    .v19-mobile-tabs .tab-button.active svg {
+        transform: scale(1.1);
+    }
+
+    /* Active Indicator */
+    .v19-mobile-tabs .tab-button::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 50%;
+        transform: translateX(-50%) scaleX(0);
+        width: 24px;
+        height: 3px;
+        background: #3b82f6;
+        border-radius: 2px;
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .v19-mobile-tabs .tab-button.active::before {
+        transform: translateX(-50%) scaleX(1);
+    }
+
+    /* Tap Feedback */
+    .v19-mobile-tabs .tab-button:active {
+        transform: scale(0.92);
+        opacity: 0.8;
+    }
+
+    /* ===== SECTION VISIBILITY CONTROL ===== */
+    /* Hide all sections by default on mobile */
+    body.mobile-view .control-panel [data-mobile-section] {
+        display: none !important;
+    }
+
+    /* Show active section */
+    body.mobile-view .control-panel [data-mobile-section].v19-section-active {
+        display: block !important;
+        animation: v19-section-fade-in 0.25s ease-out;
+    }
+
+    /* Content section includes action button */
+    body.mobile-view[data-active-section="content"] .action-section {
+        display: block !important;
+    }
+
+    /* Always show action button in control panel tabs */
+    body.mobile-view .action-section {
+        position: sticky !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin-top: 16px !important;
+        padding: 12px 16px !important;
+        background: linear-gradient(
+            to top,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(255, 255, 255, 0.95) 70%,
+            rgba(255, 255, 255, 0) 100%
+        ) !important;
+        z-index: 50 !important;
+    }
+
+    /* Section Animation */
+    @keyframes v19-section-fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* ===== PANEL MANAGEMENT ===== */
+    /* Control panel shows when any non-preview tab is active */
+    body.mobile-view .control-panel {
+        display: none !important;
+    }
+
+    body.mobile-view[data-active-section="content"] .control-panel,
+    body.mobile-view[data-active-section="background"] .control-panel,
+    body.mobile-view[data-active-section="style"] .control-panel,
+    body.mobile-view[data-active-section="output"] .control-panel {
+        display: block !important;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* Preview panel shows only when preview tab is active */
+    body.mobile-view .preview-panel {
+        display: none !important;
+    }
+
+    body.mobile-view[data-active-section="preview"] .preview-panel {
+        display: block !important;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* ===== OUTPUT SECTION FIXES ===== */
+    /* Remove collapsed state on mobile for output section */
+    body.mobile-view #mobileSection-output .v13-group-content {
+        display: block !important;
+    }
+
+    body.mobile-view #mobileSection-output.collapsed .v13-group-content {
+        display: block !important;
+    }
+
+    /* ===== SECTION-SPECIFIC STYLES ===== */
+    /* Each section gets full height */
+    body.mobile-view .control-panel [data-mobile-section].v19-section-active {
+        min-height: calc(100vh - 120px - env(safe-area-inset-bottom));
+    }
+
+    /* Section headers on mobile */
+    body.mobile-view [data-mobile-section] .v13-group-header {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+        padding: 12px 16px !important;
+        margin: -12px -16px 12px -16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    /* ===== IMPROVED TOUCH TARGETS ===== */
+    body.mobile-view .v13-tab {
+        min-height: 44px;
+        padding: 10px 14px !important;
+    }
+
+    body.mobile-view .checkbox-label {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    body.mobile-view .helper-button {
+        min-height: 44px;
+    }
+
+    /* ===== CONTENT TAB SPECIFICS ===== */
+    body.mobile-view #mobileSection-content .knowledge-mode-section {
+        margin-bottom: 12px;
+    }
+
+    body.mobile-view #mobileSection-content .text-input {
+        min-height: 150px;
+    }
+
+    /* ===== BACKGROUND TAB SPECIFICS ===== */
+    body.mobile-view #mobileSection-background .upload-area {
+        min-height: 120px;
+    }
+
+    body.mobile-view #mobileSection-background .folder-images-container {
+        max-height: 300px;
+    }
+
+    /* ===== STYLE TAB SPECIFICS ===== */
+    body.mobile-view #mobileSection-style .v13-sub-group {
+        margin-bottom: 8px;
+    }
+
+    body.mobile-view #mobileSection-style .v13-sub-content {
+        padding: 12px;
+    }
+
+    /* ===== OUTPUT TAB SPECIFICS ===== */
+    body.mobile-view #mobileSection-output .v13-group-content {
+        padding: 16px;
+    }
+
+    body.mobile-view #mobileSection-output .numbering-options,
+    body.mobile-view #mobileSection-output .footer-options {
+        margin-top: 12px !important;
+    }
+}
+
+/* ===== VERY SMALL SCREENS ===== */
+@media (max-width: 380px) {
+    .v19-mobile-tabs .tab-button {
+        font-size: 9px;
+        padding: 4px 1px;
+    }
+
+    .v19-mobile-tabs .tab-button svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .v19-mobile-tabs .tab-button::before {
+        width: 20px;
+    }
+}
+
+/* ===== LANDSCAPE MODE ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .v19-mobile-tabs {
+        height: calc(48px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .v19-mobile-tabs .tab-button {
+        flex-direction: row;
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .v19-mobile-tabs .tab-button svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .v19-mobile-tabs .tab-button::before {
+        top: auto;
+        bottom: 2px;
+    }
+}
+
+/* ===== DARK MODE ===== */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .v19-mobile-tabs {
+        background: rgba(15, 23, 42, 0.95);
+        border-top-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .v19-mobile-tabs .tab-button {
+        color: #64748b;
+    }
+
+    .v19-mobile-tabs .tab-button.active {
+        color: #60a5fa;
+    }
+
+    .v19-mobile-tabs .tab-button::before {
+        background: #60a5fa;
+    }
+
+    body.mobile-view .action-section {
+        background: linear-gradient(
+            to top,
+            rgba(15, 23, 42, 0.98) 0%,
+            rgba(15, 23, 42, 0.95) 70%,
+            rgba(15, 23, 42, 0) 100%
+        ) !important;
+    }
+
+    body.mobile-view [data-mobile-section] .v13-group-header {
+        background: #1e293b;
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (max-width: 768px) and (prefers-contrast: high) {
+    .v19-mobile-tabs {
+        border-top-width: 2px;
+    }
+
+    .v19-mobile-tabs .tab-button.active {
+        font-weight: 700;
+    }
+
+    .v19-mobile-tabs .tab-button::before {
+        height: 4px;
+    }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+    .v19-mobile-tabs .tab-button,
+    .v19-mobile-tabs .tab-button svg,
+    .v19-mobile-tabs .tab-button::before,
+    body.mobile-view .control-panel [data-mobile-section].v19-section-active {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* ===== KEYBOARD VISIBLE ===== */
+body.keyboard-visible .v19-mobile-tabs {
+    display: none !important;
+}
+
+/* ===== DESKTOP OVERRIDE ===== */
+@media (min-width: 769px) {
+    .v19-mobile-tabs {
+        display: none !important;
+    }
+
+    /* Show all sections on desktop */
+    .control-panel [data-mobile-section] {
+        display: block !important;
+    }
+
+    /* Output section collapsed by default on desktop */
+    #mobileSection-output:not(.v19-section-active) .v13-group-content {
+        display: none;
+    }
+}
