@@ -30,6 +30,9 @@ import { AISuggestions } from './modules/aiSuggestions.js';
 // V13 Menu System
 import { V13Menu } from './modules/v13-menu.js';
 
+// V21 Desktop Tabs
+import { initDesktopTabs, getDesktopTabs } from './modules/desktopTabs.js';
+
 class ImageTextApp {
     constructor() {
         this.state = {
@@ -83,6 +86,9 @@ class ImageTextApp {
             // V16: Always initialize mobile handler, it will manage itself based on screen size
             this.components.mobile.init();
             this.components.mobile.applyDeviceOptimizations();
+
+            // V21: Initialize desktop tabs
+            this.components.desktopTabs = initDesktopTabs();
 
             this.setupEventListeners();
             this.setupV11EventListeners(); // V11 specific

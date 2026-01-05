@@ -51,6 +51,8 @@
     <link rel="stylesheet" href="css/v19-mobile-tabs.css">
     <!-- V20 Flat Elegant Design -->
     <link rel="stylesheet" href="css/v20-flat-elegant.css">
+    <!-- V21 Desktop Tabs Interface -->
+    <link rel="stylesheet" href="css/v21-desktop-tabs.css">
 </head>
 <body>
     <div class="app-container v81-balanced-layout v9-emphasis-positioning v9-deemphasize-presets v91-clean">
@@ -94,12 +96,48 @@
 
         <main class="main-content">
             <div class="container">
+                <!-- V21 Desktop Tabs Navigation -->
+                <nav class="v21-desktop-tabs" id="desktopTabs">
+                    <button class="v21-tab-btn active" data-tab="content">
+                        <span class="tab-step">1</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 6.1H3M21 12.1H3M15.5 18.1H3" />
+                        </svg>
+                        Content
+                    </button>
+                    <button class="v21-tab-btn" data-tab="design">
+                        <span class="tab-step">2</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        Design
+                    </button>
+                    <button class="v21-tab-btn" data-tab="export">
+                        <span class="tab-step">3</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Export
+                    </button>
+                    <button class="v21-tab-btn" data-tab="preview">
+                        <span class="tab-step">4</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Preview
+                    </button>
+                </nav>
+
                 <div class="content-grid">
 <!-- ===== V13 CONTROL PANEL - STREAMLINED ARCHITECTURE ===== -->
 <aside class="control-panel">
 
+    <!-- ===== V21 TAB: CONTENT ===== -->
+    <div class="v21-tab-content v21-active" data-tab-content="content">
+
     <!-- ===== 1. CONTENT GROUP (Always visible) ===== -->
-    <div class="v13-section-group v13-content-section" id="mobileSection-content" data-mobile-section="content">
+    <div class="v13-section-group v13-content-section v21-content-section" id="mobileSection-content" data-mobile-section="content">
         <div class="v13-group-header">
             <div class="v13-group-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -164,9 +202,13 @@
             </div>
         </div>
     </div>
+    </div><!-- End v21-tab-content content -->
+
+    <!-- ===== V21 TAB: DESIGN ===== -->
+    <div class="v21-tab-content" data-tab-content="design">
 
     <!-- ===== 2. BACKGROUND GROUP (Tab-based) ===== -->
-    <div class="v13-section-group" id="mobileSection-background" data-mobile-section="background">
+    <div class="v13-section-group v21-design-section" id="mobileSection-background" data-mobile-section="background">
         <div class="v13-group-header">
             <div class="v13-group-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -325,7 +367,7 @@
     </div>
 
     <!-- ===== 3. STYLE GROUP (Sub-groups) ===== -->
-    <div class="v13-section-group" id="mobileSection-style" data-mobile-section="style">
+    <div class="v13-section-group v21-design-section" id="mobileSection-style" data-mobile-section="style">
         <div class="v13-group-header">
             <div class="v13-group-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -577,9 +619,13 @@
 
         </div>
     </div>
+    </div><!-- End v21-tab-content design -->
+
+    <!-- ===== V21 TAB: EXPORT ===== -->
+    <div class="v21-tab-content" data-tab-content="export">
 
     <!-- ===== 4. OUTPUT GROUP (Collapsed by default) ===== -->
-    <div class="v13-section-group" id="mobileSection-output" data-mobile-section="output">
+    <div class="v13-section-group v21-export-section" id="mobileSection-output" data-mobile-section="output">
         <div class="v13-group-header">
             <div class="v13-group-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -696,6 +742,7 @@
             </div>
         </div>
     </div>
+    </div><!-- End v21-tab-content export -->
 
     <!-- ===== ACTION BUTTON ===== -->
     <div class="action-section" style="margin-top: 24px;">
@@ -1069,5 +1116,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script type="module" src="js/app.js"></script>
     <script src="js/apple-interactions.js"></script>
+    <!-- V21 Desktop Tabs Initialization -->
+    <script type="module">
+        import { initDesktopTabs } from './js/modules/desktopTabs.js';
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => initDesktopTabs());
+        } else {
+            initDesktopTabs();
+        }
+    </script>
 </body>
 </html>
