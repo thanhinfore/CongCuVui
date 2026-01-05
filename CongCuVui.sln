@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Datalac.com", "Datalac.com\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMCCHomePage", "SMCCHomePage\SMCCHomePage.csproj", "{CE56BC93-316D-48D2-87C0-9F59AAAC00A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinhDanHocAI", "BinhDanHocAI\BinhDanHocAI.csproj", "{A286A32C-CDA8-4C9C-A65B-BE8D1B680105}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,10 @@ Global
 		{CE56BC93-316D-48D2-87C0-9F59AAAC00A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE56BC93-316D-48D2-87C0-9F59AAAC00A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE56BC93-316D-48D2-87C0-9F59AAAC00A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A286A32C-CDA8-4C9C-A65B-BE8D1B680105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A286A32C-CDA8-4C9C-A65B-BE8D1B680105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A286A32C-CDA8-4C9C-A65B-BE8D1B680105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A286A32C-CDA8-4C9C-A65B-BE8D1B680105}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
