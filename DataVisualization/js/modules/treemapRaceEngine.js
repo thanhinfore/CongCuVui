@@ -1,6 +1,13 @@
 // ========================================
-// Treemap Race Engine - ANIMATED RECTANGULAR TILES v1.0
+// Treemap Race Engine - ANIMATED RECTANGULAR TILES v2.0
 // Dynamic treemap showing proportional rectangles with smooth transitions
+// 🚀 v2.0 ENHANCEMENTS: Premium visual quality
+//    - Particle burst on rectangle growth
+//    - Motion blur on repositioning animations
+//    - Multi-layer shadow system (3 depth layers)
+//    - Advanced conic gradient effects
+//    - Enhanced typography with gradient text
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class TreemapRaceEngine {

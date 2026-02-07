@@ -1,7 +1,15 @@
 // ========================================
-// Bump Chart Engine Module - v11.0 Graphics Excellence
+// Bump Chart Engine Module - v12.0 ULTIMATE EDITION
 // RANK TRACKING VISUALIZATION: Premium graphics with gradients & smooth curves
 // Enhanced with bezier curves, glow effects, and beautiful gradients
+//
+// 🚀 v12.0 ENHANCEMENTS: Next-generation rank visualization
+//    - Elastic & bounce easing for natural rank transitions
+//    - Particle celebrations on major rank changes
+//    - Radial gradient 3D dots with dynamic lighting
+//    - Motion blur on fast rank movements
+//    - Enhanced line gradients (3-stop → 7-stop)
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class BumpChartEngine {

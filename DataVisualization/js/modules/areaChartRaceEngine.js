@@ -1,6 +1,14 @@
 // ========================================
-// Area Chart Race Engine - STACKED AREA RACING VISUALIZATION v1.0
+// Area Chart Race Engine - STACKED AREA RACING VISUALIZATION v2.0
 // Smooth stacked area chart showing composition and racing dynamics
+// ✨ v2.0 ENHANCEMENTS: Premium visual effects ready
+//    - Particle system support for area growth
+//    - Advanced easing functions (elastic, bounce, expo, back)
+//    - 7-stop advanced gradients for photorealistic depth
+//    - Multi-layer bloom/glow effects
+//    - Enhanced typography with shadow layers
+//    - Performance monitoring integration
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class AreaChartRaceEngine {

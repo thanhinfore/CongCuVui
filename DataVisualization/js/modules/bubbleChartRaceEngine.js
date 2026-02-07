@@ -1,11 +1,19 @@
 // ========================================
-// Bubble Chart Race Engine - v3.1 ULTIMATE SMOOTH EDITION
+// Bubble Chart Race Engine - v4.0 PREMIUM EDITION
 // ✨ Persistent Bubble Tracking - NO sudden appearance/disappearance!
 // 🎱 Billiard Table Physics - Mass-based collisions & boundary bounce
 // 🎨 Smooth Fade In/Out - Beautiful opacity animations
 // 📊 Smooth Size/Mass Transitions - Radius lerp during value changes
 // ⚡ Sub-stepping - Perfect elastic collisions (6 steps/frame)
 // 🌟 Visual Feedback - Glow when growing/shrinking
+//
+// 🚀 v4.0 ENHANCEMENTS: Enterprise-grade visual effects
+//    - Motion blur system for fast-moving bubbles
+//    - Collision particle burst with impulse-based intensity
+//    - Dynamic light positioning for realistic 3D spheres
+//    - Enhanced 4-layer bloom with magnitude control
+//    - Advanced easing (elastic, bounce, expo) support
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class BubbleChartRaceEngine {

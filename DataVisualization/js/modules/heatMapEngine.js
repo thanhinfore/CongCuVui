@@ -1,7 +1,15 @@
 // ========================================
-// Heat Map Engine Module - v11.0 Graphics Excellence
+// Heat Map Engine Module - v12.0 CINEMATIC EDITION
 // COMPREHENSIVE OVERVIEW: 3D cell effects with enhanced gradients
 // Premium matrix visualization with depth and shadows
+//
+// 🚀 v12.0 ENHANCEMENTS: Cinematic cell visualization
+//    - Multi-layer bloom on high-value cells
+//    - Smooth cell transition animations with easing
+//    - Interactive hover effects with scale & glow
+//    - Advanced radial gradients for 3D cell depth
+//    - Enhanced text shadows (single → 3-layer)
+// 📚 Uses: VisualEffectsLib v2.0 (import for full features)
 // ========================================
 
 export class HeatMapEngine {
